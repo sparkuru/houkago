@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "housou 包内分层(ws/routes/db/domain/lib) + monorepo 布局 + romaji 命名规则"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "bun:sqlite 单实例/prepared statement/snake_case 表+camelCase 边界映射/最小表设计"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "WS 畸形信封→KEIHOU(非断连)、TypeBox 边缘校验、REST 错误体"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "禁CJK标识符/一词一义、room:<id> pub/sub 三种 publish 路径、导出 App 类型、薄传输厚domain"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "kyoushitsu 目录(components/composables/stores/ws/api) + Vue3 命名"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "kousoku 单一类型源 + Eden Treaty 编译期端到端 + 信封判别联合 + 禁any/as"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Pinia 装配、WS 客户端写 store、服务器权威/projected 时间(为 P0 留挂点)"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "<script setup>、ArtPlayer 实例单组件封装并生命周期销毁"}
+{"file": ".trellis/tasks/archive/2026-06/06-13-elysia-js-spike-bun/research/elysia-spike-results.md", "reason": "Elysia 版本/包名(@elysiajs/openapi,eden)、#781 publish 工作模式、TypeBox WS 校验、Eden 类型证明"}

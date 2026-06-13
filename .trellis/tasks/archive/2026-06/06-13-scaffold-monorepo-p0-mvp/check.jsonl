@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "review checklist: romaji/一词一义、契约导出、room pub/sub publish 路径、无媒体字节、注释克制"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "校验畸形信封→KEIHOU 非断连、错误体格式、不吞错"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "校验 prepared statement/无SQL拼接、边界类型映射、单 DB 实例"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "review checklist: 类型从kousoku导入/无any、Eden 走 api层不裸fetch、ArtPlayer 生命周期销毁"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "校验 Eden 端到端类型流通、判别联合穷尽、禁as绕契约"}
