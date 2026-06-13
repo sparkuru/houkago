@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查禁用模式、typecheck/lint/test 容器内全绿、端到端验证证据"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "核查非部長 SHINKOU 丢弃不吞错、无半应用状态"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "核查分层：handler 薄、权威判定不漏进传输层"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查前端禁用模式与 ./dx 构建/运行验证"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 store 单向数据流：WS client 写、组件读，回声抑制不破坏"}

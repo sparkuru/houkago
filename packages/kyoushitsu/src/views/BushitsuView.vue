@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { housou } from "@/api"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
+// biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
+import { useShinkou } from "@/composables/useShinkou"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
 import type { Enmoku } from "houkago-kousoku"
@@ -21,6 +23,11 @@ const current = ref<Enmoku | null>(null)
 const manualUrl = ref("")
 
 let client: KousokuClient | null = null
+
+// 進行制御: routes player events → SHINKOU (host) and remote SHINKOU/GENJOU →
+// player (部員). The controller gates by role + 追従中; this view just connects.
+const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
+const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
 
 function playManual() {
   if (!manualUrl.value) return
@@ -48,7 +55,17 @@ onMounted(async () => {
   bushitsu.bushitsuId = bushitsuId
   const base = import.meta.env.VITE_HOUSOU_URL ?? "http://localhost:3000"
   client = new KousokuClient(base, (msg) => bushitsu.apply(msg))
-  client.connect(bushitsuId, bushitsu.senderId || "anon")
+  client.connect(bushitsuId, bushitsu.senderId)
+
+  // Learn who the 部長 is so isBuchou is known before we decide to follow.
+  const { data: room } = await housou.bushitsu({ id: bushitsuId }).get()
+  if (room) bushitsu.buchouId = room.buchouId
+
+  // 追いかけ: a 部員 asks for authority state to catch up; the host drives, so it
+  // does not follow and does not ask.
+  if (!bushitsu.isBuchou) {
+    client.send({ type: "OIKAKE", ts: Date.now(), senderId: bushitsu.senderId, payload: {} })
+  }
 
   const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
   if (data) bangumi.value = data
@@ -62,7 +79,15 @@ onBeforeUnmount(() => {
 <template>
   <div class="bushitsu">
     <main class="stage">
-      <EnmokuPlayer v-if="current" :key="current.url" :url="current.url" :type="current.type" />
+      <EnmokuPlayer
+        v-if="current"
+        ref="playerRef"
+        :key="current.url"
+        :url="current.url"
+        :type="current.type"
+        @shinkou="shinkou.onLocalShinkou"
+        @ready="shinkou.applyLatest"
+      />
       <div v-else class="placeholder">
         <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
         <button type="button" @click="playManual">再生</button>

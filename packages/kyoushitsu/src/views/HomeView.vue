@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { housou } from "@/api"
+import { buinId } from "@/lib/identity"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
@@ -15,19 +16,18 @@ const error = ref("")
 
 function enter(bushitsuId: string) {
   bushitsu.nickname = nickname.value
-  bushitsu.senderId = `${nickname.value}-${crypto.randomUUID().slice(0, 8)}`
   bushitsu.bushitsuId = bushitsuId
   router.push({ name: "bushitsu", params: { id: bushitsuId } })
 }
 
-// 部室を作る then enter as 部長.
+// 部室を作る then enter as 部長. The room's buchouId must be this browser's stable
+// buinId (= the WS senderId), or host-authority never matches (design §5).
 async function create() {
   error.value = ""
   if (!nickname.value) return
-  const senderId = `${nickname.value}-${crypto.randomUUID().slice(0, 8)}`
   const { data, error: err } = await housou.bushitsu.post({
     name: newRoomName.value || "新部室",
-    buchouId: senderId,
+    buchouId: buinId(),
   })
   if (err || !data) {
     error.value = "部室作成に失敗しました"

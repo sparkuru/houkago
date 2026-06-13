@@ -48,6 +48,13 @@ export class NotBuchou extends Error {       // 部長権限なし：only the ho
 - **Host authority is an error case, not a silent no-op.** A 部員 trying to drive
   playback gets a `NotBuchou` → `KEIHOU`, so the client knows the action was
   rejected (design §5).
+- **`app.onError` does not cover WS message bodies.** It maps errors thrown in
+  HTTP handlers and the WS `error()` envelope-validation callback — but a throw
+  inside the `.ws({ message })` handler is *not* routed through it. So the WS
+  `message` handler wraps its body in a single `try/catch` that maps a domain
+  error `code` → a `KEIHOU` sent back to that sender (`ws.send`, not a room
+  broadcast). This is the WS-channel equivalent of central error mapping; keep
+  domain functions throwing typed errors and let this one catch translate them.
 - **Never swallow.** No empty `catch {}`. If you catch to add context, rethrow.
 
 ---

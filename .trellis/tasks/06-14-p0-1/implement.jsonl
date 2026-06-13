@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "薄传输厚 domain 分层：WS handler 只解析+委派，权威判定归 ShinkouSeigyo/domain，I/O 归 db"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "非部長 SHINKOU 静默丢弃 vs KEIHOU 的错误边界，禁吞错、禁半应用状态"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "禁用模式 + Build&Run：./dx 容器内 typecheck/lint/test 与端到端验证规约"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "bushitsu 查询拿 buchouId 做权威比对的 query 模式"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "store 为 server-authoritative truth，WS client 写、组件读；isBuchou/shinkou 状态"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 独占 ArtPlayer 实例生命周期，同步接线（部長发/部員应用+seek）不破坏所有权"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "ws/ client 与 stores 落点；同步算法接线位置"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "kousoku 契约 Static<> 复用、TypeBox 校验、禁 any/as 绕过"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端禁用模式 + ./dx 容器内构建/运行验证"}

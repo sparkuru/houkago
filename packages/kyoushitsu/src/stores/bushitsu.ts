@@ -1,6 +1,7 @@
+import { buinId } from "@/lib/identity"
 import type { KousokuMessage, Shinkou } from "houkago-kousoku"
 import { defineStore } from "pinia"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 
 // useBushitsuStore: server-authoritative room/session state, fed by the WS
 // client (state-management spec). The WS client is the writer; components read.
@@ -11,10 +12,14 @@ type ChatLine = { senderId: string; content: string; ts: number }
 export const useBushitsuStore = defineStore("bushitsu", () => {
   const bushitsuId = ref<string | null>(null)
   const nickname = ref("")
-  const senderId = ref("")
+  const senderId = ref(buinId()) // stable identity = WS senderId (design §5)
+  const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
   const enmokuId = ref<string | null>(null) // 上映中
   const chat = ref<ChatLine[]>([])
+
+  // 部長か：am I the host? Derived authority — only my player drives sync.
+  const isBuchou = computed(() => buchouId.value !== null && senderId.value === buchouId.value)
 
   // last authoritative Shinkou + its server time, for P0 projected-progress math.
   const shinkou = ref<Shinkou | null>(null)
@@ -52,6 +57,8 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     bushitsuId,
     nickname,
     senderId,
+    buchouId,
+    isBuchou,
     shusseki,
     enmokuId,
     chat,

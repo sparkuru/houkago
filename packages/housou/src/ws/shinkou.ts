@@ -1,10 +1,11 @@
 import type { Shinkou } from "houkago-kousoku"
+import { NotBuchou } from "../lib/errors"
 
 // ShinkouSeigyo（進行制御）: server-side authority state for the sync core.
-// SCAFFOLD STAGE — this holds the last authoritative Shinkou + its receive time
-// per 部室 and projects progress for late-joiners (OIKAKE → GENJOU). The full
-// P0 sync state machine (host-authority enforcement on SHINKOU, drift tiers,
-// echo handling) is the next task; the hooks are marked below.
+// Holds the last authoritative Shinkou + its receive time per 部室 and projects
+// progress for late joiners (OIKAKE → GENJOU). Host-authority is enforced here:
+// only the room's 部長 may record a Shinkou (design §5). Drift tiers (TENKO /
+// zure) are the next slice — TENKO stays a no-op for now.
 
 type AuthorityState = {
   enmokuId: string | null
@@ -28,13 +29,24 @@ export class ShinkouSeigyo {
     )
   }
 
-  // Record an authoritative Shinkou. P0 TODO: only accept from the room's 部長
-  // (NotBuchou otherwise); broadcast SHINKOU to room:<bushitsuId>.
-  shinkou(bushitsuId: string, shinkou: Shinkou, enmokuId: string | null): void {
+  // Record an authoritative Shinkou. Only the room's 部長 may drive sync — a
+  // non-host sender is rejected with NotBuchou (design §5), which the WS handler
+  // maps to a KEIHOU back to that sender. Pure + in-memory so the authority gate
+  // and recording are unit-testable without a socket. `now` is injectable for
+  // deterministic projected-progress tests.
+  shinkou(
+    bushitsuId: string,
+    shinkou: Shinkou,
+    enmokuId: string | null,
+    senderId: string,
+    buchouId: string,
+    now = Date.now(),
+  ): void {
+    if (senderId !== buchouId) throw new NotBuchou("only 部長 may control playback")
     this.state.set(bushitsuId, {
       enmokuId,
       shinkou,
-      shinkouServerTime: Date.now(),
+      shinkouServerTime: now,
     })
   }
 
