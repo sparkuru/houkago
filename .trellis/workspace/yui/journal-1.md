@@ -104,3 +104,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: P0纵切1：单房间房主权威同步端到端
+
+**Date**: 2026-06-14
+**Task**: P0纵切1：单房间房主权威同步端到端
+**Branch**: `k-on`
+
+### Summary
+
+实现 design.md §5 第一条同步链路：服务端 ShinkouSeigyo 房主权威(senderId==buchouId 否则 NotBuchou→KEIHOU 发回发送者，不广播)；客户端 useShinkou 进行制御(tsuijuuChuu 回声抑制200ms+投影追平)脱离.vue、EnmokuPlayer 独占 art 暴露 apply()、store isBuchou 派生。修了 HomeView 建房者 senderId/buchouId 双重生成不匹配致永远当不成部長的 bug，改 lib/identity localStorage 持久 buinId。测试 shinkou 单测5+sync.e2e 3(广播/OIKAKE追平/KEIHOU拒绝)，容器内 typecheck/lint/test14/build 全绿。biome 忽略.trellis；error-handling spec 记录 onError 不覆盖 WS message body 需 try/catch→KEIHOU。漂移校正 TENKO/zure 留第二片。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f56b415` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

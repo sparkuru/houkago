@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 3
-- **Last Active**: 2026-06-13
+- **Total Sessions**: 4
+- **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~106 | Active |
+| `journal-1.md` | ~139 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 4 | 2026-06-14 | P0纵切1：单房间房主权威同步端到端 | `f56b415` | `k-on` |
 | 3 | 2026-06-13 | Scaffold Bun monorepo（kousoku/housou/kyoushitsu）+ docker(./dx) 开发环境 | `4105532` | `k-on` |
 | 2 | 2026-06-13 | 填充 backend/frontend 编码规范，bootstrap 收尾 | `48e9d13` | `k-on` |
 | 1 | 2026-06-13 | 后端选型落定：Bun + Elysia.js spike + 弹幕引擎决策 | `ddea404` | `k-on` |
