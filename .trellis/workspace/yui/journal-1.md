@@ -71,3 +71,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Scaffold Bun monorepo（kousoku/housou/kyoushitsu）+ docker(./dx) 开发环境
+
+**Date**: 2026-06-13
+**Task**: Scaffold Bun monorepo（kousoku/housou/kyoushitsu）+ docker(./dx) 开发环境
+**Branch**: `k-on`
+
+### Summary
+
+搭起 Bun workspaces monorepo 脚手架(scaffold-only)：kousoku 共享契约(WS信封+§4全表判别联合+TypeBox)、housou(Elysia+WS pub/sub+bun:sqlite+最小REST+ShinkouSeigyo占位)、kyoushitsu(Vue3+Eden+WS骨架+ArtPlayer)。宿主机不装bun，改用 ./dx docker(oven/bun:1) 包裹器跑全部bun命令。vue-router 由实验性5.x降到稳定4.x。验收全绿(install/typecheck/lint/test6pass/build)。spec补Build&Run与vue-router锁版约定。P0同步算法留挂点未实现。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4105532` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
