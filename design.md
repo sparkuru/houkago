@@ -323,3 +323,42 @@ EchoSuppressing    → tsuijuuChuu        追従中
 | §8 选型佐证 | `synctv-web/package.json` | 播放器/弹幕/HLS·DASH 依赖版本 |
 | 房间状态管理（前端整体） | `synctv-web/src/stores/room.ts`、`src/hooks/useRoom.ts`、`useMovie.ts` | 前端房间/影片状态组织方式 |
 | 影院 UI（B站直播风参照） | `synctv-web/src/components/cinema/` | 播放器+聊天+弹幕的布局 |
+
+---
+
+## 第四部分 · 开发与协作约束（硬约束）
+
+> 本部分对人与 AI 同等生效。违反即返工。操作细节落在 `.trellis/spec/{backend,frontend}/quality-guidelines.md`（Build & Run 节），本部分给原则。
+
+### 16. Docker 优先：开发与验证一律在容器内
+
+**宿主机不安装语言运行时/工具链（含 bun）。** 所有 build / install / typecheck / lint / test / 启动服务，统一在 `oven/bun:1` 容器内通过仓库根 `./dx` 包裹器执行：
+
+```
+./dx bun install
+./dx bun run typecheck      # 全 workspace
+./dx bun run lint           # biome
+./dx sh -c 'cd packages/housou && bun test'
+```
+
+- **目的**：环境可复现、隔离、零宿主机污染；最大限度**减少向宿主机请求执行命令**——能在容器内自证的（装/编/测/跑），不要回到宿主机问。
+- `./dx` 已做 uid 映射（产物归当前用户）、端口发布（3000 housou / 5173 kyoushitsu）、容器内 HOME=`/app/.devhome`（gitignore）。
+- **两个 `./dx` 不可并发**（重复绑定端口）；「起服务 + 连客户端」放进同一个 `./dx sh -c`：后台起服务→跑驱动断言→kill。
+- 容器内服务监听 `0.0.0.0` 才能从宿主访问（`app.listen({ hostname:'0.0.0.0' })` / vite `server.host:'0.0.0.0'`）。
+- **验证以容器内实跑为准**：验收靠 `./dx` 跑出的实际命令与结果证据，不靠口头断言。
+- 例外（必须经宿主机的极少数操作，如 `git`、`docker` 本身、改宿主机 dotfiles）才在宿主机执行，且应事先说明。
+
+### 17. 编码遵守优秀工程规范
+
+代码质量是硬指标，不是事后润色。**操作层规则以 `.trellis/spec/` 为准（trellis 子代理逐任务注入）**；本节给不可让渡的总原则：
+
+1. **契约单一源 / 一词一义**：跨端共享的类型、协议、领域模型只在 `kousoku` 定义一处，他处 import 不重定义；命名严格遵 §13 词典，禁同义词漂移（成员永远 `Buin`，影片永远 `Enmoku`）。
+2. **类型优先、禁逃逸**：TypeScript strict；禁 `any`、禁用 `as`/`@ts-ignore` 绕过契约——类型不符就改契约而非强转。运行时边界（WS 信封 / REST body）用 TypeBox 校验，TS 类型 `Static<>` 同源。
+3. **薄传输厚 domain、单一职责**：路由/WS handler 只解析+委派；业务逻辑进 `domain/`，I/O 进 `db/`。函数小而专注，一个函数一件事。
+4. **DRY 但不过度抽象**：改任何常量/配置前先全局搜索引用（防「忘了同步另一处」）；重复出现 3 次以上才抽象，避免过早抽象。
+5. **错误不吞**：禁空 `catch {}`；错误带类型/`code`，集中映射（REST→状态码，WS→`KEIHOU`，非断连）；绝不半应用状态后假装成功。
+6. **注释克制**：解释「为什么」与非显然的领域意图；禁复述代码、禁装饰性 banner、禁留注释掉的死代码。
+7. **测试覆盖核心逻辑**：纯逻辑（尤其同步状态机 §5：projected 投影、漂移分级、房主权威）必须可脱离 socket/DOM 单测；提交前 typecheck / lint / test 全绿（容器内实跑）。
+8. **安全与边界**：不记录密钥/令牌/用户消息内容；服务端权威，不信任客户端自律（房主权威在服务端强制）；媒体/弹幕跨域一律服务端拉取。
+9. **小步提交**：按功能切分提交，提交信息说清「做了什么 + 为什么」；提交前工作树自检。
+10. **不引入实验性/不稳定依赖作地基**：选稳定主线版本（前车之鉴：vue-router 用稳定 4.x，禁实验性 5.x）；引入新依赖说明理由与许可。
