@@ -5,6 +5,13 @@ node_modules/
 dist/
 *.log
 
+# bun
+.vite/
+.devhome/
+
 # data
 *.sqlite
 *.db
+*.db-shm
+*.db-wal
+*.db-journal

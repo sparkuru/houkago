@@ -1,0 +1,17 @@
+{
+  "name": "houkago",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "typecheck": "bun run --filter '*' typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "dev:housou": "bun run --filter houkago-housou dev",
+    "dev:kyoushitsu": "bun run --filter houkago-kyoushitsu dev"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}

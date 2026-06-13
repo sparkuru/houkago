@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# dx —— 在 oven/bun:1 容器里跑命令的开发包裹器。
+# 宿主机不装 bun；所有 bun/bunx/服务全走容器。仓库挂到 /app，uid 映射避免 root 占文件。
+#
+# 用法:
+#   ./dx bun install
+#   ./dx bun run typecheck
+#   ./dx bun run lint
+#   ./dx bun test
+#   ./dx bun --version
+#   ./dx sh -c 'cd packages/housou && bun run dev'
+#
+# 端口: housou 3000、kyoushitsu(vite) 5173 已发布到宿主。
+# 容器内服务须监听 0.0.0.0（elysia listen / vite server.host）才能从宿主访问。
+set -euo pipefail
+
+IMAGE="oven/bun:1"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# bun 缓存/HOME 落 repo 内（已 gitignore），任意 uid 都可写。
+DEVHOME="${REPO_ROOT}/.devhome"
+mkdir -p "${DEVHOME}"
+
+TTY_FLAGS=()
+[ -t 0 ] && TTY_FLAGS+=(-i)
+[ -t 0 ] && [ -t 1 ] && TTY_FLAGS+=(-t)
+
+exec docker run --rm \
+  "${TTY_FLAGS[@]}" \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/app/.devhome \
+  -v "${REPO_ROOT}:/app" \
+  -w /app \
+  -p 3000:3000 \
+  -p 5173:5173 \
+  "${IMAGE}" "$@"

@@ -15,6 +15,22 @@ naming dictionary is honored across the stack.
 
 ---
 
+## Build & Run + dependency pins (this project)
+
+**The host has no `bun`** — run every bun/vite/test command through the repo-root
+`./dx` wrapper (`oven/bun:1` container, repo at `/app`, ports 3000/5173 published,
+uid-mapped). Two `./dx` calls can't run concurrently (port re-bind). Vite must
+bind `0.0.0.0` (`server.host: "0.0.0.0"`) to be reachable from the host. See
+backend quality-guidelines for the full command list.
+
+**Router: pin `vue-router` to `^4.x`** (the stable Vue 3 router). Do NOT use
+`vue-router@5.x` — that line is the experimental unplugin/data-loaders variant;
+it drags in `unplugin`/`@vue-macros`/`chokidar` and shipped a `createWebHistory`
+that self-recurses (stack overflow on navigation). 4.x and 5.x share the
+`createRouter`/`createWebHistory` API, so 4.x needs no code changes.
+
+---
+
 ## Forbidden Patterns
 
 - **CJK in identifiers.** romaji ASCII only; 汉字 in comments/docs (design §12).

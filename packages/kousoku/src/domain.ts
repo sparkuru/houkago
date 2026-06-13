@@ -1,0 +1,68 @@
+import { type Static, Type } from "@sinclair/typebox"
+
+// 部長 / 部員 / 見学：role within a 部室 (design §3, §13)
+export const YakuwariSchema = Type.Union([
+  Type.Literal("buchou"), // 部長 host：sole sync authority (design §5)
+  Type.Literal("buin"), // 部員 member
+  Type.Literal("kengaku"), // 見学 guest / spectator
+])
+export type Yakuwari = Static<typeof YakuwariSchema>
+
+// 部室：a watch room (design §13)
+export const BushitsuSchema = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  buchouId: Type.String(), // 部長 id：first to create/enter holds authority
+  createdAt: Type.Number(), // epoch ms
+})
+export type Bushitsu = Static<typeof BushitsuSchema>
+
+// 部員：a member present in a 部室
+export const BuinSchema = Type.Object({
+  id: Type.String(),
+  bushitsuId: Type.String(),
+  nickname: Type.String(),
+  yakuwari: YakuwariSchema,
+})
+export type Buin = Static<typeof BuinSchema>
+
+// 演目 source kind (design §6). Single source for both the REST create-input
+// schema (housou) and the player prop type (kyoushitsu).
+export const EnmokuTypeSchema = Type.Union([
+  Type.Literal("direct"),
+  Type.Literal("hls"),
+  Type.Literal("dash"),
+  Type.Literal("live"),
+])
+export type EnmokuType = Static<typeof EnmokuTypeSchema>
+
+// 演目：a playable item (design §6)
+export const EnmokuSchema = Type.Object({
+  id: Type.String(),
+  bushitsuId: Type.String(),
+  title: Type.String(),
+  type: EnmokuTypeSchema,
+  url: Type.String(), // points at eisha's stable proxy address in later phases
+  headers: Type.Optional(Type.Record(Type.String(), Type.String())),
+  subtitles: Type.Optional(
+    Type.Record(Type.String(), Type.Object({ url: Type.String(), type: Type.String() })),
+  ),
+  sources: Type.Optional(Type.Array(Type.Object({ name: Type.String(), url: Type.String() }))),
+  danmaku: Type.Optional(
+    Type.Object({
+      type: Type.Union([Type.Literal("file"), Type.Literal("fetch")]),
+      ref: Type.String(),
+    }),
+  ),
+  live: Type.Optional(Type.Boolean()),
+  addedBy: Type.String(), // 投稿者 buin id
+})
+export type Enmoku = Static<typeof EnmokuSchema>
+
+// 進行：playback state, the sync primitive (design §4 SHINKOU, §5)
+export const ShinkouSchema = Type.Object({
+  isPlaying: Type.Boolean(),
+  currentTime: Type.Number(), // seconds
+  playbackRate: Type.Number(),
+})
+export type Shinkou = Static<typeof ShinkouSchema>

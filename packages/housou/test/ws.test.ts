@@ -1,0 +1,101 @@
+import { afterAll, beforeAll, expect, test } from "bun:test"
+import type { KousokuMessage } from "houkago-kousoku"
+import { app } from "../src/index"
+
+// Integration test against a running Elysia instance, mirroring the spike
+// driver: malformed envelope → KEIHOU (not disconnect), and two clients in the
+// same room exchange OSHABERI echoes.
+
+let baseWs: string
+
+beforeAll(() => {
+  app.listen(0)
+  const port = app.server?.port
+  baseWs = `ws://localhost:${port}/ws`
+})
+
+afterAll(() => {
+  app.server?.stop()
+})
+
+function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
+  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
+  return new Promise((resolve) => ws.addEventListener("open", () => resolve(ws), { once: true }))
+}
+
+function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise<KousokuMessage> {
+  return new Promise((resolve) => {
+    const onMsg = (ev: MessageEvent) => {
+      const m = JSON.parse(ev.data) as KousokuMessage
+      if (pred(m)) {
+        ws.removeEventListener("message", onMsg)
+        resolve(m)
+      }
+    }
+    ws.addEventListener("message", onMsg)
+  })
+}
+
+test("malformed envelope yields KEIHOU error, connection stays open", async () => {
+  const ws = await open("rA", "u1")
+  const keihou = await new Promise<KousokuMessage>((resolve) => {
+    ws.addEventListener("message", (ev) => {
+      const m = JSON.parse(ev.data) as KousokuMessage
+      if (m.type === "KEIHOU") resolve(m)
+    })
+    ws.send(JSON.stringify({ nope: true }))
+  })
+  expect(keihou.type).toBe("KEIHOU")
+  // connection must still be usable afterwards — not disconnected
+  expect(ws.readyState).toBe(WebSocket.OPEN)
+  ws.close()
+})
+
+test("two clients in the same room exchange OSHABERI echo", async () => {
+  const a = await open("rB", "alice")
+  const b = await open("rB", "bob")
+
+  const gotByB = nextMatch(b, (m) => m.type === "OSHABERI")
+  const gotByA = nextMatch(a, (m) => m.type === "OSHABERI")
+
+  const msg: KousokuMessage = {
+    type: "OSHABERI",
+    ts: Date.now(),
+    senderId: "alice",
+    payload: { content: "hello room" },
+  }
+  a.send(JSON.stringify(msg))
+
+  const [mb, ma] = await Promise.all([gotByB, gotByA])
+  expect(mb.type).toBe("OSHABERI")
+  expect(ma.type).toBe("OSHABERI")
+  if (mb.type === "OSHABERI") expect(mb.payload.content).toBe("hello room")
+
+  a.close()
+  b.close()
+})
+
+test("room isolation: rC client does not receive rD chat", async () => {
+  const c = await open("rC", "carol")
+  const d = await open("rD", "dave")
+
+  let leaked = false
+  c.addEventListener("message", (ev) => {
+    const m = JSON.parse(ev.data) as KousokuMessage
+    if (m.type === "OSHABERI") leaked = true
+  })
+
+  d.send(
+    JSON.stringify({
+      type: "OSHABERI",
+      ts: Date.now(),
+      senderId: "dave",
+      payload: { content: "other room" },
+    } satisfies KousokuMessage),
+  )
+
+  await new Promise((r) => setTimeout(r, 150))
+  expect(leaked).toBe(false)
+  c.close()
+  d.close()
+})

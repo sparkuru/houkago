@@ -1,0 +1,51 @@
+import type { Bushitsu, Enmoku } from "houkago-kousoku"
+import { getBushitsu, insertBushitsu } from "../db/queries/bushitsu"
+import { insertEnmoku, listEnmoku } from "../db/queries/enmoku"
+import { BushitsuNotFound } from "../lib/errors"
+import { newId } from "../lib/id"
+
+// BushitsuKanri（部室管理）: room lifecycle + enmoku metadata. Pure orchestration;
+// validation happens at the transport edge, I/O lives in db/.
+
+// 部室を作る：create a room. The creator's buin id becomes 部長 (design §5).
+export function createBushitsu(name: string, buchouId: string): Bushitsu {
+  const bushitsu: Bushitsu = {
+    id: newId(),
+    name,
+    buchouId,
+    createdAt: Date.now(),
+  }
+  insertBushitsu(bushitsu)
+  return bushitsu
+}
+
+// 部室を取る：fetch a room or throw BushitsuNotFound.
+export function fetchBushitsu(id: string): Bushitsu {
+  const bushitsu = getBushitsu(id)
+  if (!bushitsu) throw new BushitsuNotFound(id)
+  return bushitsu
+}
+
+// 演目を投稿する：add a direct-link enmoku to a room.
+export function addEnmoku(
+  bushitsuId: string,
+  input: { title: string; type: Enmoku["type"]; url: string; addedBy: string },
+): Enmoku {
+  fetchBushitsu(bushitsuId) // ensure the room exists
+  const enmoku: Enmoku = {
+    id: newId(),
+    bushitsuId,
+    title: input.title,
+    type: input.type,
+    url: input.url,
+    addedBy: input.addedBy,
+  }
+  insertEnmoku(enmoku, Date.now())
+  return enmoku
+}
+
+// 番組表：a room's enmoku queue.
+export function fetchBangumi(bushitsuId: string): Enmoku[] {
+  fetchBushitsu(bushitsuId)
+  return listEnmoku(bushitsuId)
+}

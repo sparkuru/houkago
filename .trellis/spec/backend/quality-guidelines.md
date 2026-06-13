@@ -13,6 +13,28 @@ of truth, the sync core is correct, and the control plane never touches media.
 
 ---
 
+## Build & Run (this project)
+
+**The host has no `bun`.** All bun/bunx/test/dev commands run inside the
+`oven/bun:1` container via the repo-root `./dx` wrapper (repo mounted at `/app`,
+uid-mapped so artifacts stay owned by you):
+
+```
+./dx bun install
+./dx bun run typecheck      # bun run --filter '*' typecheck
+./dx bun run lint           # biome check .
+./dx sh -c 'cd packages/housou && bun test'
+```
+
+`./dx` publishes ports 3000 (housou) and 5173 (kyoushitsu/vite), so **two `./dx`
+invocations cannot run concurrently** — they would re-bind the same ports. When a
+check needs a server plus a client (WS echo, REST round-trip), run both inside
+one `./dx sh -c '...'`: background the server, run the driver/asserts, then kill.
+Container services must listen on `0.0.0.0` to be reachable from the host
+(`app.listen({ hostname: "0.0.0.0", port })`).
+
+---
+
 ## Forbidden Patterns
 
 - **CJK in identifiers.** Code identifiers are romaji ASCII; 汉字 only in comments
