@@ -137,3 +137,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: P0纵切2：漂移校正（服务端权威钟心跳+zureHosei三档）
+
+**Date**: 2026-06-14
+**Task**: P0纵切2：漂移校正（服务端权威钟心跳+zureHosei三档）
+**Branch**: `k-on`
+
+### Summary
+
+在纵切1房主权威同步上补 design.md §5 漂移校正。服务端权威钟：ws/tenko.ts 全局 setInterval(~4s) 遍历活跃房间 app.server?.publish GENJOU(projected+serverTime)，ShinkouSeigyo.has() 跳过未驱动房，仅 import.meta.main 启动+stop句柄防泄漏(spike#781)。客户端：lib/zure.ts zureHosei 纯函数三档(≤0.3忽略/>1.5seek/中档 playing→nudge±5% paused→seek)；useShinkou 重写为显式 type 路由替代slice1笼统watch硬seek(SHINKOU硬apply/GENJOU→alignTransport+zureHosei时间分量/nudge跨tick自回退)，全程tsuijuuChuu抑制、isBuchou跳过；EnmokuPlayer加alignTransport/setRate/暴露snapshot。心跳复用GENJOU统一追平与漂移，TENKO(C→S)v1不用，design§5回填。trellis-check 13文件过、修1过时注释。容器内typecheck/lint绿、housou16+kyoushitsu5测试过、build通过。决策:tick源=服务端权威钟、zure全三档(用户选);心跳复用GENJOU、软校正自回退(AI定)。Out:自由控制权/断线重连/NTP-lite/WebRTC。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a47e9ce` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
