@@ -1,0 +1,10 @@
+/archive
+
+# deps / build
+node_modules/
+dist/
+*.log
+
+# data
+*.sqlite
+*.db
