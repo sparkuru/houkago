@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Build&Run ./dx；Required Patterns 中 timer/非WS上下文用 app.server?.publish（spike #781）；房间 pub/sub topic"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "ws/ 下心跳模块落点（tenko.ts）；薄传输厚 domain 分层"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "心跳/校正错误不吞；WS try/catch→KEIHOU 约定"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "tsuijuuChuu 回声抑制、projected 派生不存 ticking 值、WS client 写 store"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "zureHosei 纯逻辑落 lib/；同步逻辑归 composables/ws 不进 .vue"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "kousoku 契约复用、禁 any/as；zureHosei 决策类型"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端禁用模式 + ./dx 构建/运行/测试"}

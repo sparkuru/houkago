@@ -116,6 +116,8 @@ v1 不含 WebRTC 语音（synctv 的 WEBRTC_* 一组后置到 P4）。
 - `0.3s < zure ≤ 1.5s` → 软校正：临时 playbackRate ±5% 拉回，无跳变
 - `zure ≤ 0.3s` → 忽略
 
+> **v1 实现（P0 纵切2）**：漂移校正落地为「服务端权威钟周期 GENJOU 心跳（~4s）+ 客户端 `zureHosei` 三档」。心跳与 OIKAKE 追平复用同一条 `GENJOU` 权威下发路径（迟到追平即 zure 极大→seek 档，与漂移统一）。`TENKO`（C→S 成员上报心跳）在服务端权威钟模型下 v1 未用。
+
 **时钟对齐**
 - 消息带服务端 `ts`，client 用一次轻量 ping/pong 估 `clockOffset`（NTP-lite）。
 - v1 简化：信任 host.currentTime + 单程延迟（RTT/2）补偿。

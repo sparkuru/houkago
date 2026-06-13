@@ -3,6 +3,7 @@ import "./db/client" // applies idempotent schema on module load
 import { statusFor } from "./lib/errors"
 import { bushitsuRoutes } from "./routes/bushitsu"
 import { wsRoutes } from "./ws/handler"
+import { startTenko } from "./ws/tenko"
 
 export const app = new Elysia()
   // Central error mapping: domain error `code` → HTTP status + uniform body.
@@ -35,5 +36,8 @@ if (import.meta.main) {
   const port = Number(process.env.PORT ?? 3000)
   // Bind 0.0.0.0 so the container service is reachable from the host (dx).
   app.listen({ hostname: "0.0.0.0", port })
+  // 点呼: authority-clock heartbeat, only in the running server (not tests, which
+  // start it explicitly with a stop handle to avoid leaking the timer).
+  startTenko(app)
   console.log(`houkago-housou listening on :${app.server?.port ?? port}`)
 }

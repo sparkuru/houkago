@@ -35,3 +35,9 @@ export function taibu(bushitsuId: string): number {
 export function shusseki(bushitsuId: string): number {
   return presence.get(bushitsuId) ?? 0
 }
+
+// 活動中の部室: rooms with at least one connected 部員, for the periodic heartbeat
+// to iterate (tenko). presence is pruned to >0 entries, so map keys suffice.
+export function activeRooms(): string[] {
+  return [...presence.keys()]
+}

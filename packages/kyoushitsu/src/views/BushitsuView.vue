@@ -54,7 +54,10 @@ function oshaberi(content: string) {
 onMounted(async () => {
   bushitsu.bushitsuId = bushitsuId
   const base = import.meta.env.VITE_HOUSOU_URL ?? "http://localhost:3000"
-  client = new KousokuClient(base, (msg) => bushitsu.apply(msg))
+  client = new KousokuClient(base, (msg) => {
+    bushitsu.apply(msg) // keep the store the single source of truth first
+    shinkou.handleRemote(msg) // then drive the player by message type
+  })
   client.connect(bushitsuId, bushitsu.senderId)
 
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
@@ -86,7 +89,7 @@ onBeforeUnmount(() => {
         :url="current.url"
         :type="current.type"
         @shinkou="shinkou.onLocalShinkou"
-        @ready="shinkou.applyLatest"
+        @ready="shinkou.catchUp"
       />
       <div v-else class="placeholder">
         <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />

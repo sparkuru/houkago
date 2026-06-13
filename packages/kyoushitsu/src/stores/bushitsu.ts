@@ -44,7 +44,8 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         shinkouServerTime.value = msg.payload.serverTime
         break
       case "SHINKOU":
-        // P0 TODO: apply to player with tsuijuuChuu echo suppression.
+        // Player application (hard apply + tsuijuuChuu echo suppression) is done
+        // by useShinkou.handleRemote; the store only commits last-known truth.
         shinkou.value = msg.payload
         shinkouServerTime.value = msg.ts
         break

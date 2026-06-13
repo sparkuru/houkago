@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查 publish 路径、心跳无媒体字节、typecheck/lint/test 全绿"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "核查心跳/校正错误不吞、无半应用状态"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 tsuijuuChuu 抑制完整、projected 派生不存 ticking、单向数据流"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查前端禁用模式与 ./dx 测试证据"}

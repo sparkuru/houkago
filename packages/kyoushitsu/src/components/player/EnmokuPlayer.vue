@@ -50,7 +50,22 @@ function apply(s: Shinkou): void {
   else if (!s.isPlaying && art.playing) art.pause()
 }
 
-defineExpose({ apply })
+// Align play/pause/rate to authority without seeking — used by the GENJOU
+// heartbeat so the time component can be left to zureHosei (no seek every tick).
+function alignTransport(s: Shinkou): void {
+  if (!art) return
+  art.playbackRate = s.playbackRate
+  if (s.isPlaying && !art.playing) art.play()
+  else if (!s.isPlaying && art.playing) art.pause()
+}
+
+// Temporarily override the playback rate for a soft drift nudge (design §5 中档).
+// The authority rate is restored by useShinkou on the next ignore-tier tick.
+function setRate(rate: number): void {
+  if (art) art.playbackRate = rate
+}
+
+defineExpose({ apply, alignTransport, setRate, snapshot })
 
 onMounted(() => {
   if (!container.value) return

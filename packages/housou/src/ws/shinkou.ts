@@ -18,6 +18,13 @@ const DEFAULT_SHINKOU: Shinkou = { isPlaying: false, currentTime: 0, playbackRat
 export class ShinkouSeigyo {
   private state = new Map<string, AuthorityState>()
 
+  // True once a 部長 has driven this room. The heartbeat (tenko) only beats
+  // rooms that have real authority state — never a room that has never played,
+  // so it does not spam a default paused GENJOU.
+  has(bushitsuId: string): boolean {
+    return this.state.has(bushitsuId)
+  }
+
   // Authoritative state for a room, defaulting to a fresh paused state.
   genjou(bushitsuId: string): AuthorityState {
     return (
