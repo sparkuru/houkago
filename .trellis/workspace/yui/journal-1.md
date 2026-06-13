@@ -38,3 +38,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: 填充 backend/frontend 编码规范，bootstrap 收尾
+
+**Date**: 2026-06-13
+**Task**: 填充 backend/frontend 编码规范，bootstrap 收尾
+**Branch**: `k-on`
+
+### Summary
+
+以 design.md §2 命名词典 + Elysia spike 结论为依据填充 .trellis/spec 下 backend(5)/frontend(6) 共 11 个 guideline，index 状态转 Done，prd 勾选完成；归档 00-bootstrap-guidelines。下一步进入脚手架 + P0 MVP。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `48e9d13` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
