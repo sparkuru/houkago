@@ -157,6 +157,8 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 
 优先级链 本地文件 > 在线抓取 > 弹幕盒子，前端按配置选当前源；实时聊天弹幕永远叠加。
 
+> P0 偏离回填：P0 实时聊天弹幕实现为自有 Vue/CSS 淡气泡 overlay（`components/danmaku/DanmakuOverlay.vue`，可开关、弹幕姬 lite 风），非飞屏渲染。canvas 飞屏弹幕引擎 `weizhenye/Danmaku` 推迟到样式化 `DANMAKU` / 文件弹幕切片（密集弹幕才需 canvas 性能）。
+
 ### 8. 技术选型
 
 | 层 | 选型 | 理由 |

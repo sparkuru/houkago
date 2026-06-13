@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { housou } from "@/api"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
+import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
@@ -21,6 +22,11 @@ const current = ref<Enmoku | null>(null)
 
 // scaffold: a hand-typed direct link to prove ArtPlayer playback.
 const manualUrl = ref("")
+
+// 視聴 UI 態（pure view state, not store; state-management）：
+// 網全面（web fullscreen, keep chat docked）と 聊天展開（chat collapse arrow）.
+const webZenmen = ref(false)
+const chatHiraku = ref(true)
 
 let client: KousokuClient | null = null
 
@@ -80,17 +86,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="bushitsu">
+  <div class="bushitsu" :class="{ 'web-zenmen': webZenmen }">
     <main class="stage">
-      <EnmokuPlayer
-        v-if="current"
-        ref="playerRef"
-        :key="current.url"
-        :url="current.url"
-        :type="current.type"
-        @shinkou="shinkou.onLocalShinkou"
-        @ready="shinkou.catchUp"
-      />
+      <div class="bar">
+        <button
+          type="button"
+          :aria-label="webZenmen ? 'ウェブ全画面を解除' : 'ウェブ全画面'"
+          :aria-pressed="webZenmen"
+          @click="webZenmen = !webZenmen"
+        >
+          {{ webZenmen ? "全画面解除" : "ウェブ全画面" }}
+        </button>
+      </div>
+      <div v-if="current" class="player-wrap">
+        <EnmokuPlayer
+          ref="playerRef"
+          :key="current.url"
+          :url="current.url"
+          :type="current.type"
+          @shinkou="shinkou.onLocalShinkou"
+          @ready="shinkou.catchUp"
+        />
+        <DanmakuOverlay />
+      </div>
       <div v-else class="placeholder">
         <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
         <button type="button" @click="playManual">再生</button>
@@ -102,7 +120,16 @@ onBeforeUnmount(() => {
         </ul>
       </section>
     </main>
-    <ChatPanel @oshaberi="oshaberi" />
+    <button
+      type="button"
+      class="chat-toggle"
+      :aria-label="chatHiraku ? '聊天室を畳む' : '聊天室を開く'"
+      :aria-expanded="chatHiraku"
+      @click="chatHiraku = !chatHiraku"
+    >
+      {{ chatHiraku ? "›" : "‹" }}
+    </button>
+    <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" />
   </div>
 </template>
 
@@ -115,6 +142,15 @@ onBeforeUnmount(() => {
   flex: 1;
   padding: 12px;
 }
+.bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+/* player + overlay share one positioned wrapper so the overlay covers the player */
+.player-wrap {
+  position: relative;
+}
 .placeholder {
   aspect-ratio: 16 / 9;
   display: flex;
@@ -123,5 +159,35 @@ onBeforeUnmount(() => {
   gap: 8px;
   background: #111;
   color: #fff;
+}
+/* collapse arrow sits between stage and chat; always reachable */
+.chat-toggle {
+  align-self: center;
+  width: 20px;
+  padding: 12px 0;
+  border: 1px solid #ddd;
+  border-right: none;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+/* ウェブ全画面: layout-level full viewport that KEEPS the chat docked right
+   (synctv-web lacks this). ArtPlayer auto-fits the resized container. */
+.bushitsu.web-zenmen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #000;
+}
+.bushitsu.web-zenmen .stage {
+  display: flex;
+  flex-direction: column;
+}
+.bushitsu.web-zenmen .player-wrap {
+  flex: 1;
+  min-height: 0;
+}
+.bushitsu.web-zenmen .bangumi {
+  display: none;
 }
 </style>

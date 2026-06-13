@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "弹幕/overlay 包成单组件独占生命周期(onMounted创建/onUnmounted销毁timer)，模板声明式、分支进computed；DanmakuOverlay 命名见示例"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "overlay开关/折叠/网页全屏态为纯视图 local ref 不进 store；store.chat 为 server truth 只读"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "components/danmaku、chat 分域落点；逻辑可进 composables 不进 .vue"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "契约类型从 kousoku import、禁 any/as"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端禁用模式 + ./dx 容器内 typecheck/lint/build"}

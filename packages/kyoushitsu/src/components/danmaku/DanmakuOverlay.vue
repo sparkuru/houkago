@@ -1,0 +1,162 @@
+<script setup lang="ts">
+import { useBushitsuStore } from "@/stores/bushitsu"
+import { onUnmounted, ref, watch } from "vue"
+
+// 弹幕姬 lite: faint chat bubbles overlaid on the player corner. This is the P0
+// realtime-chat danmaku — a self-owned Vue/CSS overlay, NOT a canvas flying-danmaku
+// engine (design §7/§8 deferred). Bubble lifecycle (appear → ~5s → fade/remove)
+// lives here as local view state; it never touches the store (state-management).
+const bushitsu = useBushitsuStore()
+
+// 表示中の気泡: each visible bubble carries its own id + removal timer so we can
+// clear them all on unmount.
+type Bubble = { id: number; senderId: string; content: string }
+
+const MAX_BUBBLES = 5 // 最近約 N 条
+const LIFETIME_MS = 5000 // 約 5s で自動淡出
+const FADE_MS = 600 // fade-out transition window before removal
+
+// open/close is pure UI state, kept as a local ref (state-management).
+const hyouji = ref(true) // 表示: overlay shown?
+
+const bubbles = ref<Bubble[]>([])
+const fading = ref<Set<number>>(new Set())
+const timers = new Map<number, ReturnType<typeof setTimeout>>()
+let seq = 0
+
+function scheduleRemoval(id: number): void {
+  const fadeTimer = setTimeout(() => {
+    fading.value.add(id)
+    fading.value = new Set(fading.value)
+    const dropTimer = setTimeout(() => removeBubble(id), FADE_MS)
+    timers.set(id, dropTimer)
+  }, LIFETIME_MS)
+  timers.set(id, fadeTimer)
+}
+
+function removeBubble(id: number): void {
+  bubbles.value = bubbles.value.filter((b) => b.id !== id)
+  if (fading.value.has(id)) {
+    fading.value.delete(id)
+    fading.value = new Set(fading.value)
+  }
+  const t = timers.get(id)
+  if (t) {
+    clearTimeout(t)
+    timers.delete(id)
+  }
+}
+
+function pushBubble(senderId: string, content: string): void {
+  const id = ++seq
+  bubbles.value = [...bubbles.value, { id, senderId, content }].slice(-MAX_BUBBLES)
+  scheduleRemoval(id)
+}
+
+// New chat lines surface as bubbles. store.chat is server truth (read-only); we
+// react to its growth, not mutate it.
+watch(
+  () => bushitsu.chat.length,
+  (len, prev) => {
+    if (!hyouji.value) return
+    for (let i = prev ?? 0; i < len; i++) {
+      const line = bushitsu.chat[i]
+      if (line) pushBubble(line.senderId, line.content)
+    }
+  },
+)
+
+function toggle(): void {
+  hyouji.value = !hyouji.value
+  if (!hyouji.value) clearAll()
+}
+
+function clearAll(): void {
+  for (const t of timers.values()) clearTimeout(t)
+  timers.clear()
+  bubbles.value = []
+  fading.value = new Set()
+}
+
+onUnmounted(clearAll)
+</script>
+
+<template>
+  <div class="danmaku-overlay">
+    <button
+      type="button"
+      class="danmaku-toggle"
+      :aria-label="hyouji ? '聊天气泡を隠す' : '聊天气泡を表示'"
+      :aria-pressed="hyouji"
+      @click="toggle"
+    >
+      {{ hyouji ? "弾幕 ON" : "弾幕 OFF" }}
+    </button>
+    <ul v-if="hyouji" class="danmaku-track">
+      <li
+        v-for="b in bubbles"
+        :key="b.id"
+        class="danmaku-bubble"
+        :class="{ fading: fading.has(b.id) }"
+      >
+        <span class="sender">{{ b.senderId }}</span>
+        <span class="sep"> · </span>
+        <span class="content">{{ b.content }}</span>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<style scoped>
+/* pointer-events: none so bubbles never steal player clicks; the toggle re-enables
+   itself (accessibility: a real keyboard-reachable button). */
+.danmaku-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.danmaku-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  pointer-events: auto;
+  font-size: 11px;
+  padding: 2px 8px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.danmaku-track {
+  position: absolute;
+  left: 12px;
+  bottom: 56px; /* sit above the player control bar */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 60%;
+}
+.danmaku-bubble {
+  /* 很淡: low-key, semi-transparent, small — must not 喧宾夺主 */
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.28);
+  padding: 2px 8px;
+  border-radius: 10px;
+  opacity: 0.7;
+  transition: opacity 0.6s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.danmaku-bubble.fading {
+  opacity: 0;
+}
+.sender {
+  color: rgba(255, 255, 255, 0.6);
+}
+</style>
