@@ -65,7 +65,7 @@
 
 **houkago-kyoushitsu（教室 / 前端）**
 - 播放器：ArtPlayer + hls.js/dash.js（字幕轨、HLS 多音轨切换）
-- 弹幕：artplayer-plugin-danmuku（实时聊天弹幕 + 预载文件弹幕）
+- 弹幕：`weizhenye/Danmaku`（MIT, canvas 引擎，实时聊天弹幕 + 预载文件弹幕，统一时间轴渲染）
 - 聊天室 UI（B 站直播风：右侧栏 + 视频上弹幕叠加）
 - 部室 UI：建/进房、部员列表、番組表、房主控制条
 - 浏览/搜索 UI：调 eisha
@@ -149,7 +149,7 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 ### 7. 弹幕管线（需求 3，三源优先级合流）
 
 前端弹幕轨道合并三条流：
-1. **实时聊天弹幕**：WS `OSHABERI`/`DANMAKU` → 实时 push 进 ArtPlayer danmuku 插件
+1. **实时聊天弹幕**：WS `OSHABERI`/`DANMAKU` → 实时 push 进 `weizhenye/Danmaku` 引擎
 2. **装载文件弹幕**：用户上传 xml/ass → kokuban 解析 → 时间轴 JSON → 前端预载、按 currentTime 渲染
 3. **抓取弹幕**：kokuban 按标题匹配 → 从 B 站/第三方取 → 时间轴 JSON
 
@@ -160,14 +160,17 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 | 层 | 选型 | 理由 |
 |----|------|------|
 | 前端 | **Vue 3 + Vite** | 与 ArtPlayer 集成示例多；synctv-web 也 Vue，便于参照 |
-| 播放器 | **ArtPlayer + artplayer-plugin-danmuku + hls.js/dash.js** | 弹幕生态最契合；HLS 多音轨/字幕切换齐备 |
-| housou | **Node/TS（Fastify + ws）** | 与前端共享 TS 类型；迭代快 |
+| 播放器 | **ArtPlayer + hls.js/dash.js** | HLS 多音轨/字幕切换齐备 |
+| 弹幕引擎 | **`weizhenye/Danmaku`（MIT, canvas）** | 现成 MIT 引擎，不自研；实时聊天弹幕 + 预载文件弹幕统一走它 |
+| housou | **Bun + Elysia.js**（TypeBox + Eden Treaty） | spike 实测：Bun 原生 WS pub/sub topic 天然适配房间广播；#781 非 WS 全局 publish 已验证可干净实现（详见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`）。备选 Fastify-on-Bun 未触发。|
 | eisha | **Go**（或 Node 起步） | 代理/manifest 重写/并发拉流 Go 更稳；独立进程可后换 |
 | 传输 | WebSocket，JSON（v1）→ protobuf（后期） | |
-| 存储 | SQLite（v1）→ Postgres | 单文件零运维起步 |
-| 工程 | pnpm monorepo | 同仓共享类型 |
+| 存储 | SQLite（v1, `bun:sqlite`）→ Postgres | 单文件零运维起步；Bun 内置 SQLite 驱动 |
+| 工程 | Bun workspaces monorepo | 同仓共享类型 |
 
-> polyglot 取舍：eisha 用 Go 还是 Node。v1 建议先 Node 同栈跑通，代理性能不足再单独换 Go——独立进程，替换不影响其他模块。
+> polyglot 取舍：eisha 用 Go 还是 Node/Bun。v1 建议先 Bun 同栈跑通，代理性能不足再单独换 Go——独立进程，替换不影响其他模块。
+>
+> **后端框架落定（spike 结论）**：housou 用 **Elysia.js on Bun**。6/6 能力探针全过，硬指标 #781（HTTP handler / `setInterval` 等非 WS 上下文全局 `publish` 到房间 topic）实测 PASS——工作模式为 handler 内 `server.publish(topic,msg)`、非请求上下文 `app.server?.publish(topic,msg)`。WS 信封用 TypeBox 校验，契约共享走 Eden Treaty（编译期）。完整实测见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`。
 
 ### 9. 仓库结构
 
@@ -175,7 +178,7 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 houkago/
 ├── packages/
 │   ├── kousoku/      # 校則 · 共享 TS 类型（WS 协议、Enmoku 模型）
-│   ├── housou/       # 放送室 · server：Fastify + ws + sqlite
+│   ├── housou/       # 放送室 · server：Bun + Elysia.js（WS pub/sub）+ bun:sqlite
 │   ├── kyoushitsu/   # 教室 · web：Vue3 + ArtPlayer
 │   ├── eisha/        # 映写室 · 解析器 + 流代理（含 parsers/ 插件目录）
 │   └── kokuban/      # 黒板 · 弹幕聚合（v1 可并入 eisha 部署）
@@ -302,7 +305,7 @@ EchoSuppressing    → tsuijuuChuu        追従中
 ## 第三部分 · 参考实现索引（archive/refer，仅本地，不进版本库）
 
 > `synctv`=AGPL（**只读设计，禁止拷代码**）；`synctv-web`=Apache（**可借鉴，保留署名**）。
-> 选型已被 synctv-web 印证：`artplayer@5 + artplayer-plugin-danmuku@5 + hls.js + dashjs`。
+> 选型部分已被 synctv-web 印证：`artplayer@5 + hls.js + dashjs`。弹幕本项目改用 MIT 的 `weizhenye/Danmaku`（不沿用 synctv-web 的 artplayer-plugin-danmuku）。
 
 | 本文设计节 | 参考文件（archive/refer/…） | 看什么 |
 |-----------|----------------------------|--------|
