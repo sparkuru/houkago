@@ -170,3 +170,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: P0纵切3：聊天气泡 overlay + 网页全屏保留侧栏
+
+**Date**: 2026-06-14
+**Task**: P0纵切3：聊天气泡 overlay + 网页全屏保留侧栏
+**Branch**: `k-on`
+
+### Summary
+
+补 design §10 P0 聊天弹幕前端（B站直播风）。A: DanmakuOverlay.vue 弹幕姬 lite——读 store.chat 最近~5 条播放器左下角淡气泡，新增浮现~5s 淡出，fade/drop timer 登记 Map、onUnmounted+关闭全清，开关按钮，容器 pointer-events:none 不拦播放器。B: BushitsuView 网页全屏 webZenmen(纯 CSS class、fixed 占满、ChatPanel 仍 docked 右侧、无 JS 监听、退出复原) + 聊天折叠 chatHiraku 箭头，视图态本地 ref 不进 store。用户细化需求：弹幕姬式淡气泡而非飞屏弹幕、网页全屏保留聊天(synctv-web 缺)。决策：P0 不引入 canvas 弹幕引擎，纯 Vue/CSS overlay，weizhenye/Danmaku 推迟到样式化/文件弹幕切片，design §7 回填。trellis-check 3 文件过、修 1 死 class。容器内 typecheck/lint/build 绿、kyoushitsu test 5 pass 不回归。Out:飞屏 canvas 弹幕/样式化 DANMAKU/文件弹幕(P1)/抓取(P2)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ad14417` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
