@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查 emit 上传 control、职责、模板薄、布局"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 view 态不进 store"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查事件清理、./dx 全绿、三态不回归"}

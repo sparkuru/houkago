@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "control 状态用 emit 上传(替代脆弱暴露 ref)、art 事件归 EnmokuPlayer、模板薄、:deep/scoped 跨 teleport"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "控制条/折叠为本地 view 态不进 store"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "./dx 闭环、事件清理、禁死代码、布局不回归"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "ArtPlayer control 事件类型、禁 any"}
