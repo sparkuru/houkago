@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 23
-- **Last Active**: 2026-06-14
+- **Total Sessions**: 24
+- **Last Active**: 2026-06-15
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~768 | Active |
+| `journal-1.md` | ~801 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 24 | 2026-06-15 | 隔离 ArtPlayer 挂载点修 Vue insertBefore 崩溃 | `59d0bb8` | `k-on` |
 | 23 | 2026-06-14 | 放权后 guest 控件实时重显(art.controls.show,无需刷新) | `16552eb` | `k-on` |
 | 22 | 2026-06-14 | 共享播放控制(授权 guest 驱动全员)+控播放锁真正生效 | `9d33d39` | `k-on` |
 | 21 | 2026-06-14 | 控播放遮罩改用 pointer-events 真正屏蔽 guest 操作 | `6502747` | `k-on` |

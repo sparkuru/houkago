@@ -766,3 +766,36 @@ kengen 共享控制后用户复测:房主 A 在 guest B 进房后才开'控播�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 24: 隔离 ArtPlayer 挂载点修 Vue insertBefore 崩溃
+
+**Date**: 2026-06-15
+**Task**: 隔离 ArtPlayer 挂载点修 Vue insertBefore 崩溃
+**Branch**: `k-on`
+
+### Summary
+
+权限变更时 Vue patch 报 insertBefore parent=null,致控播放 gating/控件显隐不实时生效需刷新。根因:.enmoku-player 既是 ArtPlayer 挂载容器又直接含 v-if 浮层(control-lock/join-gate),ArtPlayer 重排容器子节点与 Vue block patch 抢同一 DOM,v-if 切换时 comment 锚点 parent 已被 ArtPlayer 弄成 null。修法:ArtPlayer 挂进专属子 div .art-host(Vue 永不 patch 其内部),浮层作为 art-host 兄弟、同为 .enmoku-player 直接子;container ref 下移到 art-host;既有 :deep(.art-bottom/.art-mask/.art-video) 后代选择器跨 art-host 仍命中,letterbox/control-lock 隐藏/弹幕 Teleport 不变。清理 insertBefore repro 探测残留(probe.html/src/probe.ts/vite.probe.config.ts/dist-probe)。./dx typecheck/lint/test(63)/build 全绿;headless 自证页面渲染不空白(停在昵称门为预期,非回归)。崩溃消除+权限实时生效由用户实机双浏览器确认。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `59d0bb8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
