@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "同步逻辑居 useShinkou composable;EnmokuPlayer art 调用/锁定 CSS;:deep 隐藏控制条;模板薄"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "canControl 派生自 store;权威跟随逻辑;view 态边界"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "补/改同步用例;./dx 闭环;禁死代码"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "SHINKOU/canControl 类型,禁 any"}
