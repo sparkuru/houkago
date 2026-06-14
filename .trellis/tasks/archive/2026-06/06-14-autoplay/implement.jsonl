@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 独占 art 命令式调用(muted/play/catch);遮罩属 view,模板薄;静音解除手势"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "静音/遮罩为本地 view 态不进 store;isBuchou 派生区分部員/房主"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "play() rejection 必须 catch 不留 Unhandled;补测试;./dx 闭环;禁死代码"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "ArtPlayer muted/play Promise 类型,禁 any"}
