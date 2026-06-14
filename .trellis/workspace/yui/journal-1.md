@@ -634,3 +634,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 20: guest 权限 epic 阶段1:两层角色+房主权限开关(控播放/发言/选源)+UI gating
+
+**Date**: 2026-06-14
+**Task**: guest 权限 epic 阶段1:两层角色+房主权限开关(控播放/发言/选源)+UI gating
+**Branch**: `k-on`
+
+### Summary
+
+synctv 式 guest 权限 epic 阶段1。决策(用户选):两层角色(部長/ゲスト,不引入个体提升部員)+房间级权限开关(对所有 guest 生效),MVP 含控播放/发言/选源三项+无权限时控件隐藏或遮罩(UI gating);入房控制(开放/审批/关闭+join 门控+审批+等待 UI)是另一套机制,拆为阶段2单列(本任务不做)。现状:YakuwariSchema(buchou/buin/kengaku)定义未用、运行时只 senderId===buchouId、SHINKOU/JOUEI 硬 host-only、聊天人人可发。实现:协议 kousoku SHUSSEKI members 加 yakuwari、新增 KengenSchema/KENGEN(S→C 权限快照 {playback,chat,playlist})/SETTEI(C→S host 设权限);housou lib/kengen.ts canDo(isHost,kengen,action) 纯函数+per-room kengen 内存态(默认 playback:false/chat:true/playlist:false 随 roster 房空清)、members(bushitsuId,buchouId) 标 yakuwari、buchouIdOf 非抛(房不存在退化无 host 不杀连接,修 scaffold ws.test)、handler open 发 KENGEN/SHINKOU 按 playback/JOUEI 按 playlist/OSHABERI-DANMAKU 按 chat 经 canDo 强制越权 throw Forbidden(新 FORBIDDEN/403)→KEIHOU 不广播不断连/SETTEI 仅 host(否则 NotBuchou)setKengen+广播;kyoushitsu store roster 含 yakuwari+kengen 态+派生 canControl/canChat/canPlaylist(host 恒 true)+yakuwariOf、lib/kengen.ts 镜像纯函数、KengenPanel(新 host-only 三 toggle→SETTEI)、UI gating(无 canControl 播放器遮罩拦 pointer-events z-index5 低于 join-gate10、无 canChat 聊天隐 input 显閲覧のみ、无 canPlaylist 源入口 v-if 隐)、成员/聊天角色 badge 文字非颜色。双保险前端 gating+服务端强制同源(两 lib/kengen 一致)。类型 kousoku→treaty→kyoushitsu 贯通无 any。trellis-check 13 源+5 测试 0 问题。容器内./dx typecheck/lint/build 绿,housou 36+kyoushitsu 56 pass(新增 kengen/kengen.e2e/store yakuwari)。已知设计边界(非本任务,记录):授权 guest 控播放后房主端 handleRemote isBuchou 早退不跟随 guest SHINKOU(房主恒权威),但服务端记权威态、他人/迟到者仍跟随,'房主跟随 guest'非验收项。Out:入房控制(阶段2)、三层角色/个体提升部員、账号鉴权、权限 DB 持久、踢人。双端实跑由用户确认。剩余 backlog:guest 权限 epic 阶段2 入房控制(开放/审批/关闭)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `769ae3b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
