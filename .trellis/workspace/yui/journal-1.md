@@ -369,3 +369,37 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: 部員自动跟随改用点击加入遮罩(撤销静音方案,方案二)
+
+**Date**: 2026-06-14
+**Task**: 部員自动跟随改用点击加入遮罩(撤销静音方案,方案二)
+**Branch**: `k-on`
+
+### Summary
+
+上一版静音自动播(cceb693)实测:B 按提示解除静音后画面糊、同步不丝滑(静音起播 HLS 低码率+解除瞬间与 zure 校正打架),用户要求回到提策略前状态改用方案二。先 git revert(ba733e1)撤销静音方案(删 autoplay.ts/test,恢复 EnmokuPlayer/BushitsuView)。再实现方案二「点击加入观看遮罩+一次点击干净追平」:部員(非isBuchou)进房保持暂停叠『▶点击加入观看』遮罩(真 button,aria/键盘可达,z-index 盖画面露底部 native 控件),房主无遮罩零变化;点击遮罩在 click 同步调用栈内先 safePlay()(带声手势有效)再 emit('join'),父级 onJoin 置 joined=true+shinkou.catchUp()(seek 房主投影位置+跟随),一次点击即带声播放并立即追平;safePlay() 统一 apply/alignTransport/onJoin 三处 play,Promise.resolve(art.play()).catch() 静默吞 rejection(加入前 heartbeat/SHINKOU play 被拒不抛 Unhandled 不黑屏),无静音重试无 muted 残留;join-gate.ts 抽 showJoinGate(isBuchou,joined) 纯逻辑;joined/遮罩本地 view 态不进 store,catchUp 仍走 useShinkou 未在.vue 重写。Decision:免点击只能静音但实测画质/同步劣化,改选保留声音一次点击。trellis-check 4 文件 0 问题。容器内./dx typecheck/lint/build 绿、kyoushitsu 20 pass(新增 join-gate 3 例)。期间另修:dev-server 之前停了致 出席0/不播——非代码问题,用 nohup ./dx 后台重启(日志/tmp/houkago-dev.log)。Out:免点击自动播(舍弃)、音量持久化、原生全屏交互、断线重连。双端实跑由用户确认。剩余 backlog:昵称显示、全屏 UI 调优、房间控制权限。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ba733e1` | (see git log) |
+| `c51ccab` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
