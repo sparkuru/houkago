@@ -104,8 +104,22 @@ function oshaberi(content: string) {
   })
 }
 
-onMounted(async () => {
-  bushitsu.bushitsuId = bushitsuId
+// 昵称 gate: a direct-link / refresh / 隐私窗口 visitor has no persisted nickname,
+// so connecting would fall back to the raw senderId (uuid) server-side. Gate the
+// WS connect behind an inline name form (pure view 態, not store). The 部員
+// join-gate (autoplay 遮罩) is a separate, later layer; this name gate runs first.
+const nameGate = ref(false)
+const nameInput = ref("ゲスト")
+
+function submitName() {
+  bushitsu.setNickname(nameInput.value.trim() || "ゲスト")
+  nameGate.value = false
+  startSession()
+}
+
+// Connect + post-connect bootstrap (buchouId / OIKAKE / 番組表 / 上映中 watch).
+// Held until a nickname exists so connect always carries a real name.
+async function startSession() {
   const base = housouUrl()
   client = new KousokuClient(base, (msg) => {
     bushitsu.apply(msg) // keep the store the single source of truth first
@@ -131,6 +145,15 @@ onMounted(async () => {
   // Watching it gives host + 部員 + late joiners one resolve→play path.
   // immediate covers the case where GENJOU已 set enmokuId before this mounts.
   watch(() => bushitsu.enmokuId, applyEnmokuId, { immediate: true })
+}
+
+onMounted(() => {
+  bushitsu.bushitsuId = bushitsuId
+  if (bushitsu.nickname) {
+    startSession()
+  } else {
+    nameGate.value = true
+  }
 })
 
 onBeforeUnmount(() => {
@@ -140,6 +163,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="bushitsu" :class="{ 'web-zenmen': webZenmen }">
+    <div v-if="nameGate" class="name-gate">
+      <form class="name-form" @submit.prevent="submitName">
+        <label>
+          ニックネーム
+          <input v-model="nameInput" aria-label="ニックネーム" placeholder="ゲスト" />
+        </label>
+        <button type="submit">入部</button>
+      </form>
+    </div>
     <main class="stage">
       <div class="bar">
         <button
@@ -255,5 +287,23 @@ onBeforeUnmount(() => {
 }
 .bushitsu.web-zenmen .bangumi {
   display: none;
+}
+/* 昵称 gate: connect-time overlay, sits above the whole room until a name exists. */
+.name-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
 }
 </style>

@@ -1,4 +1,5 @@
 import { buinId } from "@/lib/identity"
+import { loadNickname, saveNickname } from "@/lib/nickname"
 import type { KousokuMessage, Shinkou } from "houkago-kousoku"
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
@@ -11,7 +12,7 @@ type ChatLine = { senderId: string; content: string; ts: number }
 
 export const useBushitsuStore = defineStore("bushitsu", () => {
   const bushitsuId = ref<string | null>(null)
-  const nickname = ref("")
+  const nickname = ref(loadNickname()) // persisted, so reload/direct-link keeps the name
   const senderId = ref(buinId()) // stable identity = WS senderId (design §5)
   const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
@@ -61,6 +62,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     }
   }
 
+  // ニックネーム設定: set + persist together so every entry point stays in sync.
+  function setNickname(name: string): void {
+    nickname.value = name
+    saveNickname(name)
+  }
+
   // 名前解決: map a senderId to its nickname for display; fall back to the raw
   // senderId when the roster lacks it (no error, design: graceful degrade).
   function nicknameOf(id: string): string {
@@ -80,6 +87,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     shinkou,
     shinkouServerTime,
     apply,
+    setNickname,
     nicknameOf,
   }
 })

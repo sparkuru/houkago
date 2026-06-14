@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { housou } from "@/api"
 import { buinId } from "@/lib/identity"
+import { normalizeRoomId } from "@/lib/room-id"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
@@ -15,7 +16,7 @@ const newRoomName = ref("")
 const error = ref("")
 
 function enter(bushitsuId: string) {
-  bushitsu.nickname = nickname.value
+  bushitsu.setNickname(nickname.value) // persist so reload/direct-link keeps the name
   bushitsu.bushitsuId = bushitsuId
   router.push({ name: "bushitsu", params: { id: bushitsuId } })
 }
@@ -40,7 +41,10 @@ async function create() {
 function join() {
   error.value = ""
   if (!nickname.value || !roomId.value) return
-  enter(roomId.value)
+  // 净化: a pasted URL/path ("bushitsu/<uuid>") must not become the room id.
+  const id = normalizeRoomId(roomId.value)
+  if (!id) return
+  enter(id)
 }
 </script>
 
