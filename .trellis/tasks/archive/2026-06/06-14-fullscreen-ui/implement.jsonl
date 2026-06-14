@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 感知控制条经 prop 下传;ChatPanel emit 折叠;DanmakuOverlay/BushitsuView 职责;模板薄"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "控制条可见/折叠为本地 view 态不进 store"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "./dx 闭环;禁死代码;ArtPlayer 事件生命周期清理"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "ArtPlayer control 事件类型/局部窄接口,禁 any"}
