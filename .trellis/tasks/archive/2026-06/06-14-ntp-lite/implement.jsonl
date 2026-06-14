@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "useShinkou 投影/offset 估计为同步逻辑居 composable 非 .vue;EnmokuPlayer 不涉"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "offset 为 sync 基础设施态;client onMessage 写入口;不破坏 store server-truth"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "offset 估计/投影抽纯函数补测;./dx 闭环;禁死代码"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "offset 估计/投影类型,禁 any"}
