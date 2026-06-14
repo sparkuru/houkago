@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查 watch+art API 重显、art 调用归属、不回归 hover/control emit"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查 ./dx 全绿、guard、无死代码"}
