@@ -16,7 +16,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const senderId = ref(buinId()) // stable identity = WS senderId (design §5)
   const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
-  const roster = ref<Record<string, string>>({}) // 名簿: senderId→nickname, rebuilt from SHUSSEKI
+  const roster = ref<Record<string, string>>({}) // 名簿: senderId→nickname, accumulated from SHUSSEKI
   const enmokuId = ref<string | null>(null) // 上映中
   const chat = ref<ChatLine[]>([])
 
@@ -35,12 +35,16 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
         break
       case "SHUSSEKI": {
-        // SHUSSEKI is the full presence snapshot: count + roster名簿. Rebuild the
-        // roster from members so departures drop out and the count stays consistent.
+        // SHUSSEKI carries the live count + present members. The count (出席数)
+        // tracks presence exactly. The roster名簿 (display-name lookup), however,
+        // is MERGED — never rebuilt — so a departed member's nickname is retained
+        // for their historical chat/danmaku lines (otherwise nicknameOf falls back
+        // to the raw uuid). Accumulating display names is harmless; only presence
+        // counting needs to reflect departures.
         shusseki.value = msg.payload.n
-        const next: Record<string, string> = {}
-        for (const m of msg.payload.members) next[m.id] = m.nickname
-        roster.value = next
+        const merged = { ...roster.value }
+        for (const m of msg.payload.members) merged[m.id] = m.nickname
+        roster.value = merged
         break
       }
       case "JOUEI":

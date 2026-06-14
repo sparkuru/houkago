@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { canSeekTo } from "@/lib/seekable"
 import Artplayer from "artplayer"
 import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
@@ -28,7 +29,32 @@ const container = ref<HTMLDivElement | null>(null)
 const playerEl = ref<HTMLElement | null>(null)
 let art: Artplayer | null = null
 
+// 中途加入の追平 seek が早すぎて落ちる問題への対策（prd Bug2）: hls.js がまだ
+// メディアを読み込み切っておらず seek 不可（readyState 低 / video.seekable 空）の
+// うちに art.seek = t を発行しても 0 に戻り、追平しない。要求された seek 先を
+// pendingSeek に控え、メディアが seek 可能になった loadedmetadata/canplay で flush する。
+// 通常（既に seek 可能）は即時 seek し pendingSeek は使わない。
+let pendingSeek: number | null = null
+
 type ArtTemplate = { $player: HTMLElement }
+
+// art.video（HTMLVideoElement）への型安全な参照。ArtPlayer 型不全のため局部で収窄。
+function videoEl(): HTMLVideoElement | null {
+  return (art as unknown as { video?: HTMLVideoElement }).video ?? null
+}
+
+// 追平 seek を発行：今 seek 可能ならそのまま、まだならメディア準備完了後に
+// flush するため pendingSeek に控える。seek 可否判定は純関数 canSeekTo に委譲。
+function seekTo(target: number): void {
+  if (!art) return
+  const v = videoEl()
+  if (v && canSeekTo(target, v.readyState, v.duration)) {
+    art.seek = target
+    pendingSeek = null
+    return
+  }
+  pendingSeek = target
+}
 
 function playM3u8(video: HTMLVideoElement, url: string, artInstance: Artplayer) {
   if (Hls.isSupported()) {
@@ -62,7 +88,7 @@ function snapshot(): Shinkou {
 // place that mutates the ArtPlayer instance from outside its own events.
 function apply(s: Shinkou): void {
   if (!art) return
-  if (Math.abs(art.currentTime - s.currentTime) > SEEK_EPSILON) art.seek = s.currentTime
+  if (Math.abs(art.currentTime - s.currentTime) > SEEK_EPSILON) seekTo(s.currentTime)
   art.playbackRate = s.playbackRate
   if (s.isPlaying && !art.playing) safePlay()
   else if (!s.isPlaying && art.playing) art.pause()
@@ -119,6 +145,16 @@ onMounted(() => {
   art.on("seek", onChange)
   art.on("video:ratechange", onChange)
   art.on("ready", () => emit("ready"))
+
+  // 追平 seek の取りこぼし回収（prd Bug2）: catchUp/heartbeat が seek 可能になる前に
+  // 控えた pendingSeek を、メディアが seek 可能になった時点で一度だけ flush する。
+  // これにより中途加入は遮罩クリック後に房主の現在位置へ自動追平し、A の手動 toggle
+  // に依存しない。flush 後 pendingSeek は seekTo 内で null に戻る。
+  const flushPending = () => {
+    if (pendingSeek !== null) seekTo(pendingSeek)
+  }
+  art.on("video:loadedmetadata", flushPending)
+  art.on("video:canplay", flushPending)
 })
 
 onBeforeUnmount(() => {
