@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "roster 合并语义、store 为 server-truth 写入口、shusseki 计数不回归"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 独占 art seek/play、catch-up 时机、模板薄"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "心跳 publish 投递、tenko 生命周期、临时日志用后即删"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "WS 广播/serverMsg 构造、心跳投递边界"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "补测试、./dx 闭环、禁死代码/调试残留"}

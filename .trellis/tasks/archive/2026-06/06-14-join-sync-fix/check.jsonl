@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 roster 合并不丢名、计数不回归、写入口"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查心跳投递修复、无临时日志残留、tenko 不泄漏"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查 catch-up seek 时机、art 调用归属、不回归"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查测试覆盖、./dx 全绿、无调试残留"}
