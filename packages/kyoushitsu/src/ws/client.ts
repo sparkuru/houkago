@@ -9,6 +9,9 @@ type OnMessage = (msg: KousokuMessage) => void
 
 export class KousokuClient {
   private ws: WebSocket | null = null
+  // CONNECTING(0)→OPEN(1) 窓だけを埋める送信バッファ。open で FIFO flush。
+  // 跨重連の持久化はしない（prd: Out of Scope）。
+  private sendQueue: string[] = []
 
   constructor(
     private readonly baseUrl: string,
@@ -27,16 +30,39 @@ export class KousokuClient {
       const msg = JSON.parse(ev.data) as KousokuMessage
       this.onMessage(msg)
     })
+    ws.addEventListener("open", () => {
+      this.flush()
+    })
     this.ws = ws
   }
 
   // 放送：send a client-originated envelope to housou.
+  // OPEN なら即送、CONNECTING ならバッファ、CLOSING/CLOSED/null なら安全に破棄。
+  // CONNECTING 中の send() は DOMException(InvalidStateError) を投げるため必ず分岐する。
   send(msg: KousokuMessage): void {
-    this.ws?.send(JSON.stringify(msg))
+    const ws = this.ws
+    if (!ws) return
+    const data = JSON.stringify(msg)
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(data)
+    } else if (ws.readyState === WebSocket.CONNECTING) {
+      this.sendQueue.push(data)
+    }
+  }
+
+  private flush(): void {
+    const ws = this.ws
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+    const queued = this.sendQueue
+    this.sendQueue = []
+    for (const data of queued) {
+      ws.send(data)
+    }
   }
 
   close(): void {
     this.ws?.close()
     this.ws = null
+    this.sendQueue = []
   }
 }
