@@ -13,10 +13,13 @@ import { onBeforeUnmount, onMounted, ref } from "vue"
 // 再生にユーザー操作が要る。親が `!isBuchou && !joined` を渡し、true の間だけ
 // 「クリックして参加」遮罩を表示する。
 // controlLocked: a guest without 再生制御 permission. The parent passes
-// `!canControl`; while true a transparent mask intercepts pointer events over the
-// player so the guest cannot operate playback. The server also rejects any
-// SHINKOU it would send (双保険), but blocking the UI avoids the dead clicks. The
-// join-gate (audio autoplay) sits above this and is unaffected.
+// `!canControl`; while true the root gets a `.control-locked` class that sets
+// pointer-events:none on ArtPlayer の根 `.art-video-player`, so every player
+// control/video click is blocked (z-index 抬升では内部控件に勝てない — design
+// note). 程序化 art.play()/seek は JS 呼び出しで pointer-events に縛られないため
+// follower 同期は通常通り。.control-lock は純視覚提示に降格 (pointer-events:none)。
+// 弹幕 toggle は pointer-events:auto の子で依然押せ、join-gate は $player の兄弟で
+// 影響を受けない。The server also rejects any SHINKOU (双保険・最終保険).
 const props = defineProps<{
   url: string
   type: Enmoku["type"]
@@ -182,10 +185,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="enmoku-player">
-    <!-- 再生制御の遮罩：guest に 再生制御 権限がない間だけ player 操作を塞ぐ
-         (pointer-events 拦截)。join-gate より下層 (z-index) なので参加クリックは
-         通る。状態は文字併記で色だけに頼らない (accessibility)。 -->
+  <div ref="container" class="enmoku-player" :class="{ 'control-locked': controlLocked }">
+    <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。拦截は CSS で
+         .art-video-player に pointer-events:none を当てて行い、この帯は純視覚
+         (pointer-events:none)。状態は文字併記で色だけに頼らない (accessibility)。 -->
     <div
       v-if="controlLocked"
       class="control-lock"
@@ -223,14 +226,21 @@ onBeforeUnmount(() => {
 .enmoku-player :deep(.art-video) {
   object-fit: contain;
 }
-/* 参加遮罩：画面領域を覆うが native コントロール(下部)は塞がない高さに留める。
-   color のみで状態を伝えないようテキスト+アイコンを併記（accessibility）。 */
-/* 再生制御遮罩：player 全域を覆い pointer を拦截 (guest が操作不可)。native
-   コントロール条も含めて塞ぐ。join-gate より下層 (z-index) で参加は妨げない。 */
+/* 再生制御ロック：ArtPlayer の根 .art-video-player ごと pointer-events を切り、
+   guest の play/pause/seek/進度条/中央ボタン等あらゆる入力を遮断する（z-index で
+   内部控件と争わない — 控件は数十量級）。子の .danmaku-toggle は pointer-events:
+   auto で再有効化されるので押せ、$player の兄弟である join-gate は影響を受けない。
+   程序化 art.play()/seek は JS 呼び出しのため follower 同期は妨げない。 */
+.enmoku-player.control-locked :deep(.art-video-player) {
+  pointer-events: none;
+}
+/* 再生制御提示帯：純視覚（pointer-events:none で拦截はしない）。color のみで
+   状態を伝えないようテキストを併記（accessibility）。 */
 .control-lock {
   position: absolute;
   inset: 0;
   z-index: 5;
+  pointer-events: none;
   display: flex;
   align-items: flex-start;
   justify-content: center;
