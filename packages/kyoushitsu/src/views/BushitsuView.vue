@@ -7,6 +7,7 @@ import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { housouUrl } from "@/lib/housou-url"
+import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
 import type { Enmoku } from "houkago-kousoku"
@@ -31,12 +32,24 @@ const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 const webZenmen = ref(false)
 const chatHiraku = ref(true)
 
+// 参加済みか（follower の autoplay ゲート用, pure view 態 → store 不要）。
+// 部長は遮罩自体が出ないので影響しない。
+const joined = ref(false)
+
 let client: KousokuClient | null = null
 
 // 進行制御: routes player events → SHINKOU (host) and remote SHINKOU/GENJOU →
 // player (部員). The controller gates by role + 追従中; this view just connects.
 const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
 const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
+
+// 参加ボタン押下：joined を立てて遮罩を消し、同じ同期スタック内で catchUp。
+// EnmokuPlayer 側が先に音付き play() を済ませてあるので、ここは房主の現在位置へ
+// seek + 追従させるだけ（手势保留のため非同期を挟まない）。
+function onJoin() {
+  joined.value = true
+  shinkou.catchUp()
+}
 
 // ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
@@ -144,8 +157,10 @@ onBeforeUnmount(() => {
           :key="current.url"
           :url="current.url"
           :type="current.type"
+          :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
           @shinkou="shinkou.onLocalShinkou"
           @ready="shinkou.catchUp"
+          @join="onJoin"
         />
         <DanmakuOverlay :target="playerEl" />
       </div>

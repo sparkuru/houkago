@@ -8,11 +8,15 @@ import { onBeforeUnmount, onMounted, ref } from "vue"
 // owns its lifecycle (create onMounted, destroy onUnmounted), per
 // component-guidelines. All art.seek/play/pause calls stay here; sync decisions
 // live in composables/useShinkou.ts.
-const props = defineProps<{ url: string; type: Enmoku["type"] }>()
+// showJoinGate: follower がまだ未参加のとき、ブラウザの autoplay 制約で音付き
+// 再生にユーザー操作が要る。親が `!isBuchou && !joined` を渡し、true の間だけ
+// 「クリックして参加」遮罩を表示する。
+const props = defineProps<{ url: string; type: Enmoku["type"]; showJoinGate?: boolean }>()
 
 // Local playback changes (host drives → useShinkou broadcasts); `ready` lets the
-// parent run catch-up once the instance exists.
-const emit = defineEmits<{ shinkou: [Shinkou]; ready: [] }>()
+// parent run catch-up once the instance exists. `join`：部員 pressed the gate —
+// the parent flips joined + catchUp in the same gesture stack.
+const emit = defineEmits<{ shinkou: [Shinkou]; ready: []; join: [] }>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
 // loop (design §5 ≤0.3s ignore tier).
@@ -37,6 +41,15 @@ function playM3u8(video: HTMLVideoElement, url: string, artInstance: Artplayer) 
   }
 }
 
+// 唯一の art.play() 経路：autoplay ポリシーで未参加 follower の play() は拒否
+// (NotAllowedError) されるのが想定動作。rejection を静かに握りつぶし、Unhandled
+// にも黒画面にもしない。muted リトライはしない（音質/同期劣化のため revert 済み）。
+function safePlay(): void {
+  if (!art) return
+  // art.play() の戻りは Promise（rejection あり）— catch して握りつぶす。
+  Promise.resolve(art.play()).catch(() => {})
+}
+
 function snapshot(): Shinkou {
   return {
     isPlaying: art ? art.playing : false,
@@ -51,7 +64,7 @@ function apply(s: Shinkou): void {
   if (!art) return
   if (Math.abs(art.currentTime - s.currentTime) > SEEK_EPSILON) art.seek = s.currentTime
   art.playbackRate = s.playbackRate
-  if (s.isPlaying && !art.playing) art.play()
+  if (s.isPlaying && !art.playing) safePlay()
   else if (!s.isPlaying && art.playing) art.pause()
 }
 
@@ -60,7 +73,7 @@ function apply(s: Shinkou): void {
 function alignTransport(s: Shinkou): void {
   if (!art) return
   art.playbackRate = s.playbackRate
-  if (s.isPlaying && !art.playing) art.play()
+  if (s.isPlaying && !art.playing) safePlay()
   else if (!s.isPlaying && art.playing) art.pause()
 }
 
@@ -68,6 +81,15 @@ function alignTransport(s: Shinkou): void {
 // The authority rate is restored by useShinkou on the next ignore-tier tick.
 function setRate(rate: number): void {
   if (art) art.playbackRate = rate
+}
+
+// 参加ボタン押下：このクリックは同期イベント処理器内なのでユーザー操作が有効。
+// ここで音付き play() を即発火（手势保留）し、親へ join を通知 → 親が catchUp で
+// 房主の現在位置へ seek + 追従。apply 側は art.playing 済みなら play() を再発火
+// しないので二重再生にはならない。手势確保のため emit より先に play する。
+function onJoin(): void {
+  safePlay()
+  emit("join")
 }
 
 defineExpose({ apply, alignTransport, setRate, snapshot, playerEl })
@@ -107,15 +129,42 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="enmoku-player" />
+  <div ref="container" class="enmoku-player">
+    <button
+      v-if="showJoinGate"
+      type="button"
+      class="join-gate"
+      aria-label="クリックして参加（再生に音声付きで合流）"
+      @click="onJoin"
+    >
+      ▶ クリックして参加
+    </button>
+  </div>
 </template>
 
 <style scoped>
 /* 宽高比由父级 .player-wrap 决定（普通=16:9，网页全屏=填满左列）；
    播放器只负责填满父容器，ArtPlayer 内部 object-fit contain 做 letterbox */
 .enmoku-player {
+  position: relative;
   width: 100%;
   height: 100%;
   background: #000;
+}
+/* 参加遮罩：画面領域を覆うが native コントロール(下部)は塞がない高さに留める。
+   color のみで状態を伝えないようテキスト+アイコンを併記（accessibility）。 */
+.join-gate {
+  position: absolute;
+  inset: 0 0 60px 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
 }
 </style>
