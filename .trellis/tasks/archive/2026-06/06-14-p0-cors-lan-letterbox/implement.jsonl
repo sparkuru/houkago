@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "player/overlay 组件结构、scoped 样式与 :deep 触达子组件、模板薄"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "前端禁用模式 + ./dx typecheck/lint/build；禁注释噪声/死代码"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "移除调试日志；不记录用户消息内容（logging 边界）"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "全屏/折叠/overlay 态为本地视图态，不进 store（修复不破坏此约束）"}
