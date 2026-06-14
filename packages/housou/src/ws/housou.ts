@@ -16,28 +16,41 @@ export function serverMsg<T extends KousokuMessage>(
   return { type, ts: Date.now(), senderId: "server", payload } as T
 }
 
-// 出席（shusseki）: per-room presence count, maintained on WS open/close.
-const presence = new Map<string, number>()
+// 出席（shusseki）: per-room presence, maintained on WS open/close. The roster
+// (名簿) maps senderId→nickname so SHUSSEKI can carry a full member snapshot; the
+// count is the roster size. Both share the WS open/close lifecycle (in-memory).
+const roster = new Map<string, Map<string, string>>()
 
-export function nyuubu(bushitsuId: string): number {
-  const n = (presence.get(bushitsuId) ?? 0) + 1
-  presence.set(bushitsuId, n)
-  return n
+export type Member = { id: string; nickname: string }
+
+export function join(bushitsuId: string, senderId: string, nickname: string): void {
+  let room = roster.get(bushitsuId)
+  if (!room) {
+    room = new Map<string, string>()
+    roster.set(bushitsuId, room)
+  }
+  room.set(senderId, nickname)
 }
 
-export function taibu(bushitsuId: string): number {
-  const n = Math.max(0, (presence.get(bushitsuId) ?? 0) - 1)
-  if (n === 0) presence.delete(bushitsuId)
-  else presence.set(bushitsuId, n)
-  return n
+export function leave(bushitsuId: string, senderId: string): void {
+  const room = roster.get(bushitsuId)
+  if (!room) return
+  room.delete(senderId)
+  if (room.size === 0) roster.delete(bushitsuId)
+}
+
+export function members(bushitsuId: string): Member[] {
+  const room = roster.get(bushitsuId)
+  if (!room) return []
+  return [...room].map(([id, nickname]) => ({ id, nickname }))
 }
 
 export function shusseki(bushitsuId: string): number {
-  return presence.get(bushitsuId) ?? 0
+  return roster.get(bushitsuId)?.size ?? 0
 }
 
 // 活動中の部室: rooms with at least one connected 部員, for the periodic heartbeat
-// to iterate (tenko). presence is pruned to >0 entries, so map keys suffice.
+// to iterate (tenko). roster is pruned to non-empty rooms, so map keys suffice.
 export function activeRooms(): string[] {
-  return [...presence.keys()]
+  return [...roster.keys()]
 }

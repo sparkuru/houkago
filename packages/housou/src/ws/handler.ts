@@ -1,13 +1,7 @@
 import { Elysia, t } from "elysia"
 import { type KousokuMessage, KousokuMessageSchema } from "houkago-kousoku"
 import { fetchBushitsu } from "../domain/bushitsu"
-import {
-  nyuubu as enterPresence,
-  taibu as leavePresence,
-  roomTopic,
-  serverMsg,
-  shusseki,
-} from "./housou"
+import { join, leave, members, roomTopic, serverMsg, shusseki } from "./housou"
 import { shinkouSeigyo } from "./shinkou"
 
 // WS sync hub (design §5). SCAFFOLD STAGE: proves the pub/sub path
@@ -21,6 +15,7 @@ import { shinkouSeigyo } from "./shinkou"
 const ConnectQuery = t.Object({
   bushitsuId: t.String(),
   senderId: t.Optional(t.String()),
+  nickname: t.Optional(t.String()),
 })
 
 type Conn = { bushitsuId: string; senderId: string }
@@ -39,14 +34,21 @@ export const wsRoutes = new Elysia().ws("/ws", {
     return serverMsg("KEIHOU", { message: "invalid envelope" })
   },
   open(ws) {
-    const { bushitsuId, senderId } = ws.data.query
-    conns.set(ws.id, { bushitsuId, senderId: senderId ?? "anon" })
+    const { bushitsuId, senderId, nickname } = ws.data.query
+    const id = senderId ?? "anon"
+    conns.set(ws.id, { bushitsuId, senderId: id })
 
     const topic = roomTopic(bushitsuId)
     ws.subscribe(topic)
-    const n = enterPresence(bushitsuId)
-    ws.publish(topic, serverMsg("SHUSSEKI", { n }))
-    ws.send(serverMsg("SHUSSEKI", { n }))
+    // roster join is atomic with the broadcast: no enter-then-name window.
+    // nickname falls back to senderId so a member always has a label.
+    join(bushitsuId, id, nickname || id)
+    const snapshot = serverMsg("SHUSSEKI", {
+      n: shusseki(bushitsuId),
+      members: members(bushitsuId),
+    })
+    ws.publish(topic, snapshot)
+    ws.send(snapshot)
   },
   message(ws, message) {
     const conn = conns.get(ws.id)
@@ -116,10 +118,10 @@ export const wsRoutes = new Elysia().ws("/ws", {
     const conn = conns.get(ws.id)
     if (!conn) return
     conns.delete(ws.id)
-    const n = leavePresence(conn.bushitsuId)
+    leave(conn.bushitsuId, conn.senderId)
     ws.publish(
       roomTopic(conn.bushitsuId),
-      serverMsg("SHUSSEKI", { n: shusseki(conn.bushitsuId) || n }),
+      serverMsg("SHUSSEKI", { n: shusseki(conn.bushitsuId), members: members(conn.bushitsuId) }),
     )
   },
 })

@@ -18,12 +18,14 @@ export class KousokuClient {
     private readonly onMessage: OnMessage,
   ) {}
 
-  connect(bushitsuId: string, senderId: string): void {
+  connect(bushitsuId: string, senderId: string, nickname?: string): void {
     const url = new URL(this.baseUrl)
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
     url.pathname = "/ws"
     url.searchParams.set("bushitsuId", bushitsuId)
     url.searchParams.set("senderId", senderId)
+    // nickname rides the connect query so housou's open() has it atomically (prd Decision §1).
+    if (nickname) url.searchParams.set("nickname", nickname)
 
     const ws = new WebSocket(url)
     ws.addEventListener("message", (ev) => {

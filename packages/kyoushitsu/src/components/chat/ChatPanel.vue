@@ -22,7 +22,7 @@ function send() {
     <header class="chat-head">出席 {{ bushitsu.shusseki }}</header>
     <ul class="chat-log">
       <li v-for="(line, i) in bushitsu.chat" :key="i">
-        <span class="sender">{{ line.senderId }}</span>: {{ line.content }}
+        <span class="sender">{{ bushitsu.nicknameOf(line.senderId) }}</span>: {{ line.content }}
       </li>
     </ul>
     <form class="chat-input" @submit.prevent="send">

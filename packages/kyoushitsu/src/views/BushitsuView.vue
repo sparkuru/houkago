@@ -111,7 +111,7 @@ onMounted(async () => {
     bushitsu.apply(msg) // keep the store the single source of truth first
     shinkou.handleRemote(msg) // then drive the player by message type
   })
-  client.connect(bushitsuId, bushitsu.senderId)
+  client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
 
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
   const { data: room } = await housou.bushitsu({ id: bushitsuId }).get()

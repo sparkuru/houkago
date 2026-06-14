@@ -105,7 +105,7 @@ onUnmounted(clearAll)
           class="danmaku-bubble"
           :class="{ fading: fading.has(b.id) }"
         >
-          <span class="sender">{{ b.senderId }}</span>
+          <span class="sender">{{ bushitsu.nicknameOf(b.senderId) }}</span>
           <span class="sep"> · </span>
           <span class="content">{{ b.content }}</span>
         </li>

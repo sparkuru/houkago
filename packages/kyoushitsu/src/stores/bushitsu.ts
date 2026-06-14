@@ -15,6 +15,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const senderId = ref(buinId()) // stable identity = WS senderId (design §5)
   const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
+  const roster = ref<Record<string, string>>({}) // 名簿: senderId→nickname, rebuilt from SHUSSEKI
   const enmokuId = ref<string | null>(null) // 上映中
   const chat = ref<ChatLine[]>([])
 
@@ -32,9 +33,15 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
       case "OSHABERI":
         chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
         break
-      case "SHUSSEKI":
+      case "SHUSSEKI": {
+        // SHUSSEKI is the full presence snapshot: count + roster名簿. Rebuild the
+        // roster from members so departures drop out and the count stays consistent.
         shusseki.value = msg.payload.n
+        const next: Record<string, string> = {}
+        for (const m of msg.payload.members) next[m.id] = m.nickname
+        roster.value = next
         break
+      }
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
         break
@@ -54,6 +61,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     }
   }
 
+  // 名前解決: map a senderId to its nickname for display; fall back to the raw
+  // senderId when the roster lacks it (no error, design: graceful degrade).
+  function nicknameOf(id: string): string {
+    return roster.value[id] ?? id
+  }
+
   return {
     bushitsuId,
     nickname,
@@ -61,10 +74,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     buchouId,
     isBuchou,
     shusseki,
+    roster,
     enmokuId,
     chat,
     shinkou,
     shinkouServerTime,
     apply,
+    nicknameOf,
   }
 })

@@ -46,7 +46,14 @@ export const GenjouSchema = envelope(
 )
 export const JoueiSchema = envelope("JOUEI", Type.Object({ enmokuId: Type.String() }))
 export const BangumiSchema = envelope("BANGUMI", Type.Object({ enmoku: Type.Array(EnmokuSchema) }))
-export const ShussekiSchema = envelope("SHUSSEKI", Type.Object({ n: Type.Number() }))
+// 出席（shusseki）: presence full snapshot — count + roster (id→nickname名簿).
+export const ShussekiSchema = envelope(
+  "SHUSSEKI",
+  Type.Object({
+    n: Type.Number(),
+    members: Type.Array(Type.Object({ id: Type.String(), nickname: Type.String() })),
+  }),
+)
 export const KeihouSchema = envelope("KEIHOU", Type.Object({ message: Type.String() }))
 
 // Full discriminated union — single source of truth for the WS protocol.
