@@ -236,3 +236,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: LAN/HTTP 下 crypto.randomUUID 崩溃修复（buinId secure-context fallback）
+
+**Date**: 2026-06-14
+**Task**: LAN/HTTP 下 crypto.randomUUID 崩溃修复（buinId secure-context fallback）
+**Branch**: `k-on`
+
+### Summary
+
+LAN 实跑(9.2 经 http://192.168.9.4:5173 明文 HTTP+非 localhost)整页空白。根因: crypto.randomUUID 受浏览器 secure context 限制,仅 HTTPS/localhost 可用,明文 HTTP+LAN IP 下为 undefined,identity.ts buinId() 抛 TypeError 致 HomeView→pinia store init 链路崩、全站白屏(接 06-14-p0-cors-lan-letterbox LAN 使能链路才暴露;headless 测 localhost 故未抓到)。修法: identity.ts 新增内联 uuidv4()——randomUUID 存在优先用,否则用不受 secure context 限制的 crypto.getRandomValues 拼 RFC-4122 v4(bytes[6]|0x40 置 version=4、bytes[8]|0x80 置 variant=10b,?? 0 处理 noUncheckedIndexedAccess),buinId 改用之,localStorage 持久语义不变。服务端 housou/src/lib/id.ts 跑 Bun 恒安全上下文不动。加 test/identity.test.ts 三例(randomUUID 缺失返回合法 v4/缺失下二次持久一致/存在时不回归),用例间清并恢复全局 crypto 与 localStorage 防污染。trellis-check 0 问题。容器内(./dx 端口被运行中 dev-server 占用,改用等价无端口 docker run)typecheck/lint 全绿、kyoushitsu 8 pass(含新增 3 例)不回归。LAN 白屏消除待用户 9.2 浏览器最终确认。Out: 服务端 id、HTTPS/secure-context 部署方案(自签/反代 TLS,部署期单列)、昵称显示、弹幕引擎。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ddb359a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
