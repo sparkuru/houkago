@@ -10,7 +10,8 @@
 #   ./dx bun --version
 #   ./dx sh -c 'cd packages/housou && bun run dev'
 #
-# 端口: housou 3000、kyoushitsu(vite) 5173 已发布到宿主。
+# 端口: housou 3000、kyoushitsu(vite) 5173 空闲时发布到宿主；已被占用（dev-server
+# 在跑）则自动跳过该端口的 -p，使验证命令仍能在容器里跑通。
 # 容器内服务须监听 0.0.0.0（elysia listen / vite server.host）才能从宿主访问。
 set -euo pipefail
 
@@ -25,12 +26,25 @@ TTY_FLAGS=()
 [ -t 0 ] && TTY_FLAGS+=(-i)
 [ -t 0 ] && [ -t 1 ] && TTY_FLAGS+=(-t)
 
+# 端口发布按需：dev/serve 要把 3000/5173 暴露到宿主，但 typecheck/lint/test/build
+# 这类验证命令不需要端口。某端口已被占用（通常是正在跑的 dev-server）时直接发布会
+# "port is already allocated" 使整个 dx 失败 —— 此时跳过该端口的 -p，让验证命令仍能
+# 在容器里跑通。端口空闲时照常发布，dev 不受影响。
+PORT_FLAGS=()
+for p in 3000 5173; do
+  if (exec 3<>"/dev/tcp/127.0.0.1/${p}") 2>/dev/null; then
+    exec 3>&- 3<&-
+    echo "dx: port ${p} busy — skip publishing (fine for verify; dev needs it free)" >&2
+  else
+    PORT_FLAGS+=(-p "${p}:${p}")
+  fi
+done
+
 exec docker run --rm \
   "${TTY_FLAGS[@]}" \
   --user "$(id -u):$(id -g)" \
   -e HOME=/app/.devhome \
   -v "${REPO_ROOT}:/app" \
   -w /app \
-  -p 3000:3000 \
-  -p 5173:5173 \
+  "${PORT_FLAGS[@]}" \
   "${IMAGE}" "$@"
