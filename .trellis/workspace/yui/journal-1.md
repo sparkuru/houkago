@@ -535,3 +535,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 17: 全屏二修:原生全屏气泡跟随+网页全屏 letterbox(art-video contain)
+
+**Date**: 2026-06-14
+**Task**: 全屏二修:原生全屏气泡跟随+网页全屏 letterbox(art-video contain)
+**Branch**: `k-on`
+
+### Summary
+
+上轮全屏 UI 调优后两个边界 bug。Bug1 原生(浏览器)全屏下弹幕气泡不随控制条显隐移动:根因 controlsShown 经 EnmokuPlayer defineExpose(ref)→BushitsuView computed(()=>playerRef.value?.controlsShown)→prop 的'暴露 ref 经父 computed'链在原生全屏时序不可靠,且 bottom 56/16px 绝对偏移在 4K 全屏下相对控制条过小看不出移动甚至被遮挡。修:EnmokuPlayer 改 emit('control', state:boolean)(art.on('control', s=>emit) 内),删 controlsShown ref/expose;BushitsuView 自有 ref 接 @control=controlsShown= 传 prop(三态确定性响应),watch(current) 切演目复位 true;danmaku-track.ts bottom 常量改 clamp(56px,9vh,140px)(普通尺寸=旧 56 不劣化,大屏按 9vh 抬到控制条上至 140 上限),函数返回 CSS length 字符串,DanmakuOverlay 直接喂 :style,测试同步。Bug2 网页全屏+折叠聊天布局错乱:headless(google-chrome-stable --dump-dom)实证容器布局正确(player-wrap 填满),真根因是 ArtPlayer dist .art-video{position:absolute;inset:0;width/height:100%} 未设 object-fit 默认拉伸满铺——普通模式 wrap 锁 16:9 容器比=映像比故不显,网页全屏 aspect-ratio:auto 容器比偏离 16:9(折叠聊天更宽,畸变更明显,故'展开看似正常折叠错乱')映像被拉伸不 contain。修:EnmokuPlayer :deep(.art-video){object-fit:contain},三态正确 letterbox 居中,普通模式 no-op;.hiraku-handle(12px)实证不挤坏布局无需改。control typed emit 无 any,view 态不进 store,未触碰同步/昵称/join-gate/nameGate/Teleport/catchUp-seek。trellis-check 5 文件 0 问题。容器内./dx typecheck/lint/build 绿,kyoushitsu 43 pass 不回归。Out:NTP-lite 时钟偏移(B 端加速/超前,另任务)、canvas 弹幕、聊天栏宽度、guest 权限 epic。视觉由用户实机确认。剩余 backlog:NTP-lite 跨机时钟偏移(已诊断未做)、guest/权限 epic 片2+3。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cd9c878` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
