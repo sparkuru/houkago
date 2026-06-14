@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "SHUSSEKI schema 扩展 members 类型贯通 kousoku→housou→kyoushitsu,禁 any"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "store apply SHUSSEKI 更新 roster;nicknameOf getter;roster 为 server-truth 写入口"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "ChatPanel/DanmakuOverlay 经 store 读 nickname,模板薄,职责不越界"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "补测试;./dx 闭环;禁死代码"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "roster 内存态与 presence 同生命周期、close 清理;不记录消息内容"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "SHUSSEKI 广播构造与 serverMsg 一致,WS 边界"}

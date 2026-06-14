@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "核查 SHUSSEKI members 类型贯通无 any"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 roster 写入口、nicknameOf 回退、不破坏 shusseki 计数"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查 roster 生命周期/close 清理、与 presence 一致、不泄漏"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查 Chat/Danmaku 经 store 读名、模板薄"}
