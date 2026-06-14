@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "KENGEN/SETTEI/yakuwari 类型贯通 kousoku→housou→kyoushitsu,权限判定类型,禁 any"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "SETTEI 鉴权与越权 enforcement→KEIHOU,权限 error code,WS 边界不断连"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "per-room 权限内存态生命周期、权限判定纯函数可测、不记录消息内容"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "kengen/roster yakuwari 为 server-truth 写入口,canControl/canChat/canPlaylist 派生,UI gating 态边界"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "房主设置面板/UI gating(遮罩/隐藏)职责,ChatPanel/EnmokuPlayer/BushitsuView 分工,模板薄"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "权限判定纯函数补测、./dx 闭环、禁死代码"}

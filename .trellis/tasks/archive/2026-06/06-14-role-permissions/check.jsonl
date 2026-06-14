@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "核查 SETTEI 鉴权、越权 enforcement→KEIHOU 一致不断连"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查权限态生命周期、纯函数可测、不泄漏"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 kengen/yakuwari server-truth 写入口、派生权限、UI gating 态"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "核查 KENGEN/SETTEI/yakuwari 类型贯通无 any"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查设置面板/gating 职责、模板薄、不回归"}
