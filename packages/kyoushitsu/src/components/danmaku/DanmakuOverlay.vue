@@ -16,9 +16,10 @@ const bushitsu = useBushitsuStore()
 // 気泡トラックの bottom をこれに追従させ、条が出たら遮られないよう上へ、隐れたら底へ。
 const props = defineProps<{ target?: HTMLElement | null; controlsShown?: boolean }>()
 
-// 条が可視のとき上げる／隐れたとき底に寄せる。純関数 danmakuTrackBottom に委譲。
+// 条が可視のとき上げる／隐れたとき底に寄せる。純関数 danmakuTrackBottom に委譲
+// （CSS length 文字列 — 大屏/原生全屏では clamp で控制条上まで抬げる, Bug1）。
 // 未指定時は条あり扱い(true)で従来位置を保つ。
-const trackBottom = computed(() => `${danmakuTrackBottom(props.controlsShown ?? true)}px`)
+const trackBottom = computed(() => danmakuTrackBottom(props.controlsShown ?? true))
 
 // 表示中の気泡: each visible bubble carries its own id + removal timer so we can
 // clear them all on unmount.

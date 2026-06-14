@@ -55,9 +55,15 @@ function onJoin() {
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
 const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
 
-// コントロール条の显隐を EnmokuPlayer から読み、DanmakuOverlay へ下す（prd #3）。
-// defineExpose した ref は .value 経由でアクセス時に unwrap 済みの boolean。
-const controlsShown = computed<boolean>(() => playerRef.value?.controlsShown ?? true)
+// コントロール条の显隐：EnmokuPlayer の @control（emit）を自有 ref で受け、
+// DanmakuOverlay へ prop で下す（prd Bug1）。暴露 ref→親 computed の脆い連鎖を
+// 避け、原生全屏含む三態で確実に響応させる。pure view 態 → store 不要。
+const controlsShown = ref(true)
+// 演目切替（current 変更）で player が再 mount され control 発火前は条あり扱いに
+// 復位させる。EnmokuPlayer 卸載は control を停発するので親側で戻す。
+watch(current, () => {
+  controlsShown.value = true
+})
 
 // 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
 // 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
@@ -197,6 +203,7 @@ onBeforeUnmount(() => {
           @shinkou="shinkou.onLocalShinkou"
           @ready="shinkou.catchUp"
           @join="onJoin"
+          @control="controlsShown = $event"
         />
         <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
       </div>

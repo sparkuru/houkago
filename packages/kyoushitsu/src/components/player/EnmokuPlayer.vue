@@ -16,18 +16,16 @@ const props = defineProps<{ url: string; type: Enmoku["type"]; showJoinGate?: bo
 
 // Local playback changes (host drives → useShinkou broadcasts); `ready` lets the
 // parent run catch-up once the instance exists. `join`：部員 pressed the gate —
-// the parent flips joined + catchUp in the same gesture stack.
-const emit = defineEmits<{ shinkou: [Shinkou]; ready: []; join: [] }>()
+// the parent flips joined + catchUp in the same gesture stack. `control`：
+// ArtPlayer コントロール条の显隐を親へ直送（emit）— 暴露 ref→親 computed の脆い
+// 連鎖を避け、普通／网页全屏／原生全屏の三態で確実に響応させる（prd Bug1）。
+const emit = defineEmits<{ shinkou: [Shinkou]; ready: []; join: []; control: [boolean] }>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
 // loop (design §5 ≤0.3s ignore tier).
 const SEEK_EPSILON = 0.3
 
 const container = ref<HTMLDivElement | null>(null)
-// コントロール条の显隐（ArtPlayer 'control' イベント由来, prd #3）。気泡トラックの
-// bottom を切り替えるための local view 態（store 不要・state-management）。親が
-// playerRef 経由で読み、DanmakuOverlay に prop で下す。
-const controlsShown = ref(true)
 // ArtPlayer の主播放器容器（$player）：原生全屏の対象元素。父级用它做 Teleport
 // target，让弹幕 overlay 进入全屏子树。ArtPlayer 类型不全 → 局部窄接口收窄，禁 any。
 const playerEl = ref<HTMLElement | null>(null)
@@ -122,7 +120,7 @@ function onJoin(): void {
   emit("join")
 }
 
-defineExpose({ apply, alignTransport, setRate, snapshot, playerEl, controlsShown })
+defineExpose({ apply, alignTransport, setRate, snapshot, playerEl })
 
 onMounted(() => {
   if (!container.value) return
@@ -150,11 +148,10 @@ onMounted(() => {
   art.on("video:ratechange", onChange)
   art.on("ready", () => emit("ready"))
 
-  // コントロール条の显隐を local view 態へ反映（prd #3）。ArtPlayer 'control' は
-  // state=条が可視か を渡す（typed event, 禁 any）。art.destroy で listener も自清。
-  art.on("control", (state) => {
-    controlsShown.value = state
-  })
+  // コントロール条の显隐を親へ直送（prd Bug1）。ArtPlayer 'control' は state=条が
+  // 可視か を渡す（typed event, 禁 any）。emit で送ることで暴露 ref→親 computed の
+  // 脆い連鎖を排し、原生全屏含む三態で確実に響応する。art.destroy で listener 自清。
+  art.on("control", (state) => emit("control", state))
 
   // 追平 seek の取りこぼし回収（prd Bug2）: catchUp/heartbeat が seek 可能になる前に
   // 控えた pendingSeek を、メディアが seek 可能になった時点で一度だけ flush する。
@@ -171,7 +168,6 @@ onBeforeUnmount(() => {
   art?.destroy()
   art = null
   playerEl.value = null
-  controlsShown.value = true
 })
 </script>
 
@@ -197,6 +193,14 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: #000;
+}
+/* ArtPlayer 既定の .art-video は object-fit 未指定で、容器を満铺ストレッチする
+   （dist CSS: width/height 100% のみ）。普通模式は wrap が 16:9 で容器=映像比のため
+   目立たないが、网页全屏／原生全屏は容器比が映像比とズレ、映像が歪む／满铺して
+   contain しない（prd Bug2）。contain を明示し、全状態で letterbox 居中させる。
+   wrap の比が映像比と一致する普通模式では no-op。 */
+.enmoku-player :deep(.art-video) {
+  object-fit: contain;
 }
 /* 参加遮罩：画面領域を覆うが native コントロール(下部)は塞がない高さに留める。
    color のみで状態を伝えないようテキスト+アイコンを併記（accessibility）。 */
