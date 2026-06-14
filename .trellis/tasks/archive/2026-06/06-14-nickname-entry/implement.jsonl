@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "nickname 持久化与 store init;guest 兜底 view 态边界;roster 写入口不变"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "BushitsuView 昵称 gate 遮罩职责、模板薄;HomeView roomId 净化"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "持久化/净化纯函数补测试;./dx 闭环;禁死代码"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "localStorage 读写/净化函数类型,禁 any"}
