@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer art 调用归属、:deep 跨 ArtPlayer、pointer-events gating、模板薄"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "./dx 闭环、禁死代码、不回归"}

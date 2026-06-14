@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查 pointer-events gating、弹幕/join-gate 不受影响、:deep 正确"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查 ./dx 全绿、不回归、无死代码"}
