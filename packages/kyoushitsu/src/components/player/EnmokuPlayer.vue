@@ -3,7 +3,7 @@ import { canSeekTo } from "@/lib/seekable"
 import Artplayer from "artplayer"
 import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
-import { onBeforeUnmount, onMounted, ref } from "vue"
+import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 
 // The ArtPlayer instance is imperative third-party state — this single component
 // owns its lifecycle (create onMounted, destroy onUnmounted), per
@@ -135,6 +135,22 @@ function onJoin(): void {
   safePlay()
   emit("join")
 }
+
+// 放権（解锁: controlLocked true→false）時にコントロール条を能動的に再表示する。
+// 加锁中は CSS `.control-locked` が `.art-bottom`/`.art-mask` を display:none で消す
+// が、解锁で display:none が外れても ArtPlayer 自身の显隐状態機は「隠れ」のまま
+// （.art-bottom 既定 opacity:0、art-control-show / art-hover が付いて初めて opacity:1）
+// なので hover/再構築まで条が戻らなかった（prd 根因）。`art.controls.show = true` は
+// $player に `art-control-show` クラスを付け（条が opacity:1 で復帰）、同時に
+// ArtPlayer 内部で 'control' イベントを emit する — 既存の art.on("control", …) が
+// それを親へ転送し controlsShown(気泡跟随) も自然に整合する（追加 emit 不要）。
+// 加锁(false→true)は CSS が即時隠すので JS 操作は不要。art が null（mount 前）なら guard。
+watch(
+  () => props.controlLocked,
+  (locked, prev) => {
+    if (prev && !locked && art) art.controls.show = true
+  },
+)
 
 defineExpose({ apply, alignTransport, setRate, snapshot, playerEl })
 
