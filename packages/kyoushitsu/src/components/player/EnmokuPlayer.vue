@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import { shouldRetryMuted, showUnmuteOverlay } from "@/lib/autoplay"
 import Artplayer from "artplayer"
 import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
+import { onBeforeUnmount, onMounted, ref } from "vue"
 
 // The ArtPlayer instance is imperative third-party state — this single component
 // owns its lifecycle (create onMounted, destroy onUnmounted), per
 // component-guidelines. All art.seek/play/pause calls stay here; sync decisions
 // live in composables/useShinkou.ts.
-// `muted`: 部員(follower)は初期ミュートで起動し、手势なしでも program的 play() が
-// ブラウザ autoplay 策略に許可されるようにする。房主は muted=false で従来通り。
-const props = defineProps<{ url: string; type: Enmoku["type"]; muted?: boolean }>()
+const props = defineProps<{ url: string; type: Enmoku["type"] }>()
 
 // Local playback changes (host drives → useShinkou broadcasts); `ready` lets the
 // parent run catch-up once the instance exists.
@@ -28,34 +25,6 @@ const playerEl = ref<HTMLElement | null>(null)
 let art: Artplayer | null = null
 
 type ArtTemplate = { $player: HTMLElement }
-
-// 実 art.muted を映す view 態（store には載せない）。遮罩の表示と解除に使う。
-const artMuted = ref(false)
-const unmuteOverlayMieru = computed(() => showUnmuteOverlay(props.muted === true, artMuted.value))
-
-// art.play() は Promise を返す。autoplay 策略で拒否されたら（まだ非ミュートなら）
-// ミュートして一度だけ再試行し、なお失敗すれば吞んで Unhandled rejection を出さない。
-// seek/transport の三箇所はすべてこの helper 経由で再生する。
-async function safePlay(): Promise<void> {
-  if (!art) return
-  try {
-    await art.play()
-  } catch {
-    if (!shouldRetryMuted(art.muted)) return
-    art.muted = true
-    artMuted.value = true
-    try {
-      await art.play()
-    } catch {}
-  }
-}
-
-// 遮罩クリック → ミュート解除（この click 自体が手势なので以後 program的 play は通る）。
-function unmute(): void {
-  if (!art) return
-  art.muted = false
-  artMuted.value = false
-}
 
 function playM3u8(video: HTMLVideoElement, url: string, artInstance: Artplayer) {
   if (Hls.isSupported()) {
@@ -82,7 +51,7 @@ function apply(s: Shinkou): void {
   if (!art) return
   if (Math.abs(art.currentTime - s.currentTime) > SEEK_EPSILON) art.seek = s.currentTime
   art.playbackRate = s.playbackRate
-  if (s.isPlaying && !art.playing) safePlay()
+  if (s.isPlaying && !art.playing) art.play()
   else if (!s.isPlaying && art.playing) art.pause()
 }
 
@@ -91,7 +60,7 @@ function apply(s: Shinkou): void {
 function alignTransport(s: Shinkou): void {
   if (!art) return
   art.playbackRate = s.playbackRate
-  if (s.isPlaying && !art.playing) safePlay()
+  if (s.isPlaying && !art.playing) art.play()
   else if (!s.isPlaying && art.playing) art.pause()
 }
 
@@ -116,10 +85,8 @@ onMounted(() => {
     autoSize: false,
     fullscreen: true,
     setting: true,
-    muted: props.muted === true,
   })
 
-  artMuted.value = art.muted
   playerEl.value = (art.template as ArtTemplate).$player
 
   // Local playback events → Shinkou snapshots. useShinkou gates these by 部長 +
@@ -140,47 +107,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="enmoku-player">
-    <div ref="container" class="enmoku-art" />
-    <button
-      v-if="unmuteOverlayMieru"
-      type="button"
-      class="unmute-overlay"
-      aria-label="音声を開く"
-      @click="unmute"
-    >
-      🔊 クリックで音声を開く
-    </button>
-  </div>
+  <div ref="container" class="enmoku-player" />
 </template>
 
 <style scoped>
 /* 宽高比由父级 .player-wrap 决定（普通=16:9，网页全屏=填满左列）；
-   播放器只负责填满父容器，ArtPlayer 内部 object-fit contain 做 letterbox。
-   遮罩を重ねるため wrapper を positioned に。 */
+   播放器只负责填满父容器，ArtPlayer 内部 object-fit contain 做 letterbox */
 .enmoku-player {
-  position: relative;
   width: 100%;
   height: 100%;
   background: #000;
-}
-.enmoku-art {
-  width: 100%;
-  height: 100%;
-}
-/* 部員ミュート時の「音声を開く」遮罩。画面を覆ってクリックを受けるが、
-   ArtPlayer 自体の native fullscreen ボタン等(高 z-index)より下に置く。 */
-.unmute-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
 }
 </style>
