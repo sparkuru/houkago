@@ -601,3 +601,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 19: NTP-lite 被动时钟偏移:修跨机 B 端加速/超前(design §5)
+
+**Date**: 2026-06-14
+**Task**: NTP-lite 被动时钟偏移:修跨机 B 端加速/超前(design §5)
+**Branch**: `k-on`
+
+### Summary
+
+跨机实跑 B 端有时加速、跑到比房主 A 更前。根因 design §5 v1 简化'直接信任服务器钟、不做 client offset':useShinkou projected 用 B 机器 Date.now() 减服务器 serverTime,跨机墙钟偏差 O(LAN 可秒级,远大于单向延迟~1ms)直接进投影→B 追一个偏前 O 的目标→zure nudge 软校正(±5%)持续加速并稳定停在 A 前面+忽快忽慢。Decision(用户选):被动估计(零协议改动)而非主动 ping/pong——LAN 上被动残差≈单向延迟可忽略,无需改协议/后端。实现:handleRemote 中仅 msg.senderId==='server'(housou serverMsg 统一置 senderId:server+服务器墙钟 ts,覆盖 GENJOU/SHUSSEKI/JOUEI/KEIHOU;SHINKOU 经 ws.publish 转发带房主 ts/senderId 被天然排除不污染)取样本 sample=msg.ts-Date.now();lib/clock-offset.ts estimateOffset 取有限窗口(16)max(=最小单向延迟那条,offset 低估最少最堅牢),样本不足(<1)返 0 退化为原行为、抗单条网络抖动致反复 seek;createOffsetEstimator 环形窗口。projected(s,serverTime,offset) 改 serverNow=Date.now()+offset,applyShinkou/applyGenjou/catchUp(经 applyShinkou)三处投影传 estimate();offset=0 代数等价原式。仅投影时间基准变准,未动 zure 三档/tsuijuuChuu/房主权威(isBuchou 早返回房主不投影)/JOUEI/catchUp-pendingSeek/store server-truth。offset 态居 useShinkou composable。trellis-check 3 文件 0 问题(记 in-scope 备注:SHINKOU 硬应用用房主 ts 混 host-vs-server 但 elapsed 近零、按 PRD 一阶 offset 范围外)。容器内./dx typecheck/lint/build 绿,housou 29+kyoushitsu 50 pass(新增 clock-offset.test 7)。Out:完整 NTP(多轮统计/漂移率)、主动 ping/pong(WAN 用)、guest 权限 epic。跨机实跑由用户确认。剩余 backlog:guest/权限 epic 片2(角色模型)+片3(权限矩阵)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8902401` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

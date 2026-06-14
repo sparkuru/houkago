@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 18
+- **Total Sessions**: 19
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~603 | Active |
+| `journal-1.md` | ~636 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 19 | 2026-06-14 | NTP-lite 被动时钟偏移:修跨机 B 端加速/超前(design §5) | `8902401` | `k-on` |
 | 18 | 2026-06-14 | 普通模式播放器高度驱动:折叠聊天不再膨胀(bug2 真症状) | `933fcf1` | `k-on` |
 | 17 | 2026-06-14 | 全屏二修:原生全屏气泡跟随+网页全屏 letterbox(art-video contain) | `cd9c878` | `k-on` |
 | 16 | 2026-06-14 | 全屏 UI 调优:气泡随控制条上移 + 折叠按钮收进聊天栏头部(#3/#4) | `1868ee6` | `k-on` |
