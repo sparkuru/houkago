@@ -14,6 +14,14 @@ export class NotBuchou extends Error {
   code = "NOT_BUCHOU" as const
 }
 
+// 権限なし：the action is gated by the room's guest-permission switch and this
+// non-host sender is not allowed it right now (prd role-permissions). Distinct
+// from NotBuchou (which is reserved for host-only actions like SETTEI) so a
+// rejected guest action reads as "permission off", not "you are not the host".
+export class Forbidden extends Error {
+  code = "FORBIDDEN" as const
+}
+
 // 生徒証 invalid (auth deferred past scaffold, but the channel exists).
 export class Unauthorized extends Error {
   code = "UNAUTHORIZED" as const
@@ -24,6 +32,7 @@ const STATUS: Record<string, number> = {
   ENMOKU_NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   NOT_BUCHOU: 403,
+  FORBIDDEN: 403,
 }
 
 export function statusFor(code: string): number {

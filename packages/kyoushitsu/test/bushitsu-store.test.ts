@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from "bun:test"
-import type { KousokuMessage } from "houkago-kousoku"
+import type { KousokuMessage, Yakuwari } from "houkago-kousoku"
 import { createPinia, setActivePinia } from "pinia"
 
 // 名簿（roster）store test: applying SHUSSEKI updates the count and MERGES the
@@ -21,11 +21,15 @@ const mem = new Map<string, string>()
 
 const { useBushitsuStore } = await import("../src/stores/bushitsu")
 
-const shusseki = (members: { id: string; nickname: string }[]): KousokuMessage => ({
+type M = { id: string; nickname: string; yakuwari?: Yakuwari }
+const shusseki = (members: M[]): KousokuMessage => ({
   type: "SHUSSEKI",
   ts: Date.now(),
   senderId: "server",
-  payload: { n: members.length, members },
+  payload: {
+    n: members.length,
+    members: members.map((m) => ({ ...m, yakuwari: m.yakuwari ?? "kengaku" })),
+  },
 })
 
 beforeEach(() => {
@@ -64,4 +68,51 @@ test("apply SHUSSEKI merges roster so a departed member's name is retained", () 
   expect(store.shusseki).toBe(1)
   expect(store.nicknameOf("u2")).toBe("Mio")
   expect(store.nicknameOf("u1")).toBe("Yui") // departed → name retained, not uuid
+})
+
+test("apply SHUSSEKI records yakuwari; yakuwariOf resolves and defaults to ゲスト", () => {
+  const store = useBushitsuStore()
+  store.apply(
+    shusseki([
+      { id: "u1", nickname: "Yui", yakuwari: "buchou" },
+      { id: "u2", nickname: "Mio", yakuwari: "kengaku" },
+    ]),
+  )
+  expect(store.yakuwariOf("u1")).toBe("buchou")
+  expect(store.yakuwariOf("u2")).toBe("kengaku")
+  expect(store.yakuwariOf("unknown")).toBe("kengaku")
+})
+
+const kengenMsg = (payload: {
+  playback: boolean
+  chat: boolean
+  playlist: boolean
+}): KousokuMessage => ({ type: "KENGEN", ts: Date.now(), senderId: "server", payload })
+
+test("default kengen is guest-chat-only before any KENGEN arrives", () => {
+  const store = useBushitsuStore()
+  expect(store.kengen).toEqual({ playback: false, chat: true, playlist: false })
+  // guest (no buchouId set → isBuchou false): chat only
+  expect(store.canControl).toBe(false)
+  expect(store.canChat).toBe(true)
+  expect(store.canPlaylist).toBe(false)
+})
+
+test("apply KENGEN updates the snapshot and derived guest gates", () => {
+  const store = useBushitsuStore()
+  store.apply(kengenMsg({ playback: true, chat: false, playlist: true }))
+  expect(store.kengen).toEqual({ playback: true, chat: false, playlist: true })
+  expect(store.canControl).toBe(true)
+  expect(store.canChat).toBe(false)
+  expect(store.canPlaylist).toBe(true)
+})
+
+test("host (isBuchou) may do everything regardless of kengen", () => {
+  const store = useBushitsuStore()
+  store.buchouId = store.senderId // I am the 部長
+  store.apply(kengenMsg({ playback: false, chat: false, playlist: false }))
+  expect(store.isBuchou).toBe(true)
+  expect(store.canControl).toBe(true)
+  expect(store.canChat).toBe(true)
+  expect(store.canPlaylist).toBe(true)
 })

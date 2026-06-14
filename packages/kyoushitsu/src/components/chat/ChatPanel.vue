@@ -34,13 +34,19 @@ function send() {
     </header>
     <ul class="chat-log">
       <li v-for="(line, i) in bushitsu.chat" :key="i">
-        <span class="sender">{{ bushitsu.nicknameOf(line.senderId) }}</span>: {{ line.content }}
+        <span class="sender">{{ bushitsu.nicknameOf(line.senderId) }}</span>
+        <span class="yakuwari" :class="bushitsu.yakuwariOf(line.senderId)">
+          {{ bushitsu.yakuwariOf(line.senderId) === "buchou" ? "部長" : "ゲスト" }}
+        </span>: {{ line.content }}
       </li>
     </ul>
-    <form class="chat-input" @submit.prevent="send">
+    <!-- 発言権限がない guest は input を隠し「閲覧のみ」を表示 (prd §4)。
+         host は canChat 恒 true。服务端も越権 OSHABERI を拒否 (双保険)。 -->
+    <form v-if="bushitsu.canChat" class="chat-input" @submit.prevent="send">
       <input v-model="draft" aria-label="お喋り" placeholder="メッセージ..." />
       <button type="submit">送信</button>
     </form>
+    <p v-else class="chat-readonly">閲覧のみ</p>
   </aside>
 </template>
 
@@ -84,6 +90,27 @@ function send() {
 }
 .sender {
   color: #888;
+}
+/* 役割バッジ: 部長/ゲストを軽量に区別。色だけでなくテキストで状態を伝える。 */
+.yakuwari {
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+.yakuwari.buchou {
+  border-color: #2a7;
+  color: #2a7;
+}
+.yakuwari.kengaku {
+  color: #888;
+}
+.chat-readonly {
+  margin: 0;
+  padding: 8px;
+  color: #888;
+  border-top: 1px solid #eee;
 }
 .chat-input {
   display: flex;

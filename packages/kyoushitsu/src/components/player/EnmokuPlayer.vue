@@ -12,7 +12,17 @@ import { onBeforeUnmount, onMounted, ref } from "vue"
 // showJoinGate: follower がまだ未参加のとき、ブラウザの autoplay 制約で音付き
 // 再生にユーザー操作が要る。親が `!isBuchou && !joined` を渡し、true の間だけ
 // 「クリックして参加」遮罩を表示する。
-const props = defineProps<{ url: string; type: Enmoku["type"]; showJoinGate?: boolean }>()
+// controlLocked: a guest without 再生制御 permission. The parent passes
+// `!canControl`; while true a transparent mask intercepts pointer events over the
+// player so the guest cannot operate playback. The server also rejects any
+// SHINKOU it would send (双保険), but blocking the UI avoids the dead clicks. The
+// join-gate (audio autoplay) sits above this and is unaffected.
+const props = defineProps<{
+  url: string
+  type: Enmoku["type"]
+  showJoinGate?: boolean
+  controlLocked?: boolean
+}>()
 
 // Local playback changes (host drives → useShinkou broadcasts); `ready` lets the
 // parent run catch-up once the instance exists. `join`：部員 pressed the gate —
@@ -173,6 +183,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="container" class="enmoku-player">
+    <!-- 再生制御の遮罩：guest に 再生制御 権限がない間だけ player 操作を塞ぐ
+         (pointer-events 拦截)。join-gate より下層 (z-index) なので参加クリックは
+         通る。状態は文字併記で色だけに頼らない (accessibility)。 -->
+    <div
+      v-if="controlLocked"
+      class="control-lock"
+      role="status"
+      aria-label="再生制御は部長のみ"
+    >
+      <span>部長が再生を操作中</span>
+    </div>
     <button
       v-if="showJoinGate"
       type="button"
@@ -204,6 +225,25 @@ onBeforeUnmount(() => {
 }
 /* 参加遮罩：画面領域を覆うが native コントロール(下部)は塞がない高さに留める。
    color のみで状態を伝えないようテキスト+アイコンを併記（accessibility）。 */
+/* 再生制御遮罩：player 全域を覆い pointer を拦截 (guest が操作不可)。native
+   コントロール条も含めて塞ぐ。join-gate より下層 (z-index) で参加は妨げない。 */
+.control-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+.control-lock span {
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+}
 .join-gate {
   position: absolute;
   inset: 0 0 60px 0;

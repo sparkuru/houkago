@@ -2,6 +2,7 @@
 import { housou } from "@/api"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
 import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
+import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
@@ -10,7 +11,7 @@ import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
-import type { Enmoku } from "houkago-kousoku"
+import type { Enmoku, Kengen } from "houkago-kousoku"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 
@@ -69,8 +70,15 @@ watch(current, () => {
 // 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
 // — the JOUEI echo flows back through the store.enmokuId watch like any 部員, so
 // host and members share one resolve→play path (state-management: WS is writer).
+// 権限設定: the host changes a guest-permission switch → SETTEI(C→S). housou
+// stores it and broadcasts KENGEN back, which the store applies — so the host's
+// own UI also follows the round-trip, not a local optimistic write.
+function settei(kengen: Kengen) {
+  client?.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
+}
+
 async function playManual() {
-  if (!manualUrl.value || !bushitsu.isBuchou) return
+  if (!manualUrl.value || !bushitsu.canPlaylist) return
   const isHls = manualUrl.value.endsWith(".m3u8")
   const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
     title: "手填直链",
@@ -184,6 +192,7 @@ onBeforeUnmount(() => {
     </div>
     <main class="stage">
       <div class="bar">
+        <KengenPanel v-if="bushitsu.isBuchou" @settei="settei" />
         <button
           type="button"
           :aria-label="webZenmen ? 'ウェブ全画面を解除' : 'ウェブ全画面'"
@@ -200,6 +209,7 @@ onBeforeUnmount(() => {
           :url="current.url"
           :type="current.type"
           :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
+          :control-locked="!bushitsu.canControl"
           @shinkou="shinkou.onLocalShinkou"
           @ready="shinkou.catchUp"
           @join="onJoin"
@@ -208,7 +218,7 @@ onBeforeUnmount(() => {
         <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
       </div>
       <div v-else class="placeholder">
-        <template v-if="bushitsu.isBuchou">
+        <template v-if="bushitsu.canPlaylist">
           <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
           <button type="button" @click="playManual">再生</button>
         </template>

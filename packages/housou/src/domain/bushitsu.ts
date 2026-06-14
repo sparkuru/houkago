@@ -26,6 +26,15 @@ export function fetchBushitsu(id: string): Bushitsu {
   return bushitsu
 }
 
+// 部長 id without throwing: the WS hub needs the host id to label roles + gate
+// permissions on every message, but a connection may target a room that does not
+// exist in the DB (scaffold / direct WS). Returning null there keeps the hub
+// alive (no host → everyone is a guest, default kengen applies) instead of
+// killing the message with a thrown BushitsuNotFound.
+export function buchouIdOf(id: string): string | null {
+  return getBushitsu(id)?.buchouId ?? null
+}
+
 // 演目を投稿する：add a direct-link enmoku to a room.
 export function addEnmoku(
   bushitsuId: string,

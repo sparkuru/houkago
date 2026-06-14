@@ -1,6 +1,8 @@
 import { Elysia, t } from "elysia"
 import { type KousokuMessage, KousokuMessageSchema } from "houkago-kousoku"
-import { fetchBushitsu } from "../domain/bushitsu"
+import { buchouIdOf } from "../domain/bushitsu"
+import { Forbidden, NotBuchou } from "../lib/errors"
+import { canDo, getKengen, setKengen } from "../lib/kengen"
 import { join, leave, members, roomTopic, serverMsg, shusseki } from "./housou"
 import { shinkouSeigyo } from "./shinkou"
 
@@ -43,12 +45,17 @@ export const wsRoutes = new Elysia().ws("/ws", {
     // roster join is atomic with the broadcast: no enter-then-name window.
     // nickname falls back to senderId so a member always has a label.
     join(bushitsuId, id, nickname || id)
+    const buchouId = buchouIdOf(bushitsuId) ?? ""
     const snapshot = serverMsg("SHUSSEKI", {
       n: shusseki(bushitsuId),
-      members: members(bushitsuId),
+      members: members(bushitsuId, buchouId),
     })
     ws.publish(topic, snapshot)
     ws.send(snapshot)
+    // New joiner learns the room's current guest-permission snapshot so its UI
+    // gating is correct before any change happens (prd §2). Sent only to this
+    // socket; room-wide broadcast happens on SETTEI.
+    ws.send(serverMsg("KENGEN", getKengen(bushitsuId)))
   },
   message(ws, message) {
     const conn = conns.get(ws.id)
@@ -64,32 +71,62 @@ export const wsRoutes = new Elysia().ws("/ws", {
       switch (msg.type) {
         // Chat / danmaku: echo to the whole room (proves pub/sub path). publish
         // reaches other subscribers; send delivers back to the sender too.
+        // Gated by guestCan.chat: a guest with chat off is rejected (→ KEIHOU),
+        // not silently dropped, so the client knows (error-handling spec).
         case "OSHABERI":
-        case "DANMAKU":
+        case "DANMAKU": {
+          const isHost = conn.senderId === buchouIdOf(conn.bushitsuId)
+          if (!canDo(isHost, getKengen(conn.bushitsuId), "chat")) {
+            throw new Forbidden("発言の権限がありません")
+          }
           ws.publish(topic, msg)
           ws.send(msg)
           break
+        }
 
-        // 進行: the sync primitive. Only the room's 部長 may drive playback —
-        // ShinkouSeigyo throws NotBuchou otherwise (→ KEIHOU below). On accept,
-        // broadcast to the room so 部員 follow. enmokuId stays null here so the
-        // current 演目 (set by JOUEI) is preserved across play/pause/seek.
+        // 進行: the sync primitive. Gated by guestCan.playback — the host always
+        // drives; a guest drives only when the room switch is on, else Forbidden
+        // (→ KEIHOU). On accept, broadcast to the room so 部員 follow. enmokuId
+        // stays null here so the current 演目 (set by JOUEI) is preserved.
         case "SHINKOU": {
-          const { buchouId } = fetchBushitsu(conn.bushitsuId)
-          shinkouSeigyo.shinkou(conn.bushitsuId, msg.payload, null, conn.senderId, buchouId)
+          const isHost = conn.senderId === buchouIdOf(conn.bushitsuId)
+          if (!canDo(isHost, getKengen(conn.bushitsuId), "playback")) {
+            throw new Forbidden("再生制御の権限がありません")
+          }
+          // canDo already authorized this sender; pass senderId as buchouId so a
+          // permitted guest is accepted by ShinkouSeigyo's own host gate too.
+          shinkouSeigyo.shinkou(conn.bushitsuId, msg.payload, null, conn.senderId, conn.senderId)
           ws.publish(topic, msg)
           break
         }
 
-        // 上映: the 部長 sets the room's current 演目. ShinkouSeigyo throws
-        // NotBuchou for non-host (→ KEIHOU). On accept, set authority enmokuId
-        // and broadcast JOUEI so every 部員 loads the source; echo back to the
-        // host too so it follows the same enmokuId→play path (no double logic).
+        // 上映: set the room's current 演目. Gated by guestCan.playlist — host
+        // always, guest only when on, else Forbidden (→ KEIHOU). On accept, set
+        // authority enmokuId and broadcast JOUEI so every 部員 loads the source;
+        // echo back to the sender so it follows the same enmokuId→play path.
         case "JOUEI": {
-          const { buchouId } = fetchBushitsu(conn.bushitsuId)
-          shinkouSeigyo.jouei(conn.bushitsuId, msg.payload.enmokuId, conn.senderId, buchouId)
+          const isHost = conn.senderId === buchouIdOf(conn.bushitsuId)
+          if (!canDo(isHost, getKengen(conn.bushitsuId), "playlist")) {
+            throw new Forbidden("ソース選択の権限がありません")
+          }
+          shinkouSeigyo.jouei(conn.bushitsuId, msg.payload.enmokuId, conn.senderId, conn.senderId)
           ws.publish(topic, msg)
           ws.send(msg)
+          break
+        }
+
+        // 設定: the 部長 sets the room's guest-permission switches. Host-only —
+        // a non-host is rejected with NotBuchou (→ KEIHOU). On accept, store the
+        // new snapshot and broadcast KENGEN to the whole room (incl. the host)
+        // so every client's UI gating updates in real time (prd §2).
+        case "SETTEI": {
+          if (conn.senderId !== buchouIdOf(conn.bushitsuId)) {
+            throw new NotBuchou("only 部長 may set permissions")
+          }
+          setKengen(conn.bushitsuId, msg.payload)
+          const kengen = serverMsg("KENGEN", getKengen(conn.bushitsuId))
+          ws.publish(topic, kengen)
+          ws.send(kengen)
           break
         }
 
@@ -119,9 +156,13 @@ export const wsRoutes = new Elysia().ws("/ws", {
     if (!conn) return
     conns.delete(ws.id)
     leave(conn.bushitsuId, conn.senderId)
+    const buchouId = buchouIdOf(conn.bushitsuId) ?? ""
     ws.publish(
       roomTopic(conn.bushitsuId),
-      serverMsg("SHUSSEKI", { n: shusseki(conn.bushitsuId), members: members(conn.bushitsuId) }),
+      serverMsg("SHUSSEKI", {
+        n: shusseki(conn.bushitsuId),
+        members: members(conn.bushitsuId, buchouId),
+      }),
     )
   },
 })

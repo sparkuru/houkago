@@ -1,8 +1,13 @@
 import { buinId } from "@/lib/identity"
+import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
-import type { KousokuMessage, Shinkou } from "houkago-kousoku"
+import type { Kengen, KousokuMessage, Shinkou, Yakuwari } from "houkago-kousoku"
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
+
+// Guest-permission default mirrors housou's DEFAULT_KENGEN: guests may chat,
+// host keeps playback + source. Used until the first KENGEN arrives.
+const DEFAULT_KENGEN: Kengen = { playback: false, chat: true, playlist: false }
 
 // useBushitsuStore: server-authoritative room/session state, fed by the WS
 // client (state-management spec). The WS client is the writer; components read.
@@ -17,11 +22,23 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
   const roster = ref<Record<string, string>>({}) // 名簿: senderId→nickname, accumulated from SHUSSEKI
+  // 役割: senderId→yakuwari (部長/ゲスト), accumulated from SHUSSEKI alongside the
+  // roster so departed members' roles resolve for historical lines too.
+  const yakuwari = ref<Record<string, Yakuwari>>({})
   const enmokuId = ref<string | null>(null) // 上映中
   const chat = ref<ChatLine[]>([])
+  // 権限: the room's guest-permission snapshot, written by KENGEN. Defaults to the
+  // housou default so gating is sane before the first KENGEN arrives.
+  const kengen = ref<Kengen>({ ...DEFAULT_KENGEN })
 
   // 部長か：am I the host? Derived authority — only my player drives sync.
   const isBuchou = computed(() => buchouId.value !== null && senderId.value === buchouId.value)
+
+  // 派生権限: the host may always do everything; a guest follows the room switch
+  // (canDo pure function, shared with housou's gate). UI gating reads these.
+  const canControl = computed(() => canDo(isBuchou.value, kengen.value, "playback"))
+  const canChat = computed(() => canDo(isBuchou.value, kengen.value, "chat"))
+  const canPlaylist = computed(() => canDo(isBuchou.value, kengen.value, "playlist"))
 
   // last authoritative Shinkou + its server time, for P0 projected-progress math.
   const shinkou = ref<Shinkou | null>(null)
@@ -43,10 +60,18 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         // counting needs to reflect departures.
         shusseki.value = msg.payload.n
         const merged = { ...roster.value }
-        for (const m of msg.payload.members) merged[m.id] = m.nickname
+        const mergedYakuwari = { ...yakuwari.value }
+        for (const m of msg.payload.members) {
+          merged[m.id] = m.nickname
+          mergedYakuwari[m.id] = m.yakuwari
+        }
         roster.value = merged
+        yakuwari.value = mergedYakuwari
         break
       }
+      case "KENGEN":
+        kengen.value = msg.payload
+        break
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
         break
@@ -78,6 +103,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     return roster.value[id] ?? id
   }
 
+  // 役割解決: map a senderId to its yakuwari for role display; default to ゲスト
+  // (kengaku) when unknown so a label always renders (graceful degrade).
+  function yakuwariOf(id: string): Yakuwari {
+    return yakuwari.value[id] ?? "kengaku"
+  }
+
   return {
     bushitsuId,
     nickname,
@@ -86,6 +117,11 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     isBuchou,
     shusseki,
     roster,
+    yakuwari,
+    kengen,
+    canControl,
+    canChat,
+    canPlaylist,
     enmokuId,
     chat,
     shinkou,
@@ -93,5 +129,6 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     apply,
     setNickname,
     nicknameOf,
+    yakuwariOf,
   }
 })

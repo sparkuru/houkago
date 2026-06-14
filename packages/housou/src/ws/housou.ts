@@ -1,4 +1,5 @@
-import type { KousokuMessage, KousokuMessageType } from "houkago-kousoku"
+import type { KousokuMessage, KousokuMessageType, Yakuwari } from "houkago-kousoku"
+import { clearKengen } from "../lib/kengen"
 
 // 放送（housou）: broadcast helpers over room:<bushitsuId> Bun pub/sub topics
 // (quality-guidelines). Centralises topic naming and server-stamped envelope
@@ -21,7 +22,7 @@ export function serverMsg<T extends KousokuMessage>(
 // count is the roster size. Both share the WS open/close lifecycle (in-memory).
 const roster = new Map<string, Map<string, string>>()
 
-export type Member = { id: string; nickname: string }
+export type Member = { id: string; nickname: string; yakuwari: Yakuwari }
 
 export function join(bushitsuId: string, senderId: string, nickname: string): void {
   let room = roster.get(bushitsuId)
@@ -36,13 +37,24 @@ export function leave(bushitsuId: string, senderId: string): void {
   const room = roster.get(bushitsuId)
   if (!room) return
   room.delete(senderId)
-  if (room.size === 0) roster.delete(bushitsuId)
+  if (room.size === 0) {
+    roster.delete(bushitsuId)
+    clearKengen(bushitsuId) // permission state shares the roster lifecycle
+  }
 }
 
-export function members(bushitsuId: string): Member[] {
+// Roster snapshot with each member's yakuwari. Role is two-tier (prd Decision):
+// the member whose id is the room's buchouId is 部長; everyone else is ゲスト
+// (kengaku). The caller passes buchouId (known from fetchBushitsu) so this stays
+// pure over the in-memory roster without a DB dependency here.
+export function members(bushitsuId: string, buchouId: string): Member[] {
   const room = roster.get(bushitsuId)
   if (!room) return []
-  return [...room].map(([id, nickname]) => ({ id, nickname }))
+  return [...room].map(([id, nickname]) => ({
+    id,
+    nickname,
+    yakuwari: id === buchouId ? "buchou" : "kengaku",
+  }))
 }
 
 export function shusseki(bushitsuId: string): number {
