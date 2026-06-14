@@ -246,6 +246,9 @@ onBeforeUnmount(() => {
 }
 .stage {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   padding: 12px;
 }
 .bar {
@@ -253,23 +256,49 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   margin-bottom: 8px;
 }
-/* player + overlay share one positioned wrapper so the overlay covers the player.
-   普通模式下 wrap 定 16:9 盒，播放器填满它 */
+/* player + overlay share one positioned wrapper so the overlay covers the player. */
 .player-wrap {
   position: relative;
+  flex: 1;
+  min-height: 0;
+}
+/* 普通模式：stage 为 flex column，player-wrap 占 bar 与 bangumi 之间的剩余高度
+   （flex:1 + min-height:0），16:9 由该高度推导 width → 与 stage 宽度/聊天显隐无关，
+   折叠聊天后不膨胀；margin-inline:auto 居中，多余横向空间留白。max-width:100% 防止
+   窄高窗口下推导 width 溢出（此时退化为宽度驱动，仍合理）。仅作用普通模式：
+   margin-inline:auto 会取消 flex 的默认 stretch，若漏到 web-zenmen 会令空 wrap 收成
+   0 宽，故用 :not(.web-zenmen) 隔离。 */
+.bushitsu:not(.web-zenmen) .player-wrap {
   aspect-ratio: 16 / 9;
+  max-width: 100%;
+  margin-inline: auto;
 }
 .player-wrap :deep(.enmoku-player) {
   height: 100%;
 }
+/* placeholder（上映前）も player-wrap と同じ高度驱动で、折叠聊天で膨胀しない。 */
 .placeholder {
-  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   background: #111;
   color: #fff;
+}
+.bushitsu:not(.web-zenmen) .placeholder {
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  margin-inline: auto;
+}
+/* 普通模式：番組表は player の下に固定高で居座り、player の高度推导を侵さない。
+   長くなれば自前スクロール。web-zenmen では display:none で隐す（既存）。 */
+.bushitsu:not(.web-zenmen) .bangumi {
+  flex: none;
+  max-height: 30vh;
+  overflow-y: auto;
+  margin-top: 8px;
 }
 /* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
    中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */
@@ -306,10 +335,6 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 1000;
   background: #000;
-}
-.bushitsu.web-zenmen .stage {
-  display: flex;
-  flex-direction: column;
 }
 /* 网页全屏：取消固定比例，填满左列高度；ArtPlayer 内部 contain 上下黑边居中，
    无下方黑占位（B 站直播间式整块播放器） */
