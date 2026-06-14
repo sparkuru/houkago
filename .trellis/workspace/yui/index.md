@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 6
+- **Total Sessions**: 7
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~205 | Active |
+| `journal-1.md` | ~238 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 7 | 2026-06-14 | P0 验证修复：CORS/LAN 使能 + 全屏 letterbox + 气泡层级 + 聊天可读 | `815b76d` | `k-on` |
 | 6 | 2026-06-14 | P0纵切3：聊天气泡 overlay + 网页全屏保留侧栏 | `ad14417` | `k-on` |
 | 5 | 2026-06-14 | P0纵切2：漂移校正（服务端权威钟心跳+zureHosei三档） | `a47e9ce` | `k-on` |
 | 4 | 2026-06-14 | P0纵切1：单房间房主权威同步端到端 | `f56b415` | `k-on` |

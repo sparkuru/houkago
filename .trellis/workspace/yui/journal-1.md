@@ -203,3 +203,36 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: P0 验证修复：CORS/LAN 使能 + 全屏 letterbox + 气泡层级 + 聊天可读
+
+**Date**: 2026-06-14
+**Task**: P0 验证修复：CORS/LAN 使能 + 全屏 letterbox + 气泡层级 + 聊天可读
+**Branch**: `k-on`
+
+### Summary
+
+浏览器实跑验证暴露的缺陷与使能缺口集中修复。使能: housou .use(cors()) 跨源调控制面(design §2,dev 放行注释要求上线收紧); lib/housou-url.ts 按 location.hostname:3000 推导 housou 地址,localhost 与 LAN IP 均自动对(替代写死),api/index.ts+BushitsuView 改用之; vite allowedHosts:true 接受 LAN host 头。修复四项: (1)气泡层级 DanmakuOverlay z-index:60 + Teleport 到 ArtPlayer $player,普通/网页/原生全屏均覆盖播放器; (2)全屏 letterbox aspect-ratio 移到 .player-wrap(普通 16:9),player 填满父容器,web-zenmen 取消固定比例填满左列,ArtPlayer 内部 object-fit contain 上下黑边居中,无下方黑占位; (3)聊天可读 ChatPanel 白底深字,全屏黑底下右栏清晰; (4)移除 handler.ts 三处 [DBG] console.error。EnmokuPlayer 用局部窄接口 ArtTemplate 收窄 ArtPlayer 类型禁 any。trellis-check 全绿: 容器内 typecheck/lint/build 通过,housou 16 + kyoushitsu 5 测试不回归,headless dump-dom 自证首页/房间不空白; 视觉正确性由用户最终确认。Out-of-scope: 昵称显示(需协议+store 改动)、原生全屏聊天叠层、canvas 飞屏弹幕。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `815b76d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
