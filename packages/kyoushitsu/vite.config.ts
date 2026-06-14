@@ -15,5 +15,10 @@ export default defineConfig({
     // Dev over LAN: accept any Host header (e.g. a teammate hitting the dev box
     // by IP), not just localhost. Tighten if exposed beyond a trusted network.
     allowedHosts: true,
+    // We run vite inside a container with the repo bind-mounted (./dx). Host
+    // inotify events do NOT reliably cross the bind mount, so native HMR misses
+    // edits — the browser silently serves stale modules. Polling-based watch is
+    // the reliable fix in containers; the CPU cost is acceptable for dev.
+    watch: { usePolling: true, interval: 300 },
   },
 })
