@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 15
+- **Total Sessions**: 16
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~504 | Active |
+| `journal-1.md` | ~537 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 16 | 2026-06-14 | 全屏 UI 调优:气泡随控制条上移 + 折叠按钮收进聊天栏头部(#3/#4) | `1868ee6` | `k-on` |
 | 15 | 2026-06-14 | 修中途加入不追平(延迟seek兑现)+离开后昵称丢失(roster合并) | `a66069a` | `k-on` |
 | 14 | 2026-06-14 | 昵称持久化+进房兜底(guest gate)+roomId 净化(guest/权限 epic 片1) | `9ef17c9` | `k-on` |
 | 13 | 2026-06-14 | 昵称显示：聊天/弹幕显 nickname 而非 senderId(roster + SHUSSEKI members) | `5240ed4` | `k-on` |

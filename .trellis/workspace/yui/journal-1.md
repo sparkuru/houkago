@@ -502,3 +502,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 16: 全屏 UI 调优:气泡随控制条上移 + 折叠按钮收进聊天栏头部(#3/#4)
+
+**Date**: 2026-06-14
+**Task**: 全屏 UI 调优:气泡随控制条上移 + 折叠按钮收进聊天栏头部(#3/#4)
+**Branch**: `k-on`
+
+### Summary
+
+原始需求 #3/#4 前端 UI 打磨。#3 气泡相对进度条:DanmakuOverlay .danmaku-track bottom 此前写死 56px、不随控制条变。EnmokuPlayer 监听 art.on('control',state)(ArtPlayer types/events.d.ts 已声明 'control':[boolean],类型安全无 any)得 controlsShown 本地 ref,defineExpose→BushitsuView computed→prop 单向下传 DanmakuOverlay;trackBottom 经纯函数 danmakuTrackBottom(可见 56/隐藏 16)算出,inline :style bottom + transition 0.2s 平滑;监听随 art.destroy 自清,onBeforeUnmount 复位 true;z-index 仍 60 不被遮挡。#4 折叠按钮收纳(用户选'收进聊天栏头部'):移除 stage 与 ChatPanel 间常驻 20px 粗竖条;展开态折叠按钮收进 ChatPanel header(出席 N 行)右侧小 ›,ChatPanel emit('toggle')、BushitsuView 管 chatHiraku 不自管全局;折叠态右缘 hover-reveal 手柄默认 opacity:0,:hover/:focus-visible 才现(键盘可达,aria-expanded/label 不靠颜色)。控制条态/折叠态均本地 view 态不进 store;未触碰同步/昵称/autoplay join-gate/nameGate;web-zenmen 网页全屏 ChatPanel 仍 docked。trellis-check 删 1 处死代码(chat-toggle.ts+test——折叠手柄是纯 CSS,JS 函数没人用,仅为自测而存)。容器内./dx typecheck/lint/build 绿,kyoushitsu 43 pass(新增 danmaku-track.test 3)。Out:canvas 飞屏弹幕/弹幕样式化/聊天栏宽度可调/主题、guest 权限 epic。视觉由用户最终确认(普通/网页全屏/原生全屏气泡位置与手柄浮现)。剩余 backlog:guest/权限 epic 片2(角色模型)+片3(房主权限矩阵)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1868ee6` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
