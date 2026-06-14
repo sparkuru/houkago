@@ -469,3 +469,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 15: 修中途加入不追平(延迟seek兑现)+离开后昵称丢失(roster合并)
+
+**Date**: 2026-06-14
+**Task**: 修中途加入不追平(延迟seek兑现)+离开后昵称丢失(roster合并)
+**Branch**: `k-on`
+
+### Summary
+
+实跑两 bug(均 dev-server 重启跑最新代码后复现)。Bug1 离开后昵称丢失:store apply SHUSSEKI 整表重建 roster.value=next,离开者从 members 名单消失→nicknameOf 回退 uuid,历史聊天/弹幕变 uuid。改为合并 {...roster.value,...next} 累积名字不删离开者;shusseki 仍用 n 反映在场。roster 仅显示用累积无害。Bug2 中途加入不追平:A 播放中 B 加入→输名→点遮罩→从 0 播不同步,必须 A 暂停/播放一次(SHINKOU)才追平。先怀疑心跳投递坏(tenko setInterval app.server?.publish 非请求上下文),implementer 容器内驱动房间探测确认心跳正常(9s 收 2 条 GENJOU,publish ret>0),排除;真根因是 B 挂载时 hls.js 尚未可 seek,@ready/catchUp/早期心跳的 art.seek 落空被重置回 0,A toggle 时媒体已可 seek 才生效。修:EnmokuPlayer 新增 pendingSeek+seekTo,媒体不可 seek 时控住目标,在 video:loadedmetadata/canplay flush 一次(idempotent,成功即清不循环);apply 的 seek 改走 seekTo,catchUp/心跳/apply 均经此,可 seek 后可靠兑现,点遮罩即追平不依赖 A;canSeekTo(target,readyState,duration) 抽纯函数。flush 在 suppressed 外但仅 follower 持 pendingSeek 且 follower 不广播 SHINKOU→echo 安全。未触碰房主权威/JOUEI/tsuijuuChuu-zure/昵称/autoplay join-gate/nameGate。biome.json ignore 加 .claude(本地 agent 配置与 .trellis 一致,因 biome 只读仓库 .gitignore 会误 lint .claude)。trellis-check 7 文件 0 问题。容器内 ./dx typecheck/lint/build 绿,housou 27+kyoushitsu 40 pass(新增 seekable.test 7,改 store 测为离开后名字保留)。临时调试日志([TENKO-DBG]/[OPEN-DBG])已删。Out:断线重连/NTP-lite/权限/全屏 UI 调优。双端实跑由用户确认。剩余 backlog:#3+#4 全屏 UI 调优、guest/权限 epic 片2+3。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a66069a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
