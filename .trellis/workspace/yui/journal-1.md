@@ -436,3 +436,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: 昵称持久化+进房兜底(guest gate)+roomId 净化(guest/权限 epic 片1)
+
+**Date**: 2026-06-14
+**Task**: 昵称持久化+进房兜底(guest gate)+roomId 净化(guest/权限 epic 片1)
+**Branch**: `k-on`
+
+### Summary
+
+实跑暴露:昵称 roster 已实现但仍显 uuid。根因 store.nickname=ref('') 不持久,只在 HomeView 设;直接打开/刷新房间 URL(B 隐私窗口)跳过首页→nickname 空→connect 传空→housou 回退 senderId→显 uuid。次:房间号误填整段路径 bushitsu/<uuid> 致脏 id 撞坏路由 500(BUSHITSU_NOT_FOUND 本已映射 404)。用户愿景升级为 synctv 式 guest 身份+房主权限矩阵(房主控 guest 看视频/聊天/播放列表/进房,分享链接访客以 guest 进)——较大 epic,拆片。用户选先做片1(解昵称),权限矩阵另开 epic。本片实现:nickname.ts loadNickname/saveNickname(localStorage 键 houkago.nickname 仿 identity);store nickname=ref(loadNickname)+setNickname(set+save),HomeView enter/create/join 经 setNickname 持久;BushitsuView connect+bootstrap 封 startSession(),onMounted nickname 非空直接 startSession、空则 nameGate 内联表单(默认ゲスト,form/input/button,aria,z-index>join-gate)提交→setNickname(空则ゲスト)→startSession——无昵称访客即 guest,gate 在 connect 前与部員播放 join-gate 分层不冲突、本地 view 态不进 store;room-id.ts normalizeRoomId 去空白/剥查询串井号/取 / 末段,HomeView join 净化后进(空不进),杜绝脏 id 500。角色枚举/权限矩阵留 epic 片2(部長/部員/guest role 落 domain/store/协议,BuinSchema.yakuwari 已有字段)+片3(权限开关服务端强制)。trellis-check 7 文件 0 问题。容器内./dx typecheck/lint/build 绿,kyoushitsu 33 pass(新增 nickname.test 3+room-id.test 7)。Out:改名 UI/重名消歧/头像、昵称 DB 持久、权限矩阵。双端实跑由用户确认。剩余 backlog:#3+#4 全屏 UI 调优、guest/权限 epic 片2+3。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9ef17c9` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

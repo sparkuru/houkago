@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~438 | Active |
+| `journal-1.md` | ~471 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 14 | 2026-06-14 | 昵称持久化+进房兜底(guest gate)+roomId 净化(guest/权限 epic 片1) | `9ef17c9` | `k-on` |
 | 13 | 2026-06-14 | 昵称显示：聊天/弹幕显 nickname 而非 senderId(roster + SHUSSEKI members) | `5240ed4` | `k-on` |
 | 12 | 2026-06-14 | 部員自动跟随改用点击加入遮罩(撤销静音方案,方案二) | `ba733e1`, `c51ccab` | `k-on` |
 | 11 | 2026-06-14 | 部員自动跟随播放：绕过浏览器 autoplay 策略（静音自动播+解除遮罩） | `cceb693` | `k-on` |
