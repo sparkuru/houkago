@@ -403,3 +403,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 13: 昵称显示：聊天/弹幕显 nickname 而非 senderId(roster + SHUSSEKI members)
+
+**Date**: 2026-06-14
+**Task**: 昵称显示：聊天/弹幕显 nickname 而非 senderId(roster + SHUSSEKI members)
+**Branch**: `k-on`
+
+### Summary
+
+聊天框/弹幕气泡此前显 senderId(uuid)。根因:client.connect 只传 senderId 不发昵称,housou open() 只数 presence(Map<bushitsuId,number>)不存名字,ChatPanel/DanmakuOverlay 直显 senderId。协议已备 NYUUBU{nickname}/BuinSchema.nickname,HomeView 已收集 store.nickname。Decision(用户选):①nickname 经 connect query 参数(?nickname=)随 senderId 同路传输——open() 即有名,原子加 roster+广播,无'进场到报名'窗口(NYUUBU 消息保留协议定义不依赖);②roster 经扩展 SHUSSEKI 下发,负载 {n}→{n,members:[{id,nickname}]},SHUSSEKI 即 presence 全量快照,open/close 广播,复用现有通道改动最小。实现:kousoku ShussekiSchema 扩 members;housou presence 计数 Map 改 per-room roster Map<bushitsuId,Map<senderId,nickname>>,shusseki 由 roster.size 派生,activeRooms 读 roster keys,删 nyuubu/taibu,handler ConnectQuery 加可选 nickname、open join+广播回发 SHUSSEKI{n,members}、close leave 后广播、最后一人 prune 无泄漏;kyoushitsu client.connect 增 nickname→?nickname=,BushitsuView 传 store.nickname,store 加 roster ref+apply SHUSSEKI 重建 roster+nicknameOf(id) 回退 senderId,ChatPanel/DanmakuOverlay 经 nicknameOf(Danmaku 模板期解析晚到 roster 也生效),自己消息同经 roster。roster 内存态与 presence 同生命周期,store roster 为 server-truth 唯一写入口组件不自存。trellis-check 11 文件 0 问题(确认 SHUSSEKI 仅 open/close 两构造点都带 members、tenko 只构造 GENJOU 不受影响、nyuubu/taibu 无残留逻辑)。容器内./dx typecheck/lint/build 绿,housou 27+kyoushitsu 23 pass(新增 roster.test/bushitsu-store.test)。Out:改名/重名消歧/头像、昵称持久化 DB、房间控制权限、全屏 UI 调优。双端实跑由用户确认。剩余 backlog:#3+#4 全屏 UI 调优(气泡相对进度条/折叠按钮)、#1 房间控制权限。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5240ed4` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
