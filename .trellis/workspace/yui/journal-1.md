@@ -336,3 +336,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: 部員自动跟随播放：绕过浏览器 autoplay 策略（静音自动播+解除遮罩）
+
+**Date**: 2026-06-14
+**Task**: 部員自动跟随播放：绕过浏览器 autoplay 策略（静音自动播+解除遮罩）
+**Branch**: `k-on`
+
+### Summary
+
+源/transport 同步已通,但部員(B)首次进房不自动播、黑屏,需手点一次,之后才同步(重进房又需点)。根因:浏览器 autoplay 策略——无用户手势时程序化 art.play() 被拒 NotAllowedError,且 rejection 未 catch(Unhandled);房主点击有手势故正常,黑屏亦因未解码首帧。Decision(用户选'结合'):部員 muted:true 初始化使程序化 play 被允许→进房即静音自动跟随有画面;同时叠「🔊 点击开启声音」遮罩,点击解除静音(该 click 即手势)。仅部員(!isBuchou)启用,房主零变化。实现:autoplay.ts 抽 shouldRetryMuted/showUnmuteOverlay 纯逻辑;EnmokuPlayer 加 muted prop、safePlay() 统一三处 play(apply×2+alignTransport) rejection 静音重试一次仍败静默吞(art null 是 play 前 guard 非吞错)、artMuted ref+unmute()、内部遮罩(真 button 带 aria/键盘可达 z-index20 解除后消失);BushitsuView :muted=!isBuchou。静音/遮罩本地 view 态不进 store,未触碰 useShinkou 追従/zure/JOUEI/DanmakuOverlay Teleport。trellis-check 4 文件 0 问题。容器内 ./dx typecheck/lint/build 绿、kyoushitsu 22 pass(新增 autoplay.test 5 例)。验证全程 ./dx(强约束)。Out:音量持久化、原生全屏自动播差异、断线重连。双端实跑由用户确认。剩余 backlog:昵称显示、全屏 UI 调优(#3 气泡相对进度条+#4 折叠按钮)、房间控制权限。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cceb693` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
