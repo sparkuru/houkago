@@ -269,3 +269,36 @@ LAN 实跑(9.2 经 http://192.168.9.4:5173 明文 HTTP+非 localhost)整页空�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: 源同步：房主放映源经 JOUEI 下发，部員自动跟随播放
+
+**Date**: 2026-06-14
+**Task**: 源同步：房主放映源经 JOUEI 下发，部員自动跟随播放
+**Branch**: `k-on`
+
+### Summary
+
+此前 transport(SHINKOU)已同步但'源'本身没下发,两端各自手填 m3u8。补 design §6/§10 当前上映源单点同步闭环。现状勘明:协议已备 JOUEI/GENJOU(带 enmokuId)/BANGUMI + REST POST /:id/enmoku & GET /:id/bangumi,但 handler 无 JOUEI 分支、enmokuId 权威从未被 set(shinkou() 传 null),playManual 只设本地 current 不广播;隐患 shinkou() 每次 SHINKOU 覆写 enmokuId。Decision(用户选):注册番组表+JOUEI(enmokuId)而非 JOUEI 直携 url——与 GENJOU/迟到追平同一解析路径,合 §6,JOUEI 协议不改。后端:shinkou.ts 加 jouei() 设当前源(鉴权仅部長 NotBuchou,不破坏进度态)+修 shinkou() 保留已有 enmokuId(传 null 沿用);handler.ts case JOUEI 鉴权+广播全房+回送房主,被拒 KEIHOU 不断连。前端:BushitsuView playManual→POST enmoku 得真 id→刷 bangumi→send JOUEI;applyEnmokuId 从番组表解析(本地缺则 GET 重拉);watch(store.enmokuId,{immediate}) 让房主/部員/迟到走同一 resolve→play,房主不绕 store 直设 current,部員未放映见等待态;enmoku-resolve.ts 纯函数;#5 manual 默认测试流(开发期)。trellis-check 7 文件 0 问题。容器内 typecheck/lint/build 全绿,housou 23+kyoushitsu 12 pass(新增 11 例)。Out:房间控制/权限(房主限 B 输入/强控内容/踢人)、解析器/流代理(P2)、番组表队列管理、昵称显示、全屏 UI 调优——均单列。LAN 跨机实跑(A 房主/B 部員)待用户确认。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `428cd15` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
