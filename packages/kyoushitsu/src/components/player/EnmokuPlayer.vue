@@ -204,11 +204,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="enmoku-player" :class="{ 'control-locked': controlLocked }">
+  <div class="enmoku-player" :class="{ 'control-locked': controlLocked }">
+    <!-- ArtPlayer 専属マウント点：第三方ライブラリが内部 DOM を全権管理する。
+         Vue はこの div 内に一切ノードを置かない — そうしないと ArtPlayer の DOM
+         再配置と Vue の v-if patch が同一容器を奪い合い、comment アンカーの
+         insertBefore で parent=null クラッシュを起こす（prd 根因）。浮層は下の
+         兄弟として .enmoku-player 直下に置き、Vue が完全掌握する。 -->
+    <div ref="container" class="art-host"></div>
     <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。遮断は CSS で
          .art-bottom/.art-mask を display:none + .art-video を pointer-events:none に
          して行い、この帯は純視覚 (pointer-events:none)。状態は文字併記で色だけに
-         頼らない (accessibility)。 -->
+         頼らない (accessibility)。art-host の兄弟なので ArtPlayer の DOM と交錯しない。 -->
     <div
       v-if="controlLocked"
       class="control-lock"
@@ -237,6 +243,13 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   background: #000;
+}
+/* ArtPlayer 専属マウント点：.enmoku-player を満铺する。ArtPlayer の DOM はこの
+   中に生え、浮層(control-lock/join-gate)は兄弟として外層直下に置く。下の :deep
+   後代選択器(.art-bottom/.art-mask/.art-video)は art-host を跨いでも依然命中する。 */
+.art-host {
+  width: 100%;
+  height: 100%;
 }
 /* ArtPlayer 既定の .art-video は object-fit 未指定で、容器を満铺ストレッチする
    （dist CSS: width/height 100% のみ）。普通模式は wrap が 16:9 で容器=映像比のため
