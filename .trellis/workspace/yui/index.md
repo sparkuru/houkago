@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 22
+- **Total Sessions**: 23
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~735 | Active |
+| `journal-1.md` | ~768 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 23 | 2026-06-14 | 放权后 guest 控件实时重显(art.controls.show,无需刷新) | `16552eb` | `k-on` |
 | 22 | 2026-06-14 | 共享播放控制(授权 guest 驱动全员)+控播放锁真正生效 | `9d33d39` | `k-on` |
 | 21 | 2026-06-14 | 控播放遮罩改用 pointer-events 真正屏蔽 guest 操作 | `6502747` | `k-on` |
 | 20 | 2026-06-14 | guest 权限 epic 阶段1:两层角色+房主权限开关(控播放/发言/选源)+UI gating | `769ae3b` | `k-on` |

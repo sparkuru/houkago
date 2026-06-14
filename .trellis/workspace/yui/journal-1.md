@@ -733,3 +733,36 @@ synctv 式 guest 权限 epic 阶段1。决策(用户选):两层角色(部長/ゲ
 ### Next Steps
 
 - None - task complete
+
+
+## Session 23: 放权后 guest 控件实时重显(art.controls.show,无需刷新)
+
+**Date**: 2026-06-14
+**Task**: 放权后 guest 控件实时重显(art.controls.show,无需刷新)
+**Branch**: `k-on`
+
+### Summary
+
+kengen 共享控制后用户复测:房主 A 在 guest B 进房后才开'控播放',B 控件不实时出现、需刷新。诊断:反应性链正常(SETTEI→服务端广播 KENGEN→B store.apply 设 kengen→canControl 计算→BushitsuView :control-locked='!bushitsu.canControl'→EnmokuPlayer :class .control-locked→CSS .art-bottom/.art-mask display:none),数据确活到 B。症状非对称——加锁(display:none 加上)CSS 即时,故'禁止→控件即时消失'正常;解锁(display:none 去掉)后元素回默认 display,但 artplayer@5.4 dist CSS .art-bottom 默认 opacity:0、仅 .art-control-show/.art-hover 才 opacity:1,ArtPlayer 控件显隐状态机仍停隐藏,需 hover/事件才重显,刷新重建初始显→'刷新才有'。修(仅 EnmokuPlayer.vue):import watch,新增 watch(()=>props.controlLocked),由 true→false(解锁,判定 prev&&!locked 排除初次挂载 prev=undefined 与加锁 false→true)且 art 非 null 时 art.controls.show=true。核实 API:Artplayer.controls=Record&Component,Component set show(boolean) 类型安全无 any;dist setter set show(t){addClass/removeClass art-control-show; emit('control',t)}——既给  加 art-control-show(条 opacity:1 复现)又 emit control,被既有 art.on('control')转发→controlsShown(气泡跟随)自然整合,无需额外 emit 不冲突不双发。加锁(false→true)不动 JS,CSS display:none 即时隐藏保留。art 调用归 EnmokuPlayer、模板未改、art null guard、无死代码。trellis-check 0 问题(确认 watch 判定仅 true→false、类型安全、control emit 整合无冲突)。容器内./dx typecheck/lint/build 绿,kyoushitsu 63 pass 不回归。逻辑链已核实,实机 hover/解锁 DOM 显隐由用户双端确认。Out:锁定时保留音量/全屏细分、入房控制(epic 阶段2)。剩余 backlog:guest 权限 epic 阶段2 入房控制(开放/审批/关闭)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `16552eb` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
