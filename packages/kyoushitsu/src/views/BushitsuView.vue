@@ -55,6 +55,10 @@ function onJoin() {
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
 const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
 
+// コントロール条の显隐を EnmokuPlayer から読み、DanmakuOverlay へ下す（prd #3）。
+// defineExpose した ref は .value 経由でアクセス時に unwrap 済みの boolean。
+const controlsShown = computed<boolean>(() => playerRef.value?.controlsShown ?? true)
+
 // 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
 // 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
 // — the JOUEI echo flows back through the store.enmokuId watch like any 部員, so
@@ -194,7 +198,7 @@ onBeforeUnmount(() => {
           @ready="shinkou.catchUp"
           @join="onJoin"
         />
-        <DanmakuOverlay :target="playerEl" />
+        <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
       </div>
       <div v-else class="placeholder">
         <template v-if="bushitsu.isBuchou">
@@ -210,16 +214,21 @@ onBeforeUnmount(() => {
         </ul>
       </section>
     </main>
-    <button
-      type="button"
-      class="chat-toggle"
-      :aria-label="chatHiraku ? '聊天室を畳む' : '聊天室を開く'"
-      :aria-expanded="chatHiraku"
-      @click="chatHiraku = !chatHiraku"
-    >
-      {{ chatHiraku ? "›" : "‹" }}
-    </button>
-    <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" />
+    <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
+         中の ‹ ボタンを浮現させる。既定は不可视（opacity:0）、keyboard でも focus で
+         浮現し可達。展开中は v-if で消す（header 内の › で畳む）。 -->
+    <div v-if="!chatHiraku" class="hiraku-handle">
+      <button
+        type="button"
+        class="hiraku-button"
+        aria-label="聊天室を開く"
+        :aria-expanded="chatHiraku"
+        @click="chatHiraku = true"
+      >
+        ‹
+      </button>
+    </div>
+    <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" @toggle="chatHiraku = false" />
   </div>
 </template>
 
@@ -255,15 +264,32 @@ onBeforeUnmount(() => {
   background: #111;
   color: #fff;
 }
-/* collapse arrow sits between stage and chat; always reachable */
-.chat-toggle {
-  align-self: center;
+/* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
+   中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */
+.hiraku-handle {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  width: 12px;
+}
+.hiraku-button {
   width: 20px;
+  margin-left: -8px;
   padding: 12px 0;
+  font-size: 14px;
+  line-height: 1;
+  color: #222;
+  background: #f5f5f5;
   border: 1px solid #ddd;
   border-right: none;
-  background: #f5f5f5;
+  border-radius: 4px 0 0 4px;
   cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.hiraku-handle:hover .hiraku-button,
+.hiraku-button:focus-visible {
+  opacity: 1;
 }
 
 /* ウェブ全画面: layout-level full viewport that KEEPS the chat docked right

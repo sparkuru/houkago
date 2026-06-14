@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { danmakuTrackBottom } from "@/lib/danmaku-track"
 import { useBushitsuStore } from "@/stores/bushitsu"
-import { onUnmounted, ref, watch } from "vue"
+import { computed, onUnmounted, ref, watch } from "vue"
 
 // 弹幕姬 lite: faint chat bubbles overlaid on the player corner. This is the P0
 // realtime-chat danmaku — a self-owned Vue/CSS overlay, NOT a canvas flying-danmaku
@@ -11,7 +12,13 @@ const bushitsu = useBushitsuStore()
 // target = ArtPlayer の $player（原生全屏の対象元素）。指定时把 overlay teleport 进
 // 该子树，使其在 原生全屏 / 网页全屏 / 普通模式 下均覆盖播放器；未就绪（mount 前）
 // 时 :disabled 让其原地渲染做 fallback，不报错。
-const props = defineProps<{ target?: HTMLElement | null }>()
+// controlsShown：ArtPlayer コントロール条の显隐（親が EnmokuPlayer から下す, prd #3）。
+// 気泡トラックの bottom をこれに追従させ、条が出たら遮られないよう上へ、隐れたら底へ。
+const props = defineProps<{ target?: HTMLElement | null; controlsShown?: boolean }>()
+
+// 条が可視のとき上げる／隐れたとき底に寄せる。純関数 danmakuTrackBottom に委譲。
+// 未指定時は条あり扱い(true)で従来位置を保つ。
+const trackBottom = computed(() => `${danmakuTrackBottom(props.controlsShown ?? true)}px`)
 
 // 表示中の気泡: each visible bubble carries its own id + removal timer so we can
 // clear them all on unmount.
@@ -98,7 +105,7 @@ onUnmounted(clearAll)
       >
         {{ hyouji ? "弾幕 ON" : "弾幕 OFF" }}
       </button>
-      <ul v-if="hyouji" class="danmaku-track">
+      <ul v-if="hyouji" class="danmaku-track" :style="{ bottom: trackBottom }">
         <li
           v-for="b in bubbles"
           :key="b.id"
@@ -141,7 +148,9 @@ onUnmounted(clearAll)
 .danmaku-track {
   position: absolute;
   left: 12px;
-  bottom: 56px; /* sit above the player control bar */
+  /* bottom は controlsShown に追従して inline で切替（prd #3）。条の显隐に合わせ
+     平滑に上下する。 */
+  transition: bottom 0.2s ease;
   margin: 0;
   padding: 0;
   list-style: none;

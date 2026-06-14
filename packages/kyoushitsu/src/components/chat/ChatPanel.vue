@@ -5,7 +5,9 @@ import { ref } from "vue"
 // B-station-live-style chat side panel (scaffold shell). Emits the romaji domain
 // verb so the parent decides how to send; this component does not own the WS.
 const bushitsu = useBushitsuStore()
-const emit = defineEmits<{ oshaberi: [content: string] }>()
+// toggle：折叠要求。親（BushitsuView）が chatHiraku を畳む。ChatPanel は WS も
+// 折叠態も自管せず emit で親へ委ねる（component-guidelines）。
+const emit = defineEmits<{ oshaberi: [content: string]; toggle: [] }>()
 
 const draft = ref("")
 
@@ -19,7 +21,17 @@ function send() {
 
 <template>
   <aside class="chat-panel">
-    <header class="chat-head">出席 {{ bushitsu.shusseki }}</header>
+    <header class="chat-head">
+      <span>出席 {{ bushitsu.shusseki }}</span>
+      <button
+        type="button"
+        class="chat-collapse"
+        aria-label="聊天室を畳む"
+        @click="emit('toggle')"
+      >
+        ›
+      </button>
+    </header>
     <ul class="chat-log">
       <li v-for="(line, i) in bushitsu.chat" :key="i">
         <span class="sender">{{ bushitsu.nicknameOf(line.senderId) }}</span>: {{ line.content }}
@@ -43,9 +55,25 @@ function send() {
   color: #222;
 }
 .chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 8px;
   font-weight: bold;
   border-bottom: 1px solid #eee;
+}
+/* header 右端の小さな折叠ボタン（prd #4 展开態）。中間の粗竖条は廃止。 */
+.chat-collapse {
+  padding: 0 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: #888;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.chat-collapse:hover {
+  color: #222;
 }
 .chat-log {
   flex: 1;

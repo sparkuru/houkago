@@ -24,6 +24,10 @@ const emit = defineEmits<{ shinkou: [Shinkou]; ready: []; join: [] }>()
 const SEEK_EPSILON = 0.3
 
 const container = ref<HTMLDivElement | null>(null)
+// コントロール条の显隐（ArtPlayer 'control' イベント由来, prd #3）。気泡トラックの
+// bottom を切り替えるための local view 態（store 不要・state-management）。親が
+// playerRef 経由で読み、DanmakuOverlay に prop で下す。
+const controlsShown = ref(true)
 // ArtPlayer の主播放器容器（$player）：原生全屏の対象元素。父级用它做 Teleport
 // target，让弹幕 overlay 进入全屏子树。ArtPlayer 类型不全 → 局部窄接口收窄，禁 any。
 const playerEl = ref<HTMLElement | null>(null)
@@ -118,7 +122,7 @@ function onJoin(): void {
   emit("join")
 }
 
-defineExpose({ apply, alignTransport, setRate, snapshot, playerEl })
+defineExpose({ apply, alignTransport, setRate, snapshot, playerEl, controlsShown })
 
 onMounted(() => {
   if (!container.value) return
@@ -146,6 +150,12 @@ onMounted(() => {
   art.on("video:ratechange", onChange)
   art.on("ready", () => emit("ready"))
 
+  // コントロール条の显隐を local view 態へ反映（prd #3）。ArtPlayer 'control' は
+  // state=条が可視か を渡す（typed event, 禁 any）。art.destroy で listener も自清。
+  art.on("control", (state) => {
+    controlsShown.value = state
+  })
+
   // 追平 seek の取りこぼし回収（prd Bug2）: catchUp/heartbeat が seek 可能になる前に
   // 控えた pendingSeek を、メディアが seek 可能になった時点で一度だけ flush する。
   // これにより中途加入は遮罩クリック後に房主の現在位置へ自動追平し、A の手動 toggle
@@ -161,6 +171,7 @@ onBeforeUnmount(() => {
   art?.destroy()
   art = null
   playerEl.value = null
+  controlsShown.value = true
 })
 </script>
 
