@@ -700,3 +700,36 @@ synctv 式 guest 权限 epic 阶段1。决策(用户选):两层角色(部長/ゲ
 ### Next Steps
 
 - None - task complete
+
+
+## Session 22: 共享播放控制(授权 guest 驱动全员)+控播放锁真正生效
+
+**Date**: 2026-06-14
+**Task**: 共享播放控制(授权 guest 驱动全员)+控播放锁真正生效
+**Branch**: `k-on`
+
+### Summary
+
+用户复测 kengen 阶段1 暴露两点:(1)控播放锁不彻底——点画面不播了但控制条播放键仍可按(pointer-events:none on .art-video-player 被控件自身可点性覆盖);(2)'控播放'真正语义是共享控制——授权时 guest 暂停/播放应驱动房主及所有人,而非只控自己。当前 guest SHINKOU 服务端接受+广播 peers 但房主 handleRemote if(isBuchou)return 不跟随 guest。Decision(偏离 design §5 单一房主权威→有权者共享后写者胜,§5 回填):onLocalShinkou 广播门槛 isBuchou→canControl(host||kengen.playback)授权 guest 也广播;handleRemote 去掉房主早退,SHINKOU 分支无条件 applyShinkou(房主+所有人跟他人,后写者胜),GENJOU 分支内 if(isBuchou)break(房主仍不追自身心跳维持稳定,非房主照常追平),offset 取样 senderId==='server' 保留任何早退之前(NTP-lite 不回归)。无自驱动环:服务端 SHINKOU 只 ws.publish 不回发自身(与 OSHABERI/JOUEI 不同)+suppressed/tsuijuuChuu 抑制 apply 引发本地事件不再广播。锁真正生效:控制条 class 反查 artplayer@5.4 dist——.art-bottom(进度+.art-controls 播放/音量/全屏)、.art-mask(.art-state 中央播放)、.art-video(视频点击);controlLocked 时 .art-bottom/.art-mask display:none(不被控件可点性翻盘)+.art-video pointer-events:none,播放键彻底点不到;移除旧失效 .art-video-player pointer-events 死规则。弹幕 toggle(teleport pointer-events:auto)/join-gate( 兄弟)/气泡不受影响;授权/房主控件恢复;服务端 canDo(playback) enforcement 仍最终保险(client canControl 与 server 同源)。同步逻辑仍居 useShinkou composable。trellis-check 0 问题(确认 handler SHINKOU 只 publish 无 send 自echo、无环)。容器内./dx typecheck/lint/build 绿,housou 36+kyoushitsu 63 pass(新增 use-shinkou.test 7:canControl 广播门槛 host/授权guest发-无权不发、房主与guest apply 他人 SHINKOU、GENJOU 仅非房主、房主跳自身 GENJOU)。已知边界(MVP 可接受):锁定 guest 一并失去音量/全屏控件,细分留后续;driverId 入 GENJOU 精确判定自身驱动留后续。双端实跑由用户确认。剩余 backlog:guest 权限 epic 阶段2 入房控制(开放/审批/关闭)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9d33d39` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

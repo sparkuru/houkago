@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
+- **Total Sessions**: 22
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~702 | Active |
+| `journal-1.md` | ~735 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 22 | 2026-06-14 | 共享播放控制(授权 guest 驱动全员)+控播放锁真正生效 | `9d33d39` | `k-on` |
 | 21 | 2026-06-14 | 控播放遮罩改用 pointer-events 真正屏蔽 guest 操作 | `6502747` | `k-on` |
 | 20 | 2026-06-14 | guest 权限 epic 阶段1:两层角色+房主权限开关(控播放/发言/选源)+UI gating | `769ae3b` | `k-on` |
 | 19 | 2026-06-14 | NTP-lite 被动时钟偏移:修跨机 B 端加速/超前(design §5) | `8902401` | `k-on` |
