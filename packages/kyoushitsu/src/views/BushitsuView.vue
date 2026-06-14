@@ -5,10 +5,11 @@ import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
+import { housouUrl } from "@/lib/housou-url"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
 import type { Enmoku } from "houkago-kousoku"
-import { onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { useRoute } from "vue-router"
 
 // 放映 page: player + chat side panel. Wires the WS client to the store
@@ -35,6 +36,10 @@ let client: KousokuClient | null = null
 const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
 const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
 
+// ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
+// 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
+const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
+
 function playManual() {
   if (!manualUrl.value) return
   const isHls = manualUrl.value.endsWith(".m3u8")
@@ -59,7 +64,7 @@ function oshaberi(content: string) {
 
 onMounted(async () => {
   bushitsu.bushitsuId = bushitsuId
-  const base = import.meta.env.VITE_HOUSOU_URL ?? "http://localhost:3000"
+  const base = housouUrl()
   client = new KousokuClient(base, (msg) => {
     bushitsu.apply(msg) // keep the store the single source of truth first
     shinkou.handleRemote(msg) // then drive the player by message type
@@ -107,7 +112,7 @@ onBeforeUnmount(() => {
           @shinkou="shinkou.onLocalShinkou"
           @ready="shinkou.catchUp"
         />
-        <DanmakuOverlay />
+        <DanmakuOverlay :target="playerEl" />
       </div>
       <div v-else class="placeholder">
         <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
@@ -147,9 +152,14 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   margin-bottom: 8px;
 }
-/* player + overlay share one positioned wrapper so the overlay covers the player */
+/* player + overlay share one positioned wrapper so the overlay covers the player.
+   普通模式下 wrap 定 16:9 盒，播放器填满它 */
 .player-wrap {
   position: relative;
+  aspect-ratio: 16 / 9;
+}
+.player-wrap :deep(.enmoku-player) {
+  height: 100%;
 }
 .placeholder {
   aspect-ratio: 16 / 9;
@@ -183,9 +193,12 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
 }
+/* 网页全屏：取消固定比例，填满左列高度；ArtPlayer 内部 contain 上下黑边居中，
+   无下方黑占位（B 站直播间式整块播放器） */
 .bushitsu.web-zenmen .player-wrap {
   flex: 1;
   min-height: 0;
+  aspect-ratio: auto;
 }
 .bushitsu.web-zenmen .bangumi {
   display: none;

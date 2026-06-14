@@ -38,6 +38,9 @@ function send() {
   flex-direction: column;
   width: 320px;
   border-left: 1px solid #ddd;
+  /* 实底色：网页全屏黑底下右侧聊天栏仍是可读的白底深字（普通模式白底本就合理） */
+  background: #fff;
+  color: #222;
 }
 .chat-head {
   padding: 8px;

@@ -8,6 +8,11 @@ import { onUnmounted, ref, watch } from "vue"
 // lives here as local view state; it never touches the store (state-management).
 const bushitsu = useBushitsuStore()
 
+// target = ArtPlayer の $player（原生全屏の対象元素）。指定时把 overlay teleport 进
+// 该子树，使其在 原生全屏 / 网页全屏 / 普通模式 下均覆盖播放器；未就绪（mount 前）
+// 时 :disabled 让其原地渲染做 fallback，不报错。
+const props = defineProps<{ target?: HTMLElement | null }>()
+
 // 表示中の気泡: each visible bubble carries its own id + removal timer so we can
 // clear them all on unmount.
 type Bubble = { id: number; senderId: string; content: string }
@@ -82,29 +87,31 @@ onUnmounted(clearAll)
 </script>
 
 <template>
-  <div class="danmaku-overlay">
-    <button
-      type="button"
-      class="danmaku-toggle"
-      :aria-label="hyouji ? '聊天气泡を隠す' : '聊天气泡を表示'"
-      :aria-pressed="hyouji"
-      @click="toggle"
-    >
-      {{ hyouji ? "弾幕 ON" : "弾幕 OFF" }}
-    </button>
-    <ul v-if="hyouji" class="danmaku-track">
-      <li
-        v-for="b in bubbles"
-        :key="b.id"
-        class="danmaku-bubble"
-        :class="{ fading: fading.has(b.id) }"
+  <Teleport :to="props.target" :disabled="!props.target">
+    <div class="danmaku-overlay">
+      <button
+        type="button"
+        class="danmaku-toggle"
+        :aria-label="hyouji ? '聊天气泡を隠す' : '聊天气泡を表示'"
+        :aria-pressed="hyouji"
+        @click="toggle"
       >
-        <span class="sender">{{ b.senderId }}</span>
-        <span class="sep"> · </span>
-        <span class="content">{{ b.content }}</span>
-      </li>
-    </ul>
-  </div>
+        {{ hyouji ? "弾幕 ON" : "弾幕 OFF" }}
+      </button>
+      <ul v-if="hyouji" class="danmaku-track">
+        <li
+          v-for="b in bubbles"
+          :key="b.id"
+          class="danmaku-bubble"
+          :class="{ fading: fading.has(b.id) }"
+        >
+          <span class="sender">{{ b.senderId }}</span>
+          <span class="sep"> · </span>
+          <span class="content">{{ b.content }}</span>
+        </li>
+      </ul>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -115,6 +122,8 @@ onUnmounted(clearAll)
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  /* ArtPlayer 内部控件 z-index 在数十量级；抬到其上，普通与网页全屏下气泡都可见 */
+  z-index: 60;
 }
 .danmaku-toggle {
   position: absolute;
