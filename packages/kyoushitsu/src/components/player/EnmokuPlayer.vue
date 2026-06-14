@@ -13,11 +13,14 @@ import { onBeforeUnmount, onMounted, ref } from "vue"
 // 再生にユーザー操作が要る。親が `!isBuchou && !joined` を渡し、true の間だけ
 // 「クリックして参加」遮罩を表示する。
 // controlLocked: a guest without 再生制御 permission. The parent passes
-// `!canControl`; while true the root gets a `.control-locked` class that sets
-// pointer-events:none on ArtPlayer の根 `.art-video-player`, so every player
-// control/video click is blocked (z-index 抬升では内部控件に勝てない — design
-// note). 程序化 art.play()/seek は JS 呼び出しで pointer-events に縛られないため
-// follower 同期は通常通り。.control-lock は純視覚提示に降格 (pointer-events:none)。
+// `!canControl`; while true the root gets a `.control-locked` class. ArtPlayer の
+// コントロール条 `.art-bottom`(z60, 進度条+再生/音量/全屏ボタン) と中央オーバーレイ
+// `.art-mask`(z50, .art-state 大再生ボタン) を display:none で消し(display は
+// pointer-events で覆せない — 前回 .art-video-player の pointer-events:none は控件
+// 自身の可点性に勝てず再生ボタンが押せた)、video 本体 `.art-video` は
+// pointer-events:none で点击を殺す。これで guest はあらゆる再生入力を失う。
+// 程序化 art.play()/seek は JS 呼び出しで pointer-events/display に縛られないため
+// follower 同期は通常通り。.control-lock 帯は純視覚提示 (pointer-events:none)。
 // 弹幕 toggle は pointer-events:auto の子で依然押せ、join-gate は $player の兄弟で
 // 影響を受けない。The server also rejects any SHINKOU (双保険・最終保険).
 const props = defineProps<{
@@ -186,9 +189,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="container" class="enmoku-player" :class="{ 'control-locked': controlLocked }">
-    <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。拦截は CSS で
-         .art-video-player に pointer-events:none を当てて行い、この帯は純視覚
-         (pointer-events:none)。状態は文字併記で色だけに頼らない (accessibility)。 -->
+    <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。遮断は CSS で
+         .art-bottom/.art-mask を display:none + .art-video を pointer-events:none に
+         して行い、この帯は純視覚 (pointer-events:none)。状態は文字併記で色だけに
+         頼らない (accessibility)。 -->
     <div
       v-if="controlLocked"
       class="control-lock"
@@ -226,12 +230,18 @@ onBeforeUnmount(() => {
 .enmoku-player :deep(.art-video) {
   object-fit: contain;
 }
-/* 再生制御ロック：ArtPlayer の根 .art-video-player ごと pointer-events を切り、
-   guest の play/pause/seek/進度条/中央ボタン等あらゆる入力を遮断する（z-index で
-   内部控件と争わない — 控件は数十量級）。子の .danmaku-toggle は pointer-events:
-   auto で再有効化されるので押せ、$player の兄弟である join-gate は影響を受けない。
-   程序化 art.play()/seek は JS 呼び出しのため follower 同期は妨げない。 */
-.enmoku-player.control-locked :deep(.art-video-player) {
+/* 再生制御ロック：ArtPlayer のコントロール条と中央再生ボタンを display:none で
+   消し、video 本体は pointer-events:none で点击を殺す。display:none は控件自身の
+   可点性に覆されない（前回 .art-video-player の pointer-events:none では控件が勝ち
+   再生ボタンが押せた）。.art-bottom=底部条(進度条+再生/音量/全屏)、.art-mask=中央
+   オーバーレイ(.art-state 大再生ボタン)。$player の兄弟 join-gate と pointer-events:
+   auto の弹幕 toggle は影響を受けない。程序化 art.play()/seek は JS 呼び出しのため
+   follower 同期は妨げない。授権/房主時(control-locked なし)は控件が復帰する。 */
+.enmoku-player.control-locked :deep(.art-bottom),
+.enmoku-player.control-locked :deep(.art-mask) {
+  display: none;
+}
+.enmoku-player.control-locked :deep(.art-video) {
   pointer-events: none;
 }
 /* 再生制御提示帯：純視覚（pointer-events:none で拦截はしない）。color のみで

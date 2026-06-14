@@ -4,9 +4,13 @@ import { useBushitsuStore } from "@/stores/bushitsu"
 import type { KousokuMessage, Shinkou } from "houkago-kousoku"
 import type { Ref } from "vue"
 
-// 進行制御（client side, design §5): the sync controller. Lives here — never in a
-// .vue — because echo suppression + drift correction is stateful logic shared
-// across the player's lifetime. The host drives (emits SHINKOU); 部員 follow.
+// 進行制御（client side, design §5 回填): the sync controller. Lives here — never
+// in a .vue — because echo suppression + drift correction is stateful logic shared
+// across the player's lifetime. 共有制御: anyone with 再生制御 権限 (host or an
+// authorized guest, bushitsu.canControl) drives — their local play/seek emits
+// SHINKOU; everyone (host included) follows a peer's SHINKOU (後写者勝ち). Only the
+// periodic GENJOU heartbeat keeps the original single-host follow (host skips it
+// to stay its own authority on its own heartbeat).
 //
 // Two remote channels are routed explicitly by message type (no blanket store
 // watch): an explicit SHINKOU (host pressed play/seek/rate) is a hard apply; a
@@ -60,10 +64,13 @@ export function useShinkou(send: (m: KousokuMessage) => void, player: Ref<Player
     }, TSUIJUU_MS)
   }
 
-  // A local player event. Only the 部長 broadcasts, and never while echoing a
-  // remote apply.
+  // A local player event. Anyone holding 再生制御 権限 (bushitsu.canControl = host
+  // or an authorized guest) broadcasts — 共有制御 (design §5 回填). Never while
+  // echoing a remote apply (追従中) so the apply-induced local event is not
+  // re-broadcast → no oscillation. Unauthorized guests never reach here (control
+  // bar hidden + server enforcement), so the gate is canControl, not isBuchou.
   function onLocalShinkou(s: Shinkou) {
-    if (!bushitsu.isBuchou || tsuijuuChuu) return
+    if (!bushitsu.canControl || tsuijuuChuu) return
     send({ type: "SHINKOU", ts: Date.now(), senderId: bushitsu.senderId, payload: s })
   }
 
@@ -111,22 +118,28 @@ export function useShinkou(send: (m: KousokuMessage) => void, player: Ref<Player
   }
 
   // Route a decoded remote envelope. The store has already committed it (truth);
-  // here we drive the player. The 部長 is the authority and never follows.
+  // here we drive the player. 共有制御 (design §5 回填): a peer's SHINKOU is applied
+  // by EVERYONE, host included (後写者勝ち) — the host no longer early-returns. The
+  // GENJOU heartbeat keeps the original rule (host skips it; it would be the host
+  // chasing its own forwarded heartbeat), so the host stays stable on its own
+  // ticks while still following an authorized peer's explicit SHINKOU. No
+  // oscillation: the server's ws.publish never echoes to the sender, and an apply
+  // runs inside 追従中 so the induced local event is suppressed before broadcast.
   function handleRemote(msg: KousokuMessage) {
     // NTP-lite offset sampling: only server-stamped S→C envelopes carry the
     // server wall-clock (senderId === "server"). A SHINKOU is the host client's
     // ts forwarded via publish — that is the host's clock, not the server's, so
-    // it must NOT feed the estimate. Sample before the isBuchou gate (harmless;
-    // keeps the estimate warm regardless of role).
+    // it must NOT feed the estimate. Sample before any early-out (harmless; keeps
+    // the estimate warm regardless of role).
     if (msg.senderId === "server") {
       offsetEstimator.push(msg.ts - Date.now())
     }
-    if (bushitsu.isBuchou) return
     switch (msg.type) {
       case "SHINKOU":
         applyShinkou(msg.payload, msg.ts)
         break
       case "GENJOU":
+        if (bushitsu.isBuchou) break // 房主は自身の心跳を追わない（原権威の安定性維持）
         applyGenjou(msg.payload.shinkou, msg.payload.serverTime)
         break
       default:
