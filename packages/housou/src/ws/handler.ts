@@ -70,11 +70,24 @@ export const wsRoutes = new Elysia().ws("/ws", {
 
         // 進行: the sync primitive. Only the room's 部長 may drive playback —
         // ShinkouSeigyo throws NotBuchou otherwise (→ KEIHOU below). On accept,
-        // broadcast to the room so 部員 follow.
+        // broadcast to the room so 部員 follow. enmokuId stays null here so the
+        // current 演目 (set by JOUEI) is preserved across play/pause/seek.
         case "SHINKOU": {
           const { buchouId } = fetchBushitsu(conn.bushitsuId)
           shinkouSeigyo.shinkou(conn.bushitsuId, msg.payload, null, conn.senderId, buchouId)
           ws.publish(topic, msg)
+          break
+        }
+
+        // 上映: the 部長 sets the room's current 演目. ShinkouSeigyo throws
+        // NotBuchou for non-host (→ KEIHOU). On accept, set authority enmokuId
+        // and broadcast JOUEI so every 部員 loads the source; echo back to the
+        // host too so it follows the same enmokuId→play path (no double logic).
+        case "JOUEI": {
+          const { buchouId } = fetchBushitsu(conn.bushitsuId)
+          shinkouSeigyo.jouei(conn.bushitsuId, msg.payload.enmokuId, conn.senderId, buchouId)
+          ws.publish(topic, msg)
+          ws.send(msg)
           break
         }
 

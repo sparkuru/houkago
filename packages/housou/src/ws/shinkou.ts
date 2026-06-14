@@ -41,6 +41,10 @@ export class ShinkouSeigyo {
   // maps to a KEIHOU back to that sender. Pure + in-memory so the authority gate
   // and recording are unit-testable without a socket. `now` is injectable for
   // deterministic projected-progress tests.
+  //
+  // SHINKOU is transport-only (play/pause/seek/rate) and must NOT clear the
+  // current 演目: enmokuId is set by JOUEI, not here. Passing null/undefined
+  // preserves the existing enmokuId so a play/pause does not drop the source.
   shinkou(
     bushitsuId: string,
     shinkou: Shinkou,
@@ -50,10 +54,32 @@ export class ShinkouSeigyo {
     now = Date.now(),
   ): void {
     if (senderId !== buchouId) throw new NotBuchou("only 部長 may control playback")
+    const prev = this.state.get(bushitsuId)
     this.state.set(bushitsuId, {
-      enmokuId,
+      enmokuId: enmokuId ?? prev?.enmokuId ?? null,
       shinkou,
       shinkouServerTime: now,
+    })
+  }
+
+  // 上映：set the room's current 演目 (design §6). Only the 部長 may drive sync, so
+  // only the 部長 may pick the source — non-host is rejected with NotBuchou
+  // (→ KEIHOU). Merges the enmokuId into authority state WITHOUT touching the
+  // existing shinkou/shinkouServerTime, so switching source mid-room does not
+  // reset playback transport. A room with no prior state starts paused.
+  jouei(
+    bushitsuId: string,
+    enmokuId: string,
+    senderId: string,
+    buchouId: string,
+    now = Date.now(),
+  ): void {
+    if (senderId !== buchouId) throw new NotBuchou("only 部長 may control playback")
+    const prev = this.state.get(bushitsuId)
+    this.state.set(bushitsuId, {
+      enmokuId,
+      shinkou: prev?.shinkou ?? DEFAULT_SHINKOU,
+      shinkouServerTime: prev?.shinkouServerTime ?? now,
     })
   }
 

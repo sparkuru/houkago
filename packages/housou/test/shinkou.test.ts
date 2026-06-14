@@ -37,6 +37,46 @@ test("non-部長 SHINKOU is rejected with NotBuchou and leaves state untouched",
   expect(g.shinkouServerTime).toBe(1_000)
 })
 
+test("jouei sets enmokuId without touching existing shinkou/serverTime", () => {
+  const s = new ShinkouSeigyo()
+  s.shinkou("rA", playing, "e1", "host", "host", 1_000)
+  s.jouei("rA", "e2", "host", "host", 5_000)
+  const g = s.genjou("rA")
+  expect(g.enmokuId).toBe("e2")
+  // transport state must be preserved across a source switch
+  expect(g.shinkou.isPlaying).toBe(true)
+  expect(g.shinkou.currentTime).toBe(100)
+  expect(g.shinkouServerTime).toBe(1_000)
+})
+
+test("jouei on a fresh room initializes paused default state", () => {
+  const s = new ShinkouSeigyo()
+  s.jouei("rA", "e1", "host", "host", 7_000)
+  const g = s.genjou("rA")
+  expect(g.enmokuId).toBe("e1")
+  expect(g.shinkou.isPlaying).toBe(false)
+  expect(g.shinkou.currentTime).toBe(0)
+  expect(g.shinkouServerTime).toBe(7_000)
+})
+
+test("non-部長 jouei is rejected with NotBuchou and leaves state untouched", () => {
+  const s = new ShinkouSeigyo()
+  s.jouei("rA", "e1", "host", "host", 1_000)
+  expect(() => s.jouei("rA", "e2", "intruder", "host", 2_000)).toThrow(NotBuchou)
+  expect(s.genjou("rA").enmokuId).toBe("e1")
+})
+
+test("SHINKOU with null enmokuId preserves the current 演目 (no source drop)", () => {
+  const s = new ShinkouSeigyo()
+  s.jouei("rA", "e1", "host", "host", 1_000)
+  // a play/pause carries null enmokuId — the source must survive
+  s.shinkou("rA", playing, null, "host", "host", 2_000)
+  const g = s.genjou("rA")
+  expect(g.enmokuId).toBe("e1")
+  expect(g.shinkou.isPlaying).toBe(true)
+  expect(g.shinkouServerTime).toBe(2_000)
+})
+
 test("projected returns currentTime while paused (no elapsed advance)", () => {
   const s = new ShinkouSeigyo()
   s.shinkou("rA", paused, null, "host", "host", 1_000)

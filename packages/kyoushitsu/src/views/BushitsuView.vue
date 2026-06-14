@@ -5,11 +5,12 @@ import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
+import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { housouUrl } from "@/lib/housou-url"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
 import type { Enmoku } from "houkago-kousoku"
-import { computed, onBeforeUnmount, onMounted, ref } from "vue"
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 
 // 放映 page: player + chat side panel. Wires the WS client to the store
@@ -22,7 +23,8 @@ const bangumi = ref<Enmoku[]>([])
 const current = ref<Enmoku | null>(null)
 
 // scaffold: a hand-typed direct link to prove ArtPlayer playback.
-const manualUrl = ref("")
+// 开发期默认值，上线前清除。
+const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 
 // 視聴 UI 態（pure view state, not store; state-management）：
 // 網全面（web fullscreen, keep chat docked）と 聊天展開（chat collapse arrow）.
@@ -40,17 +42,44 @@ const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
 const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
 
-function playManual() {
-  if (!manualUrl.value) return
+// 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
+// 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
+// — the JOUEI echo flows back through the store.enmokuId watch like any 部員, so
+// host and members share one resolve→play path (state-management: WS is writer).
+async function playManual() {
+  if (!manualUrl.value || !bushitsu.isBuchou) return
   const isHls = manualUrl.value.endsWith(".m3u8")
-  current.value = {
-    id: "manual",
-    bushitsuId,
+  const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
     title: "手填直链",
     type: isHls ? "hls" : "direct",
     url: manualUrl.value,
     addedBy: bushitsu.senderId,
+  })
+  if (!enmoku) return
+  bangumi.value = [...bangumi.value, enmoku]
+  client?.send({
+    type: "JOUEI",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: { enmokuId: enmoku.id },
+  })
+}
+
+// 上映中の解決：apply the authoritative enmokuId by resolving it to the room's
+// Enmoku and setting `current`. If the local 番組表 lacks it (late joiner, or a
+// source another client registered), re-fetch the 番組表 once and resolve again.
+async function applyEnmokuId(enmokuId: string | null) {
+  if (!enmokuId) {
+    current.value = null
+    return
   }
+  let enmoku = resolveEnmoku(bangumi.value, enmokuId)
+  if (!enmoku) {
+    const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
+    if (data) bangumi.value = data
+    enmoku = resolveEnmoku(bangumi.value, enmokuId)
+  }
+  current.value = enmoku
 }
 
 function oshaberi(content: string) {
@@ -83,6 +112,12 @@ onMounted(async () => {
 
   const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
   if (data) bangumi.value = data
+
+  // store.enmokuId is the single source of truth for 上映中, written by the WS
+  // client from JOUEI (host pick / echo) and GENJOU (late-joiner catch-up).
+  // Watching it gives host + 部員 + late joiners one resolve→play path.
+  // immediate covers the case where GENJOU已 set enmokuId before this mounts.
+  watch(() => bushitsu.enmokuId, applyEnmokuId, { immediate: true })
 })
 
 onBeforeUnmount(() => {
@@ -115,8 +150,11 @@ onBeforeUnmount(() => {
         <DanmakuOverlay :target="playerEl" />
       </div>
       <div v-else class="placeholder">
-        <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
-        <button type="button" @click="playManual">再生</button>
+        <template v-if="bushitsu.isBuchou">
+          <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
+          <button type="button" @click="playManual">再生</button>
+        </template>
+        <span v-else>部長の放映を待っています…</span>
       </div>
       <section class="bangumi">
         <h3>番組表</h3>
