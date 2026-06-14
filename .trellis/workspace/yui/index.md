@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 17
+- **Total Sessions**: 18
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~570 | Active |
+| `journal-1.md` | ~603 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 18 | 2026-06-14 | 普通模式播放器高度驱动:折叠聊天不再膨胀(bug2 真症状) | `933fcf1` | `k-on` |
 | 17 | 2026-06-14 | 全屏二修:原生全屏气泡跟随+网页全屏 letterbox(art-video contain) | `cd9c878` | `k-on` |
 | 16 | 2026-06-14 | 全屏 UI 调优:气泡随控制条上移 + 折叠按钮收进聊天栏头部(#3/#4) | `1868ee6` | `k-on` |
 | 15 | 2026-06-14 | 修中途加入不追平(延迟seek兑现)+离开后昵称丢失(roster合并) | `a66069a` | `k-on` |

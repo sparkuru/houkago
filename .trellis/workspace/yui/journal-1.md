@@ -568,3 +568,36 @@ JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateEr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 18: 普通模式播放器高度驱动:折叠聊天不再膨胀(bug2 真症状)
+
+**Date**: 2026-06-14
+**Task**: 普通模式播放器高度驱动:折叠聊天不再膨胀(bug2 真症状)
+**Branch**: `k-on`
+
+### Summary
+
+上轮 object-fit:contain 修了网页全屏畸变,但用户复测发现 bug2 真症状是:普通模式折叠右侧聊天栏后播放器铺满整窗变巨(非畸变)。AskUserQuestion 确认期望:折叠只隐藏侧栏,播放器保持合理大小、不因释放空间变巨;网页全屏填满是期望。根因:.bushitsu{display:flex}行布局 .stage{flex:1}+ChatPanel(320),.player-wrap{aspect-ratio:16/9}宽度驱动,折叠→ChatPanel display:none→stage 整宽→player 按全宽撑开。修(纯 CSS,仅 BushitsuView):.stage 改 flex column;.player-wrap base flex:1+min-height:0 占 .bar 与 .bangumi 间剩余高度,在 :not(.web-zenmen) 下 aspect-ratio:16/9 由高度推导 width+margin-inline:auto 居中+max-width:100%,宽度由高度定不随聊天显隐变,折叠后横向留白居中(高度驱动比 max-width 封顶更彻底)。约束全收 :not(.web-zenmen) 避免 margin-inline:auto 取消 align stretch 致 web-zenmen 空 wrap 收 0 宽;web-zenmen flex:1/aspect-ratio:auto 填满+object-fit:contain 不动。.placeholder 同步;普通模式 .bangumi flex:none/max-height:30vh/overflow-y 防挤占高度推导。headless 实证 1920/3840/1366×折叠×普通/web-zenmen:普通折叠前后 player-wrap 尺寸完全一致,web-zenmen 仍填满。trellis-check 自修 2 处(注释错位+冗余死规则 .web-zenmen .stage 重复 base)。容器内./dx typecheck/lint/build 绿,kyoushitsu 43 pass。bug1(原生全屏气泡跟随)上轮已确认解决。Out:NTP-lite 时钟偏移、guest 权限 epic、canvas 弹幕、聊天栏宽度可调。视觉由用户实机确认。剩余 backlog:NTP-lite 跨机时钟偏移(已诊断)、guest/权限 epic 片2+3。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `933fcf1` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
