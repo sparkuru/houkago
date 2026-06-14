@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查单测覆盖 CONNECTING/open flush/CLOSED、./dx 全绿、无死代码"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "核查队列与 WebSocket 类型无 any"}
