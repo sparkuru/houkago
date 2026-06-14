@@ -144,6 +144,7 @@ onBeforeUnmount(() => {
           :key="current.url"
           :url="current.url"
           :type="current.type"
+          :muted="!bushitsu.isBuchou"
           @shinkou="shinkou.onLocalShinkou"
           @ready="shinkou.catchUp"
         />
