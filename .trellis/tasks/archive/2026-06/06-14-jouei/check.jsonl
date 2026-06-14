@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "核查 JOUEI 鉴权与 KEIHOU 错误映射一致、不断连"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "核查权威态改动可测、SHINKOU 不清 enmokuId、补用例"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "核查 store 写入口边界、解析→current 路径、迟到追平同路径"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "核查类型贯通无 any、treaty 端到端"}

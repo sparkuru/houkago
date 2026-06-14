@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "JOUEI WS 分支鉴权(部長 NotBuchou→KEIHOU)与 SHINKOU 同款错误映射、WS 域错误回 KEIHOU 不断连"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "权威态修改(shinkouSeigyo jouei setter / SHINKOU 不清 enmokuId)纯函数可测、不记录用户内容"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "store 为 server-truth 写入口,enmokuId/番组表解析→current 的 view 态边界;客户端经 treaty 不裸 fetch"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Enmoku/JOUEI 类型贯通 kousoku→housou→kyoushitsu,禁 any,treaty 端到端类型"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "BushitsuView 监听 enmokuId→解析→current 的职责边界,模板薄"}
