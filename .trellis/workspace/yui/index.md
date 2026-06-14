@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-06-14
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~304 | Active |
+| `journal-1.md` | ~338 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-06-14 | 修复 WS send 未连通抛错致放映断 + dx 端口冲突/docker 强约束工具链改进 | `9c1f696`, `ed24b5b` | `k-on` |
 | 9 | 2026-06-14 | 源同步：房主放映源经 JOUEI 下发，部員自动跟随播放 | `428cd15` | `k-on` |
 | 8 | 2026-06-14 | LAN/HTTP 下 crypto.randomUUID 崩溃修复（buinId secure-context fallback） | `ddb359a` | `k-on` |
 | 7 | 2026-06-14 | P0 验证修复：CORS/LAN 使能 + 全屏 letterbox + 气泡层级 + 聊天可读 | `815b76d` | `k-on` |

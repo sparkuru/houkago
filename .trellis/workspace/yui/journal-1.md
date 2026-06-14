@@ -302,3 +302,37 @@ LAN 实跑(9.2 经 http://192.168.9.4:5173 明文 HTTP+非 localhost)整页空�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: 修复 WS send 未连通抛错致放映断 + dx 端口冲突/docker 强约束工具链改进
+
+**Date**: 2026-06-14
+**Task**: 修复 WS send 未连通抛错致放映断 + dx 端口冲突/docker 强约束工具链改进
+**Branch**: `k-on`
+
+### Summary
+
+JOUEI 源同步上线后回归:房主点再生整页 DOMException(InvalidStateError)、视频不播。根因 KousokuClient.send() 直接 ws.send(),WebSocket CONNECTING 时抛错;与新 playManual(房主不直设 current 而依赖 JOUEI echo→store.enmokuId watch)叠加,send 一抛 JOUEI 没发出 current 恒 null 不播。修:send() OPEN 即送/CONNECTING 入队 sendQueue/CLOSING-CLOSED-null 安全丢弃;connect 注册 open→flush;flush 先清队列再 FIFO 防重入;close 清队列。补 client.test.ts mock WebSocket 覆盖 4 类 readyState。仅覆盖 CONNECTING→OPEN 窗口,断线重连单列。同时按用户强约束改工具链:(1)dx 逐端口探测(/dev/tcp),端口被 dev-server 占用则跳过该 -p 发布——此前硬编码 -p 3000/5173 致 dev 在跑时验证容器 'port is already allocated' 失败、逼回退裸 docker 触发权限弹窗;(2)新增 .claude/hooks/enforce-dx.py(注册 settings.json PreToolUse matcher=Bash)deny 裸 docker run/compose/podman run 提示走 dx,不拦 docker ps/kill 与 ./dx 自身;(3)settings.local allow Bash(./dx *) 免询问。.claude/ 整个 gitignored 本机生效不入库,仅 dx 入库。dx 改进经实跑验证:dev-server 占端口时 ./dx sh -c 验证全跑通(typecheck/lint/build 绿 kyoushitsu 17 pass)。trellis-check 0 问题且子代理正常用 dx。记忆 dev-env-dx-docker-bun 已更新。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9c1f696` | (see git log) |
+| `ed24b5b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
