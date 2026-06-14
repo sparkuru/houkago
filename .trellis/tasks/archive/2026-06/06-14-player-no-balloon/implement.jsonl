@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "BushitsuView 布局 CSS、scoped/:deep、普通与 web-zenmen 分流、模板薄"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "./dx 闭环、headless 实证、禁死代码、布局不回归"}

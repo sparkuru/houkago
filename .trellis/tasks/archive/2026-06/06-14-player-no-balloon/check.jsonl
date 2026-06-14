@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查布局约束仅普通模式、web-zenmen 不回归、职责"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查 ./dx 全绿、各窗口×折叠组合不回归"}
