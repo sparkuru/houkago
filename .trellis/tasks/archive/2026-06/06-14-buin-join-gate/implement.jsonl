@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 独占 art 命令式调用与遮罩 UI;emit join 给父级;catchUp 在 click 同步栈保手势;模板薄"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "joined/遮罩为本地 view 态不进 store;isBuchou 派生区分部員/房主;catchUp 经 useShinkou"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "play() rejection 必 catch 无 Unhandled;补测试;./dx 闭环;禁死代码/静音残留"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "art.play Promise/事件类型,禁 any"}
