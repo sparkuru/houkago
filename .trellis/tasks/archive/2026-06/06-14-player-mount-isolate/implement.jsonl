@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "EnmokuPlayer 挂载点与 Vue 浮层隔离、art 调用归属、:deep 后代选择器、模板薄"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "崩溃修复、headless 自证不空白、./dx 闭环、禁死代码、布局不回归"}

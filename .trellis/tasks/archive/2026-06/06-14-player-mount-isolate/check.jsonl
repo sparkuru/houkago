@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "核查挂载隔离结构、浮层为 art-host 兄弟、:deep 仍生效、不回归"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "核查无崩溃、./dx 全绿、headless 不空白、布局不回归"}
