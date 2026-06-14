@@ -667,3 +667,36 @@ synctv 式 guest 权限 epic 阶段1。决策(用户选):两层角色(部長/ゲ
 ### Next Steps
 
 - None - task complete
+
+
+## Session 21: 控播放遮罩改用 pointer-events 真正屏蔽 guest 操作
+
+**Date**: 2026-06-14
+**Task**: 控播放遮罩改用 pointer-events 真正屏蔽 guest 操作
+**Branch**: `k-on`
+
+### Summary
+
+阶段1(kengen 权限)的 control-lock 播放器遮罩不生效:guest 无控播放权仍能点 ArtPlayer 播放,只是 ~4s 后被心跳强制拉回。根因:EnmokuPlayer .control-lock z-index:5,而 ArtPlayer (.art-video-player)未建立隔离 stacking context、其内部控件 z-index 数十量级(弹幕 overlay 用 60 才压住),控件浮在 z-index:5 遮罩之上→点击穿透到控件→guest 驱动本地播放,4s 后心跳才同步。Decision:不靠抬 z-index 与 ArtPlayer 内部层级打架,改用 pointer-events。修(仅 EnmokuPlayer.vue):.enmoku-player 加 :class control-locked(=controlLocked),CSS .enmoku-player.control-locked :deep(.art-video-player){pointer-events:none} 切断 ArtPlayer 根所有控件/视频点击输入(play/pause/seek/进度条/中央按钮);.control-lock 降为纯视觉提示加 pointer-events:none。不受影响依据:join-gate 是  兄弟(在 .enmoku-player 内非 .art-video-player 内)pointer-events 不波及仍可点 onJoin 起播;弹幕 toggle teleport 进  且 pointer-events:auto,CSS 允许后代在父 none 下重启故仍可点、气泡仍渲染;程序化 art.play()/seek(apply/alignTransport/seekTo/catchUp/心跳)是 JS 调用不受 pointer-events 影响 follower 仍同步;host(controlLocked=false)/放权后不加 class 控件恢复;服务端 enforcement 未动(最终保险)。ArtPlayer 根 class=.art-video-player(art.template.,dist 携 --art-* 变量与 art-control-show 等状态 class 确认)。:deep 编译为 .enmoku-player.control-locked[data-v] .art-video-player 正确。trellis-check 0 问题。容器内./dx typecheck/lint/build 绿,kyoushitsu 56 pass 不回归。pointer-events 交互 headless 难验,最终双端实机由用户确认。Out:仅放开部分控件(如禁播放但允全屏)细分留后续、入房控制(epic 阶段2)。剩余 backlog:guest 权限 epic 阶段2 入房控制(开放/审批/关闭)。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6502747` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
