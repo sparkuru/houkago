@@ -866,3 +866,36 @@ kengen 共享控制后用户复测:房主 A 在 guest B 进房后才开'控播�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 27: Bangumi queue controls
+
+**Date**: 2026-06-18
+**Task**: Bangumi queue controls
+**Branch**: `k-on`
+
+### Summary
+
+Implemented interactive bangumi queue controls, delete synchronization, source-switch reset semantics, regression tests, and spec notes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `28d6b21` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
