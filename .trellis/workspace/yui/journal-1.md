@@ -799,3 +799,37 @@ kengen 共享控制后用户复测:房主 A 在 guest B 进房后才开'控播�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 25: guest 权限 epic 阶段2:入房控制
+
+**Date**: 2026-06-18
+**Task**: guest 权限 epic 阶段2:入房控制
+**Branch**: `k-on`
+
+### Summary
+
+实现房间级入房控制:新增 NYUUSHITSU/NYUUSHITSU_SETTEI/NYUUSHITSU_HANTEI 协议,后端在 WS open 前按 open/approval/closed 门控 guest,approval 下 pending socket 不进 roster 且不能发房内动作,房主可批准/拒绝,房主离线期间 pending 保留到其回来处理;前端按 server-truth 入房状态显示等待/关闭/拒绝 gate,进入后才 bootstrap 番組表/OIKAKE/同步,房主面板加入入室设置和审批列表;补后端 admission 单测/e2e 和前端 store 测试,并把 WS 入房门控合约写入 backend quality spec. 验证: ./dx bun run typecheck, ./dx bun run lint, housou+kyoushitsu bun test, kyoushitsu build 全绿(仅 Vite 大 chunk 既有提示).
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fbebcee` | (see git log) |
+| `421f46c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
