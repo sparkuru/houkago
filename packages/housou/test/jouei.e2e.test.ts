@@ -80,6 +80,44 @@ test("部長 JOUEI broadcasts to a 部員 and echoes back to the host", async ()
   member.close()
 })
 
+test("JOUEI resets transport and broadcasts GENJOU for the new source", async () => {
+  const room = await makeRoom("host")
+  const enmoku = await addEnmoku(room.id)
+
+  const host = await open(room.id, "host")
+  const member = await open(room.id, "member")
+
+  host.send(
+    JSON.stringify({
+      type: "SHINKOU",
+      ts: Date.now(),
+      senderId: "host",
+      payload: { isPlaying: true, currentTime: 30, playbackRate: 1 },
+    } satisfies KousokuMessage),
+  )
+  await new Promise((r) => setTimeout(r, 50))
+
+  const gotGenjou = nextMatch(member, (m) => m.type === "GENJOU")
+  host.send(
+    JSON.stringify({
+      type: "JOUEI",
+      ts: Date.now(),
+      senderId: "host",
+      payload: { enmokuId: enmoku.id },
+    } satisfies KousokuMessage),
+  )
+
+  const genjou = await gotGenjou
+  expect(genjou.type).toBe("GENJOU")
+  if (genjou.type === "GENJOU") {
+    expect(genjou.payload.enmokuId).toBe(enmoku.id)
+    expect(genjou.payload.shinkou).toEqual({ isPlaying: false, currentTime: 0, playbackRate: 1 })
+  }
+
+  host.close()
+  member.close()
+})
+
 test("non-部長 JOUEI is rejected with KEIHOU and does not broadcast", async () => {
   const room = await makeRoom("host")
   const enmoku = await addEnmoku(room.id)

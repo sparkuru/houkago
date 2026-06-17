@@ -199,8 +199,13 @@ export const wsRoutes = new Elysia().ws("/ws", {
             throw new Forbidden("ソース選択の権限がありません")
           }
           shinkouSeigyo.jouei(conn.bushitsuId, msg.payload.enmokuId, conn.senderId, conn.senderId)
-          ws.publish(topic, msg)
-          ws.send(msg)
+          const jouei = serverMsg("JOUEI", msg.payload)
+          const { enmokuId, shinkou, shinkouServerTime } = shinkouSeigyo.genjou(conn.bushitsuId)
+          const genjou = serverMsg("GENJOU", { enmokuId, shinkou, serverTime: shinkouServerTime })
+          ws.publish(topic, jouei)
+          ws.send(jouei)
+          ws.publish(topic, genjou)
+          ws.send(genjou)
           break
         }
 

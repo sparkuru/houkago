@@ -1,7 +1,7 @@
 import type { Bushitsu, Enmoku } from "houkago-kousoku"
 import { getBushitsu, insertBushitsu } from "../db/queries/bushitsu"
-import { insertEnmoku, listEnmoku } from "../db/queries/enmoku"
-import { BushitsuNotFound } from "../lib/errors"
+import { deleteEnmoku, insertEnmoku, listEnmoku } from "../db/queries/enmoku"
+import { BushitsuNotFound, EnmokuNotFound } from "../lib/errors"
 import { newId } from "../lib/id"
 
 // BushitsuKanri（部室管理）: room lifecycle + enmoku metadata. Pure orchestration;
@@ -57,4 +57,11 @@ export function addEnmoku(
 export function fetchBangumi(bushitsuId: string): Enmoku[] {
   fetchBushitsu(bushitsuId)
   return listEnmoku(bushitsuId)
+}
+
+// 演目を消す：delete a queued Enmoku from a room.
+export function removeEnmoku(bushitsuId: string, enmokuId: string): { ok: true } {
+  fetchBushitsu(bushitsuId)
+  if (!deleteEnmoku(bushitsuId, enmokuId)) throw new EnmokuNotFound(enmokuId)
+  return { ok: true }
 }

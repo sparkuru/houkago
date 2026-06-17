@@ -64,9 +64,9 @@ export class ShinkouSeigyo {
 
   // 上映：set the room's current 演目 (design §6). Only the 部長 may drive sync, so
   // only the 部長 may pick the source — non-host is rejected with NotBuchou
-  // (→ KEIHOU). Merges the enmokuId into authority state WITHOUT touching the
-  // existing shinkou/shinkouServerTime, so switching source mid-room does not
-  // reset playback transport. A room with no prior state starts paused.
+  // (→ KEIHOU). A source switch resets transport to a fresh paused state; reusing
+  // the previous source's play/time state would make followers autoplay or seek
+  // into the new media before the driver intentionally starts it.
   jouei(
     bushitsuId: string,
     enmokuId: string,
@@ -75,11 +75,10 @@ export class ShinkouSeigyo {
     now = Date.now(),
   ): void {
     if (senderId !== buchouId) throw new NotBuchou("only 部長 may control playback")
-    const prev = this.state.get(bushitsuId)
     this.state.set(bushitsuId, {
       enmokuId,
-      shinkou: prev?.shinkou ?? DEFAULT_SHINKOU,
-      shinkouServerTime: prev?.shinkouServerTime ?? now,
+      shinkou: DEFAULT_SHINKOU,
+      shinkouServerTime: now,
     })
   }
 

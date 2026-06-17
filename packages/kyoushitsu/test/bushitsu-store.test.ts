@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from "bun:test"
-import type { KousokuMessage, Yakuwari } from "houkago-kousoku"
+import type { Enmoku, KousokuMessage, Yakuwari } from "houkago-kousoku"
 import { createPinia, setActivePinia } from "pinia"
 
 // 名簿（roster）store test: applying SHUSSEKI updates the count and MERGES the
@@ -95,6 +95,15 @@ const nyuushitsuMsg = (payload: {
   pending: { senderId: string; nickname: string; requestedAt: number }[]
 }): KousokuMessage => ({ type: "NYUUSHITSU", ts: Date.now(), senderId: "server", payload })
 
+const enmoku = (id: string): Enmoku => ({
+  id,
+  bushitsuId: "rA",
+  title: `t-${id}`,
+  type: "hls",
+  url: `https://x/${id}.m3u8`,
+  addedBy: "host",
+})
+
 test("default kengen is guest-chat-only before any KENGEN arrives", () => {
   const store = useBushitsuStore()
   expect(store.kengen).toEqual({ playback: false, chat: true, playlist: false })
@@ -142,4 +151,11 @@ test("apply NYUUSHITSU updates mode, my admission status, and pending requests",
   expect(store.nyuushitsuMode).toBe("approval")
   expect(store.nyuushitsuStatus).toBe("entered")
   expect(store.pendingNyuushitsu).toEqual([{ senderId: "u2", nickname: "Mio", requestedAt: 123 }])
+})
+
+test("apply BANGUMI updates the room queue snapshot", () => {
+  const store = useBushitsuStore()
+  const queue = [enmoku("e1"), enmoku("e2")]
+  store.apply({ type: "BANGUMI", ts: Date.now(), senderId: "server", payload: { enmoku: queue } })
+  expect(store.bangumi.map((e) => e.id)).toEqual(["e1", "e2"])
 })

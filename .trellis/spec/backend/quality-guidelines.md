@@ -165,6 +165,88 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 
 ---
 
+## Scenario: Bangumi Queue and Source Switch Sync
+
+### 1. Scope / Trigger
+
+- Trigger: any change to 番組表 (`enmoku`) create/delete, `BANGUMI` realtime
+  snapshots, or `JOUEI` source switching.
+- 番組表 is server-authoritative realtime state: a REST write must update storage
+  and broadcast the latest queue to every admitted socket in `room:<bushitsuId>`.
+
+### 2. Signatures
+
+- REST create: `POST /bushitsu/:id/enmoku` -> `Enmoku`
+- REST delete: `DELETE /bushitsu/:id/enmoku/:enmokuId` -> `{ ok: true }`
+- WS queue snapshot: `BANGUMI { enmoku: Enmoku[] }`
+- WS source switch: `JOUEI { enmokuId: string }`, followed by
+  `GENJOU { enmokuId, shinkou, serverTime }`
+
+### 3. Contracts
+
+- REST create/delete must call domain/db first, then broadcast
+  `BANGUMI` with the full latest `fetchBangumi(bushitsuId)` result.
+- From HTTP handlers, `server.publish(topic, ...)` must send a serialized JSON
+  string. Passing a raw object produces `"[object Object]"` for websocket clients.
+- `JOUEI` resets authoritative transport to `{ isPlaying: false, currentTime: 0,
+  playbackRate: 1 }` with a fresh `shinkouServerTime`, then broadcasts `JOUEI`
+  and a server-stamped `GENJOU`. Do not reuse the previous source's play/time
+  state for the new media.
+
+### 4. Validation & Error Matrix
+
+- Delete missing `enmokuId` in an existing room -> `ENMOKU_NOT_FOUND` / HTTP 404.
+- Delete in a missing room -> `BUSHITSU_NOT_FOUND` / HTTP 404.
+- Unauthorized `JOUEI` -> `FORBIDDEN` / `KEIHOU`; do not update authority state
+  or broadcast `JOUEI`/`GENJOU`.
+
+### 5. Good/Base/Bad Cases
+
+- Good: guest with playlist permission deletes an item; host and all guests
+  receive the same `BANGUMI` snapshot without refreshing.
+- Base: adding a manual source still returns the created `Enmoku`, broadcasts the
+  updated queue, and may then `JOUEI` it.
+- Bad: source switch preserves old `Shinkou` (`isPlaying=true`, old timestamp),
+  causing followers to autoplay/seek in the new source while the driver is
+  paused.
+
+### 6. Tests Required
+
+- REST/e2e: create/delete updates DB and delete broadcasts `BANGUMI` to active
+  host + guest sockets.
+- Sync unit: `ShinkouSeigyo.jouei` resets transport to paused start.
+- WS/e2e: after prior playing `SHINKOU`, `JOUEI` broadcasts a `GENJOU` whose
+  `shinkou` is paused at `0`.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+server?.publish(roomTopic(id), serverMsg("BANGUMI", { enmoku }))
+```
+
+#### Correct
+
+```ts
+const msg = serverMsg("BANGUMI", { enmoku })
+server?.publish(roomTopic(id), JSON.stringify(msg))
+```
+
+#### Wrong
+
+```ts
+state.set(room, { enmokuId, shinkou: prev.shinkou, shinkouServerTime: prev.shinkouServerTime })
+```
+
+#### Correct
+
+```ts
+state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.now() })
+```
+
+---
+
 ## Code Review Checklist
 
 - [ ] Identifiers romaji; domain terms match the §13 dictionary (no synonyms).

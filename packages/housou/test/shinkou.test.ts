@@ -37,16 +37,15 @@ test("non-部長 SHINKOU is rejected with NotBuchou and leaves state untouched",
   expect(g.shinkouServerTime).toBe(1_000)
 })
 
-test("jouei sets enmokuId without touching existing shinkou/serverTime", () => {
+test("jouei sets enmokuId and resets transport to paused start", () => {
   const s = new ShinkouSeigyo()
   s.shinkou("rA", playing, "e1", "host", "host", 1_000)
   s.jouei("rA", "e2", "host", "host", 5_000)
   const g = s.genjou("rA")
   expect(g.enmokuId).toBe("e2")
-  // transport state must be preserved across a source switch
-  expect(g.shinkou.isPlaying).toBe(true)
-  expect(g.shinkou.currentTime).toBe(100)
-  expect(g.shinkouServerTime).toBe(1_000)
+  expect(g.shinkou.isPlaying).toBe(false)
+  expect(g.shinkou.currentTime).toBe(0)
+  expect(g.shinkouServerTime).toBe(5_000)
 })
 
 test("jouei on a fresh room initializes paused default state", () => {

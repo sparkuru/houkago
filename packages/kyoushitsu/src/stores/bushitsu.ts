@@ -2,6 +2,7 @@ import { buinId } from "@/lib/identity"
 import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
 import type {
+  Enmoku,
   Kengen,
   KousokuMessage,
   NyuushitsuMode,
@@ -35,6 +36,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   // roster so departed members' roles resolve for historical lines too.
   const yakuwari = ref<Record<string, Yakuwari>>({})
   const enmokuId = ref<string | null>(null) // 上映中
+  const bangumi = ref<Enmoku[]>([])
   const chat = ref<ChatLine[]>([])
   // 権限: the room's guest-permission snapshot, written by KENGEN. Defaults to the
   // housou default so gating is sane before the first KENGEN arrives.
@@ -92,6 +94,9 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
         break
+      case "BANGUMI":
+        bangumi.value = msg.payload.enmoku
+        break
       case "GENJOU":
         enmokuId.value = msg.payload.enmokuId
         shinkou.value = msg.payload.shinkou
@@ -112,6 +117,10 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   function setNickname(name: string): void {
     nickname.value = name
     saveNickname(name)
+  }
+
+  function setBangumi(enmoku: Enmoku[]): void {
+    bangumi.value = enmoku
   }
 
   // 名前解決: map a senderId to its nickname for display; fall back to the raw
@@ -143,10 +152,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     canChat,
     canPlaylist,
     enmokuId,
+    bangumi,
     chat,
     shinkou,
     shinkouServerTime,
     apply,
+    setBangumi,
     setNickname,
     nicknameOf,
     yakuwariOf,

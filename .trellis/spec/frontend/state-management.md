@@ -51,6 +51,10 @@ Anything that is purely one component's view concern stays a local `ref`.
   envelopes (`GENJOU`, `SHINKOU`, `JOUEI`, `BANGUMI`, `SHUSSEKI`, `OSHABERI`,
   `DANMAKU`) are decoded and committed to stores via store actions. UI never
   writes server-truth fields directly.
+- `BANGUMI` is a full queue snapshot, not a patch. Commit it into
+  `useBushitsuStore.bangumi`; room views may optimistically set the same store
+  after their own REST write, but must still accept the socket snapshot so host
+  and guest stay in sync without refresh.
 - **Host-authority on the client:** only the 部長's player events emit `SHINKOU`.
   When applying a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo
   for ~200ms so the resulting local player event is not re-broadcast (design §5).
@@ -67,6 +71,8 @@ Anything that is purely one component's view concern stays a local `ref`.
 
 - Treating the client as the source of truth for playback — leads to fights with
   the authority state. The client follows; only the host drives.
+- Keeping 番組表 as a component-local `ref` only. A REST delete by another client
+  will not reach that component unless `BANGUMI` is committed into the room store.
 - Forgetting `tsuijuuChuu` echo suppression → applying a remote `SHINKOU` fires a
   local seek/play event that gets broadcast back, causing oscillation.
 - Storing a continuously-incremented `currentTime` in a store instead of deriving

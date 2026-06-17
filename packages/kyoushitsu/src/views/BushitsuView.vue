@@ -6,6 +6,7 @@ import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
+import { canDeleteBangumiItem, canPlayBangumiItem, isCurrentEnmoku } from "@/lib/bangumi-actions"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
@@ -21,8 +22,8 @@ const route = useRoute()
 const bushitsu = useBushitsuStore()
 const bushitsuId = String(route.params.id)
 
-const bangumi = ref<Enmoku[]>([])
 const current = ref<Enmoku | null>(null)
+const currentEnmokuId = computed(() => current.value?.id ?? null)
 
 // scaffold: a hand-typed direct link to prove ArtPlayer playback.
 // 开发期默认值，上线前清除。
@@ -97,6 +98,16 @@ function nyuushitsuHantei(senderId: string, approved: boolean) {
   })
 }
 
+function sendJouei(enmokuId: string) {
+  if (!canPlayBangumiItem(bushitsu.canPlaylist)) return
+  client?.send({
+    type: "JOUEI",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: { enmokuId },
+  })
+}
+
 async function playManual() {
   if (!manualUrl.value || !bushitsu.canPlaylist) return
   const isHls = manualUrl.value.endsWith(".m3u8")
@@ -107,13 +118,19 @@ async function playManual() {
     addedBy: bushitsu.senderId,
   })
   if (!enmoku) return
-  bangumi.value = [...bangumi.value, enmoku]
-  client?.send({
-    type: "JOUEI",
-    ts: Date.now(),
-    senderId: bushitsu.senderId,
-    payload: { enmokuId: enmoku.id },
-  })
+  bushitsu.setBangumi([...bushitsu.bangumi, enmoku])
+  sendJouei(enmoku.id)
+}
+
+function playBangumi(enmokuId: string) {
+  sendJouei(enmokuId)
+}
+
+async function deleteBangumiEnmoku(enmokuId: string) {
+  if (!canDeleteBangumiItem(bushitsu.canPlaylist, enmokuId, currentEnmokuId.value)) return
+  const { data } = await housou.bushitsu({ id: bushitsuId }).enmoku({ enmokuId }).delete()
+  if (!data) return
+  bushitsu.setBangumi(bushitsu.bangumi.filter((e) => e.id !== enmokuId))
 }
 
 // 上映中の解決：apply the authoritative enmokuId by resolving it to the room's
@@ -124,11 +141,11 @@ async function applyEnmokuId(enmokuId: string | null) {
     current.value = null
     return
   }
-  let enmoku = resolveEnmoku(bangumi.value, enmokuId)
+  let enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
   if (!enmoku) {
     const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
-    if (data) bangumi.value = data
-    enmoku = resolveEnmoku(bangumi.value, enmokuId)
+    if (data) bushitsu.setBangumi(data)
+    enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
   }
   current.value = enmoku
 }
@@ -169,7 +186,7 @@ async function enterRoom() {
   }
 
   const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
-  if (data) bangumi.value = data
+  if (data) bushitsu.setBangumi(data)
 
   // store.enmokuId is the single source of truth for 上映中, written by the WS
   // client from JOUEI (host pick / echo) and GENJOU (late-joiner catch-up).
@@ -276,7 +293,34 @@ onBeforeUnmount(() => {
         <section class="bangumi">
           <h3>番組表</h3>
           <ul>
-            <li v-for="e in bangumi" :key="e.id">{{ e.title }}</li>
+            <li
+              v-for="e in bushitsu.bangumi"
+              :key="e.id"
+              class="bangumi-row"
+              :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
+              :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
+            >
+              <span class="bangumi-title">{{ e.title }}</span>
+              <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">上映中</span>
+              <span v-if="bushitsu.canPlaylist" class="bangumi-actions">
+                <button
+                  type="button"
+                  class="bangumi-action"
+                  :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
+                  @click="playBangumi(e.id)"
+                >
+                  再生
+                </button>
+                <button
+                  type="button"
+                  class="bangumi-action danger"
+                  :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
+                  @click="deleteBangumiEnmoku(e.id)"
+                >
+                  削除
+                </button>
+              </span>
+            </li>
           </ul>
         </section>
       </main>
@@ -359,6 +403,51 @@ onBeforeUnmount(() => {
   max-height: 30vh;
   overflow-y: auto;
   margin-top: 8px;
+}
+.bangumi ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.bangumi-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fff;
+}
+.bangumi-row.current {
+  border-color: #222;
+  background: #f7f7f7;
+}
+.bangumi-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bangumi-status {
+  font-size: 12px;
+  color: #222;
+}
+.bangumi-actions {
+  display: flex;
+  gap: 6px;
+}
+.bangumi-action {
+  min-width: 48px;
+  min-height: 28px;
+  padding: 3px 8px;
+}
+.bangumi-action.danger:not(:disabled) {
+  color: #8a1f1f;
 }
 /* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
    中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */

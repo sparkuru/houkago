@@ -35,6 +35,8 @@ const listStmt = db.query<EnmokuRow, { $bushitsuId: string }>(
    FROM enmoku WHERE bushitsu_id = $bushitsuId ORDER BY created_at ASC`,
 )
 
+const deleteStmt = db.query("DELETE FROM enmoku WHERE id = $id AND bushitsu_id = $bushitsuId")
+
 // 演目を投稿する：add an Enmoku to a 部室.
 export function insertEnmoku(e: Enmoku, createdAt: number): void {
   insertStmt.run({
@@ -51,4 +53,10 @@ export function insertEnmoku(e: Enmoku, createdAt: number): void {
 // 番組表：list a room's enmoku in submission order.
 export function listEnmoku(bushitsuId: string): Enmoku[] {
   return listStmt.all({ $bushitsuId: bushitsuId }).map(toDomain)
+}
+
+// 演目を消す：remove a room-owned Enmoku. Returns whether a row was deleted.
+export function deleteEnmoku(bushitsuId: string, id: string): boolean {
+  const result = deleteStmt.run({ $id: id, $bushitsuId: bushitsuId })
+  return result.changes > 0
 }
