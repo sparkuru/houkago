@@ -84,6 +84,85 @@ Container services must listen on `0.0.0.0` to be reachable from the host
   covered by integration tests against a running Elysia instance, mirroring the
   spike driver.
 
+## Scenario: WebSocket Room Admission Gate
+
+### 1. Scope / Trigger
+
+- Trigger: any change to room entry, guest waiting, host approval, or room-level
+  policy over the `/ws` transport.
+- Admission is a **server-side gate before roster join**. A socket that is not
+  admitted must not subscribe to `room:<bushitsuId>` and must not broadcast chat,
+  playback, source, or heartbeat messages into the room.
+
+### 2. Signatures
+
+- Shared protocol source: `packages/kousoku/src/messages.ts`.
+- `NYUUSHITSU` S→C payload:
+  `{ mode: "open" | "approval" | "closed", status: "entered" | "waiting" | "rejected" | "closed", pending: { senderId: string, nickname: string, requestedAt: number }[] }`
+- `NYUUSHITSU_SETTEI` C→S payload:
+  `{ mode: "open" | "approval" | "closed" }`
+- `NYUUSHITSU_HANTEI` C→S payload:
+  `{ senderId: string, approved: boolean }`
+
+### 3. Contracts
+
+- `mode=open`: guest is admitted immediately, then receives `SHUSSEKI`,
+  `KENGEN`, and `NYUUSHITSU(status="entered")`.
+- `mode=approval`: guest remains pending and receives
+  `NYUUSHITSU(status="waiting")`; the socket is kept alive but not subscribed to
+  the room topic. The 部長 receives pending requests in `NYUUSHITSU.pending`.
+- `mode=closed`: guest receives `NYUUSHITSU(status="closed")` and is not added
+  to roster.
+- The 部長 (`senderId === buchouId`) is always admitted and is the only actor
+  allowed to send `NYUUSHITSU_SETTEI` or `NYUUSHITSU_HANTEI`.
+- Room-level admission mode is in-memory per room id and is not tied to the
+  部長's online status. Pending requests are removed when the waiting socket
+  closes.
+
+### 4. Validation & Error Matrix
+
+- Malformed envelope -> `KEIHOU("invalid envelope")`, connection remains usable.
+- Non-部長 sends `NYUUSHITSU_SETTEI` -> `KEIHOU` with `NotBuchou`.
+- Non-部長 sends `NYUUSHITSU_HANTEI` -> `KEIHOU` with `NotBuchou`.
+- Not-yet-admitted socket sends room action (`OSHABERI`, `SHINKOU`, `JOUEI`,
+  `OIKAKE`, etc.) -> `KEIHOU` with `Forbidden`; do not broadcast.
+
+### 5. Good/Base/Bad Cases
+
+- Good: approval-mode guest waits, sends no room traffic, then receives
+  `entered` + current room snapshots after host approval.
+- Base: default `open` preserves current direct-link behavior.
+- Bad: adding a pending guest to `SHUSSEKI` before approval, or subscribing them
+  to `room:<id>`, leaks room state and allows unauthorized room actions.
+
+### 6. Tests Required
+
+- Unit-test the admission state module: default mode, set/clear, pending grouping,
+  pending connection removal.
+- WS e2e-test default open, closed rejection, approval wait, approval admit,
+  host-offline pending visibility after reconnect, and non-host rejection.
+- Frontend store test: applying `NYUUSHITSU` updates mode, own status, and
+  pending request list.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+// Pending guest is treated like a room member.
+ws.subscribe(roomTopic(bushitsuId))
+join(bushitsuId, senderId, nickname)
+```
+
+#### Correct
+
+```ts
+// Pending guest gets a private admission status only; room join happens after
+// the 部長 approves.
+addPendingNyuushitsu(bushitsuId, ws.id, senderId, nickname)
+ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: [] }))
+```
+
 ---
 
 ## Code Review Checklist
