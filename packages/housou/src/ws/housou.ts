@@ -1,5 +1,4 @@
 import type { KousokuMessage, KousokuMessageType, Yakuwari } from "houkago-kousoku"
-import { clearKengen } from "../lib/kengen"
 
 // 放送（housou）: broadcast helpers over room:<bushitsuId> Bun pub/sub topics
 // (quality-guidelines). Centralises topic naming and server-stamped envelope
@@ -39,7 +38,6 @@ export function leave(bushitsuId: string, senderId: string): void {
   room.delete(senderId)
   if (room.size === 0) {
     roster.delete(bushitsuId)
-    clearKengen(bushitsuId) // permission state shares the roster lifecycle
   }
 }
 

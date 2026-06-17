@@ -1,13 +1,22 @@
 import { buinId } from "@/lib/identity"
 import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
-import type { Kengen, KousokuMessage, Shinkou, Yakuwari } from "houkago-kousoku"
+import type {
+  Kengen,
+  KousokuMessage,
+  NyuushitsuMode,
+  NyuushitsuRequest,
+  NyuushitsuStatus,
+  Shinkou,
+  Yakuwari,
+} from "houkago-kousoku"
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
 
 // Guest-permission default mirrors housou's DEFAULT_KENGEN: guests may chat,
 // host keeps playback + source. Used until the first KENGEN arrives.
 const DEFAULT_KENGEN: Kengen = { playback: false, chat: true, playlist: false }
+const DEFAULT_NYUUSHITSU_MODE: NyuushitsuMode = "open"
 
 // useBushitsuStore: server-authoritative room/session state, fed by the WS
 // client (state-management spec). The WS client is the writer; components read.
@@ -30,6 +39,9 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   // 権限: the room's guest-permission snapshot, written by KENGEN. Defaults to the
   // housou default so gating is sane before the first KENGEN arrives.
   const kengen = ref<Kengen>({ ...DEFAULT_KENGEN })
+  const nyuushitsuMode = ref<NyuushitsuMode>(DEFAULT_NYUUSHITSU_MODE)
+  const nyuushitsuStatus = ref<NyuushitsuStatus | "idle">("idle")
+  const pendingNyuushitsu = ref<NyuushitsuRequest[]>([])
 
   // 部長か：am I the host? Derived authority — only my player drives sync.
   const isBuchou = computed(() => buchouId.value !== null && senderId.value === buchouId.value)
@@ -71,6 +83,11 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
       }
       case "KENGEN":
         kengen.value = msg.payload
+        break
+      case "NYUUSHITSU":
+        nyuushitsuMode.value = msg.payload.mode
+        nyuushitsuStatus.value = msg.payload.status
+        pendingNyuushitsu.value = msg.payload.pending
         break
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
@@ -119,6 +136,9 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     roster,
     yakuwari,
     kengen,
+    nyuushitsuMode,
+    nyuushitsuStatus,
+    pendingNyuushitsu,
     canControl,
     canChat,
     canPlaylist,

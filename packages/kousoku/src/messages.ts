@@ -12,6 +12,31 @@ export const KengenSchema = Type.Object({
 })
 export type Kengen = Static<typeof KengenSchema>
 
+// 入室制御（nyuushitsu）: room-level admission policy. The room may keep running
+// while the 部長 is offline; approval-mode guests wait in a pending queue until
+// the 部長 returns and decides.
+export const NyuushitsuModeSchema = Type.Union([
+  Type.Literal("open"),
+  Type.Literal("approval"),
+  Type.Literal("closed"),
+])
+export type NyuushitsuMode = Static<typeof NyuushitsuModeSchema>
+
+export const NyuushitsuStatusSchema = Type.Union([
+  Type.Literal("entered"),
+  Type.Literal("waiting"),
+  Type.Literal("rejected"),
+  Type.Literal("closed"),
+])
+export type NyuushitsuStatus = Static<typeof NyuushitsuStatusSchema>
+
+export const NyuushitsuRequestSchema = Type.Object({
+  senderId: Type.String(),
+  nickname: Type.String(),
+  requestedAt: Type.Number(),
+})
+export type NyuushitsuRequest = Static<typeof NyuushitsuRequestSchema>
+
 // WS envelope (design §4): { type, ts, senderId, payload }.
 // Every message type is its own envelope schema so TypeBox validation on housou
 // discriminates on the `type` literal and the frontend gets a narrowable union.
@@ -78,6 +103,27 @@ export const KeihouSchema = envelope("KEIHOU", Type.Object({ message: Type.Strin
 export const KengenMsgSchema = envelope("KENGEN", KengenSchema)
 export const SetteiSchema = envelope("SETTEI", KengenSchema)
 
+// --- S→C: 入室状態 / C→S: 入室設定・承認判定 ---
+export const NyuushitsuSchema = envelope(
+  "NYUUSHITSU",
+  Type.Object({
+    mode: NyuushitsuModeSchema,
+    status: NyuushitsuStatusSchema,
+    pending: Type.Array(NyuushitsuRequestSchema),
+  }),
+)
+export const NyuushitsuSetteiSchema = envelope(
+  "NYUUSHITSU_SETTEI",
+  Type.Object({ mode: NyuushitsuModeSchema }),
+)
+export const NyuushitsuHanteiSchema = envelope(
+  "NYUUSHITSU_HANTEI",
+  Type.Object({
+    senderId: Type.String(),
+    approved: Type.Boolean(),
+  }),
+)
+
 // Full discriminated union — single source of truth for the WS protocol.
 export const KousokuMessageSchema = Type.Union([
   NyuubuSchema,
@@ -94,6 +140,9 @@ export const KousokuMessageSchema = Type.Union([
   KeihouSchema,
   KengenMsgSchema,
   SetteiSchema,
+  NyuushitsuSchema,
+  NyuushitsuSetteiSchema,
+  NyuushitsuHanteiSchema,
 ])
 export type KousokuMessage = Static<typeof KousokuMessageSchema>
 
@@ -111,6 +160,9 @@ export type Shusseki = Static<typeof ShussekiSchema>
 export type Keihou = Static<typeof KeihouSchema>
 export type KengenMsg = Static<typeof KengenMsgSchema>
 export type Settei = Static<typeof SetteiSchema>
+export type Nyuushitsu = Static<typeof NyuushitsuSchema>
+export type NyuushitsuSettei = Static<typeof NyuushitsuSetteiSchema>
+export type NyuushitsuHantei = Static<typeof NyuushitsuHanteiSchema>
 
 // Discriminating string-literal union of all message type tags.
 export type KousokuMessageType = KousokuMessage["type"]

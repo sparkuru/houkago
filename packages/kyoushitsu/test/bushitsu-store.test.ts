@@ -89,6 +89,12 @@ const kengenMsg = (payload: {
   playlist: boolean
 }): KousokuMessage => ({ type: "KENGEN", ts: Date.now(), senderId: "server", payload })
 
+const nyuushitsuMsg = (payload: {
+  mode: "open" | "approval" | "closed"
+  status: "entered" | "waiting" | "rejected" | "closed"
+  pending: { senderId: string; nickname: string; requestedAt: number }[]
+}): KousokuMessage => ({ type: "NYUUSHITSU", ts: Date.now(), senderId: "server", payload })
+
 test("default kengen is guest-chat-only before any KENGEN arrives", () => {
   const store = useBushitsuStore()
   expect(store.kengen).toEqual({ playback: false, chat: true, playlist: false })
@@ -115,4 +121,25 @@ test("host (isBuchou) may do everything regardless of kengen", () => {
   expect(store.canControl).toBe(true)
   expect(store.canChat).toBe(true)
   expect(store.canPlaylist).toBe(true)
+})
+
+test("default nyuushitsu state is open and idle before the server snapshot", () => {
+  const store = useBushitsuStore()
+  expect(store.nyuushitsuMode).toBe("open")
+  expect(store.nyuushitsuStatus).toBe("idle")
+  expect(store.pendingNyuushitsu).toEqual([])
+})
+
+test("apply NYUUSHITSU updates mode, my admission status, and pending requests", () => {
+  const store = useBushitsuStore()
+  store.apply(
+    nyuushitsuMsg({
+      mode: "approval",
+      status: "entered",
+      pending: [{ senderId: "u2", nickname: "Mio", requestedAt: 123 }],
+    }),
+  )
+  expect(store.nyuushitsuMode).toBe("approval")
+  expect(store.nyuushitsuStatus).toBe("entered")
+  expect(store.pendingNyuushitsu).toEqual([{ senderId: "u2", nickname: "Mio", requestedAt: 123 }])
 })

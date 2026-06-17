@@ -11,7 +11,7 @@ import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
-import type { Enmoku, Kengen } from "houkago-kousoku"
+import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 
@@ -43,6 +43,8 @@ let client: KousokuClient | null = null
 // player (部員). The controller gates by role + 追従中; this view just connects.
 const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
 const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
+const bootstrapped = ref(false)
+let stopEnmokuWatch: ReturnType<typeof watch> | null = null
 
 // 参加ボタン押下：joined を立てて遮罩を消し、同じ同期スタック内で catchUp。
 // EnmokuPlayer 側が先に音付き play() を済ませてあるので、ここは房主の現在位置へ
@@ -75,6 +77,24 @@ watch(current, () => {
 // own UI also follows the round-trip, not a local optimistic write.
 function settei(kengen: Kengen) {
   client?.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
+}
+
+function nyuushitsuSettei(mode: NyuushitsuMode) {
+  client?.send({
+    type: "NYUUSHITSU_SETTEI",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: { mode },
+  })
+}
+
+function nyuushitsuHantei(senderId: string, approved: boolean) {
+  client?.send({
+    type: "NYUUSHITSU_HANTEI",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: { senderId, approved },
+  })
 }
 
 async function playManual() {
@@ -135,16 +155,9 @@ function submitName() {
   startSession()
 }
 
-// Connect + post-connect bootstrap (buchouId / OIKAKE / 番組表 / 上映中 watch).
-// Held until a nickname exists so connect always carries a real name.
-async function startSession() {
-  const base = housouUrl()
-  client = new KousokuClient(base, (msg) => {
-    bushitsu.apply(msg) // keep the store the single source of truth first
-    shinkou.handleRemote(msg) // then drive the player by message type
-  })
-  client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
-
+async function enterRoom() {
+  if (bootstrapped.value) return
+  bootstrapped.value = true
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
   const { data: room } = await housou.bushitsu({ id: bushitsuId }).get()
   if (room) bushitsu.buchouId = room.buchouId
@@ -162,7 +175,24 @@ async function startSession() {
   // client from JOUEI (host pick / echo) and GENJOU (late-joiner catch-up).
   // Watching it gives host + 部員 + late joiners one resolve→play path.
   // immediate covers the case where GENJOU已 set enmokuId before this mounts.
-  watch(() => bushitsu.enmokuId, applyEnmokuId, { immediate: true })
+  stopEnmokuWatch?.()
+  stopEnmokuWatch = watch(() => bushitsu.enmokuId, applyEnmokuId, { immediate: true })
+}
+
+// Connect first, then wait for the server-authoritative admission status. Only
+// after NYUUSHITSU says "entered" do we bootstrap room data and sync.
+async function startSession() {
+  const base = housouUrl()
+  bushitsu.nyuushitsuStatus = "idle"
+  bootstrapped.value = false
+  client = new KousokuClient(base, (msg) => {
+    bushitsu.apply(msg) // keep the store the single source of truth first
+    if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
+      void enterRoom()
+    }
+    shinkou.handleRemote(msg) // then drive the player by message type
+  })
+  client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
 }
 
 onMounted(() => {
@@ -175,6 +205,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  stopEnmokuWatch?.()
   client?.close()
 })
 </script>
@@ -190,62 +221,81 @@ onBeforeUnmount(() => {
         <button type="submit">入部</button>
       </form>
     </div>
-    <main class="stage">
-      <div class="bar">
-        <KengenPanel v-if="bushitsu.isBuchou" @settei="settei" />
-        <button
-          type="button"
-          :aria-label="webZenmen ? 'ウェブ全画面を解除' : 'ウェブ全画面'"
-          :aria-pressed="webZenmen"
-          @click="webZenmen = !webZenmen"
-        >
-          {{ webZenmen ? "全画面解除" : "ウェブ全画面" }}
-        </button>
-      </div>
-      <div v-if="current" class="player-wrap">
-        <EnmokuPlayer
-          ref="playerRef"
-          :key="current.url"
-          :url="current.url"
-          :type="current.type"
-          :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
-          :control-locked="!bushitsu.canControl"
-          @shinkou="shinkou.onLocalShinkou"
-          @ready="shinkou.catchUp"
-          @join="onJoin"
-          @control="controlsShown = $event"
-        />
-        <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
-      </div>
-      <div v-else class="placeholder">
-        <template v-if="bushitsu.canPlaylist">
-          <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
-          <button type="button" @click="playManual">再生</button>
-        </template>
-        <span v-else>部長の放映を待っています…</span>
-      </div>
-      <section class="bangumi">
-        <h3>番組表</h3>
-        <ul>
-          <li v-for="e in bangumi" :key="e.id">{{ e.title }}</li>
-        </ul>
-      </section>
-    </main>
-    <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
+    <div v-else-if="bushitsu.nyuushitsuStatus !== 'entered'" class="nyuushitsu-gate">
+      <p v-if="bushitsu.nyuushitsuStatus === 'waiting'">
+        部長の承認を待っています…
+      </p>
+      <p v-else-if="bushitsu.nyuushitsuStatus === 'closed'">
+        この部室は現在入室を閉じています。
+      </p>
+      <p v-else-if="bushitsu.nyuushitsuStatus === 'rejected'">
+        入室は承認されませんでした。
+      </p>
+      <p v-else>入室しています…</p>
+    </div>
+    <template v-else>
+      <main class="stage">
+        <div class="bar">
+          <KengenPanel
+            v-if="bushitsu.isBuchou"
+            @settei="settei"
+            @nyuushitsu-settei="nyuushitsuSettei"
+            @nyuushitsu-hantei="nyuushitsuHantei"
+          />
+          <button
+            type="button"
+            :aria-label="webZenmen ? 'ウェブ全画面を解除' : 'ウェブ全画面'"
+            :aria-pressed="webZenmen"
+            @click="webZenmen = !webZenmen"
+          >
+            {{ webZenmen ? "全画面解除" : "ウェブ全画面" }}
+          </button>
+        </div>
+        <div v-if="current" class="player-wrap">
+          <EnmokuPlayer
+            ref="playerRef"
+            :key="current.url"
+            :url="current.url"
+            :type="current.type"
+            :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
+            :control-locked="!bushitsu.canControl"
+            @shinkou="shinkou.onLocalShinkou"
+            @ready="shinkou.catchUp"
+            @join="onJoin"
+            @control="controlsShown = $event"
+          />
+          <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
+        </div>
+        <div v-else class="placeholder">
+          <template v-if="bushitsu.canPlaylist">
+            <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
+            <button type="button" @click="playManual">再生</button>
+          </template>
+          <span v-else>部長の放映を待っています…</span>
+        </div>
+        <section class="bangumi">
+          <h3>番組表</h3>
+          <ul>
+            <li v-for="e in bangumi" :key="e.id">{{ e.title }}</li>
+          </ul>
+        </section>
+      </main>
+      <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
          中の ‹ ボタンを浮現させる。既定は不可视（opacity:0）、keyboard でも focus で
          浮現し可達。展开中は v-if で消す（header 内の › で畳む）。 -->
-    <div v-if="!chatHiraku" class="hiraku-handle">
-      <button
-        type="button"
-        class="hiraku-button"
-        aria-label="聊天室を開く"
-        :aria-expanded="chatHiraku"
-        @click="chatHiraku = true"
-      >
-        ‹
-      </button>
-    </div>
-    <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" @toggle="chatHiraku = false" />
+      <div v-if="!chatHiraku" class="hiraku-handle">
+        <button
+          type="button"
+          class="hiraku-button"
+          aria-label="聊天室を開く"
+          :aria-expanded="chatHiraku"
+          @click="chatHiraku = true"
+        >
+          ‹
+        </button>
+      </div>
+      <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" @toggle="chatHiraku = false" />
+    </template>
   </div>
 </template>
 
@@ -372,6 +422,24 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 24px;
   background: #fff;
+  border-radius: 8px;
+}
+.nyuushitsu-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.72);
+}
+.nyuushitsu-gate p {
+  margin: 0;
+  padding: 20px 24px;
+  background: #111;
+  border: 1px solid #333;
   border-radius: 8px;
 }
 </style>

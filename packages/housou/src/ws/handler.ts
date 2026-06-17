@@ -1,8 +1,16 @@
 import { Elysia, t } from "elysia"
-import { type KousokuMessage, KousokuMessageSchema } from "houkago-kousoku"
+import { type KousokuMessage, KousokuMessageSchema, type NyuushitsuStatus } from "houkago-kousoku"
 import { buchouIdOf } from "../domain/bushitsu"
 import { Forbidden, NotBuchou } from "../lib/errors"
 import { canDo, getKengen, setKengen } from "../lib/kengen"
+import {
+  addPendingNyuushitsu,
+  getNyuushitsuMode,
+  pendingNyuushitsuRequests,
+  removePendingNyuushitsuConnection,
+  setNyuushitsuMode,
+  takePendingNyuushitsu,
+} from "../lib/nyuushitsu"
 import { join, leave, members, roomTopic, serverMsg, shusseki } from "./housou"
 import { shinkouSeigyo } from "./shinkou"
 
@@ -20,12 +28,81 @@ const ConnectQuery = t.Object({
   nickname: t.Optional(t.String()),
 })
 
-type Conn = { bushitsuId: string; senderId: string }
+type Conn = {
+  bushitsuId: string
+  senderId: string
+  nickname: string
+  admitted: boolean
+  status: NyuushitsuStatus
+}
+type SocketOps = {
+  send(message: KousokuMessage): void
+  subscribe(topic: string): void
+  publish(topic: string, message: KousokuMessage): void
+}
 
 // Per-connection state keyed by the stable ws.id. Elysia hands a fresh ws
 // wrapper object to each callback, so identity-based keying (WeakMap by ws) does
 // not survive across open/message/close — ws.id does.
 const conns = new Map<string, Conn>()
+const sockets = new Map<string, SocketOps>()
+
+function shussekiSnapshot(bushitsuId: string): KousokuMessage {
+  const buchouId = buchouIdOf(bushitsuId) ?? ""
+  return serverMsg("SHUSSEKI", {
+    n: shusseki(bushitsuId),
+    members: members(bushitsuId, buchouId),
+  })
+}
+
+function sendNyuushitsu(connId: string, status: NyuushitsuStatus): void {
+  const conn = conns.get(connId)
+  const socket = sockets.get(connId)
+  if (!conn || !socket) return
+  conn.status = status
+  const buchouId = buchouIdOf(conn.bushitsuId)
+  socket.send(
+    serverMsg("NYUUSHITSU", {
+      mode: getNyuushitsuMode(conn.bushitsuId),
+      status,
+      pending: conn.senderId === buchouId ? pendingNyuushitsuRequests(conn.bushitsuId) : [],
+    }),
+  )
+}
+
+function notifyNyuushitsu(bushitsuId: string): void {
+  for (const [connId, conn] of conns) {
+    if (conn.bushitsuId !== bushitsuId) continue
+    sendNyuushitsu(connId, conn.admitted ? "entered" : conn.status)
+  }
+}
+
+function admit(connId: string): void {
+  const conn = conns.get(connId)
+  const socket = sockets.get(connId)
+  if (!conn || !socket || conn.admitted) return
+  const topic = roomTopic(conn.bushitsuId)
+  conn.admitted = true
+  conn.status = "entered"
+  socket.subscribe(topic)
+  join(conn.bushitsuId, conn.senderId, conn.nickname)
+
+  const snapshot = shussekiSnapshot(conn.bushitsuId)
+  socket.publish(topic, snapshot)
+  socket.send(snapshot)
+  socket.send(serverMsg("KENGEN", getKengen(conn.bushitsuId)))
+  sendNyuushitsu(connId, "entered")
+}
+
+function rejectPending(
+  connId: string,
+  status: Extract<NyuushitsuStatus, "rejected" | "closed">,
+): void {
+  const conn = conns.get(connId)
+  if (!conn || conn.admitted) return
+  removePendingNyuushitsuConnection(conn.bushitsuId, conn.senderId, connId)
+  sendNyuushitsu(connId, status)
+}
 
 export const wsRoutes = new Elysia().ws("/ws", {
   query: ConnectQuery,
@@ -38,24 +115,33 @@ export const wsRoutes = new Elysia().ws("/ws", {
   open(ws) {
     const { bushitsuId, senderId, nickname } = ws.data.query
     const id = senderId ?? "anon"
-    conns.set(ws.id, { bushitsuId, senderId: id })
-
-    const topic = roomTopic(bushitsuId)
-    ws.subscribe(topic)
-    // roster join is atomic with the broadcast: no enter-then-name window.
-    // nickname falls back to senderId so a member always has a label.
-    join(bushitsuId, id, nickname || id)
-    const buchouId = buchouIdOf(bushitsuId) ?? ""
-    const snapshot = serverMsg("SHUSSEKI", {
-      n: shusseki(bushitsuId),
-      members: members(bushitsuId, buchouId),
+    const label = nickname || id
+    conns.set(ws.id, {
+      bushitsuId,
+      senderId: id,
+      nickname: label,
+      admitted: false,
+      status: "waiting",
     })
-    ws.publish(topic, snapshot)
-    ws.send(snapshot)
-    // New joiner learns the room's current guest-permission snapshot so its UI
-    // gating is correct before any change happens (prd §2). Sent only to this
-    // socket; room-wide broadcast happens on SETTEI.
-    ws.send(serverMsg("KENGEN", getKengen(bushitsuId)))
+    sockets.set(ws.id, {
+      send: (message) => ws.send(message),
+      subscribe: (topic) => ws.subscribe(topic),
+      publish: (topic, message) => ws.publish(topic, message),
+    })
+
+    const buchouId = buchouIdOf(bushitsuId)
+    const mode = getNyuushitsuMode(bushitsuId)
+    if (id === buchouId || mode === "open") {
+      admit(ws.id)
+      return
+    }
+    if (mode === "closed") {
+      sendNyuushitsu(ws.id, "closed")
+      return
+    }
+    addPendingNyuushitsu(bushitsuId, ws.id, id, label)
+    sendNyuushitsu(ws.id, "waiting")
+    notifyNyuushitsu(bushitsuId)
   },
   message(ws, message) {
     const conn = conns.get(ws.id)
@@ -68,6 +154,9 @@ export const wsRoutes = new Elysia().ws("/ws", {
     // here — the WS-channel equivalent of central error mapping. A rejected
     // action is reported, never a silent drop or a disconnect (error-handling).
     try {
+      if (!conn.admitted) {
+        throw new Forbidden("入室が承認されていません")
+      }
       switch (msg.type) {
         // Chat / danmaku: echo to the whole room (proves pub/sub path). publish
         // reaches other subscribers; send delivers back to the sender too.
@@ -130,6 +219,48 @@ export const wsRoutes = new Elysia().ws("/ws", {
           break
         }
 
+        // 入室設定: host-only room admission mode. Switching to open admits all
+        // pending sockets; switching to closed rejects pending sockets.
+        case "NYUUSHITSU_SETTEI": {
+          if (conn.senderId !== buchouIdOf(conn.bushitsuId)) {
+            throw new NotBuchou("only 部長 may set admission")
+          }
+          setNyuushitsuMode(conn.bushitsuId, msg.payload.mode)
+          if (msg.payload.mode === "open") {
+            for (const request of pendingNyuushitsuRequests(conn.bushitsuId)) {
+              for (const connId of takePendingNyuushitsu(conn.bushitsuId, request.senderId)) {
+                admit(connId)
+              }
+            }
+          } else if (msg.payload.mode === "closed") {
+            for (const request of pendingNyuushitsuRequests(conn.bushitsuId)) {
+              for (const connId of takePendingNyuushitsu(conn.bushitsuId, request.senderId)) {
+                rejectPending(connId, "closed")
+              }
+            }
+          }
+          notifyNyuushitsu(conn.bushitsuId)
+          break
+        }
+
+        // 入室判定: host approves/rejects a pending guest. Only the 部長 decides
+        // in this MVP; delegated moderators are deliberately out of scope.
+        case "NYUUSHITSU_HANTEI": {
+          if (conn.senderId !== buchouIdOf(conn.bushitsuId)) {
+            throw new NotBuchou("only 部長 may approve admission")
+          }
+          const connIds = takePendingNyuushitsu(conn.bushitsuId, msg.payload.senderId)
+          for (const connId of connIds) {
+            if (msg.payload.approved) {
+              admit(connId)
+            } else {
+              sendNyuushitsu(connId, "rejected")
+            }
+          }
+          notifyNyuushitsu(conn.bushitsuId)
+          break
+        }
+
         // 追いかけ: late joiner asks for authority state → reply GENJOU.
         case "OIKAKE": {
           const { enmokuId, shinkou, shinkouServerTime } = shinkouSeigyo.genjou(conn.bushitsuId)
@@ -155,14 +286,13 @@ export const wsRoutes = new Elysia().ws("/ws", {
     const conn = conns.get(ws.id)
     if (!conn) return
     conns.delete(ws.id)
-    leave(conn.bushitsuId, conn.senderId)
-    const buchouId = buchouIdOf(conn.bushitsuId) ?? ""
-    ws.publish(
-      roomTopic(conn.bushitsuId),
-      serverMsg("SHUSSEKI", {
-        n: shusseki(conn.bushitsuId),
-        members: members(conn.bushitsuId, buchouId),
-      }),
-    )
+    sockets.delete(ws.id)
+    if (conn.admitted) {
+      leave(conn.bushitsuId, conn.senderId)
+      ws.publish(roomTopic(conn.bushitsuId), shussekiSnapshot(conn.bushitsuId))
+    } else {
+      removePendingNyuushitsuConnection(conn.bushitsuId, conn.senderId, ws.id)
+      notifyNyuushitsu(conn.bushitsuId)
+    }
   },
 })
