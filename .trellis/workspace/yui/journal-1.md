@@ -833,3 +833,36 @@ kengen 共享控制后用户复测:房主 A 在 guest B 进房后才开'控播�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 26: dev.sh 启动开发服务
+
+**Date**: 2026-06-18
+**Task**: dev.sh 启动开发服务
+**Branch**: `k-on`
+
+### Summary
+
+新增根目录 dev.sh,通过单个 ./dx 容器同时启动 housou 后端与 kyoushitsu 前端开发服务,避免双容器抢占/跳过 3000/5173 端口;脚本支持 --help、Bash strict mode、检查 docker 与 dx、Ctrl-C 清理两个 dev 进程。验证: bash -n dev.sh, ./dev.sh --help, timeout 20 ./dev.sh 短跑后端 3000 与 Vite 5173 正常,后台启动后 curl 前端 200/后端可达,./dx bun run lint 与 typecheck 绿。用户实机复测上一任务入房控制 open/closed/approval/房主离线 pending/批准拒绝/未入室不可操作 均通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ae802aa` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
