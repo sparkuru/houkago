@@ -7,8 +7,9 @@
 ## Overview
 
 The frontend is `houkago-kyoushitsu`（教室）: **Vue 3 + Vite**, ArtPlayer +
-hls.js/dash.js for playback, `weizhenye/Danmaku` (MIT canvas engine) for danmaku
-(design §8). It is one package in the Bun workspaces monorepo and depends on
+hls.js/dash.js for playback, Vue/CSS overlays for the P1 local-first danmaku
+validation layer, and later `weizhenye/Danmaku` (MIT canvas engine) for dense
+flying danmaku (design §8). It is one package in the Bun workspaces monorepo and depends on
 `houkago-kousoku` for all WS protocol / domain types.
 
 Vue is chosen partly so synctv-web (also Vue) can be read as a structural
@@ -27,7 +28,7 @@ packages/kyoushitsu/
 │   ├── views/             # route-level pages (BushitsuView, BrowseView)
 │   ├── components/        # presentational + feature components
 │   │   ├── player/        # ArtPlayer wrapper, subtitle/source switch UI
-│   │   ├── danmaku/       # danmaku overlay (weizhenye/Danmaku binding)
+│   │   ├── danmaku/       # danmaku overlays; later weizhenye/Danmaku binding
 │   │   ├── chat/          # B-station-live-style side panel
 │   │   └── bushitsu/      # room UI: member list, 番組表, host control bar
 │   ├── composables/       # useXxx state/logic (see hook-guidelines.md)

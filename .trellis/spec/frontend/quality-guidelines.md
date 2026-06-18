@@ -7,7 +7,8 @@
 ## Overview
 
 Stack: **Vue 3 + Vite**, TypeScript strict, Pinia, ArtPlayer + hls.js/dash.js,
-`weizhenye/Danmaku` (MIT). Contract and domain types come from
+P1 Vue/CSS danmaku overlays, and later `weizhenye/Danmaku` (MIT) for dense
+flying danmaku. Contract and domain types come from
 `houkago-kousoku`; the REST client is Eden Treaty typed against housou's `App`
 (design §8, Elysia spike). Quality means: the client faithfully follows
 server-authoritative state, third-party imperative objects are contained, and the
@@ -45,8 +46,12 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   chat, danmaku).
 - **Imperative third-party calls scattered across components** — ArtPlayer and
   the Danmaku engine are each owned by one wrapper component/composable.
-- **Self-rolling a danmaku renderer.** Use `weizhenye/Danmaku`; do not reinvent
-  it or reuse synctv-web's `artplayer-plugin-danmuku` (design §8).
+- **Self-rolling the final dense danmaku renderer.** Use `weizhenye/Danmaku`
+  when implementing dense flying danmaku; do not reinvent it or reuse
+  synctv-web's `artplayer-plugin-danmuku` (design §8). The existing Vue/CSS
+  overlays (`DanmakuOverlay`, `FileDanmakuOverlay`) are a bounded P1
+  local-first validation layer only: keep parsing/source state independent so
+  they can be replaced by the engine later.
 - **Comment noise / commented-out code / decorative banners** (see `common`).
 
 ---
@@ -60,11 +65,13 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   remote `SHINKOU` with `tsuijuuChuu`（追従中）echo suppression.
 - **Derive projected playback time on read** from last `Shinkou` +
   `shinkouServerTime`; don't store a ticking value (state-management.md).
-- **Contain third-party lifecycles:** create ArtPlayer / Danmaku engine in
-  `onMounted`, destroy in `onUnmounted`.
-- **Merge danmaku from three sources through the single engine** with the
-  priority chain 本地文件 > 在线抓取 > 弹幕盒子; live chat danmaku always overlays
-  (design §7).
+- **Contain third-party lifecycles:** create ArtPlayer / future Danmaku engine
+  in `onMounted`, destroy in `onUnmounted`.
+- **Keep danmaku source data engine-agnostic.** Local file parsing belongs in
+  `houkago-kokuban`; kyoushitsu stores only source selection, user display
+  preference, and timeline cues. The long-term priority chain is 本地文件 /
+  user-selected file > meta-derived fetch > danmubox/search; live chat danmaku
+  always overlays (design §7).
 
 ---
 
@@ -88,5 +95,7 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
 - [ ] Only the host emits `SHINKOU`; remote apply uses echo suppression.
 - [ ] Projected time derived, not stored as a ticking value.
 - [ ] ArtPlayer / Danmaku instances created and destroyed in lifecycle hooks.
-- [ ] Danmaku uses `weizhenye/Danmaku` with the three-source priority chain.
+- [ ] P1 Vue/CSS danmaku overlays keep source data engine-agnostic; dense/final
+      flying danmaku work uses `weizhenye/Danmaku` with the three-source
+      priority chain.
 - [ ] Sync-relevant logic has unit tests; comments justify *why*, no noise.

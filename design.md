@@ -65,7 +65,7 @@
 
 **houkago-kyoushitsu（教室 / 前端）**
 - 播放器：ArtPlayer + hls.js/dash.js（字幕轨、HLS 多音轨切换）
-- 弹幕：`weizhenye/Danmaku`（MIT, canvas 引擎，实时聊天弹幕 + 预载文件弹幕，统一时间轴渲染）
+- 弹幕：P1 local-first 用 Vue/CSS overlay 验证本地文件机制；密集飞屏/正式统一引擎目标仍是 `weizhenye/Danmaku`（MIT, canvas）。
 - 聊天室 UI（B 站直播风：右侧栏 + 视频上弹幕叠加）
 - 部室 UI：建/进房、部员列表、番組表、房主控制条
 - 浏览/搜索 UI：调 eisha
@@ -151,13 +151,13 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 ### 7. 弹幕管线（需求 3，三源优先级合流）
 
 前端弹幕轨道合并三条流：
-1. **实时聊天弹幕**：WS `OSHABERI`/`DANMAKU` → 实时 push 进 `weizhenye/Danmaku` 引擎
+1. **实时聊天弹幕**：WS `OSHABERI`/`DANMAKU` → 前端 overlay；后续密集飞屏再统一 push 进 `weizhenye/Danmaku` 引擎
 2. **装载文件弹幕**：用户上传 xml/ass → kokuban 解析 → 时间轴 JSON → 前端预载、按 currentTime 渲染
 3. **抓取弹幕**：kokuban 按标题匹配 → 从 B 站/第三方取 → 时间轴 JSON
 
 优先级链 本地文件 > 在线抓取 > 弹幕盒子，前端按配置选当前源；实时聊天弹幕永远叠加。
 
-> P0 偏离回填：P0 实时聊天弹幕实现为自有 Vue/CSS 淡气泡 overlay（`components/danmaku/DanmakuOverlay.vue`，可开关、弹幕姬 lite 风），非飞屏渲染。canvas 飞屏弹幕引擎 `weizhenye/Danmaku` 推迟到样式化 `DANMAKU` / 文件弹幕切片（密集弹幕才需 canvas 性能）。
+> P0/P1 local-first 偏离回填：实时聊天弹幕与本地文件弹幕先实现为自有 Vue/CSS overlay（`components/danmaku/DanmakuOverlay.vue`、`FileDanmakuOverlay.vue`），用于验证开关、来源隔离和按时间渲染。canvas 飞屏弹幕引擎 `weizhenye/Danmaku` 推迟到样式化/密集弹幕切片（密集弹幕才需 canvas 性能）。
 
 ### 8. 技术选型
 
@@ -165,7 +165,7 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 |----|------|------|
 | 前端 | **Vue 3 + Vite** | 与 ArtPlayer 集成示例多；synctv-web 也 Vue，便于参照 |
 | 播放器 | **ArtPlayer + hls.js/dash.js** | HLS 多音轨/字幕切换齐备 |
-| 弹幕引擎 | **`weizhenye/Danmaku`（MIT, canvas）** | 现成 MIT 引擎，不自研；实时聊天弹幕 + 预载文件弹幕统一走它 |
+| 弹幕引擎 | **P1 Vue/CSS overlay → 后续 `weizhenye/Danmaku`（MIT, canvas）** | local-first 先验证机制；密集飞屏/正式统一引擎不自研 |
 | housou | **Bun + Elysia.js**（TypeBox + Eden Treaty） | spike 实测：Bun 原生 WS pub/sub topic 天然适配房间广播；#781 非 WS 全局 publish 已验证可干净实现（详见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`）。备选 Fastify-on-Bun 未触发。|
 | eisha | **Go**（或 Node 起步） | 代理/manifest 重写/并发拉流 Go 更稳；独立进程可后换 |
 | 传输 | WebSocket，JSON（v1）→ protobuf（后期） | |
@@ -211,7 +211,7 @@ houkago/
 | 阶段 | 状态 | 已落地 | 主要缺口 |
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
-| P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU` | 未接 `weizhenye/Danmaku`；无文件弹幕加载/解析；无弹幕颜色/模式 UI；`kokuban` 包不存在 |
+| P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染 | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 meta 自动获取；无 danmubox/search |
 | P2 解析+代理 | 未开始 | `Enmoku` 类型预留 `headers`/`subtitles`/`sources`/`danmaku` | `houkago-eisha` 包不存在；无解析器接口；无稳定代理 URL；无过期 URL 续期；无 m3u8 manifest 重写；无浏览/搜索 UI |
 | P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板；`Enmoku` 扩展字段未持久化 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
@@ -221,9 +221,10 @@ houkago/
 **推荐下一项：P1 文件弹幕与 kokuban 骨架**
 
 - 新建 `houkago-kokuban` 包，先提供本地文件解析 API 的最小骨架。
-- 支持上传/读取 B 站 XML 或 ASS 的一个子集，转换为统一时间轴 JSON。
-- 前端为演目选择一个弹幕源，并按播放时间渲染。
-- 明确优先级链：本地文件 > 在线抓取 > 弹幕盒子；实时弹幕永远叠加。
+- Local-first：前端先支持为当前演目选择本地 B 站 XML 子集，转换为统一时间轴 JSON，并按播放时间渲染。
+- 文件弹幕前端默认关闭；用户开启后记忆偏好，切换不同视频流时只播放对应演目的本地弹幕源。
+- 后端上传/存储/管理弹幕文件是后续独立切片；本地机制验证阶段不实现 upload/list/delete/download API。
+- 明确长期优先级链：本地/用户选择文件 > meta 自动获取 > danmubox/搜索；实时弹幕永远叠加。
 
 **P2：eisha 解析与代理骨架**
 
