@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 28
+- **Total Sessions**: 29
 - **Last Active**: 2026-06-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~934 | Active |
+| `journal-1.md` | ~967 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 29 | 2026-06-18 | Roadmap status update | `6a918ef` | `k-on` |
 | 28 | 2026-06-18 | Frontend i18n labels | `dea74a2` | `k-on` |
 | 27 | 2026-06-18 | Bangumi queue controls | `28d6b21` | `k-on` |
 | 26 | 2026-06-18 | dev.sh 启动开发服务 | `ae802aa` | `k-on` |

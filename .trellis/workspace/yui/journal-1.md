@@ -932,3 +932,36 @@ Centralized kyoushitsu UI labels in a typed i18n module, switched default visibl
 ### Next Steps
 
 - None - task complete
+
+
+## Session 29: Roadmap status update
+
+**Date**: 2026-06-18
+**Task**: Roadmap status update
+**Branch**: `k-on`
+
+### Summary
+
+Updated design.md as the main product roadmap with current implementation status, P0-P4 gaps, and the recommended next P1 DANMAKU slice.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6a918ef` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
