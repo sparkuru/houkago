@@ -202,6 +202,61 @@ houkago/
 - **P3 — 扩展**：更多解析器；按标题抓取弹幕；番組表队列；部员角色。
 - **P4 — 打磨**：漂移校正调参、断线重连、鉴权/OAuth、字幕/音轨 UI、自由控制权、WebRTC 语音（可选）。
 
+> **规划记录约定**：`design.md` 是项目主干 PRD / 产品蓝图，记录长期路线、
+> 当前实现状态和跨模块待办；Trellis task 的 `prd.md` 只承载一次具体执行项，
+> 完成后会归档。后续从本节挑选一个待办进入实现时，再创建对应 Trellis task。
+
+#### 10.1 当前实现状态（2026-06-18）
+
+| 阶段 | 状态 | 已落地 | 主要缺口 |
+|------|------|--------|----------|
+| P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
+| P1 弹幕基础 | 部分完成 | 聊天气泡 overlay；`DANMAKU` 协议信封与服务端 echo/gate 已存在 | 前端未消费 `DANMAKU`；无独立弹幕输入；未接 `weizhenye/Danmaku`；无文件弹幕加载/解析；`kokuban` 包不存在 |
+| P2 解析+代理 | 未开始 | `Enmoku` 类型预留 `headers`/`subtitles`/`sources`/`danmaku` | `houkago-eisha` 包不存在；无解析器接口；无稳定代理 URL；无过期 URL 续期；无 m3u8 manifest 重写；无浏览/搜索 UI |
+| P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板；`Enmoku` 扩展字段未持久化 |
+| P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
+
+#### 10.2 下一批可执行 backlog
+
+**推荐下一项：P1 实时 `DANMAKU` 最小纵切**
+
+- 目标：把“聊天气泡 overlay”推进到真正的实时弹幕通道，但暂不引入文件弹幕和第三方抓取。
+- 后端：沿用现有 `DANMAKU` 信封和权限 gate；必要时补 e2e，确认 `DANMAKU` 与 `OSHABERI` 同房间广播且受 `chat` 权限控制。
+- 前端 store：消费 `DANMAKU` 消息，维护独立的实时弹幕列表，避免混入聊天记录。
+- 前端 UI：增加轻量弹幕发送入口，或在聊天输入旁提供“作为弹幕发送”的模式。
+- Overlay：让 `DanmakuOverlay` 渲染实时 `DANMAKU`；现阶段可继续用 Vue/CSS 轨道，后续再替换为 `weizhenye/Danmaku`。
+- 验收：两浏览器同房间，A 发弹幕，A/B 视频上均出现；关闭发言权限后 guest 发送被服务端拒绝。
+
+**P1 后续：文件弹幕与 kokuban 骨架**
+
+- 新建 `houkago-kokuban` 包，先提供本地文件解析 API 的最小骨架。
+- 支持上传/读取 B 站 XML 或 ASS 的一个子集，转换为统一时间轴 JSON。
+- 前端为演目选择一个弹幕源，并按播放时间渲染。
+- 明确优先级链：本地文件 > 在线抓取 > 弹幕盒子；实时弹幕永远叠加。
+
+**P2：eisha 解析与代理骨架**
+
+- 新建 `houkago-eisha` 包。
+- 定义解析器接口：平台链接 → `Enmoku` 扩展字段（稳定代理 URL、headers、subtitles、sources、danmakuRef、live）。
+- 先做通用直链 / m3u8 resolver，暂不碰复杂平台反爬。
+- 实现稳定流代理端点和 range/seek 基础行为。
+- 后续再加入 m3u8 manifest 重写、过期 URL 自动重解析、平台浏览/搜索 API。
+
+**P3：房间与内容管理扩展**
+
+- 为部室页增加独立部员列表/角色面板。
+- 将 `Enmoku.headers/subtitles/sources/danmaku/live` 持久化到 SQLite。
+- 支持更多解析器和按标题抓取弹幕。
+- 为番組表增加更完整的队列管理（重排、清空、当前项保护、远端同步）。
+
+**P4：稳定性与权限体系**
+
+- 实现 WS 断线重连、重连后恢复 room/admission/authority state。
+- 引入 `生徒証` token/JWT 鉴权；OAuth 后置。
+- 补字幕/音轨/多清晰度 UI。
+- 明确“自由控制权”策略：人人可控、授权可控、last-writer-wins 的边界与冲突处理。
+- 评估 WebRTC 语音是否仍符合产品方向。
+
 ### 11. 风险与对策
 
 | 风险 | 对策 |
