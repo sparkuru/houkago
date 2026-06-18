@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n"
 import { danmakuTrackBottom } from "@/lib/danmaku-track"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { computed, onUnmounted, ref, watch } from "vue"
@@ -100,11 +101,11 @@ onUnmounted(clearAll)
       <button
         type="button"
         class="danmaku-toggle"
-        :aria-label="hyouji ? '聊天气泡を隠す' : '聊天气泡を表示'"
+        :aria-label="hyouji ? t('danmakuHideAria') : t('danmakuShowAria')"
         :aria-pressed="hyouji"
         @click="toggle"
       >
-        {{ hyouji ? "弾幕 ON" : "弾幕 OFF" }}
+        {{ hyouji ? t("danmakuOn") : t("danmakuOff") }}
       </button>
       <ul v-if="hyouji" class="danmaku-track" :style="{ bottom: trackBottom }">
         <li

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { housou } from "@/api"
+import { t } from "@/i18n"
 import { buinId } from "@/lib/identity"
 import { normalizeRoomId } from "@/lib/room-id"
 import { useBushitsuStore } from "@/stores/bushitsu"
@@ -27,11 +28,11 @@ async function create() {
   error.value = ""
   if (!nickname.value) return
   const { data, error: err } = await housou.bushitsu.post({
-    name: newRoomName.value || "新部室",
+    name: newRoomName.value || t("defaultBushitsuName"),
     buchouId: buinId(),
   })
   if (err || !data) {
-    error.value = "部室作成に失敗しました"
+    error.value = t("createBushitsuFailed")
     return
   }
   enter(data.id)
@@ -50,22 +51,30 @@ function join() {
 
 <template>
   <main class="home">
-    <h1>放課後 / Houkago</h1>
+    <h1>{{ t("appTitle") }}</h1>
     <label>
-      ニックネーム
-      <input v-model="nickname" aria-label="ニックネーム" />
+      {{ t("nicknameLabel") }}
+      <input v-model="nickname" :aria-label="t('nicknameLabel')" />
     </label>
 
     <section>
-      <h2>部室を作る</h2>
-      <input v-model="newRoomName" aria-label="部室名" placeholder="部室名" />
-      <button type="button" :disabled="!nickname" @click="create">作成して入部</button>
+      <h2>{{ t("createBushitsuHeading") }}</h2>
+      <input
+        v-model="newRoomName"
+        :aria-label="t('bushitsuNameLabel')"
+        :placeholder="t('bushitsuNamePlaceholder')"
+      />
+      <button type="button" :disabled="!nickname" @click="create">{{ t("createAndJoin") }}</button>
     </section>
 
     <section>
-      <h2>部室に入る</h2>
-      <input v-model="roomId" aria-label="部室 id" placeholder="部室 id" />
-      <button type="button" :disabled="!nickname || !roomId" @click="join">入部</button>
+      <h2>{{ t("joinBushitsuHeading") }}</h2>
+      <input
+        v-model="roomId"
+        :aria-label="t('bushitsuIdLabel')"
+        :placeholder="t('bushitsuIdPlaceholder')"
+      />
+      <button type="button" :disabled="!nickname || !roomId" @click="join">{{ t("joinBushitsu") }}</button>
     </section>
 
     <p v-if="error" class="error">{{ error }}</p>

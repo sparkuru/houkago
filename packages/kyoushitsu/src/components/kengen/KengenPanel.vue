@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { Kengen, NyuushitsuMode } from "houkago-kousoku"
 
@@ -26,57 +27,57 @@ function setNyuushitsu(mode: NyuushitsuMode) {
 
 <template>
   <div class="kengen-panel">
-    <div class="kengen-group" role="group" aria-label="ゲスト権限">
+    <div class="kengen-group" role="group" :aria-label="t('guestKengenGroupAria')">
       <button
         type="button"
         :aria-pressed="bushitsu.kengen.playback"
         @click="toggle('playback')"
       >
-        再生制御 {{ bushitsu.kengen.playback ? "許可" : "禁止" }}
+        {{ t("playbackControl") }} {{ bushitsu.kengen.playback ? t("allowed") : t("blocked") }}
       </button>
       <button
         type="button"
         :aria-pressed="bushitsu.kengen.chat"
         @click="toggle('chat')"
       >
-        発言 {{ bushitsu.kengen.chat ? "許可" : "禁止" }}
+        {{ t("chatPermission") }} {{ bushitsu.kengen.chat ? t("allowed") : t("blocked") }}
       </button>
       <button
         type="button"
         :aria-pressed="bushitsu.kengen.playlist"
         @click="toggle('playlist')"
       >
-        ソース選択 {{ bushitsu.kengen.playlist ? "許可" : "禁止" }}
+        {{ t("playlistPermission") }} {{ bushitsu.kengen.playlist ? t("allowed") : t("blocked") }}
       </button>
     </div>
-    <div class="kengen-group" role="group" aria-label="入室設定">
+    <div class="kengen-group" role="group" :aria-label="t('nyuushitsuSettingGroupAria')">
       <button
         type="button"
         :aria-pressed="bushitsu.nyuushitsuMode === 'open'"
         @click="setNyuushitsu('open')"
       >
-        入室 開放
+        {{ t("nyuushitsuOpen") }}
       </button>
       <button
         type="button"
         :aria-pressed="bushitsu.nyuushitsuMode === 'approval'"
         @click="setNyuushitsu('approval')"
       >
-        入室 承認
+        {{ t("nyuushitsuApproval") }}
       </button>
       <button
         type="button"
         :aria-pressed="bushitsu.nyuushitsuMode === 'closed'"
         @click="setNyuushitsu('closed')"
       >
-        入室 閉鎖
+        {{ t("nyuushitsuClosedMode") }}
       </button>
     </div>
     <div v-if="bushitsu.pendingNyuushitsu.length > 0" class="pending-list">
       <div v-for="p in bushitsu.pendingNyuushitsu" :key="p.senderId" class="pending-row">
         <span>{{ p.nickname }}</span>
-        <button type="button" @click="emit('nyuushitsuHantei', p.senderId, true)">承認</button>
-        <button type="button" @click="emit('nyuushitsuHantei', p.senderId, false)">拒否</button>
+        <button type="button" @click="emit('nyuushitsuHantei', p.senderId, true)">{{ t("approve") }}</button>
+        <button type="button" @click="emit('nyuushitsuHantei', p.senderId, false)">{{ t("reject") }}</button>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from "@/i18n"
 import { canSeekTo } from "@/lib/seekable"
 import Artplayer from "artplayer"
 import Hls from "hls.js"
@@ -219,18 +220,18 @@ onBeforeUnmount(() => {
       v-if="controlLocked"
       class="control-lock"
       role="status"
-      aria-label="再生制御は部長のみ"
+      :aria-label="t('controlLockedAria')"
     >
-      <span>部長が再生を操作中</span>
+      <span>{{ t("controlLocked") }}</span>
     </div>
     <button
       v-if="showJoinGate"
       type="button"
       class="join-gate"
-      aria-label="クリックして参加（再生に音声付きで合流）"
+      :aria-label="t('joinGateAria')"
       @click="onJoin"
     >
-      ▶ クリックして参加
+      {{ t("joinGate") }}
     </button>
   </div>
 </template>

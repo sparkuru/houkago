@@ -81,6 +81,26 @@ const bushitsu = useBushitsuStore()
   with labels, keyboard-operable. The danmaku/chat input must be reachable and
   submittable by keyboard.
 - Do not convey state by color alone (e.g. host vs member, playing vs paused).
+- User-facing labels, placeholders, and ARIA labels go through `src/i18n/t()`
+  instead of being hard-coded in templates. Keep identifiers romaji/English,
+  keep domain vocabulary consistent with the design dictionary, and put the
+  visible text in `src/i18n/messages.ts`.
+
+```vue
+<script setup lang="ts">
+import { t } from "@/i18n"
+</script>
+
+<template>
+  <button type="button" :aria-label="t('chatOpenAria')">
+    {{ t("joinBushitsu") }}
+  </button>
+</template>
+```
+
+This keeps the default Chinese UI configurable while preserving the project's
+Japanese-style product vocabulary, and prevents label drift between visible text
+and accessibility text.
 
 ---
 
@@ -94,3 +114,5 @@ const bushitsu = useBushitsuStore()
 - Re-declaring `Enmoku`/`Buin` shapes as local prop interfaces → contract drift.
 - Mutating props or store state directly from a template handler instead of
   going through a store action.
+- Adding new visible UI text directly in a `.vue` template instead of adding a
+  typed message key first.

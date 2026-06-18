@@ -6,6 +6,7 @@ import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
+import { t } from "@/i18n"
 import { canDeleteBangumiItem, canPlayBangumiItem, isCurrentEnmoku } from "@/lib/bangumi-actions"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { housouUrl } from "@/lib/housou-url"
@@ -112,7 +113,7 @@ async function playManual() {
   if (!manualUrl.value || !bushitsu.canPlaylist) return
   const isHls = manualUrl.value.endsWith(".m3u8")
   const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
-    title: "手填直链",
+    title: t("manualEnmokuTitle"),
     type: isHls ? "hls" : "direct",
     url: manualUrl.value,
     addedBy: bushitsu.senderId,
@@ -164,10 +165,10 @@ function oshaberi(content: string) {
 // WS connect behind an inline name form (pure view 態, not store). The 部員
 // join-gate (autoplay 遮罩) is a separate, later layer; this name gate runs first.
 const nameGate = ref(false)
-const nameInput = ref("ゲスト")
+const nameInput = ref(t("nicknamePlaceholder"))
 
 function submitName() {
-  bushitsu.setNickname(nameInput.value.trim() || "ゲスト")
+  bushitsu.setNickname(nameInput.value.trim() || t("nicknamePlaceholder"))
   nameGate.value = false
   startSession()
 }
@@ -232,23 +233,27 @@ onBeforeUnmount(() => {
     <div v-if="nameGate" class="name-gate">
       <form class="name-form" @submit.prevent="submitName">
         <label>
-          ニックネーム
-          <input v-model="nameInput" aria-label="ニックネーム" placeholder="ゲスト" />
+          {{ t("nicknameLabel") }}
+          <input
+            v-model="nameInput"
+            :aria-label="t('nicknameLabel')"
+            :placeholder="t('nicknamePlaceholder')"
+          />
         </label>
-        <button type="submit">入部</button>
+        <button type="submit">{{ t("joinBushitsu") }}</button>
       </form>
     </div>
     <div v-else-if="bushitsu.nyuushitsuStatus !== 'entered'" class="nyuushitsu-gate">
       <p v-if="bushitsu.nyuushitsuStatus === 'waiting'">
-        部長の承認を待っています…
+        {{ t("waitingApproval") }}
       </p>
       <p v-else-if="bushitsu.nyuushitsuStatus === 'closed'">
-        この部室は現在入室を閉じています。
+        {{ t("nyuushitsuClosed") }}
       </p>
       <p v-else-if="bushitsu.nyuushitsuStatus === 'rejected'">
-        入室は承認されませんでした。
+        {{ t("nyuushitsuRejected") }}
       </p>
-      <p v-else>入室しています…</p>
+      <p v-else>{{ t("enteringBushitsu") }}</p>
     </div>
     <template v-else>
       <main class="stage">
@@ -261,11 +266,11 @@ onBeforeUnmount(() => {
           />
           <button
             type="button"
-            :aria-label="webZenmen ? 'ウェブ全画面を解除' : 'ウェブ全画面'"
+            :aria-label="webZenmen ? t('webZenmenExitAria') : t('webZenmenAria')"
             :aria-pressed="webZenmen"
             @click="webZenmen = !webZenmen"
           >
-            {{ webZenmen ? "全画面解除" : "ウェブ全画面" }}
+            {{ webZenmen ? t("webZenmenExit") : t("webZenmen") }}
           </button>
         </div>
         <div v-if="current" class="player-wrap">
@@ -285,13 +290,17 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="placeholder">
           <template v-if="bushitsu.canPlaylist">
-            <input v-model="manualUrl" aria-label="直链 URL" placeholder="m3u8 / mp4 直链" />
-            <button type="button" @click="playManual">再生</button>
+            <input
+              v-model="manualUrl"
+              :aria-label="t('manualUrlLabel')"
+              :placeholder="t('manualUrlPlaceholder')"
+            />
+            <button type="button" @click="playManual">{{ t("play") }}</button>
           </template>
-          <span v-else>部長の放映を待っています…</span>
+          <span v-else>{{ t("waitingBuchouJouei") }}</span>
         </div>
         <section class="bangumi">
-          <h3>番組表</h3>
+          <h3>{{ t("bangumiHeading") }}</h3>
           <ul>
             <li
               v-for="e in bushitsu.bangumi"
@@ -301,7 +310,9 @@ onBeforeUnmount(() => {
               :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
             >
               <span class="bangumi-title">{{ e.title }}</span>
-              <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">上映中</span>
+              <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
+                {{ t("joueiChuu") }}
+              </span>
               <span v-if="bushitsu.canPlaylist" class="bangumi-actions">
                 <button
                   type="button"
@@ -309,7 +320,7 @@ onBeforeUnmount(() => {
                   :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
                   @click="playBangumi(e.id)"
                 >
-                  再生
+                  {{ t("play") }}
                 </button>
                 <button
                   type="button"
@@ -317,7 +328,7 @@ onBeforeUnmount(() => {
                   :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
                   @click="deleteBangumiEnmoku(e.id)"
                 >
-                  削除
+                  {{ t("delete") }}
                 </button>
               </span>
             </li>
@@ -331,7 +342,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="hiraku-button"
-          aria-label="聊天室を開く"
+          :aria-label="t('chatOpenAria')"
           :aria-expanded="chatHiraku"
           @click="chatHiraku = true"
         >
