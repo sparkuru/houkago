@@ -92,7 +92,7 @@ test("non-部長 SETTEI is rejected with KEIHOU; host SETTEI broadcasts KENGEN",
   guest.close()
 })
 
-test("guest without chat permission: OSHABERI rejected and not broadcast", async () => {
+test("guest without chat permission: OSHABERI and DANMAKU are rejected and not broadcast", async () => {
   const room = await makeRoom("host")
   const host = await open(room.id, "host")
   const guest = await open(room.id, "guest")
@@ -111,12 +111,14 @@ test("guest without chat permission: OSHABERI rejected and not broadcast", async
   await guestKengen
 
   let hostSawChat = false
+  let hostSawDanmaku = false
   host.addEventListener("message", (ev) => {
     const m = JSON.parse(ev.data) as KousokuMessage
     if (m.type === "OSHABERI") hostSawChat = true
+    if (m.type === "DANMAKU") hostSawDanmaku = true
   })
 
-  const keihou = nextMatch(guest, (m) => m.type === "KEIHOU")
+  const chatKeihou = nextMatch(guest, (m) => m.type === "KEIHOU")
   guest.send(
     JSON.stringify({
       type: "OSHABERI",
@@ -125,11 +127,22 @@ test("guest without chat permission: OSHABERI rejected and not broadcast", async
       payload: { content: "hi" },
     } satisfies KousokuMessage),
   )
-  expect((await keihou).type).toBe("KEIHOU")
+  expect((await chatKeihou).type).toBe("KEIHOU")
+  const danmakuKeihou = nextMatch(guest, (m) => m.type === "KEIHOU")
+  guest.send(
+    JSON.stringify({
+      type: "DANMAKU",
+      ts: Date.now(),
+      senderId: "guest",
+      payload: { content: "fly" },
+    } satisfies KousokuMessage),
+  )
+  expect((await danmakuKeihou).type).toBe("KEIHOU")
   expect(guest.readyState).toBe(WebSocket.OPEN)
 
   await new Promise((r) => setTimeout(r, 150))
   expect(hostSawChat).toBe(false)
+  expect(hostSawDanmaku).toBe(false)
 
   host.close()
   guest.close()

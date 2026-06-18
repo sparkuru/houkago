@@ -211,23 +211,14 @@ houkago/
 | 阶段 | 状态 | 已落地 | 主要缺口 |
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
-| P1 弹幕基础 | 部分完成 | 聊天气泡 overlay；`DANMAKU` 协议信封与服务端 echo/gate 已存在 | 前端未消费 `DANMAKU`；无独立弹幕输入；未接 `weizhenye/Danmaku`；无文件弹幕加载/解析；`kokuban` 包不存在 |
+| P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU` | 未接 `weizhenye/Danmaku`；无文件弹幕加载/解析；无弹幕颜色/模式 UI；`kokuban` 包不存在 |
 | P2 解析+代理 | 未开始 | `Enmoku` 类型预留 `headers`/`subtitles`/`sources`/`danmaku` | `houkago-eisha` 包不存在；无解析器接口；无稳定代理 URL；无过期 URL 续期；无 m3u8 manifest 重写；无浏览/搜索 UI |
 | P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板；`Enmoku` 扩展字段未持久化 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
 
 #### 10.2 下一批可执行 backlog
 
-**推荐下一项：P1 实时 `DANMAKU` 最小纵切**
-
-- 目标：把“聊天气泡 overlay”推进到真正的实时弹幕通道，但暂不引入文件弹幕和第三方抓取。
-- 后端：沿用现有 `DANMAKU` 信封和权限 gate；必要时补 e2e，确认 `DANMAKU` 与 `OSHABERI` 同房间广播且受 `chat` 权限控制。
-- 前端 store：消费 `DANMAKU` 消息，维护独立的实时弹幕列表，避免混入聊天记录。
-- 前端 UI：增加轻量弹幕发送入口，或在聊天输入旁提供“作为弹幕发送”的模式。
-- Overlay：让 `DanmakuOverlay` 渲染实时 `DANMAKU`；现阶段可继续用 Vue/CSS 轨道，后续再替换为 `weizhenye/Danmaku`。
-- 验收：两浏览器同房间，A 发弹幕，A/B 视频上均出现；关闭发言权限后 guest 发送被服务端拒绝。
-
-**P1 后续：文件弹幕与 kokuban 骨架**
+**推荐下一项：P1 文件弹幕与 kokuban 骨架**
 
 - 新建 `houkago-kokuban` 包，先提供本地文件解析 API 的最小骨架。
 - 支持上传/读取 B 站 XML 或 ASS 的一个子集，转换为统一时间轴 JSON。

@@ -83,6 +83,27 @@ test("apply SHUSSEKI records yakuwari; yakuwariOf resolves and defaults to ã‚²ã‚
   expect(store.yakuwariOf("unknown")).toBe("kengaku")
 })
 
+test("apply OSHABERI and DANMAKU keep chat and danmaku streams separate", () => {
+  const store = useBushitsuStore()
+  store.apply({
+    type: "OSHABERI",
+    ts: 100,
+    senderId: "u1",
+    payload: { content: "chat line" },
+  })
+  store.apply({
+    type: "DANMAKU",
+    ts: 200,
+    senderId: "u2",
+    payload: { content: "danmaku line", color: "#fff", mode: "scroll" },
+  })
+
+  expect(store.chat).toEqual([{ senderId: "u1", content: "chat line", ts: 100 }])
+  expect(store.danmaku).toEqual([
+    { senderId: "u2", content: "danmaku line", ts: 200, color: "#fff", mode: "scroll" },
+  ])
+})
+
 const kengenMsg = (payload: {
   playback: boolean
   chat: boolean

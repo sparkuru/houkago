@@ -24,6 +24,7 @@ const DEFAULT_NYUUSHITSU_MODE: NyuushitsuMode = "open"
 // Sync math is deliberately absent (P0 task) — we only hold last-known truth.
 
 type ChatLine = { senderId: string; content: string; ts: number }
+type DanmakuLine = { senderId: string; content: string; ts: number; color?: string; mode?: string }
 
 export const useBushitsuStore = defineStore("bushitsu", () => {
   const bushitsuId = ref<string | null>(null)
@@ -38,6 +39,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const enmokuId = ref<string | null>(null) // 上映中
   const bangumi = ref<Enmoku[]>([])
   const chat = ref<ChatLine[]>([])
+  const danmaku = ref<DanmakuLine[]>([])
   // 権限: the room's guest-permission snapshot, written by KENGEN. Defaults to the
   // housou default so gating is sane before the first KENGEN arrives.
   const kengen = ref<Kengen>({ ...DEFAULT_KENGEN })
@@ -64,6 +66,15 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     switch (msg.type) {
       case "OSHABERI":
         chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+        break
+      case "DANMAKU":
+        danmaku.value.push({
+          senderId: msg.senderId,
+          content: msg.payload.content,
+          ts: msg.ts,
+          color: msg.payload.color,
+          mode: msg.payload.mode,
+        })
         break
       case "SHUSSEKI": {
         // SHUSSEKI carries the live count + present members. The count (出席数)
@@ -154,6 +165,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     enmokuId,
     bangumi,
     chat,
+    danmaku,
     shinkou,
     shinkouServerTime,
     apply,

@@ -65,6 +65,31 @@ Anything that is purely one component's view concern stays a local `ref`.
 - REST-fetched data (room metadata, enmoku details) flows through the Eden client
   into stores; realtime updates then mutate the same store.
 
+### Realtime Chat vs Danmaku Streams
+
+- `OSHABERI` and `DANMAKU` are separate realtime streams even though they share
+  the same websocket transport and the same room-level `chat` permission gate.
+- `useBushitsuStore.chat` stores chat-panel lines from `OSHABERI` only.
+- `useBushitsuStore.danmaku` stores realtime overlay lines from `DANMAKU` only.
+- `DanmakuOverlay` reads `bushitsu.danmaku`; it must not watch `chat` as a
+  shortcut. Chat may later be mirrored into danmaku by an explicit product
+  decision, but the store streams remain separate.
+
+```ts
+// Good: each envelope commits to its own server-truth stream.
+case "OSHABERI":
+  chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+  break
+case "DANMAKU":
+  danmaku.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+  break
+```
+
+**Tests required:** store tests must assert that applying `OSHABERI` does not
+append to `danmaku`, and applying `DANMAKU` does not append to `chat`. Backend
+WS tests should cover `DANMAKU` room broadcast and the shared chat-permission
+rejection path.
+
 ---
 
 ## Common Mistakes
@@ -79,3 +104,6 @@ Anything that is purely one component's view concern stays a local `ref`.
   projected time on read → drift and extra reactivity churn.
 - Putting transient UI flags in a global store → unnecessary cross-component
   coupling and re-renders.
+- Rendering chat messages as realtime danmaku by watching `chat` in
+  `DanmakuOverlay` → the product loses the ability to distinguish chat history
+  from actual `DANMAKU` events.

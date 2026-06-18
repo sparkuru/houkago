@@ -4,8 +4,8 @@ import { danmakuTrackBottom } from "@/lib/danmaku-track"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { computed, onUnmounted, ref, watch } from "vue"
 
-// 弹幕姬 lite: faint chat bubbles overlaid on the player corner. This is the P0
-// realtime-chat danmaku — a self-owned Vue/CSS overlay, NOT a canvas flying-danmaku
+// 弹幕姬 lite: faint realtime DANMAKU bubbles overlaid on the player corner.
+// This is a self-owned Vue/CSS overlay, NOT a canvas flying-danmaku
 // engine (design §7/§8 deferred). Bubble lifecycle (appear → ~5s → fade/remove)
 // lives here as local view state; it never touches the store (state-management).
 const bushitsu = useBushitsuStore()
@@ -67,14 +67,14 @@ function pushBubble(senderId: string, content: string): void {
   scheduleRemoval(id)
 }
 
-// New chat lines surface as bubbles. store.chat is server truth (read-only); we
-// react to its growth, not mutate it.
+// New realtime DANMAKU lines surface as bubbles. store.danmaku is server truth
+// (read-only); we react to its growth, not mutate it.
 watch(
-  () => bushitsu.chat.length,
+  () => bushitsu.danmaku.length,
   (len, prev) => {
     if (!hyouji.value) return
     for (let i = prev ?? 0; i < len; i++) {
-      const line = bushitsu.chat[i]
+      const line = bushitsu.danmaku[i]
       if (line) pushBubble(line.senderId, line.content)
     }
   },

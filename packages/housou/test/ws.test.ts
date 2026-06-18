@@ -75,6 +75,33 @@ test("two clients in the same room exchange OSHABERI echo", async () => {
   b.close()
 })
 
+test("two clients in the same room exchange DANMAKU echo", async () => {
+  const a = await open("rDanmaku", "alice")
+  const b = await open("rDanmaku", "bob")
+
+  const gotByB = nextMatch(b, (m) => m.type === "DANMAKU")
+  const gotByA = nextMatch(a, (m) => m.type === "DANMAKU")
+
+  const msg: KousokuMessage = {
+    type: "DANMAKU",
+    ts: Date.now(),
+    senderId: "alice",
+    payload: { content: "fly", color: "#fff", mode: "scroll" },
+  }
+  a.send(JSON.stringify(msg))
+
+  const [mb, ma] = await Promise.all([gotByB, gotByA])
+  expect(mb.type).toBe("DANMAKU")
+  expect(ma.type).toBe("DANMAKU")
+  if (mb.type === "DANMAKU") {
+    expect(mb.payload.content).toBe("fly")
+    expect(mb.payload.color).toBe("#fff")
+  }
+
+  a.close()
+  b.close()
+})
+
 test("room isolation: rC client does not receive rD chat", async () => {
   const c = await open("rC", "carol")
   const d = await open("rD", "dave")

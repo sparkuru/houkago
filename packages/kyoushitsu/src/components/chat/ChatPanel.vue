@@ -8,14 +8,15 @@ import { ref } from "vue"
 const bushitsu = useBushitsuStore()
 // toggle：折叠要求。親（BushitsuView）が chatHiraku を畳む。ChatPanel は WS も
 // 折叠態も自管せず emit で親へ委ねる（component-guidelines）。
-const emit = defineEmits<{ oshaberi: [content: string]; toggle: [] }>()
+const emit = defineEmits<{ oshaberi: [content: string]; danmaku: [content: string]; toggle: [] }>()
 
 const draft = ref("")
 
-function send() {
+function send(event: SubmitEvent) {
   const content = draft.value.trim()
   if (!content) return
-  emit("oshaberi", content)
+  const action = event.submitter instanceof HTMLButtonElement ? event.submitter.value : "oshaberi"
+  emit(action === "danmaku" ? "danmaku" : "oshaberi", content)
   draft.value = ""
 }
 </script>
@@ -45,7 +46,8 @@ function send() {
          host は canChat 恒 true。服务端も越権 OSHABERI を拒否 (双保険)。 -->
     <form v-if="bushitsu.canChat" class="chat-input" @submit.prevent="send">
       <input v-model="draft" :aria-label="t('oshaberiLabel')" :placeholder="t('messagePlaceholder')" />
-      <button type="submit">{{ t("send") }}</button>
+      <button type="submit" value="oshaberi">{{ t("send") }}</button>
+      <button type="submit" value="danmaku">{{ t("sendDanmaku") }}</button>
     </form>
     <p v-else class="chat-readonly">{{ t("chatReadonly") }}</p>
   </aside>

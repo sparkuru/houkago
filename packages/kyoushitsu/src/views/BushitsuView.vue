@@ -160,6 +160,15 @@ function oshaberi(content: string) {
   })
 }
 
+function danmaku(content: string) {
+  client?.send({
+    type: "DANMAKU",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: { content },
+  })
+}
+
 // 昵称 gate: a direct-link / refresh / 隐私窗口 visitor has no persisted nickname,
 // so connecting would fall back to the raw senderId (uuid) server-side. Gate the
 // WS connect behind an inline name form (pure view 態, not store). The 部員
@@ -349,7 +358,12 @@ onBeforeUnmount(() => {
           ‹
         </button>
       </div>
-      <ChatPanel v-show="chatHiraku" @oshaberi="oshaberi" @toggle="chatHiraku = false" />
+      <ChatPanel
+        v-show="chatHiraku"
+        @oshaberi="oshaberi"
+        @danmaku="danmaku"
+        @toggle="chatHiraku = false"
+      />
     </template>
   </div>
 </template>
