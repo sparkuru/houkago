@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 27
+- **Total Sessions**: 28
 - **Last Active**: 2026-06-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~901 | Active |
+| `journal-1.md` | ~934 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 28 | 2026-06-18 | Frontend i18n labels | `dea74a2` | `k-on` |
 | 27 | 2026-06-18 | Bangumi queue controls | `28d6b21` | `k-on` |
 | 26 | 2026-06-18 | dev.sh 启动开发服务 | `ae802aa` | `k-on` |
 | 25 | 2026-06-18 | guest 权限 epic 阶段2:入房控制 | `fbebcee`, `421f46c` | `k-on` |

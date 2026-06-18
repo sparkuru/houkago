@@ -899,3 +899,36 @@ Implemented interactive bangumi queue controls, delete synchronization, source-s
 ### Next Steps
 
 - None - task complete
+
+
+## Session 28: Frontend i18n labels
+
+**Date**: 2026-06-18
+**Task**: Frontend i18n labels
+**Branch**: `k-on`
+
+### Summary
+
+Centralized kyoushitsu UI labels in a typed i18n module, switched default visible labels to Chinese with Japanese-style domain vocabulary, updated affected Vue components and added i18n tests.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dea74a2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
