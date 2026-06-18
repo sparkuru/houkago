@@ -61,6 +61,12 @@ export const messages = {
     danmakuShowAria: "显示弹幕",
     danmakuOn: "弹幕 ON",
     danmakuOff: "弹幕 OFF",
+    fileDanmakuChoose: "选择弹幕",
+    fileDanmakuOn: "文件弹幕 ON",
+    fileDanmakuOff: "文件弹幕 OFF",
+    fileDanmakuToggleAria: "文件弹幕显示开关",
+    fileDanmakuNone: "未选择弹幕",
+    fileDanmakuEmpty: "未识别弹幕",
   },
 } as const
 

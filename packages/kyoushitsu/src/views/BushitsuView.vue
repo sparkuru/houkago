@@ -2,6 +2,7 @@
 import { housou } from "@/api"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
 import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
+import FileDanmakuOverlay from "@/components/danmaku/FileDanmakuOverlay.vue"
 import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
@@ -9,10 +10,12 @@ import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
 import { canDeleteBangumiItem, canPlayBangumiItem, isCurrentEnmoku } from "@/lib/bangumi-actions"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
+import { loadFileDanmakuEnabled, saveFileDanmakuEnabled } from "@/lib/file-danmaku-pref"
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient } from "@/ws/client"
+import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
 import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
@@ -64,11 +67,52 @@ const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ??
 // DanmakuOverlay へ prop で下す（prd Bug1）。暴露 ref→親 computed の脆い連鎖を
 // 避け、原生全屏含む三態で確実に響応させる。pure view 態 → store 不要。
 const controlsShown = ref(true)
+const playbackTime = ref(0)
 // 演目切替（current 変更）で player が再 mount され control 発火前は条あり扱いに
 // 復位させる。EnmokuPlayer 卸載は control を停発するので親側で戻す。
 watch(current, () => {
   controlsShown.value = true
+  playbackTime.value = 0
 })
+
+const fileInput = ref<HTMLInputElement | null>(null)
+const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
+const fileDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
+const fileDanmakuNameByEnmoku = ref<Record<string, string>>({})
+
+const currentFileDanmaku = computed(() => {
+  const id = currentEnmokuId.value
+  return id ? (fileDanmakuByEnmoku.value[id] ?? []) : []
+})
+const currentFileDanmakuName = computed(() => {
+  const id = currentEnmokuId.value
+  return id ? (fileDanmakuNameByEnmoku.value[id] ?? "") : ""
+})
+
+function toggleFileDanmaku() {
+  fileDanmakuEnabled.value = !fileDanmakuEnabled.value
+  saveFileDanmakuEnabled(fileDanmakuEnabled.value)
+}
+
+function chooseFileDanmaku() {
+  fileInput.value?.click()
+}
+
+async function onFileDanmakuSelected(event: Event) {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement)) return
+  const file = target.files?.[0]
+  target.value = ""
+  const enmokuId = currentEnmokuId.value
+  if (!file || !enmokuId) return
+
+  const cues = parseBilibiliXml(await file.text())
+  fileDanmakuByEnmoku.value = { ...fileDanmakuByEnmoku.value, [enmokuId]: cues }
+  fileDanmakuNameByEnmoku.value = {
+    ...fileDanmakuNameByEnmoku.value,
+    [enmokuId]: cues.length > 0 ? file.name : t("fileDanmakuEmpty"),
+  }
+}
 
 // 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
 // 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
@@ -267,6 +311,30 @@ onBeforeUnmount(() => {
     <template v-else>
       <main class="stage">
         <div class="bar">
+          <div v-if="current" class="file-danmaku-controls">
+            <button
+              type="button"
+              :aria-label="t('fileDanmakuToggleAria')"
+              :aria-pressed="fileDanmakuEnabled"
+              @click="toggleFileDanmaku"
+            >
+              {{ fileDanmakuEnabled ? t("fileDanmakuOn") : t("fileDanmakuOff") }}
+            </button>
+            <button type="button" @click="chooseFileDanmaku">
+              {{ t("fileDanmakuChoose") }}
+            </button>
+            <input
+              ref="fileInput"
+              class="file-danmaku-input"
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              :aria-label="t('fileDanmakuChoose')"
+              @change="onFileDanmakuSelected"
+            />
+            <span class="file-danmaku-name">
+              {{ currentFileDanmakuName || t("fileDanmakuNone") }}
+            </span>
+          </div>
           <KengenPanel
             v-if="bushitsu.isBuchou"
             @settei="settei"
@@ -294,6 +362,13 @@ onBeforeUnmount(() => {
             @ready="shinkou.catchUp"
             @join="onJoin"
             @control="controlsShown = $event"
+            @time="playbackTime = $event"
+          />
+          <FileDanmakuOverlay
+            :target="playerEl"
+            :cues="currentFileDanmaku"
+            :current-time="playbackTime"
+            :enabled="fileDanmakuEnabled"
           />
           <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
         </div>
@@ -382,8 +457,29 @@ onBeforeUnmount(() => {
 }
 .bar {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
   justify-content: flex-end;
   margin-bottom: 8px;
+}
+.file-danmaku-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin-right: auto;
+}
+.file-danmaku-input {
+  display: none;
+}
+.file-danmaku-name {
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #444;
 }
 /* player + overlay share one positioned wrapper so the overlay covers the player. */
 .player-wrap {

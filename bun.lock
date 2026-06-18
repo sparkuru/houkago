@@ -23,6 +23,14 @@
         "typescript": "^5.6.0",
       },
     },
+    "packages/kokuban": {
+      "name": "houkago-kokuban",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.6.0",
+      },
+    },
     "packages/kousoku": {
       "name": "houkago-kousoku",
       "version": "0.0.0",
@@ -41,6 +49,7 @@
         "artplayer": "^5.4.0",
         "hls.js": "^1.6.0",
         "houkago-housou": "workspace:*",
+        "houkago-kokuban": "workspace:*",
         "houkago-kousoku": "workspace:*",
         "pinia": "^3.0.0",
         "vue": "^3.5.0",
@@ -216,6 +225,8 @@
     "hookable": ["hookable@5.5.3", "", {}, "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="],
 
     "houkago-housou": ["houkago-housou@workspace:packages/housou"],
+
+    "houkago-kokuban": ["houkago-kokuban@workspace:packages/kokuban"],
 
     "houkago-kousoku": ["houkago-kousoku@workspace:packages/kousoku"],
 

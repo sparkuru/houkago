@@ -36,7 +36,15 @@ const props = defineProps<{
 // the parent flips joined + catchUp in the same gesture stack. `control`：
 // ArtPlayer コントロール条の显隐を親へ直送（emit）— 暴露 ref→親 computed の脆い
 // 連鎖を避け、普通／网页全屏／原生全屏の三態で確実に響応させる（prd Bug1）。
-const emit = defineEmits<{ shinkou: [Shinkou]; ready: []; join: []; control: [boolean] }>()
+// `time` feeds local file-danmaku rendering only; it never becomes playback
+// authority and never emits SHINKOU.
+const emit = defineEmits<{
+  shinkou: [Shinkou]
+  ready: []
+  join: []
+  control: [boolean]
+  time: [number]
+}>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
 // loop (design §5 ≤0.3s ignore tier).
@@ -180,6 +188,8 @@ onMounted(() => {
   art.on("seek", onChange)
   art.on("video:ratechange", onChange)
   art.on("ready", () => emit("ready"))
+  art.on("video:timeupdate", () => emit("time", art?.currentTime ?? 0))
+  art.on("video:seeked", () => emit("time", art?.currentTime ?? 0))
 
   // コントロール条の显隐を親へ直送（prd Bug1）。ArtPlayer 'control' は state=条が
   // 可視か を渡す（typed event, 禁 any）。emit で送ることで暴露 ref→親 computed の
