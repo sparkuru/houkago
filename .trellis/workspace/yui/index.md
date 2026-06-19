@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 29
-- **Last Active**: 2026-06-18
+- **Total Sessions**: 30
+- **Last Active**: 2026-06-19
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~967 | Active |
+| `journal-1.md` | ~1001 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 30 | 2026-06-19 | P1 file danmaku kokuban | `fa59004`, `fcf6c94` | `k-on` |
 | 29 | 2026-06-18 | Roadmap status update | `6a918ef` | `k-on` |
 | 28 | 2026-06-18 | Frontend i18n labels | `dea74a2` | `k-on` |
 | 27 | 2026-06-18 | Bangumi queue controls | `28d6b21` | `k-on` |

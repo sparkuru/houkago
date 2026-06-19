@@ -965,3 +965,37 @@ Updated design.md as the main product roadmap with current implementation status
 ### Next Steps
 
 - None - task complete
+
+
+## Session 30: P1 file danmaku kokuban
+
+**Date**: 2026-06-19
+**Task**: P1 file danmaku kokuban
+**Branch**: `k-on`
+
+### Summary
+
+Added houkago-kokuban Bilibili XML parsing, local file danmaku selection/rendering in kyoushitsu, tests, and local-first danmaku scope notes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fa59004` | (see git log) |
+| `fcf6c94` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
