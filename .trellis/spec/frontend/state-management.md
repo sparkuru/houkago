@@ -55,6 +55,10 @@ Anything that is purely one component's view concern stays a local `ref`.
   `useBushitsuStore.bangumi`; room views may optimistically set the same store
   after their own REST write, but must still accept the socket snapshot so host
   and guest stay in sync without refresh.
+- `BANGUMI` / `setBangumi` must normalize by `Enmoku.id` at the store boundary.
+  REST create/delete can race with WS snapshots, and dev/manual source flows may
+  be tempted to append locally after a POST. Deduping by id in the store prevents
+  transient duplicate rows while preserving the first occurrence order.
 - **Host-authority on the client:** only the 部長's player events emit `SHINKOU`.
   When applying a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo
   for ~200ms so the resulting local player event is not re-broadcast (design §5).
@@ -98,6 +102,11 @@ rejection path.
   the authority state. The client follows; only the host drives.
 - Keeping 番組表 as a component-local `ref` only. A REST delete by another client
   will not reach that component unless `BANGUMI` is committed into the room store.
+- Appending a just-created manual `Enmoku` after POST without considering the
+  incoming `BANGUMI` snapshot. If the snapshot arrives before the POST promise
+  resolves, a later local append can duplicate the same id in the visible queue.
+  Prefer letting the WS snapshot write the queue; keep store-level id
+  normalization as a defense.
 - Forgetting `tsuijuuChuu` echo suppression → applying a remote `SHINKOU` fires a
   local seek/play event that gets broadcast back, causing oscillation.
 - Storing a continuously-incremented `currentTime` in a store instead of deriving

@@ -180,3 +180,18 @@ test("apply BANGUMI updates the room queue snapshot", () => {
   store.apply({ type: "BANGUMI", ts: Date.now(), senderId: "server", payload: { enmoku: queue } })
   expect(store.bangumi.map((e) => e.id)).toEqual(["e1", "e2"])
 })
+
+test("setBangumi and BANGUMI dedupe by enmoku id", () => {
+  const store = useBushitsuStore()
+  const e1 = enmoku("e1")
+  store.setBangumi([e1, e1, enmoku("e2")])
+  expect(store.bangumi.map((e) => e.id)).toEqual(["e1", "e2"])
+
+  store.apply({
+    type: "BANGUMI",
+    ts: Date.now(),
+    senderId: "server",
+    payload: { enmoku: [enmoku("e3"), enmoku("e3")] },
+  })
+  expect(store.bangumi.map((e) => e.id)).toEqual(["e3"])
+})

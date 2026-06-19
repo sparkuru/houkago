@@ -26,6 +26,17 @@ const DEFAULT_NYUUSHITSU_MODE: NyuushitsuMode = "open"
 type ChatLine = { senderId: string; content: string; ts: number }
 type DanmakuLine = { senderId: string; content: string; ts: number; color?: string; mode?: string }
 
+function uniqueEnmokuById(enmoku: readonly Enmoku[]): Enmoku[] {
+  const seen = new Set<string>()
+  const unique: Enmoku[] = []
+  for (const item of enmoku) {
+    if (seen.has(item.id)) continue
+    seen.add(item.id)
+    unique.push(item)
+  }
+  return unique
+}
+
 export const useBushitsuStore = defineStore("bushitsu", () => {
   const bushitsuId = ref<string | null>(null)
   const nickname = ref(loadNickname()) // persisted, so reload/direct-link keeps the name
@@ -106,7 +117,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         enmokuId.value = msg.payload.enmokuId
         break
       case "BANGUMI":
-        bangumi.value = msg.payload.enmoku
+        bangumi.value = uniqueEnmokuById(msg.payload.enmoku)
         break
       case "GENJOU":
         enmokuId.value = msg.payload.enmokuId
@@ -130,8 +141,8 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     saveNickname(name)
   }
 
-  function setBangumi(enmoku: Enmoku[]): void {
-    bangumi.value = enmoku
+  function setBangumi(enmoku: readonly Enmoku[]): void {
+    bangumi.value = uniqueEnmokuById(enmoku)
   }
 
   // 名前解決: map a senderId to its nickname for display; fall back to the raw

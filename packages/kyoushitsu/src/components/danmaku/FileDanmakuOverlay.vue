@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { visibleFileDanmakuCues } from "@/lib/file-danmaku"
+import { fileDanmakuAnimationState, visibleFileDanmakuCues } from "@/lib/file-danmaku"
 import type { DanmakuCue } from "houkago-kokuban"
 import { computed } from "vue"
 
@@ -8,11 +8,13 @@ const props = defineProps<{
   cues: readonly DanmakuCue[]
   currentTime: number
   enabled: boolean
+  playing: boolean
 }>()
 
 const visible = computed(() =>
   props.enabled ? visibleFileDanmakuCues(props.cues, props.currentTime) : [],
 )
+const animationState = computed(() => fileDanmakuAnimationState(props.playing))
 </script>
 
 <template>
@@ -25,6 +27,7 @@ const visible = computed(() =>
         :class="[`mode-${cue.mode}`]"
         :style="{
           '--lane': cue.lane,
+          animationPlayState: animationState,
           color: cue.color,
         }"
       >

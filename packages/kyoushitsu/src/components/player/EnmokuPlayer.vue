@@ -37,13 +37,15 @@ const props = defineProps<{
 // ArtPlayer コントロール条の显隐を親へ直送（emit）— 暴露 ref→親 computed の脆い
 // 連鎖を避け、普通／网页全屏／原生全屏の三態で確実に響応させる（prd Bug1）。
 // `time` feeds local file-danmaku rendering only; it never becomes playback
-// authority and never emits SHINKOU.
+// authority and never emits SHINKOU. `playing` feeds local file-danmaku CSS
+// animation state only; playback authority still comes from SHINKOU.
 const emit = defineEmits<{
   shinkou: [Shinkou]
   ready: []
   join: []
   control: [boolean]
   time: [number]
+  playing: [boolean]
 }>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
@@ -182,12 +184,19 @@ onMounted(() => {
 
   // Local playback events → Shinkou snapshots. useShinkou gates these by 部長 +
   // 追従中 before broadcasting, so emitting unconditionally here is safe.
-  const onChange = () => emit("shinkou", snapshot())
+  const emitPlaying = () => emit("playing", art?.playing ?? false)
+  const onChange = () => {
+    emit("shinkou", snapshot())
+    emitPlaying()
+  }
   art.on("play", onChange)
   art.on("pause", onChange)
   art.on("seek", onChange)
   art.on("video:ratechange", onChange)
-  art.on("ready", () => emit("ready"))
+  art.on("ready", () => {
+    emit("ready")
+    emitPlaying()
+  })
   art.on("video:timeupdate", () => emit("time", art?.currentTime ?? 0))
   art.on("video:seeked", () => emit("time", art?.currentTime ?? 0))
 

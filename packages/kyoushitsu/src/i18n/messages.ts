@@ -26,6 +26,7 @@ export const messages = {
     manualUrlLabel: "直链 URL",
     manualUrlPlaceholder: "m3u8 / mp4 直链",
     manualEnmokuTitle: "手填直链",
+    devManualHeading: "开发直链",
     play: "播放",
     delete: "删除",
     waitingBuchouJouei: "等待部長放映…",

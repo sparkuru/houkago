@@ -68,17 +68,20 @@ const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ??
 // 避け、原生全屏含む三態で確実に響応させる。pure view 態 → store 不要。
 const controlsShown = ref(true)
 const playbackTime = ref(0)
+const playbackPlaying = ref(false)
 // 演目切替（current 変更）で player が再 mount され control 発火前は条あり扱いに
 // 復位させる。EnmokuPlayer 卸載は control を停発するので親側で戻す。
 watch(current, () => {
   controlsShown.value = true
   playbackTime.value = 0
+  playbackPlaying.value = false
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
 const fileDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
 const fileDanmakuNameByEnmoku = ref<Record<string, string>>({})
+const manualSubmitting = ref(false)
 
 const currentFileDanmaku = computed(() => {
   const id = currentEnmokuId.value
@@ -154,17 +157,21 @@ function sendJouei(enmokuId: string) {
 }
 
 async function playManual() {
-  if (!manualUrl.value || !bushitsu.canPlaylist) return
-  const isHls = manualUrl.value.endsWith(".m3u8")
-  const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
-    title: t("manualEnmokuTitle"),
-    type: isHls ? "hls" : "direct",
-    url: manualUrl.value,
-    addedBy: bushitsu.senderId,
-  })
-  if (!enmoku) return
-  bushitsu.setBangumi([...bushitsu.bangumi, enmoku])
-  sendJouei(enmoku.id)
+  const url = manualUrl.value.trim()
+  if (!url || !bushitsu.canPlaylist || manualSubmitting.value) return
+  manualSubmitting.value = true
+  try {
+    const isHls = url.endsWith(".m3u8")
+    const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
+      title: t("manualEnmokuTitle"),
+      type: isHls ? "hls" : "direct",
+      url,
+      addedBy: bushitsu.senderId,
+    })
+    if (enmoku) sendJouei(enmoku.id)
+  } finally {
+    manualSubmitting.value = false
+  }
 }
 
 function playBangumi(enmokuId: string) {
@@ -363,25 +370,19 @@ onBeforeUnmount(() => {
             @join="onJoin"
             @control="controlsShown = $event"
             @time="playbackTime = $event"
+            @playing="playbackPlaying = $event"
           />
           <FileDanmakuOverlay
             :target="playerEl"
             :cues="currentFileDanmaku"
             :current-time="playbackTime"
             :enabled="fileDanmakuEnabled"
+            :playing="playbackPlaying"
           />
           <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
         </div>
         <div v-else class="placeholder">
-          <template v-if="bushitsu.canPlaylist">
-            <input
-              v-model="manualUrl"
-              :aria-label="t('manualUrlLabel')"
-              :placeholder="t('manualUrlPlaceholder')"
-            />
-            <button type="button" @click="playManual">{{ t("play") }}</button>
-          </template>
-          <span v-else>{{ t("waitingBuchouJouei") }}</span>
+          <span>{{ t("waitingBuchouJouei") }}</span>
         </div>
         <section class="bangumi">
           <h3>{{ t("bangumiHeading") }}</h3>
@@ -417,6 +418,17 @@ onBeforeUnmount(() => {
               </span>
             </li>
           </ul>
+          <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
+            <h4>{{ t("devManualHeading") }}</h4>
+            <input
+              v-model="manualUrl"
+              :aria-label="t('manualUrlLabel')"
+              :placeholder="t('manualUrlPlaceholder')"
+            />
+            <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
+              {{ t("play") }}
+            </button>
+          </form>
         </section>
       </main>
       <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
@@ -557,6 +569,21 @@ onBeforeUnmount(() => {
 .bangumi-status {
   font-size: 12px;
   color: #222;
+}
+.dev-manual {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+.dev-manual h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dev-manual input {
+  min-width: 0;
 }
 .bangumi-actions {
   display: flex;

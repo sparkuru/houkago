@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { visibleFileDanmakuCues } from "../src/lib/file-danmaku"
+import { fileDanmakuAnimationState, visibleFileDanmakuCues } from "../src/lib/file-danmaku"
 
 test("returns cues active at the current playback time", () => {
   const visible = visibleFileDanmakuCues(
@@ -29,4 +29,9 @@ test("drops expired and future cues", () => {
 
 test("invalid playback time shows no cues", () => {
   expect(visibleFileDanmakuCues([{ time: 1, text: "x", mode: "scroll" }], Number.NaN)).toEqual([])
+})
+
+test("file danmaku animation follows playback state", () => {
+  expect(fileDanmakuAnimationState(true)).toBe("running")
+  expect(fileDanmakuAnimationState(false)).toBe("paused")
 })

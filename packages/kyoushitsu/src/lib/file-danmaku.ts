@@ -8,6 +8,11 @@ export type VisibleDanmakuCue = DanmakuCue & {
 export const FILE_DANMAKU_VISIBLE_SECONDS = 6
 export const FILE_DANMAKU_MAX_VISIBLE = 28
 export const FILE_DANMAKU_LANES = 8
+export type FileDanmakuAnimationState = "running" | "paused"
+
+export function fileDanmakuAnimationState(playing: boolean): FileDanmakuAnimationState {
+  return playing ? "running" : "paused"
+}
 
 export function visibleFileDanmakuCues(
   cues: readonly DanmakuCue[],
