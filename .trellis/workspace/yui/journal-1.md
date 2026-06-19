@@ -999,3 +999,36 @@ Added houkago-kokuban Bilibili XML parsing, local file danmaku selection/renderi
 ### Next Steps
 
 - None - task complete
+
+
+## Session 31: Fix file danmaku pause and dev link
+
+**Date**: 2026-06-19
+**Task**: Fix file danmaku pause and dev link
+**Branch**: `k-on`
+
+### Summary
+
+Fixed file danmaku CSS animations to pause with playback, removed manual-link optimistic queue duplication, added a persistent dev link form, tests, and state-management spec notes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3f4db17` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
