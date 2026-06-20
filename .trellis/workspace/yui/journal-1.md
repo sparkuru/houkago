@@ -1230,3 +1230,36 @@ Refined room player controls, chat panel, danmaku settings, fullscreen/cinema-mo
 ### Next Steps
 
 - None - task complete
+
+
+## Session 38: P2 eisha HLS URL re-resolve
+
+**Date**: 2026-06-21
+**Task**: P2 eisha HLS URL re-resolve
+**Branch**: `k-on`
+
+### Summary
+
+Implemented HLS proxy re-resolution for expired child refs: rewritten/parser-produced proxy tokens now carry manifest refresh context, eisha retries expiry-like upstream statuses once via refreshed manifests, and design/backend specs plus proxy/rest/e2e tests were updated.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c62869e` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

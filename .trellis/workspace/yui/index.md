@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 37
-- **Last Active**: 2026-06-20
+- **Total Sessions**: 38
+- **Last Active**: 2026-06-21
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1232 | Active |
+| `journal-1.md` | ~1265 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 38 | 2026-06-21 | P2 eisha HLS URL re-resolve | `c62869e` | `k-on` |
 | 37 | 2026-06-20 | Finalize kyoushitsu player controls | `b825224` | `k-on` |
 | 36 | 2026-06-20 | Generic HLS parser metadata | `dfa7416` | `k-on` |
 | 35 | 2026-06-20 | P2 persist Enmoku metadata | `ea77ed4` | `k-on` |
