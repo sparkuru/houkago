@@ -1164,3 +1164,36 @@ Persisted Enmoku extended metadata in housou SQLite: headers/subtitles/sources/d
 ### Next Steps
 
 - None - task complete
+
+
+## Session 36: Generic HLS parser metadata
+
+**Date**: 2026-06-20
+**Task**: Generic HLS parser metadata
+**Branch**: `k-on`
+
+### Summary
+
+Implemented the first real eisha parser: Generic HLS manifest parsing for sources, subtitles, and live metadata; wired housou resolver creates through resolveUrlWithMetadata; updated tests, design, and backend specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dfa7416` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
