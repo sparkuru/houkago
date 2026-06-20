@@ -212,7 +212,7 @@ houkago/
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
 | P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染 | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 meta 自动获取；无 danmubox/search |
-| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；base64url 稳定代理 token；housou 挂载 `/eisha/proxy/:token`；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata 并本地选择 HLS source URL | 无站点平台解析器；无浏览/搜索 UI；清晰度选择尚未广播同步 |
+| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；B 站公开视频 parser 骨架可从 view/playurl 产出标题、DASH source、media headers 和 `danmaku` fetch ref；base64url 稳定代理 token；housou 挂载 `/eisha/proxy/:token`；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata 并本地选择 HLS source URL | 无浏览/搜索 UI；清晰度选择尚未广播同步；DASH 音视频合流/完整 B 站播放仍未落地 |
 | P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础；`Enmoku` 扩展字段已持久化 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
 
@@ -228,8 +228,8 @@ houkago/
 
 **P2：eisha 解析与代理骨架**
 
-- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；Generic HLS manifest parser 产出 `sources`/`subtitles`/`live` metadata；稳定代理 token；housou co-deploy 挂载 `/eisha/proxy/:token`；range/seek 基础行为测试；m3u8 manifest segment/key/map/media URI 重写；HLS 子资源过期时可按 manifest 上下文懒重解析并重试一次；前端 dev 直链表单接入 resolver/create 流程；`Enmoku.headers/subtitles/sources/danmaku/live` SQLite 持久化；房间页展示 parser metadata，并支持本地选择 `sources` 驱动播放器 URL。
-- 下一刀：做第一个站点平台解析器（如 B 站）来产出真实 headers/subtitles/sources/danmaku 元数据，或补浏览/搜索 API。
+- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；Generic HLS manifest parser 产出 `sources`/`subtitles`/`live` metadata；B 站公开视频 parser 骨架产出标题、DASH source、media headers 和 `danmaku` fetch ref；稳定代理 token；housou co-deploy 挂载 `/eisha/proxy/:token`；range/seek 基础行为测试；m3u8 manifest segment/key/map/media URI 重写；HLS 子资源过期时可按 manifest 上下文懒重解析并重试一次；前端 dev 直链表单接入 resolver/create 流程；`Enmoku.headers/subtitles/sources/danmaku/live` SQLite 持久化；房间页展示 parser metadata，并支持本地选择 `sources` 驱动播放器 URL。
+- 下一刀：补 DASH 音视频合流/前端播放能力，或补平台浏览/搜索 API。
 - 后续再加入平台浏览/搜索 API。
 
 **P3：房间与内容管理扩展**

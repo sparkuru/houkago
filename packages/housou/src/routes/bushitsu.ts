@@ -95,6 +95,7 @@ async function createEnmoku(
       headers: resolved.headers,
       subtitles: resolved.subtitles,
       sources: resolved.sources,
+      danmaku: resolved.danmaku,
       live: resolved.live,
       addedBy: input.addedBy,
     })

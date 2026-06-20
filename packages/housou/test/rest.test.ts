@@ -205,6 +205,75 @@ test("add enmoku from HLS sourceUrl persists parser metadata", async () => {
   expect(bangumi[0].subtitles).toEqual(enmoku.subtitles)
 })
 
+test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-bilibili-metadata", buchouId: "u1" }),
+  }).then((r) => r.json())
+
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = (async (input, init) => {
+    const url = new URL(String(input))
+    if (url.hostname !== "api.bilibili.com") return originalFetch(input, init)
+
+    if (url.pathname === "/x/web-interface/view") {
+      return Response.json({
+        code: 0,
+        data: { bvid: "BV1xx411c7mD", title: "Bilibili resolved", cid: 62131 },
+      })
+    }
+
+    return Response.json({
+      code: 0,
+      data: {
+        support_formats: [{ quality: 32, display_desc: "480P" }],
+        dash: {
+          video: [
+            {
+              id: 32,
+              baseUrl: "https://upos.example.test/video-480.m4s?sig=1",
+              width: 512,
+              height: 384,
+              codecs: "avc1.64001E",
+            },
+          ],
+        },
+      },
+    })
+  }) as typeof fetch
+
+  try {
+    const enmoku = await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sourceUrl: "https://www.bilibili.com/video/BV1xx411c7mD",
+        addedBy: "u1",
+      }),
+    }).then((r) => r.json())
+
+    expect(enmoku.title).toBe("Bilibili resolved")
+    expect(enmoku.type).toBe("dash")
+    expect(enmoku.sources?.[0]?.name).toBe("480P · 512x384 · avc1")
+    expect(enmoku.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
+    expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
+      url: "https://upos.example.test/video-480.m4s?sig=1",
+      headers: {
+        referer: "https://www.bilibili.com/",
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+      },
+    })
+
+    const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
+    expect(bangumi[0].sources).toEqual(enmoku.sources)
+    expect(bangumi[0].danmaku).toEqual(enmoku.danmaku)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test("add enmoku broadcasts extended metadata in BANGUMI", async () => {
   const room = await fetch(`${base}/bushitsu`, {
     method: "POST",

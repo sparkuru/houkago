@@ -1,5 +1,6 @@
 import type { Enmoku } from "houkago-kousoku"
 import { EishaUpstreamError } from "./errors"
+import { resolveBilibiliUrl } from "./parsers/bilibili"
 import { parseHlsManifest } from "./parsers/hls"
 import { type FetchLike, type ProxyRef, assertHttpUrl, encodeProxyRef } from "./proxy"
 
@@ -20,6 +21,7 @@ export type ResolvedEnmokuSource = {
   headers?: Record<string, string>
   subtitles?: Enmoku["subtitles"]
   sources?: Enmoku["sources"]
+  danmaku?: Enmoku["danmaku"]
   live?: boolean
 }
 
@@ -52,6 +54,9 @@ export async function resolveUrlWithMetadata(
   options: ResolveUrlOptions,
   fetcher: FetchLike = fetch,
 ): Promise<ResolvedEnmokuSource> {
+  const bilibili = await resolveBilibiliUrl(input.url, options, fetcher)
+  if (bilibili) return { ...bilibili, title: input.title?.trim() || bilibili.title }
+
   const resolved = resolveUrl(input, options)
   if (resolved.type !== "hls") return resolved
 

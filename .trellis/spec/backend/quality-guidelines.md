@@ -196,9 +196,10 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
   `BANGUMI` with the full latest `fetchBangumi(bushitsuId)` result.
 - Resolver-body create must call `houkago-eisha.resolveUrlWithMetadata`
   server-side and store the returned stable proxy URL plus any parser-produced
-  metadata in the queued `Enmoku`. The frontend dev direct-link form submits
-  `sourceUrl`; it must not infer HLS/DASH type, parse manifests, or build proxy
-  tokens itself.
+  metadata, including `headers`, `subtitles`, `sources`, `danmaku`, and `live`,
+  in the queued `Enmoku`. The frontend dev direct-link form submits `sourceUrl`;
+  it must not infer HLS/DASH type, parse manifests, or build proxy tokens
+  itself.
 - Create/list/BANGUMI must preserve optional `Enmoku` metadata:
   `headers`, `subtitles`, `sources`, `danmaku`, and `live`. Missing metadata
   remains `undefined`, not empty containers or default `false`.
@@ -313,6 +314,7 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `resolveUrl(input, options) -> ResolvedEnmokuSource`
 - `resolveUrlWithMetadata(input, options, fetcher?) -> Promise<ResolvedEnmokuSource>`
 - `parseHlsManifest(manifest, options) -> Pick<Enmoku, "sources" | "subtitles" | "live">`
+- `resolveBilibiliUrl(url, options, fetcher?) -> Promise<ResolvedEnmokuSource | undefined>`
 - `encodeProxyRef(ref) -> token`
 - `decodeProxyRef(token) -> ProxyRef`
 - `proxyUpstream(ref, request) -> Response`
@@ -334,8 +336,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   inference, and stable proxy URL construction. Use it for fallback/simple
   resolution that must not touch the network.
 - `resolveUrlWithMetadata` wraps `resolveUrl`; for non-HLS inputs it returns the
-  same result, and for HLS inputs it fetches the upstream manifest and merges the
-  Generic HLS parser output.
+  same result, for Bilibili inputs it dispatches to the Bilibili parser first,
+  and for HLS inputs it fetches the upstream manifest and merges the Generic HLS
+  parser output.
 - Resolver type inference:
   - path ending `.m3u8` -> `Enmoku.type = "hls"`
   - path ending `.mpd` -> `Enmoku.type = "dash"`
@@ -350,6 +353,17 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     headers plus HLS refresh context in the decoded `ProxyRef`;
   - master playlists leave `live` undefined; media playlists set `live: true`
     when `#EXT-X-ENDLIST` is absent and `live: false` when it is present.
+- Bilibili parser output:
+  - accept public BV video URLs from `*.bilibili.com/video/BV...`;
+  - fetch `x/web-interface/view` for title and `cid`;
+  - fetch `x/player/playurl` with `fnval=16` for DASH metadata;
+  - return `type: "dash"`, `title`, primary proxied video URL, `sources[]` from
+    DASH video variants, Bilibili media headers (`referer` and `user-agent`),
+    and `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`;
+  - keep fetcher injection available so tests use fixtures instead of live
+    Bilibili network;
+  - do not implement cookie/VIP/WBI signing, synthetic MPD generation, or remote
+    danmaku fetching in this parser slice.
 - The proxy forwards the caller's `Range` header to upstream and preserves
   seek-relevant response headers: `accept-ranges`, `content-length`,
   `content-range`, `content-type`, plus cache validators when present.
@@ -385,6 +399,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   `EISHA_BAD_REQUEST` / HTTP 400.
 - `resolveUrlWithMetadata` HLS manifest fetch throws or returns non-OK ->
   `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- Bilibili `view` / `playurl` fetch throws, returns non-OK, returns non-zero
+  `code`, lacks `cid`, or lacks playable DASH video -> `EISHA_UPSTREAM_ERROR` /
+  HTTP 502.
 - Proxy upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
 - Upstream returns non-2xx/3xx -> preserve upstream status and allowed headers;
   do not rewrite it to 500.
@@ -404,6 +421,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Good: resolver-body create for a local HLS master playlist returns and
   persists `sources`/`subtitles` whose decoded proxy refs point at absolute child
   playlist URLs.
+- Good: resolver-body create for a public Bilibili BV URL returns and persists a
+  `dash` Enmoku with proxied `sources`, Bilibili media headers, and
+  `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`.
 - Base: direct `.mp4` input through `resolveUrlWithMetadata` does not fetch
   upstream and returns the same proxy result as `resolveUrl`.
 - Good: a proxied m3u8 manifest containing `seg-1.ts` and
@@ -420,6 +440,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Bad: `housou` parses HLS manifests itself or stores raw child playlist URLs
   without eisha proxy tokens; this leaks media-plane behavior into the control
   plane and bypasses header preservation.
+- Bad: `housou` drops parser-produced `danmaku` when storing a resolved Enmoku;
+  Bilibili metadata then looks present in the create response but disappears
+  from `GET /bangumi` / `BANGUMI`.
 - Bad: a rewritten playlist forwards upstream `content-range` / `etag` from the
   original body after changing the body text.
 - Bad: refresh retry calls `proxyUpstream` without disabling further refresh,
@@ -439,6 +462,11 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - Generic HLS parser marks media playlists live based on `#EXT-X-ENDLIST`
   - `resolveUrlWithMetadata` fetches HLS manifests and wraps fetch/non-OK
     failures as `EISHA_UPSTREAM_ERROR`
+  - Bilibili URL parser accepts common BV URL forms and rejects non-Bilibili
+    URLs
+  - Bilibili parser maps fixture `view` + `playurl` JSON into proxied DASH
+    sources, media headers, and `danmaku` fetch ref
+  - `resolveUrlWithMetadata` dispatches Bilibili URLs to the platform parser
   - `Range` forwarding and allowed response header preservation
   - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
     resolution, child header preservation, and non-http URI passthrough
@@ -456,6 +484,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     re-resolves to the refreshed segment.
   - resolver-body create from a local HLS manifest persists parser-produced
     `sources` and `subtitles` through create response and `GET /bangumi`.
+  - resolver-body create from a fixture-backed Bilibili source URL persists
+    parser-produced `sources` and `danmaku` through create response and
+    `GET /bangumi`.
 
 ### 7. Wrong vs Correct
 

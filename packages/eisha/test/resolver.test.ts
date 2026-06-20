@@ -76,6 +76,46 @@ test("resolves HLS URLs with parsed manifest metadata", async () => {
   })
 })
 
+test("dispatches Bilibili URLs to the platform parser", async () => {
+  const resolved = await resolveUrlWithMetadata(
+    { url: "https://www.bilibili.com/video/BV1xx411c7mD" },
+    { proxyBase },
+    (input) => {
+      const url = new URL(String(input))
+      if (url.pathname === "/x/web-interface/view") {
+        return Response.json({
+          code: 0,
+          data: { bvid: "BV1xx411c7mD", title: "Bilibili title", cid: 62131 },
+        })
+      }
+
+      return Response.json({
+        code: 0,
+        data: {
+          dash: {
+            video: [
+              {
+                id: 32,
+                baseUrl: "https://upos.example.test/video.m4s",
+                width: 512,
+                height: 384,
+                codecs: "avc1.64001E",
+              },
+            ],
+          },
+        },
+      })
+    },
+  )
+
+  expect(resolved.title).toBe("Bilibili title")
+  expect(resolved.type).toBe("dash")
+  expect(resolved.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
+  expect(decodeProxyRef(resolved.url.split("/eisha/proxy/")[1] ?? "").url).toBe(
+    "https://upos.example.test/video.m4s",
+  )
+})
+
 test("wraps HLS manifest fetch failures", async () => {
   await expect(
     resolveUrlWithMetadata(
