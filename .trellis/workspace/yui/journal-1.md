@@ -1263,3 +1263,37 @@ Implemented HLS proxy re-resolution for expired child refs: rewritten/parser-pro
 ### Next Steps
 
 - None - task complete
+
+
+## Session 39: Bilibili parser metadata and manual test checkpoint
+
+**Date**: 2026-06-21
+**Task**: Bilibili parser metadata and manual test checkpoint
+**Branch**: `k-on`
+
+### Summary
+
+Implemented fixture-backed Bilibili BV metadata resolution through eisha and housou persistence, then added a Trellis manual-test checkpoint before AI-driven commits.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `25c5dba` | (see git log) |
+| `e578602` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
