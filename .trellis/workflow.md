@@ -115,12 +115,12 @@ python3 ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed 
     matching enforcement line in its phase's [workflow-state:*] block. The
     breadcrumb is the only per-turn channel; if a mandatory step isn't
     mentioned there, the AI silently skips it (Phase 1.3 jsonl curation
-    skip and Phase 3.4 commit skip both manifested via this gap).
+    skip and Phase 3.5 commit skip both manifested via this gap).
 
   TAG ↔ PHASE scoping:
     [workflow-state:no_task]      → no active task; before Phase 1
     [workflow-state:planning]     → all of Phase 1 (status='planning')
-    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.4
+    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.5
                                     (status stays 'in_progress' from
                                     task.py start until task.py archive)
     [workflow-state:completed]    → currently DEAD: cmd_archive flips
@@ -189,15 +189,16 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 - 2.3 Rollback `[on demand]`
 
 <!-- Per-turn breadcrumb: shown while status='in_progress'.
-     Scope: all of Phase 2 + Phase 3.1-3.4 (status stays 'in_progress' from
+     Scope: all of Phase 2 + Phase 3.1-3.5 (status stays 'in_progress' from
      task.py start until task.py archive; only archive flips it). The body
      therefore must cover every required step from implementation through
-     commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
+     commit, including Phase 3.3 spec update, Phase 3.4 manual test checkpoint,
+     and Phase 3.5 commit. -->
 
 [workflow-state:in_progress]
 **Tools**: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill — there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
-**Flow**: trellis-implement → trellis-check → trellis-update-spec → commit (Phase 3.4) → `/trellis:finish-work`.
-**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after trellis-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+**Flow**: trellis-implement → trellis-check → trellis-update-spec → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
+**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, the main agent MUST state whether human testing is needed; if yes, list what to test, expected feedback format, and wait for the user's test feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `trellis-implement`, implement directly from the loaded task context and do NOT spawn another `trellis-implement`; if you are already running as `trellis-check`, review/fix directly and do NOT spawn another `trellis-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `trellis-implement` / `trellis-check` / `trellis-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `trellis-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
 **Inline override** (per-turn only, escape hatch for sub-agent dispatch): the user's CURRENT message MUST explicitly contain one of: "do it inline" / "no sub-agent" / "你直接改" / "别派 sub-agent" / "main session 写就行" / "不用 sub-agent". **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
@@ -209,17 +210,19 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
-**Flow** (inline mode): main session loads `trellis-before-dev` → main session edits code → main session loads `trellis-check` → run lint / type-check / tests → fix → `trellis-update-spec` → commit (Phase 3.4) → `/trellis:finish-work`.
+**Flow** (inline mode): main session loads `trellis-before-dev` → main session edits code → main session loads `trellis-check` → run lint / type-check / tests → fix → `trellis-update-spec` → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `trellis-implement` / `trellis-check` sub-agents. Load the `trellis-before-dev` skill before writing code; load the `trellis-check` skill before reporting completion.
-Phase 3.4 commit (required, once): after `trellis-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, the main agent MUST state whether human testing is needed; if yes, list what to test, expected feedback format, and wait for the user's test feedback before committing.
+Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
 - 3.1 Quality verification `[required · repeatable]`
 - 3.2 Debug retrospective `[on demand]`
 - 3.3 Spec update `[required · once]`
-- 3.4 Commit changes `[required · once]`
-- 3.5 Wrap-up reminder
+- 3.4 Manual test checkpoint `[required · once]`
+- 3.5 Commit changes `[required · once]`
+- 3.6 Wrap-up reminder
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in
@@ -230,8 +233,8 @@ Phase 3.4 commit (required, once): after `trellis-update-spec`, or whenever impl
      channel as the live blocks. -->
 
 [workflow-state:completed]
-Code committed via Phase 3.4; run `/trellis:finish-work` to wrap up (archive the task + record session).
-If you reach this state with uncommitted code, return to Phase 3.4 first — `/finish-work` refuses to run on a dirty working tree.
+Code committed via Phase 3.5; run `/trellis:finish-work` to wrap up (archive the task + record session).
+If you reach this state with uncommitted code, return to Phase 3.5 first — `/finish-work` refuses to run on a dirty working tree.
 `task.py archive` deletes any runtime session files that still point at the archived task.
 [/workflow-state:completed]
 
@@ -574,7 +577,34 @@ Load the `trellis-update-spec` skill and review whether this task produced new k
 
 Update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
 
-#### 3.4 Commit changes `[required · once]`
+#### 3.4 Manual test checkpoint `[required · once]`
+
+Before presenting the commit plan, decide whether this ready-to-commit state needs human testing.
+
+**Decision rule**:
+
+- **Human testing required** when the change affects user-visible UI/UX, browser/device behavior, authentication or permissions, network/service integration that automated tests mock, destructive/data migration behavior, deployment/runtime configuration, or any workflow whose success depends on human perception.
+- **Human testing optional** when automated tests cover the behavior and manual testing would only duplicate unit/integration assertions. Still name the optional smoke test if one would increase confidence.
+- **Human testing not needed** when the change is documentation-only, internal refactor-only with green tests, or a narrow pure-function/backend path fully covered by automated tests.
+
+**Required output**:
+
+```text
+Manual testing: required | optional | not needed
+Reason: <one or two concrete sentences>
+Test steps:
+  1. <only if required/optional>
+Expected signal:
+  - <what success looks like>
+Feedback format:
+  - PASS/FAIL
+  - environment/browser/device if relevant
+  - exact observed error, screenshot/log snippet, or "no issue observed"
+```
+
+If manual testing is **required**, stop before Phase 3.5 and wait for user feedback. If the user reports failure or ambiguity, fix the issue, rerun Phase 3.1, then repeat this checkpoint. If manual testing is optional or not needed, continue to Phase 3.5 in the same turn.
+
+#### 3.5 Commit changes `[required · once]`
 
 The AI drives a batched commit of this task's code changes so `/finish-work` can run cleanly afterwards. Goal: produce work commits FIRST, then bookkeeping (archive + journal) commits land after — never interleaved.
 
@@ -584,7 +614,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    ```bash
    git status --porcelain
    ```
-   Snapshot every dirty path. If the working tree is clean, skip to 3.5.
+   Snapshot every dirty path. If the working tree is clean, skip to 3.6.
 
 2. **Learn commit style** from recent history (so drafted messages blend in):
    ```bash
@@ -616,7 +646,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 
 6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. Do not amend. Do not push.
 
-7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.5 once they confirm.
+7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.6 once they confirm.
 
 **Rules**:
 - No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
@@ -624,7 +654,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 - If the user wants different message wording but accepts the file grouping, edit the message and re-confirm once — but if they reject the grouping, exit to manual mode.
 - The batched plan is one prompt; do not prompt per commit.
 
-#### 3.5 Wrap-up reminder
+#### 3.6 Wrap-up reminder
 
 After the above, remind the user they can run `/finish-work` to wrap up (archive the task, record the session).
 
@@ -644,8 +674,8 @@ All 4 tag blocks live in the `## Phase Index` section above, immediately after e
 |---|---|
 | No active task (before Phase 1) | `[workflow-state:no_task]` (after the Phase Index ASCII art) |
 | All of Phase 1 (task created → ready for implementation) | `[workflow-state:planning]` (after Phase 1 summary) |
-| Phase 2 + Phase 3.1–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
-| After Phase 3.5 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
+| Phase 2 + Phase 3.1–3.5 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
+| After Phase 3.6 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
 
 ### Changing the per-turn prompt text
 
