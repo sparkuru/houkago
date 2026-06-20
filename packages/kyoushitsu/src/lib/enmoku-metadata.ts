@@ -17,6 +17,23 @@ export type EnmokuMetadataSummary = {
   hasMetadata: boolean
 }
 
+export type ProviderStatKey = "view" | "danmaku" | "reply" | "favorite" | "coin" | "share" | "like"
+
+export type ProviderStatItem = {
+  key: ProviderStatKey
+  value: number
+}
+
+const PROVIDER_STAT_ORDER: ProviderStatKey[] = [
+  "view",
+  "danmaku",
+  "reply",
+  "favorite",
+  "coin",
+  "like",
+  "share",
+]
+
 export function enmokuSourceChoices(enmoku: Enmoku, primaryLabel: string): EnmokuSourceChoice[] {
   const seen = new Set<string>()
   return [
@@ -56,8 +73,22 @@ export function enmokuMetadataSummary(enmoku: Enmoku): EnmokuMetadataSummary {
     sourceCount,
     subtitleNames,
     live: enmoku.live,
-    hasMetadata: sourceCount > 0 || subtitleNames.length > 0 || enmoku.live !== undefined,
+    hasMetadata:
+      sourceCount > 0 || subtitleNames.length > 0 || enmoku.live !== undefined || !!enmoku.provider,
   }
+}
+
+export function bilibiliProvider(enmoku: Enmoku): NonNullable<Enmoku["provider"]> | null {
+  return enmoku.provider?.kind === "bilibili" ? enmoku.provider : null
+}
+
+export function providerStatItems(provider: Enmoku["provider"] | undefined): ProviderStatItem[] {
+  const stats = provider?.stats
+  if (!stats) return []
+  return PROVIDER_STAT_ORDER.flatMap((key) => {
+    const value = stats[key]
+    return typeof value === "number" ? [{ key, value }] : []
+  })
 }
 
 export function sourceValue(index: number | null): string {

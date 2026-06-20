@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import {
+  FILE_DANMAKU_FIXED_SECONDS,
+  FILE_DANMAKU_SCROLL_SECONDS,
   fileDanmakuAnimationState,
+  fileDanmakuDuration,
   fileDanmakuRenderKey,
   visibleFileDanmakuCues,
 } from "../src/lib/file-danmaku"
@@ -21,7 +24,7 @@ test("returns cues active at the current playback time", () => {
 test("drops expired and future cues", () => {
   const visible = visibleFileDanmakuCues(
     [
-      { time: 1, text: "expired", mode: "scroll", color: "#fff" },
+      { time: 0, text: "expired", mode: "scroll", color: "#fff" },
       { time: 8, text: "active", mode: "scroll", color: "#fff" },
       { time: 15, text: "future", mode: "scroll", color: "#fff" },
     ],
@@ -38,6 +41,15 @@ test("invalid playback time shows no cues", () => {
 test("file danmaku animation follows playback state", () => {
   expect(fileDanmakuAnimationState(true)).toBe("running")
   expect(fileDanmakuAnimationState(false)).toBe("paused")
+})
+
+test("visible cues carry mode duration", () => {
+  const [scroll] = visibleFileDanmakuCues([{ time: 8, text: "x", mode: "scroll" }], 10)
+  const [fixed] = visibleFileDanmakuCues([{ time: 8, text: "x", mode: "top" }], 10)
+
+  expect(scroll?.duration).toBe(FILE_DANMAKU_SCROLL_SECONDS)
+  expect(fixed?.duration).toBe(FILE_DANMAKU_FIXED_SECONDS)
+  expect(fileDanmakuDuration("reverse")).toBe(FILE_DANMAKU_SCROLL_SECONDS)
 })
 
 test("file danmaku render key changes when the selected track changes", () => {

@@ -88,7 +88,7 @@
 | `OIKAKE` | 追いかけ | C→S | `{}` | SYNC | 迟到者请求权威状态 |
 | `GENJOU` | 現状 | S→C | `{enmokuId,shinkou,serverTime}` | CURRENT+STATUS | 权威状态下发 |
 | `TENKO` | 点呼 | C↔S | `{currentTime}` | CHECK_STATUS | 周期心跳，驱动漂移校正 |
-| `JOUEI` | 上映中 | S→C | `{enmokuId}` | CURRENT | 当前演目切换 |
+| `JOUEI` | 上映中 | S→C | `{enmokuId}` | CURRENT | 当前演目切换；`enmokuId:null` 取消当前上映 |
 | `BANGUMI` | 番組表 | S→C | `{enmoku[]}` | MOVIES | 队列更新 |
 | `SHUSSEKI` | 出席数 | S→C | `{n}` | VIEWER_COUNT | 在线人数 |
 | `KEIHOU` | 警報 | S→C | `{message}` | ERROR | 错误 |
@@ -142,6 +142,21 @@ interface Enmoku {
   subtitles?: Record<string, { url: string; type: string }>  // 多字幕轨 → 需求4
   sources?: { name: string; url: string }[]             // 多清晰度/音轨
   danmaku?: { type: 'file' | 'fetch'; ref: string }     // 弹幕引用
+  provider?: {
+    kind: 'bilibili'
+    url: string
+    coverUrl?: string
+    ownerName?: string
+    stats?: {
+      view?: number
+      danmaku?: number
+      reply?: number
+      favorite?: number
+      coin?: number
+      share?: number
+      like?: number
+    }
+  }
   live?: boolean
   addedBy: string                                       // 投稿者 buinId
 }
@@ -153,7 +168,7 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 前端弹幕轨道合并三条流：
 1. **实时聊天弹幕**：WS `OSHABERI`/`DANMAKU` → 前端 overlay；后续密集飞屏再统一 push 进 `weizhenye/Danmaku` 引擎
 2. **装载文件弹幕**：用户上传 xml/ass → kokuban 解析 → 时间轴 JSON → 前端预载、按 currentTime 渲染
-3. **抓取弹幕**：kokuban 按标题匹配 → 从 B 站/第三方取 → 时间轴 JSON
+3. **抓取弹幕**：`Enmoku.danmaku` 精确引用或 kokuban 按标题匹配 → 从 B 站/第三方取 → 时间轴 JSON
 
 优先级链 本地文件 > 在线抓取 > 弹幕盒子，前端按配置选当前源；实时聊天弹幕永远叠加。
 
@@ -211,8 +226,8 @@ houkago/
 | 阶段 | 状态 | 已落地 | 主要缺口 |
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
-| P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染 | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 meta 自动获取；无 danmubox/search |
-| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；B 站公开视频 parser 可从 view/playurl 产出标题、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 可生成 `/eisha/dash/:token` MPD 并用 `/eisha/proxy/:token` 代理音视频资源；base64url 稳定代理 token；housou 挂载 eisha routes；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata，并本地选择 `sources` 驱动播放器 URL；前端 ArtPlayer 已接入 hls.js/dashjs | 无浏览/搜索 UI；清晰度选择尚未广播同步；真实 B 站公开视频播放仍需浏览器 smoke 验证 |
+| P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染；Bilibili `danmaku: fetch` 可经 eisha 拉取 XML 并转为统一 cue JSON | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 danmubox/search |
+| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`provider`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；B 站公开视频 parser 可从分享文本提取 BV 链接，并从 view/playurl 产出标题、封面、UP 主、公开 stats、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 可生成 `/eisha/dash/:token` MPD 并用 `/eisha/proxy/:token` 代理音视频资源，Bilibili DASH `backup_url` 会作为代理 fallback CDN，封面图也走 eisha 代理避免浏览器热链拦截；base64url 稳定代理 token；housou 挂载 eisha routes；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata，并本地选择 `sources` 驱动播放器 URL；前端 ArtPlayer 已接入 hls.js/dashjs；番組表可展示 Bilibili 来源信息 | 无浏览/搜索 UI；清晰度选择尚未广播同步；真实 B 站公开视频播放仍需浏览器 smoke 验证 |
 | P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础；`Enmoku` 扩展字段已持久化 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
 
@@ -228,7 +243,7 @@ houkago/
 
 **P2：eisha 解析与代理骨架**
 
-- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；Generic HLS manifest parser 产出 `sources`/`subtitles`/`live` metadata；B 站公开视频 parser 产出标题、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 合成 `/eisha/dash/:token` MPD，MPD 内音视频资源继续走 `/eisha/proxy/:token`；稳定代理 token；housou co-deploy 挂载 eisha routes；range/seek 基础行为测试；m3u8 manifest segment/key/map/media URI 重写；HLS 子资源过期时可按 manifest 上下文懒重解析并重试一次；前端 dev 直链表单接入 resolver/create 流程；`Enmoku.headers/subtitles/sources/danmaku/live` SQLite 持久化；房间页展示 parser metadata，并支持本地选择 `sources` 驱动播放器 URL；前端播放器接入 hls.js/dashjs。
+- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；Generic HLS manifest parser 产出 `sources`/`subtitles`/`live` metadata；B 站公开视频 parser 支持分享文本提取，产出标题、封面、UP 主、公开 stats、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 合成 `/eisha/dash/:token` MPD，MPD 内音视频资源继续走 `/eisha/proxy/:token`，并携带 Bilibili `backup_url` 作为 fallback；Bilibili 封面走 eisha 代理；eisha 可按 Bilibili cid 拉取 XML 弹幕并输出统一 cue JSON；稳定代理 token；housou co-deploy 挂载 eisha routes；range/seek 基础行为测试；m3u8 manifest segment/key/map/media URI 重写；HLS 子资源过期时可按 manifest 上下文懒重解析并重试一次；前端 dev 直链表单接入 resolver/create 流程；`Enmoku.headers/subtitles/sources/danmaku/provider/live` SQLite 持久化；房间页展示 parser metadata，并支持本地选择 `sources` 驱动播放器 URL；番組表展示 Bilibili 来源信息；前端播放器接入 hls.js/dashjs。
 - 下一刀：补平台浏览/搜索 API，或补真实播放 smoke 后暴露的 Bilibili 兼容性问题。
 - 后续再加入平台浏览/搜索 API。
 

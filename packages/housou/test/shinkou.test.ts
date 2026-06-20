@@ -58,6 +58,17 @@ test("jouei on a fresh room initializes paused default state", () => {
   expect(g.shinkouServerTime).toBe(7_000)
 })
 
+test("jouei with null clears the current enmoku and resets transport", () => {
+  const s = new ShinkouSeigyo()
+  s.shinkou("rA", playing, "e1", "host", "host", 1_000)
+  s.jouei("rA", null, "host", "host", 8_000)
+  const g = s.genjou("rA")
+  expect(g.enmokuId).toBeNull()
+  expect(g.shinkou.isPlaying).toBe(false)
+  expect(g.shinkou.currentTime).toBe(0)
+  expect(g.shinkouServerTime).toBe(8_000)
+})
+
 test("non-部長 jouei is rejected with NotBuchou and leaves state untouched", () => {
   const s = new ShinkouSeigyo()
   s.jouei("rA", "e1", "host", "host", 1_000)

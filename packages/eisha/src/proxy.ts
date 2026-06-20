@@ -2,6 +2,7 @@ import { EishaBadRequest, EishaUpstreamError } from "./errors"
 
 export type ProxyRef = {
   url: string
+  fallbackUrls?: string[]
   headers?: Record<string, string>
   hls?: HlsRefreshRef
 }
@@ -52,6 +53,7 @@ export function assertHttpUrl(raw: string): URL {
 
 export function encodeProxyRef(ref: ProxyRef): string {
   assertHttpUrl(ref.url)
+  for (const url of ref.fallbackUrls ?? []) assertHttpUrl(url)
   return Buffer.from(JSON.stringify(ref), "utf8").toString("base64url")
 }
 
@@ -59,12 +61,19 @@ export function decodeProxyRef(token: string): ProxyRef {
   try {
     const parsed = JSON.parse(Buffer.from(token, "base64url").toString("utf8")) as unknown
     if (!parsed || typeof parsed !== "object") throw new Error("not an object")
-    const ref = parsed as { url?: unknown; headers?: unknown; hls?: unknown }
+    const ref = parsed as {
+      url?: unknown
+      fallbackUrls?: unknown
+      headers?: unknown
+      hls?: unknown
+    }
     if (typeof ref.url !== "string") throw new Error("missing url")
+    const fallbackUrls = parseFallbackUrls(ref.fallbackUrls)
     if (ref.headers !== undefined && !isHeaderRecord(ref.headers)) {
       throw new Error("invalid headers")
     }
     const proxyRef: ProxyRef = { url: ref.url }
+    if (fallbackUrls) proxyRef.fallbackUrls = fallbackUrls
     if (ref.headers !== undefined) proxyRef.headers = ref.headers
     const hls = parseHlsRefreshRef(ref.hls)
     if (hls) proxyRef.hls = hls
@@ -82,17 +91,11 @@ export async function proxyUpstream(
   fetcher: FetchLike = fetch,
   allowRefresh = true,
 ): Promise<Response> {
-  const upstreamUrl = assertHttpUrl(ref.url)
   const headers = new Headers(ref.headers)
   const range = request.headers.get("range")
   if (range) headers.set("range", range)
 
-  let upstream: Response
-  try {
-    upstream = await fetcher(upstreamUrl, { headers, redirect: "follow" })
-  } catch (error) {
-    throw new EishaUpstreamError(error instanceof Error ? error.message : "upstream fetch failed")
-  }
+  const { upstream, upstreamUrl } = await fetchWithFallbacks(ref, headers, fetcher)
 
   if (allowRefresh && shouldRetryWithRefRefresh(ref, upstream)) {
     const refreshedRef = await refreshHlsProxyRef(ref, fetcher)
@@ -138,6 +141,29 @@ export async function proxyUpstream(
   })
 }
 
+async function fetchWithFallbacks(
+  ref: ProxyRef,
+  headers: Headers,
+  fetcher: FetchLike,
+): Promise<{ upstream: Response; upstreamUrl: URL }> {
+  const urls = [ref.url, ...(ref.fallbackUrls ?? [])]
+  let lastError: unknown
+  for (const rawUrl of urls) {
+    const upstreamUrl = assertHttpUrl(rawUrl)
+    try {
+      return {
+        upstream: await fetcher(upstreamUrl, { headers, redirect: "follow" }),
+        upstreamUrl,
+      }
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw new EishaUpstreamError(
+    lastError instanceof Error ? lastError.message : "upstream fetch failed",
+  )
+}
+
 export function rewriteM3u8Manifest(manifest: string, options: RewriteM3u8Options): string {
   let uriIndex = 0
   return manifest
@@ -173,6 +199,15 @@ function parseHlsRefreshRef(value: unknown): HlsRefreshRef | undefined {
 
   assertHttpUrl(hls.manifestUrl)
   return { manifestUrl: hls.manifestUrl, uri: hls.uri, uriIndex }
+}
+
+function parseFallbackUrls(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined
+  if (!Array.isArray(value)) throw new Error("invalid fallback urls")
+  const urls = value.filter((item): item is string => typeof item === "string")
+  if (urls.length !== value.length) throw new Error("invalid fallback url")
+  for (const url of urls) assertHttpUrl(url)
+  return urls.length > 0 ? urls : undefined
 }
 
 function rewriteM3u8Line(

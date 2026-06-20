@@ -28,6 +28,7 @@ for (const [name, type] of [
   ["subtitles_json", "TEXT"],
   ["sources_json", "TEXT"],
   ["danmaku_json", "TEXT"],
+  ["provider_json", "TEXT"],
   ["live", "INTEGER"],
 ] as const) {
   if (!enmokuColumns.has(name)) db.exec(`ALTER TABLE enmoku ADD COLUMN ${name} ${type}`)

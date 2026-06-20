@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS enmoku (
   subtitles_json TEXT,
   sources_json   TEXT,
   danmaku_json   TEXT,
+  provider_json  TEXT,
   live           INTEGER,
   added_by       TEXT NOT NULL,
   created_at     INTEGER NOT NULL,

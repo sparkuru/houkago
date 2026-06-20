@@ -69,7 +69,7 @@ export class ShinkouSeigyo {
   // into the new media before the driver intentionally starts it.
   jouei(
     bushitsuId: string,
-    enmokuId: string,
+    enmokuId: string | null,
     senderId: string,
     buchouId: string,
     now = Date.now(),

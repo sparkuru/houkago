@@ -9,7 +9,16 @@ import { newId } from "../lib/id"
 
 type AddEnmokuInput = Pick<
   Enmoku,
-  "title" | "type" | "url" | "addedBy" | "headers" | "subtitles" | "sources" | "danmaku" | "live"
+  | "title"
+  | "type"
+  | "url"
+  | "addedBy"
+  | "headers"
+  | "subtitles"
+  | "sources"
+  | "danmaku"
+  | "provider"
+  | "live"
 >
 
 // 部室を作る：create a room. The creator's buin id becomes 部長 (design §5).
@@ -55,6 +64,7 @@ export function addEnmoku(bushitsuId: string, input: AddEnmokuInput): Enmoku {
   if (input.subtitles) enmoku.subtitles = input.subtitles
   if (input.sources) enmoku.sources = input.sources
   if (input.danmaku) enmoku.danmaku = input.danmaku
+  if (input.provider) enmoku.provider = input.provider
   if (input.live !== undefined) enmoku.live = input.live
   insertEnmoku(enmoku, Date.now())
   return enmoku

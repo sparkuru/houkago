@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { decodeDashManifestRef } from "../src/dash"
 import { EishaUpstreamError } from "../src/errors"
 import { bilibiliBvidFromUrl, isBilibiliUrl, resolveBilibiliUrl } from "../src/parsers/bilibili"
-import type { FetchLike } from "../src/proxy"
+import { type FetchLike, decodeProxyRef } from "../src/proxy"
 
 const proxyBase = "https://housou.example.test"
 
@@ -10,6 +10,16 @@ test("detects common Bilibili BV video URLs", () => {
   expect(isBilibiliUrl("https://www.bilibili.com/video/BV1xx411c7mD")).toBe(true)
   expect(isBilibiliUrl("https://m.bilibili.com/video/BV1xx411c7mD?p=2")).toBe(true)
   expect(bilibiliBvidFromUrl("https://www.bilibili.com/video/BV1xx411c7mD/")).toBe("BV1xx411c7mD")
+  expect(
+    bilibiliBvidFromUrl(
+      "【字幕君交流场所】 https://www.bilibili.com/video/BV1xx411c7mD/?share_source=copy_web&vd_source=abc",
+    ),
+  ).toBe("BV1xx411c7mD")
+  expect(
+    bilibiliBvidFromUrl(
+      "【给我11分钟绝对让你爱上绝密航天2.0跑刀320！】 https://www.bilibili.com/video/BV1LCVJ6QEYa/?share_source=copy_web&vd_source=dbe6d45450c232e032217d6426db08d7",
+    ),
+  ).toBe("BV1LCVJ6QEYa")
   expect(isBilibiliUrl("https://example.test/video/BV1xx411c7mD")).toBe(false)
   expect(isBilibiliUrl("not a url")).toBe(false)
 })
@@ -26,8 +36,19 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
         data: {
           bvid: "BV1xx411c7mD",
           title: "字幕君交流场所",
+          pic: "https://i0.hdslb.com/bfs/archive/cover.jpg",
           duration: 120,
           cid: 62131,
+          owner: { name: "字幕君" },
+          stat: {
+            view: 1000,
+            danmaku: 30,
+            reply: 40,
+            favorite: 50,
+            coin: 60,
+            share: 70,
+            like: 80,
+          },
           pages: [{ cid: 62131, page: 1 }],
         },
       })
@@ -46,6 +67,7 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
             {
               id: 32,
               baseUrl: "https://upos.example.test/video-480.m4s?sig=1",
+              backupUrl: ["https://upos-backup.example.test/video-480.m4s?sig=2"],
               width: 512,
               height: 384,
               codecs: "avc1.64001E",
@@ -83,6 +105,7 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
             {
               id: 30280,
               baseUrl: "https://upos.example.test/audio-192.m4s?sig=1",
+              backup_url: ["https://upos-backup.example.test/audio-192.m4s?sig=2"],
               codecs: "mp4a.40.2",
               bandwidth: 132000,
               segment_base: {
@@ -109,6 +132,29 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
   expect(resolved?.title).toBe("字幕君交流场所")
   expect(resolved?.type).toBe("dash")
   expect(resolved?.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
+  expect(resolved?.provider).toEqual({
+    kind: "bilibili",
+    url: "https://www.bilibili.com/video/BV1xx411c7mD/",
+    coverUrl: expect.stringContaining(`${proxyBase}/eisha/proxy/`),
+    ownerName: "字幕君",
+    stats: {
+      view: 1000,
+      danmaku: 30,
+      reply: 40,
+      favorite: 50,
+      coin: 60,
+      share: 70,
+      like: 80,
+    },
+  })
+  expect(decodeProxyRef(resolved?.provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "")).toEqual({
+    url: "https://i0.hdslb.com/bfs/archive/cover.jpg",
+    headers: {
+      referer: "https://www.bilibili.com/",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+    },
+  })
   expect(resolved?.sources?.map((source) => source.name)).toEqual(["480P · 512x384 · avc1"])
 
   expect(resolved?.url.startsWith(`${proxyBase}/eisha/dash/`)).toBe(true)
@@ -117,8 +163,14 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
   expect(primaryRef.video.map((video) => video.url)).toEqual([
     "https://upos.example.test/video-480.m4s?sig=1",
   ])
+  expect(primaryRef.video[0]?.fallbackUrls).toEqual([
+    "https://upos-backup.example.test/video-480.m4s?sig=2",
+  ])
   expect(primaryRef.audio.map((audio) => audio.url)).toEqual([
     "https://upos.example.test/audio-192.m4s?sig=1",
+  ])
+  expect(primaryRef.audio[0]?.fallbackUrls).toEqual([
+    "https://upos-backup.example.test/audio-192.m4s?sig=2",
   ])
   expect(primaryRef.headers?.referer).toBe("https://www.bilibili.com/")
   expect(primaryRef.headers?.["user-agent"]).toContain("Mozilla")

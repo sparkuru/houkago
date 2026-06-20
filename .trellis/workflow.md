@@ -198,7 +198,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 [workflow-state:in_progress]
 **Tools**: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill — there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
 **Flow**: trellis-implement → trellis-check → trellis-update-spec → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
-**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, the main agent MUST state whether human testing is needed; if yes, list what to test, expected feedback format, and wait for the user's test feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `trellis-implement`, implement directly from the loaded task context and do NOT spawn another `trellis-implement`; if you are already running as `trellis-check`, review/fix directly and do NOT spawn another `trellis-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `trellis-implement` / `trellis-check` / `trellis-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `trellis-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
 **Inline override** (per-turn only, escape hatch for sub-agent dispatch): the user's CURRENT message MUST explicitly contain one of: "do it inline" / "no sub-agent" / "你直接改" / "别派 sub-agent" / "main session 写就行" / "不用 sub-agent". **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
@@ -212,7 +212,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 [workflow-state:in_progress-inline]
 **Flow** (inline mode): main session loads `trellis-before-dev` → main session edits code → main session loads `trellis-check` → run lint / type-check / tests → fix → `trellis-update-spec` → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `trellis-implement` / `trellis-check` sub-agents. Load the `trellis-before-dev` skill before writing code; load the `trellis-check` skill before reporting completion.
-Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, the main agent MUST state whether human testing is needed; if yes, list what to test, expected feedback format, and wait for the user's test feedback before committing.
+Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing.
 Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 [/workflow-state:in_progress-inline]
 
@@ -223,6 +223,60 @@ Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual te
 - 3.4 Manual test checkpoint `[required · once]`
 - 3.5 Commit changes `[required · once]`
 - 3.6 Wrap-up reminder
+
+### Trellis Plus: Submit-Ready Human Review Gate
+
+Before proposing a commit, running `git add`, running `git commit`, marking a
+task complete, or archiving a task, decide one of:
+
+- `human-required`: stop before commit and ask for targeted feedback.
+- `human-optional`: ask for optional feedback and say whether it blocks commit.
+- `human-not-needed`: include one concrete reason in the commit plan.
+
+Require human review when any of these apply:
+
+- UI, UX, copy, visual layout, animation, accessibility, or workflow ergonomics
+  changed.
+- Product behavior depends on user preference, stakeholder expectation,
+  ambiguous acceptance criteria, or "looks/feels right" judgment.
+- Validation needs a browser, local app run, mobile device, real hardware,
+  credentials, paid/external services, production-like data, or a private
+  environment.
+- A material automated check could not run because of dependencies, network,
+  permissions, fixtures, services, or time.
+- The change touches auth, deletion, permissions, security, deployment, CI/CD,
+  data migration, generated assets, or irreversible operations.
+- Tests cover only mechanics and not the user-facing behavior promised in
+  `prd.md`.
+
+The feedback request must include:
+
+- what changed;
+- what automated checks ran and their result;
+- what the user should test manually;
+- useful feedback format: pass/fail, screenshots, logs, browser console output,
+  reproduction steps, expected vs actual behavior, and environment details when
+  relevant;
+- any open question that affects commit readiness.
+
+Do not ask a generic "please review". Ask for the smallest useful human signal.
+
+#### Project Validation Profile
+
+Run these automated checks through `./dx` before submit-ready unless the task is
+documentation-only and the diff cannot affect runtime behavior:
+
+- `./dx bun run format`
+- `./dx bun run lint`
+- `./dx bun run typecheck`
+- `./dx bun test`
+
+Use focused package tests first while iterating, then the full suite before the
+manual checkpoint or commit. The repository currently has no committed browser
+E2E or visual regression command, so browser-visible player, chat, room control,
+layout, fullscreen, danmaku, and Bilibili-provider behavior requires a targeted
+manual checkpoint. Real upstream video/CDN/API behavior should be validated by
+user smoke testing when mocks and fixtures cannot prove the production path.
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in

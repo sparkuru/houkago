@@ -83,6 +83,13 @@ Anything that is purely one component's view concern stays a local `ref`.
   have to keep updating every frame.
 - REST-fetched data (room metadata, enmoku details) flows through the Eden client
   into stores; realtime updates then mutate the same store.
+- Parser-produced `Enmoku.provider` is server state and arrives through the same
+  `BANGUMI` snapshots as playback metadata. UI-specific provider popover/dialog
+  open state stays local to the route component.
+- Fetched danmaku cues derived from `Enmoku.danmaku` are local view state until a
+  dedicated `useDanmakuStore` exists. Cache them by `Enmoku.id` in the room view
+  or future danmaku store; do not write fetched cues back into `Enmoku` or
+  broadcast them over `BANGUMI`.
 
 ### Realtime Chat vs Danmaku Streams
 
@@ -96,6 +103,12 @@ Anything that is purely one component's view concern stays a local `ref`.
   shortcut. `DANMAKU -> chat mirror` is allowed for history visibility, but
   `OSHABERI/chat -> danmaku overlay` remains forbidden unless the product
   explicitly changes that direction.
+- Timeline/file/fetched danmaku is separate from realtime chat danmaku. The
+  current priority chain is local file cues > fetched cues from
+  `Enmoku.danmaku` > future danmubox/search, while live `DANMAKU` continues to
+  render as its own overlay stream.
+- A failed fetched-danmaku request must not affect playback, source switching,
+  or room state. Treat it as an empty optional source for that viewer.
 
 ```ts
 // Good: each envelope commits to its own server-truth stream.
@@ -149,3 +162,6 @@ and a `chat` line marked `kind: "danmaku"`. Backend WS tests should cover
   `DanmakuOverlay` → the product loses the ability to distinguish chat history
   from actual `DANMAKU` events. Mirroring `DANMAKU` into chat is fine only when
   the mirrored line is marked and `DanmakuOverlay` still reads `danmaku`.
+- Mutating `Enmoku.danmaku` or `Enmoku.provider` in the client to represent
+  local fetch state → parser metadata is server truth; loading/error state for
+  fetched cues is local UI state.

@@ -22,6 +22,7 @@ export type ResolvedEnmokuSource = {
   subtitles?: Enmoku["subtitles"]
   sources?: Enmoku["sources"]
   danmaku?: Enmoku["danmaku"]
+  provider?: Enmoku["provider"]
   live?: boolean
 }
 

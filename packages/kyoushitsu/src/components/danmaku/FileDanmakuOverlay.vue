@@ -43,6 +43,7 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
         :class="[`mode-${cue.mode}`]"
         :style="{
           '--lane': cue.lane,
+          '--danmaku-duration': `${cue.duration}s`,
           animationPlayState: animationState,
           color: cue.color,
         }"
@@ -75,13 +76,13 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
     1px 1px 2px #000,
     -1px -1px 2px #000,
     0 0 3px #000;
-  animation: file-danmaku-scroll 6s linear forwards;
+  animation: file-danmaku-scroll var(--danmaku-duration) linear forwards;
 }
 .file-danmaku-cue.mode-top,
 .file-danmaku-cue.mode-bottom {
   left: 50%;
   transform: translateX(-50%);
-  animation: file-danmaku-fixed 6s linear forwards;
+  animation: file-danmaku-fixed var(--danmaku-duration) linear forwards;
 }
 .file-danmaku-cue.mode-top {
   top: calc(12px + var(--lane) * 30px);
@@ -99,7 +100,7 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
   left: 50%;
   top: calc(20% + var(--lane) * 24px);
   transform: translateX(-50%);
-  animation: file-danmaku-fixed 6s linear forwards;
+  animation: file-danmaku-fixed var(--danmaku-duration) linear forwards;
 }
 
 @keyframes file-danmaku-scroll {

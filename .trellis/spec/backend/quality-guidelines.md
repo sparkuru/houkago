@@ -187,7 +187,7 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
   - resolver body: `{ sourceUrl: string, title?: string, headers?: Record<string, string>, addedBy: string }`
 - REST delete: `DELETE /bushitsu/:id/enmoku/:enmokuId` -> `{ ok: true }`
 - WS queue snapshot: `BANGUMI { enmoku: Enmoku[] }`
-- WS source switch: `JOUEI { enmokuId: string }`, followed by
+- WS source switch/cancel: `JOUEI { enmokuId: string | null }`, followed by
   `GENJOU { enmokuId, shinkou, serverTime }`
 
 ### 3. Contracts
@@ -210,7 +210,9 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 - `JOUEI` resets authoritative transport to `{ isPlaying: false, currentTime: 0,
   playbackRate: 1 }` with a fresh `shinkouServerTime`, then broadcasts `JOUEI`
   and a server-stamped `GENJOU`. Do not reuse the previous source's play/time
-  state for the new media.
+  state for the new media. `enmokuId:null` is a valid cancel-current-playback
+  request and must clear the current `Enmoku` instead of preserving the previous
+  source.
 
 ### 4. Validation & Error Matrix
 
@@ -234,6 +236,8 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
   BANGUMI snapshot.
 - Base: adding a manual source still returns the created `Enmoku`, broadcasts the
   updated queue, and may then `JOUEI` it.
+- Base: `JOUEI { enmokuId: null }` clears the current item, pauses transport at
+  `0`, and makes every client return to the no-current-player state.
 - Base: legacy `{ title, type, url }` create still works for tests and already
   resolved sources.
 - Bad: source switch preserves old `Shinkou` (`isPlaying=true`, old timestamp),
@@ -253,6 +257,8 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 - REST/e2e: old minimal enmoku rows do not gain empty optional metadata fields.
 - Frontend typecheck: dev direct-link form posts `sourceUrl` via the Eden client.
 - Sync unit: `ShinkouSeigyo.jouei` resets transport to paused start.
+- Sync unit: `ShinkouSeigyo.jouei(..., null, ...)` clears `enmokuId` and resets
+  transport to paused start.
 - WS/e2e: after prior playing `SHINKOU`, `JOUEI` broadcasts a `GENJOU` whose
   `shinkou` is paused at `0`.
 
@@ -329,6 +335,11 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 ### 3. Contracts
 
 - Legacy `ProxyRef`: `{ url: string, headers?: Record<string, string> }`.
+- Media `ProxyRef` may include `fallbackUrls?: string[]`. The proxy attempts the
+  primary URL first and only tries fallbacks when fetching the current candidate
+  throws before an upstream response exists. Do not use fallback URLs to mask
+  normal upstream HTTP statuses unless that behavior is explicitly added and
+  tested.
 - HLS child `ProxyRef` may additionally include
   `hls: { manifestUrl: string, uri: string, uriIndex: number }`. This refresh
   context is optional and backwards-compatible; do not require it when decoding
@@ -342,7 +353,7 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `DashManifestRef` is an eisha-only token payload:
   `{ duration?, headers?, video: DashRepresentation[], audio: DashRepresentation[] }`.
   Each representation carries an upstream http(s) media URL, optional
-  `bandwidth`/`codecs`/`width`/`height`, and optional
+  `fallbackUrls`, optional `bandwidth`/`codecs`/`width`/`height`, and optional
   `segmentBase: { initialization?, indexRange? }`.
 - `/eisha/dash/:token` returns `application/dash+xml; charset=utf-8` with a
   static MPD whose video/audio `BaseURL` values are `/eisha/proxy/:token` URLs.
@@ -376,8 +387,14 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     `playurl` responses;
   - return `type: "dash"`, `title`, a primary `/eisha/dash/:token` URL,
     `sources[]` whose URLs are also playable eisha DASH manifests for each
-    video quality, Bilibili media headers (`referer` and `user-agent`), and
-    `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`;
+    video quality, Bilibili media headers (`referer` and `user-agent`),
+    `provider` metadata, and `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`;
+  - parse Bilibili DASH `backupUrl` / `backup_url` arrays into representation
+    fallback URLs. Some public videos return a primary CDN host that the server
+    cannot fetch, while backup CDN URLs remain reachable;
+  - never expose Bilibili cover images directly to the browser. Store
+    `provider.coverUrl` as an `/eisha/proxy/:token` URL with Bilibili headers so
+    browser OpaqueResponseBlocking / hotlink protections do not blank the image;
   - for the current web playback path, expose only browser-stable `avc1`
     (H.264) video representations; omit `hvc1`/`hev1` Bilibili DASH video
     variants because Chrome/MSE can load their audio while showing no picture;
@@ -498,14 +515,18 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - Bilibili URL parser accepts common BV URL forms and rejects non-Bilibili
     URLs
   - DASH manifest token round-trip and generated MPD containing proxied
-    video/audio `BaseURL` entries
+    video/audio `BaseURL` entries, including fallback URLs when present
   - Bilibili parser maps fixture `view` + `playurl` JSON into `/eisha/dash`
     primary/source URLs, video/audio representations, media headers, and
-    `danmaku` fetch ref
+    `provider` + `danmaku` fetch ref
+  - Bilibili parser wraps provider cover images in `/eisha/proxy/:token`
+  - Bilibili parser copies DASH `backupUrl` / `backup_url` into proxy fallback
+    URLs
   - Bilibili parser filters non-AVC video variants and deduplicates playable
     codec variants by quality id before building user-facing `sources[]`
   - `resolveUrlWithMetadata` dispatches Bilibili URLs to the platform parser
   - `Range` forwarding and allowed response header preservation
+  - Proxy fallback URL retry when the primary candidate fetch throws
   - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
     resolution, child header preservation, and non-http URI passthrough
   - rewritten HLS child refs include refresh context with stable `manifestUrl`,
@@ -586,6 +607,117 @@ if (!isHttpUri(uri)) return uri
 // Only rewritten http(s) HLS URIs participate in refresh lookup indexes.
 if (!isHttpUri(uri)) return uri
 const uriIndex = nextUriIndex()
+```
+
+---
+
+## Scenario: Provider Metadata And Fetched Danmaku
+
+### 1. Scope / Trigger
+
+- Trigger: any change to parser-produced provider metadata, `Enmoku.provider`,
+  `/eisha/danmaku/:ref`, Bilibili share-text recognition, or fetched danmaku
+  display data.
+- Platform details stay in `eisha`; `housou` stores opaque domain metadata and
+  `kyoushitsu` renders it.
+
+### 2. Signatures
+
+- Shared model: `Enmoku.provider?: { kind: "bilibili", url: string, coverUrl?,
+  ownerName?, stats? }`.
+- Bilibili stats keys: `view`, `danmaku`, `reply`, `favorite`, `coin`, `share`,
+  `like`, all optional numbers.
+- Existing ref: `Enmoku.danmaku?: { type: "fetch", ref: "bilibili:<cid>" }`.
+- JSON route: `GET /eisha/danmaku/:ref -> DanmakuCue[]`, where `:ref` is the
+  URL-encoded existing danmaku ref.
+- DB column: `enmoku.provider_json TEXT`, parsed/stringified only in
+  `packages/housou/src/db/queries/enmoku.ts`.
+
+### 3. Contracts
+
+- Bilibili resolver input may be a raw URL or full share text containing an
+  embedded `https://*.bilibili.com/video/BV...` URL.
+- Bilibili parser reads `x/web-interface/view` for title, `cid`, cover image,
+  owner name, and public stats; it still reads `x/player/playurl` for DASH
+  playback metadata.
+- `provider.coverUrl` must be an `/eisha/proxy/:token` URL, not the raw
+  `i*.hdslb.com` URL.
+- Resolver-body create stores parser-produced `provider` alongside `headers`,
+  `sources`, `danmaku`, and `live`, then `GET /bangumi` and `BANGUMI` snapshots
+  must preserve it unchanged.
+- `/eisha/danmaku/:ref` fetches `https://comment.bilibili.com/<cid>.xml` with
+  Bilibili media headers, parses through `houkago-kokuban.parseBilibiliXml`, and
+  returns normalized cue JSON. It does not store danmaku or media bytes.
+- Generic media URLs that do not contain a Bilibili URL continue through the
+  generic resolver path unchanged.
+
+### 4. Validation & Error Matrix
+
+- `:ref` missing the `bilibili:<number>` shape -> `EISHA_BAD_REQUEST` / HTTP 400.
+- Bilibili danmaku fetch throws or returns non-OK ->
+  `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- `provider_json` is malformed or not the shared provider shape -> omit
+  `Enmoku.provider` on read; do not throw while listing a room.
+- Bilibili view stats are partial -> keep only numeric fields; missing fields
+  remain `undefined`.
+
+### 5. Good/Base/Bad Cases
+
+- Good: pasted share text creates a Bilibili `dash` Enmoku whose title is the
+  video title, provider contains cover/owner/stats, and `danmaku.ref` is
+  `bilibili:<cid>`.
+- Good: old queued rows without `provider_json` still list with
+  `provider === undefined`.
+- Base: direct `.mp4` and HLS URLs do not gain provider metadata.
+- Bad: frontend scrapes Bilibili pages directly for stats or danmaku; that
+  bypasses the server-side CORS/header boundary and duplicates parser logic.
+- Bad: `housou` fetches danmaku XML itself; control-plane routes must not own
+  platform media/danmaku fetching.
+
+### 6. Tests Required
+
+- `houkago-eisha` tests:
+  - Bilibili URL detection accepts share text with leading title text.
+  - Bilibili parser maps fixture view stats into `provider`.
+  - `/eisha/danmaku` implementation decodes `bilibili:<cid>` refs and parses XML
+    into normalized cues.
+- `houkago-housou` tests:
+  - legacy/direct create persists and lists provider metadata when provided.
+  - resolver-body Bilibili create persists `provider` and `danmaku` through
+    create response and `GET /bangumi`.
+- Frontend tests:
+  - provider view-model helpers order stat keys and handle missing provider
+    metadata without defaults.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+// Component reaches across the network boundary and parses Bilibili itself.
+const xml = await fetch(`https://comment.bilibili.com/${cid}.xml`).then((r) => r.text())
+```
+
+#### Correct
+
+```ts
+// eisha owns the platform fetch; kyoushitsu consumes typed cue JSON.
+await housou.eisha.danmaku({ ref: "bilibili:62131" }).get()
+```
+
+#### Wrong
+
+```ts
+// Provider JSON leaks through raw SQL rows and route code parses it ad hoc.
+return JSON.parse(row.provider_json)
+```
+
+#### Correct
+
+```ts
+// DB boundary validates optional metadata once and returns Enmoku.
+const provider = parseJson(row.provider_json, isProvider)
+if (provider) enmoku.provider = provider
 ```
 
 ---

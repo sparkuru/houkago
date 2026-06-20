@@ -65,6 +65,31 @@ test("proxyUpstream forwards Range and preserves seek-relevant response headers"
   expect(await response.text()).toBe("chunk")
 })
 
+test("proxyUpstream retries fallback URLs when the primary fetch fails", async () => {
+  const seen: string[] = []
+  const fetcher: FetchLike = async (input) => {
+    seen.push(String(input))
+    if (seen.length === 1) throw new Error("primary unavailable")
+    return new Response("fallback", { headers: { "content-type": "video/mp4" } })
+  }
+
+  const response = await proxyUpstream(
+    {
+      url: "https://primary.example.test/video.m4s",
+      fallbackUrls: ["https://backup.example.test/video.m4s"],
+    },
+    new Request("https://proxy.test/eisha/proxy/token"),
+    fetcher,
+  )
+
+  expect(seen).toEqual([
+    "https://primary.example.test/video.m4s",
+    "https://backup.example.test/video.m4s",
+  ])
+  expect(response.status).toBe(200)
+  expect(await response.text()).toBe("fallback")
+})
+
 test("rewriteM3u8Manifest rewrites URI lines and URI attributes through proxy refs", () => {
   const manifest = [
     "#EXTM3U",

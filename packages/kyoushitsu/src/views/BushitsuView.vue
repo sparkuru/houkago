@@ -8,12 +8,20 @@ import KengenPanel from "@/components/kengen/KengenPanel.vue"
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
-import { canDeleteBangumiItem, canPlayBangumiItem, isCurrentEnmoku } from "@/lib/bangumi-actions"
+import {
+  canCancelBangumiItem,
+  canDeleteBangumiItem,
+  canPlayBangumiItem,
+  isCurrentEnmoku,
+} from "@/lib/bangumi-actions"
 import { type ChatTheme, loadChatTheme, saveChatTheme } from "@/lib/chat-theme"
 import {
+  type ProviderStatKey,
+  bilibiliProvider,
   enmokuMetadataSummary,
   enmokuPlayableUrl,
   enmokuSourceChoices,
+  providerStatItems,
   sourceIndexFromValue,
   sourceValue,
 } from "@/lib/enmoku-metadata"
@@ -129,11 +137,16 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
 const fileDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
 const fileDanmakuNameByEnmoku = ref<Record<string, string>>({})
+const fetchedDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
+const fetchedDanmakuNameByEnmoku = ref<Record<string, string>>({})
 const fileDanmakuTrackVersion = ref(0)
+const fetchedDanmakuTrackVersion = ref(0)
 const danmakuSize = ref(22)
 const danmakuOpacity = ref(1)
 const danmakuTimeOffset = ref(0)
 const manualSubmitting = ref(false)
+const providerInfoEnmoku = ref<Enmoku | null>(null)
+let fetchedDanmakuRequest = 0
 
 const currentFileDanmaku = computed(() => {
   const id = currentEnmokuId.value
@@ -143,6 +156,27 @@ const currentFileDanmakuName = computed(() => {
   const id = currentEnmokuId.value
   return id ? (fileDanmakuNameByEnmoku.value[id] ?? "") : ""
 })
+const currentFetchedDanmaku = computed(() => {
+  const id = currentEnmokuId.value
+  return id ? (fetchedDanmakuByEnmoku.value[id] ?? []) : []
+})
+const currentFetchedDanmakuName = computed(() => {
+  const id = currentEnmokuId.value
+  return id ? (fetchedDanmakuNameByEnmoku.value[id] ?? "") : ""
+})
+const currentTimelineDanmaku = computed(() =>
+  currentFileDanmakuName.value ? currentFileDanmaku.value : currentFetchedDanmaku.value,
+)
+const currentTimelineDanmakuName = computed(
+  () => currentFileDanmakuName.value || currentFetchedDanmakuName.value,
+)
+const timelineDanmakuTrackVersion = computed(
+  () => fileDanmakuTrackVersion.value + fetchedDanmakuTrackVersion.value,
+)
+const providerInfo = computed(() =>
+  providerInfoEnmoku.value ? bilibiliProvider(providerInfoEnmoku.value) : null,
+)
+const providerInfoStats = computed(() => providerStatItems(providerInfo.value ?? undefined))
 
 function toggleFileDanmaku() {
   fileDanmakuEnabled.value = !fileDanmakuEnabled.value
@@ -175,6 +209,63 @@ async function onFileDanmakuSelected(event: Event) {
   }
 }
 
+async function loadFetchedDanmaku(enmoku: Enmoku | null) {
+  const requestId = ++fetchedDanmakuRequest
+  if (!enmoku || enmoku.danmaku?.type !== "fetch") return
+  if (!enmoku.danmaku.ref.startsWith("bilibili:")) return
+  if (fetchedDanmakuByEnmoku.value[enmoku.id]) return
+
+  let data: DanmakuCue[] | null = null
+  try {
+    const response = await housou.eisha.danmaku({ ref: enmoku.danmaku.ref }).get()
+    data = response.data ?? null
+  } catch {
+    if (requestId === fetchedDanmakuRequest && currentEnmokuId.value === enmoku.id) {
+      fetchedDanmakuNameByEnmoku.value = {
+        ...fetchedDanmakuNameByEnmoku.value,
+        [enmoku.id]: t("fileDanmakuEmpty"),
+      }
+    }
+    return
+  }
+  if (requestId !== fetchedDanmakuRequest || currentEnmokuId.value !== enmoku.id || !data) return
+
+  fetchedDanmakuByEnmoku.value = { ...fetchedDanmakuByEnmoku.value, [enmoku.id]: data }
+  fetchedDanmakuNameByEnmoku.value = {
+    ...fetchedDanmakuNameByEnmoku.value,
+    [enmoku.id]: data.length > 0 ? t("danmakuSourceRemote") : t("fileDanmakuEmpty"),
+  }
+  fetchedDanmakuTrackVersion.value += 1
+  const snapshot = playerRef.value?.snapshot()
+  if (snapshot) {
+    playbackTime.value = snapshot.currentTime
+    playbackPlaying.value = snapshot.isPlaying
+  }
+}
+
+function closeProviderInfo() {
+  providerInfoEnmoku.value = null
+}
+
+function providerStatLabel(key: ProviderStatKey): string {
+  switch (key) {
+    case "view":
+      return t("providerStatsView")
+    case "danmaku":
+      return t("providerStatsDanmaku")
+    case "reply":
+      return t("providerStatsReply")
+    case "favorite":
+      return t("providerStatsFavorite")
+    case "coin":
+      return t("providerStatsCoin")
+    case "like":
+      return t("providerStatsLike")
+    case "share":
+      return t("providerStatsShare")
+  }
+}
+
 // 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
 // 番組表, then broadcast JOUEI(enmokuId). The host does not set `current` directly
 // — the JOUEI echo flows back through the store.enmokuId watch like any 部員, so
@@ -204,7 +295,7 @@ function nyuushitsuHantei(senderId: string, approved: boolean) {
   })
 }
 
-function sendJouei(enmokuId: string) {
+function sendJouei(enmokuId: string | null) {
   if (!canPlayBangumiItem(bushitsu.canPlaylist)) return
   client?.send({
     type: "JOUEI",
@@ -220,7 +311,6 @@ async function playManual() {
   manualSubmitting.value = true
   try {
     const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
-      title: t("manualEnmokuTitle"),
       sourceUrl: url,
       addedBy: bushitsu.senderId,
     })
@@ -234,11 +324,34 @@ function playBangumi(enmokuId: string) {
   sendJouei(enmokuId)
 }
 
+function cancelBangumi(enmokuId: string) {
+  if (!canCancelBangumiItem(bushitsu.canPlaylist, enmokuId, currentEnmokuId.value)) return
+  sendJouei(null)
+}
+
 async function deleteBangumiEnmoku(enmokuId: string) {
   if (!canDeleteBangumiItem(bushitsu.canPlaylist, enmokuId, currentEnmokuId.value)) return
   const { data } = await housou.bushitsu({ id: bushitsuId }).enmoku({ enmokuId }).delete()
   if (!data) return
   bushitsu.setBangumi(bushitsu.bangumi.filter((e) => e.id !== enmokuId))
+}
+
+function sourceBadge(enmoku: Enmoku): string {
+  if (bilibiliProvider(enmoku)) return "哔"
+  switch (enmoku.type) {
+    case "direct":
+      return t("sourceDirectBadge")
+    case "hls":
+      return t("sourceHlsBadge")
+    case "dash":
+      return t("sourceDashBadge")
+    case "live":
+      return t("sourceLiveBadge")
+  }
+}
+
+function sourceBadgeTitle(enmoku: Enmoku): string {
+  return bilibiliProvider(enmoku) ? t("providerBilibili") : enmoku.type.toUpperCase()
 }
 
 // 上映中の解決：apply the authoritative enmokuId by resolving it to the room's
@@ -256,6 +369,7 @@ async function applyEnmokuId(enmokuId: string | null) {
     enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
   }
   current.value = enmoku
+  void loadFetchedDanmaku(enmoku)
 }
 
 function oshaberi(content: string) {
@@ -396,7 +510,7 @@ onBeforeUnmount(() => {
               :source-choices="currentSourceChoices"
               :selected-source-value="selectedSourceValue"
               :file-danmaku-enabled="fileDanmakuEnabled"
-              :file-danmaku-name="currentFileDanmakuName || t('danmakuNone')"
+              :file-danmaku-name="currentTimelineDanmakuName || t('danmakuNone')"
               :danmaku-size="danmakuSize"
               :danmaku-opacity="danmakuOpacity"
               :danmaku-time-offset="danmakuTimeOffset"
@@ -416,14 +530,14 @@ onBeforeUnmount(() => {
             />
             <FileDanmakuOverlay
               :target="playerEl"
-              :cues="currentFileDanmaku"
+              :cues="currentTimelineDanmaku"
               :current-time="playbackTime"
               :enabled="fileDanmakuEnabled"
               :playing="playbackPlaying"
               :size="danmakuSize"
               :opacity="danmakuOpacity"
               :time-offset="danmakuTimeOffset"
-              :track-version="fileDanmakuTrackVersion"
+              :track-version="timelineDanmakuTrackVersion"
             />
             <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" :show-toggle="false" />
             <input
@@ -476,12 +590,27 @@ onBeforeUnmount(() => {
                 :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
                 :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
               >
-                <span class="bangumi-title">{{ e.title }}</span>
-                <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
-                  {{ t("joueiChuu") }}
+                <span class="source-mark" :title="sourceBadgeTitle(e)">
+                  {{ sourceBadge(e) }}
                 </span>
-                <span v-if="bushitsu.canPlaylist" class="bangumi-actions">
+                <span class="bangumi-title">
+                  {{ e.title || t("manualEnmokuTitle") }}
+                </span>
+                <span class="bangumi-meta">
+                  <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
+                    {{ t("joueiChuu") }}
+                  </span>
                   <button
+                    v-if="bilibiliProvider(e)"
+                    type="button"
+                    class="provider-info-button"
+                    :aria-label="t('providerInfoAria')"
+                    @click="providerInfoEnmoku = e"
+                  >
+                    i
+                  </button>
+                  <button
+                    v-if="bushitsu.canPlaylist"
                     type="button"
                     class="bangumi-action"
                     :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
@@ -490,6 +619,16 @@ onBeforeUnmount(() => {
                     {{ t("play") }}
                   </button>
                   <button
+                    v-if="bushitsu.canPlaylist"
+                    type="button"
+                    class="bangumi-action"
+                    :disabled="!canCancelBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
+                    @click="cancelBangumi(e.id)"
+                  >
+                    {{ t("cancelPlay") }}
+                  </button>
+                  <button
+                    v-if="bushitsu.canPlaylist"
                     type="button"
                     class="bangumi-action danger"
                     :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
@@ -514,6 +653,35 @@ onBeforeUnmount(() => {
           </section>
         </div>
       </main>
+      <div
+        v-if="providerInfoEnmoku && providerInfo"
+        class="provider-dialog-backdrop"
+        @click.self="closeProviderInfo"
+      >
+        <section class="provider-dialog" role="dialog" :aria-label="t('providerInfoAria')">
+          <header>
+            <strong>{{ t("providerBilibili") }}</strong>
+            <button type="button" :aria-label="t('providerDialogClose')" @click="closeProviderInfo">
+              ×
+            </button>
+          </header>
+          <img v-if="providerInfo.coverUrl" :src="providerInfo.coverUrl" :alt="providerInfoEnmoku.title" />
+          <h4>{{ providerInfoEnmoku.title }}</h4>
+          <p v-if="providerInfo.ownerName">
+            <span>{{ t("providerOwner") }}</span>
+            <strong>{{ providerInfo.ownerName }}</strong>
+          </p>
+          <dl v-if="providerInfoStats.length > 0" class="provider-stats">
+            <div v-for="item in providerInfoStats" :key="item.key">
+              <dt>{{ providerStatLabel(item.key) }}</dt>
+              <dd>{{ item.value.toLocaleString() }}</dd>
+            </div>
+          </dl>
+          <a :href="providerInfo.url" target="_blank" rel="noreferrer">
+            {{ t("providerExternalLink") }}
+          </a>
+        </section>
+      </div>
       <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
          中の ‹ ボタンを浮現させる。既定は不可视（opacity:0）、keyboard でも focus で
          浮現し可達。展开中は v-if で消す（header 内の › で畳む）。 -->
@@ -770,24 +938,27 @@ onBeforeUnmount(() => {
 }
 .bangumi ul {
   flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
   padding: 8px;
   margin: 0;
   overflow-y: auto;
   list-style: none;
 }
 .bangumi-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 8px;
+  display: flex;
+  gap: 6px;
   align-items: center;
-  min-height: 34px;
-  padding: 6px 8px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 4px 6px;
+  overflow: hidden;
   border: 1px solid var(--row-border);
   border-radius: 6px;
   background: var(--row-surface);
+}
+.bangumi-row + .bangumi-row {
+  margin-top: 6px;
 }
 .theme-dark .bangumi-row {
   background: var(--row-surface);
@@ -802,12 +973,51 @@ onBeforeUnmount(() => {
   background: var(--row-current-surface);
 }
 .bangumi-title {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.bangumi-meta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.source-mark {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #00a1d6;
+  border-radius: 4px;
+}
+.provider-info-button {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--panel-accent);
+  background: transparent;
+  border: 1px solid var(--row-border);
+  border-radius: 999px;
+}
 .bangumi-status {
+  flex: 0 0 auto;
+  min-width: 44px;
   font-size: 12px;
   color: var(--panel-accent);
 }
@@ -855,9 +1065,10 @@ onBeforeUnmount(() => {
   gap: 6px;
 }
 .bangumi-action {
+  flex: 0 0 auto;
   min-width: 48px;
-  min-height: 28px;
-  padding: 3px 8px;
+  min-height: 24px;
+  padding: 2px 7px;
   border: 1px solid var(--row-border);
   border-radius: 4px;
   background: transparent;
@@ -890,6 +1101,99 @@ onBeforeUnmount(() => {
 }
 .theme-dark .bangumi-action.danger:not(:disabled) {
   color: var(--danger-text);
+}
+.provider-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.6);
+}
+.provider-dialog {
+  width: min(420px, 100%);
+  max-height: min(680px, calc(100dvh - 48px));
+  overflow-y: auto;
+  color: #222;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+.theme-dark .provider-dialog {
+  color: #eee;
+  background: #151515;
+  border-color: #333;
+}
+.provider-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.theme-dark .provider-dialog header {
+  border-bottom-color: #333;
+}
+.provider-dialog header button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: transparent;
+}
+.provider-dialog img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #111;
+}
+.provider-dialog h4,
+.provider-dialog p,
+.provider-dialog a {
+  margin: 12px;
+}
+.provider-dialog p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.provider-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+  margin: 12px;
+}
+.provider-stats div {
+  min-width: 0;
+  padding: 8px;
+  background: #f7f7f7;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}
+.theme-dark .provider-stats div {
+  background: #1d1d1d;
+  border-color: #333;
+}
+.provider-stats dt {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #666;
+}
+.theme-dark .provider-stats dt {
+  color: #aaa;
+}
+.provider-stats dd {
+  margin: 0;
+  font-weight: 700;
+}
+.provider-dialog a {
+  display: inline-flex;
+  color: var(--panel-accent);
 }
 /* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
    中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */

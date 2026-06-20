@@ -36,6 +36,25 @@ export const EnmokuTypeSchema = Type.Union([
 ])
 export type EnmokuType = Static<typeof EnmokuTypeSchema>
 
+export const EnmokuProviderSchema = Type.Object({
+  kind: Type.Literal("bilibili"),
+  url: Type.String(),
+  coverUrl: Type.Optional(Type.String()),
+  ownerName: Type.Optional(Type.String()),
+  stats: Type.Optional(
+    Type.Object({
+      view: Type.Optional(Type.Number()),
+      danmaku: Type.Optional(Type.Number()),
+      reply: Type.Optional(Type.Number()),
+      favorite: Type.Optional(Type.Number()),
+      coin: Type.Optional(Type.Number()),
+      share: Type.Optional(Type.Number()),
+      like: Type.Optional(Type.Number()),
+    }),
+  ),
+})
+export type EnmokuProvider = Static<typeof EnmokuProviderSchema>
+
 // 演目：a playable item (design §6)
 export const EnmokuSchema = Type.Object({
   id: Type.String(),
@@ -54,6 +73,7 @@ export const EnmokuSchema = Type.Object({
       ref: Type.String(),
     }),
   ),
+  provider: Type.Optional(EnmokuProviderSchema),
   live: Type.Optional(Type.Boolean()),
   addedBy: Type.String(), // 投稿者 buin id
 })

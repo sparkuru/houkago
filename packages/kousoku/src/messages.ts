@@ -81,7 +81,10 @@ export const GenjouSchema = envelope(
     serverTime: Type.Number(), // shinkouServerTime for projected-progress math (design §5)
   }),
 )
-export const JoueiSchema = envelope("JOUEI", Type.Object({ enmokuId: Type.String() }))
+export const JoueiSchema = envelope(
+  "JOUEI",
+  Type.Object({ enmokuId: Type.Union([Type.String(), Type.Null()]) }),
+)
 export const BangumiSchema = envelope("BANGUMI", Type.Object({ enmoku: Type.Array(EnmokuSchema) }))
 // 出席（shusseki）: presence full snapshot — count + roster (id→nickname名簿).
 // Each member carries its yakuwari (部長 vs ゲスト) so the client can label roles

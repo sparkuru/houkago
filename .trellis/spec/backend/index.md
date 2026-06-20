@@ -36,3 +36,20 @@ The goal is to help AI assistants and new team members understand how YOUR proje
 ---
 
 **Language**: All documentation should be written in **English**.
+
+---
+
+## Quality Check
+
+Before backend work is submit-ready, run the repository checks through `./dx`:
+
+- `./dx bun run format`
+- `./dx bun run lint`
+- `./dx bun run typecheck`
+- `./dx bun test`
+
+Use focused package tests while iterating, then the full suite before commit.
+Apply the Trellis Submit-Ready Human Review Gate from `.trellis/workflow.md`
+when backend behavior depends on real upstream services, credentials,
+production-like data, permissions, deletion, migrations, or browser smoke tests
+that automated fixtures cannot cover.

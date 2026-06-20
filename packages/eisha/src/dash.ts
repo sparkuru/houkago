@@ -9,6 +9,7 @@ export type DashSegmentBase = {
 export type DashRepresentation = {
   id: string
   url: string
+  fallbackUrls?: string[]
   bandwidth?: number
   codecs?: string
   width?: number
@@ -100,6 +101,7 @@ function parseRepresentation(value: unknown): DashRepresentation | undefined {
   const item = value as {
     id?: unknown
     url?: unknown
+    fallbackUrls?: unknown
     bandwidth?: unknown
     codecs?: unknown
     width?: unknown
@@ -110,6 +112,7 @@ function parseRepresentation(value: unknown): DashRepresentation | undefined {
   return {
     id: item.id,
     url: item.url,
+    fallbackUrls: parseFallbackUrls(item.fallbackUrls),
     bandwidth: typeof item.bandwidth === "number" ? item.bandwidth : undefined,
     codecs: typeof item.codecs === "string" ? item.codecs : undefined,
     width: typeof item.width === "number" ? item.width : undefined,
@@ -128,6 +131,12 @@ function parseSegmentBase(value: unknown): DashSegmentBase | undefined {
   return parsed.initialization || parsed.indexRange ? parsed : undefined
 }
 
+function parseFallbackUrls(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const urls = value.filter((item): item is string => typeof item === "string")
+  return urls.length > 0 && urls.length === value.length ? urls : undefined
+}
+
 function validateDashManifestRef(ref: DashManifestRef): void {
   if (!Array.isArray(ref.video) || ref.video.length === 0) {
     throw new EishaBadRequest("dash manifest has no video representation")
@@ -140,6 +149,7 @@ function validateDashManifestRef(ref: DashManifestRef): void {
   }
   for (const representation of [...ref.video, ...ref.audio]) {
     assertHttpUrl(representation.url)
+    for (const url of representation.fallbackUrls ?? []) assertHttpUrl(url)
   }
 }
 
@@ -175,6 +185,7 @@ function representationNode(
 
   const refUrl = `${proxyPrefix}${encodeProxyRef({
     url: representation.url,
+    fallbackUrls: representation.fallbackUrls,
     headers: ref.headers,
   } satisfies ProxyRef)}`
   const lines = [

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import {
+  canCancelBangumiItem,
   canDeleteBangumiItem,
   canPlayBangumiItem,
   isCurrentEnmoku,
@@ -20,4 +21,11 @@ test("playlist permission gates delete and current enmoku cannot be deleted", ()
   expect(canDeleteBangumiItem(true, "e1", "e2")).toBe(true)
   expect(canDeleteBangumiItem(false, "e1", "e2")).toBe(false)
   expect(canDeleteBangumiItem(true, "e1", "e1")).toBe(false)
+})
+
+test("playlist permission gates cancellation and only current enmoku can be cancelled", () => {
+  expect(canCancelBangumiItem(true, "e1", "e1")).toBe(true)
+  expect(canCancelBangumiItem(false, "e1", "e1")).toBe(false)
+  expect(canCancelBangumiItem(true, "e1", "e2")).toBe(false)
+  expect(canCancelBangumiItem(true, "e1", null)).toBe(false)
 })

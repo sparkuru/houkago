@@ -11,6 +11,7 @@ type EnmokuRow = {
   subtitles_json: string | null
   sources_json: string | null
   danmaku_json: string | null
+  provider_json: string | null
   live: number | null
   added_by: string
   created_at: number
@@ -29,10 +30,12 @@ function toDomain(row: EnmokuRow): Enmoku {
   const subtitles = parseJson(row.subtitles_json, isSubtitleRecord)
   const sources = parseJson(row.sources_json, isSources)
   const danmaku = parseJson(row.danmaku_json, isDanmakuRef)
+  const provider = parseJson(row.provider_json, isProvider)
   if (headers) enmoku.headers = headers
   if (subtitles) enmoku.subtitles = subtitles
   if (sources) enmoku.sources = sources
   if (danmaku) enmoku.danmaku = danmaku
+  if (provider) enmoku.provider = provider
   if (row.live !== null) enmoku.live = row.live === 1
   return enmoku
 }
@@ -40,18 +43,18 @@ function toDomain(row: EnmokuRow): Enmoku {
 const insertStmt = db.query(
   `INSERT INTO enmoku (
      id, bushitsu_id, title, type, url, headers_json, subtitles_json,
-     sources_json, danmaku_json, live, added_by, created_at
+     sources_json, danmaku_json, provider_json, live, added_by, created_at
    )
    VALUES (
      $id, $bushitsuId, $title, $type, $url, $headersJson, $subtitlesJson,
-     $sourcesJson, $danmakuJson, $live, $addedBy, $createdAt
+     $sourcesJson, $danmakuJson, $providerJson, $live, $addedBy, $createdAt
    )`,
 )
 
 const listStmt = db.query<EnmokuRow, { $bushitsuId: string }>(
   `SELECT
      id, bushitsu_id, title, type, url, headers_json, subtitles_json,
-     sources_json, danmaku_json, live, added_by, created_at
+     sources_json, danmaku_json, provider_json, live, added_by, created_at
    FROM enmoku WHERE bushitsu_id = $bushitsuId ORDER BY created_at ASC`,
 )
 
@@ -69,6 +72,7 @@ export function insertEnmoku(e: Enmoku, createdAt: number): void {
     $subtitlesJson: toJson(e.subtitles),
     $sourcesJson: toJson(e.sources),
     $danmakuJson: toJson(e.danmaku),
+    $providerJson: toJson(e.provider),
     $live: e.live === undefined ? null : e.live ? 1 : 0,
     $addedBy: e.addedBy,
     $createdAt: createdAt,
@@ -139,7 +143,28 @@ function isDanmakuRef(value: unknown): value is NonNullable<Enmoku["danmaku"]> {
   return (ref.type === "file" || ref.type === "fetch") && typeof ref.ref === "string"
 }
 
+function isProvider(value: unknown): value is NonNullable<Enmoku["provider"]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const provider = value as {
+    kind?: unknown
+    url?: unknown
+    coverUrl?: unknown
+    ownerName?: unknown
+    stats?: unknown
+  }
+  if (provider.kind !== "bilibili" || typeof provider.url !== "string") return false
+  if (provider.coverUrl !== undefined && typeof provider.coverUrl !== "string") return false
+  if (provider.ownerName !== undefined && typeof provider.ownerName !== "string") return false
+  if (provider.stats !== undefined && !isNumberRecord(provider.stats)) return false
+  return true
+}
+
 function isStringRecord(value: unknown): value is Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
   return Object.values(value).every((item) => typeof item === "string")
+}
+
+function isNumberRecord(value: unknown): value is Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  return Object.values(value).every((item) => typeof item === "number")
 }

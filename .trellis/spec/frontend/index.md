@@ -37,3 +37,19 @@ The goal is to help AI assistants and new team members understand how YOUR proje
 ---
 
 **Language**: All documentation should be written in **English**.
+
+---
+
+## Quality Check
+
+Before frontend work is submit-ready, run the repository checks through `./dx`:
+
+- `./dx bun run format`
+- `./dx bun run lint`
+- `./dx bun run typecheck`
+- `./dx bun test`
+
+Browser-visible changes require the Trellis Submit-Ready Human Review Gate from
+`.trellis/workflow.md`. Ask for manual feedback for player controls, room
+layout, fullscreen modes, chat ergonomics, danmaku rendering, Bilibili provider
+metadata, and any visual/copy change that automated tests cannot judge.

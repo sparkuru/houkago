@@ -86,7 +86,14 @@ test("dispatches Bilibili URLs to the platform parser", async () => {
       if (url.pathname === "/x/web-interface/view") {
         return Response.json({
           code: 0,
-          data: { bvid: "BV1xx411c7mD", title: "Bilibili title", cid: 62131 },
+          data: {
+            bvid: "BV1xx411c7mD",
+            title: "Bilibili title",
+            pic: "https://i0.hdslb.com/bfs/archive/cover.jpg",
+            cid: 62131,
+            owner: { name: "Bili UP" },
+            stat: { view: 1, danmaku: 2, reply: 3 },
+          },
         })
       }
 
@@ -119,6 +126,16 @@ test("dispatches Bilibili URLs to the platform parser", async () => {
   expect(resolved.title).toBe("Bilibili title")
   expect(resolved.type).toBe("dash")
   expect(resolved.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
+  expect(resolved.provider).toEqual({
+    kind: "bilibili",
+    url: "https://www.bilibili.com/video/BV1xx411c7mD/",
+    coverUrl: expect.stringContaining(`${proxyBase}/eisha/proxy/`),
+    ownerName: "Bili UP",
+    stats: { view: 1, danmaku: 2, reply: 3 },
+  })
+  expect(decodeProxyRef(resolved.provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "").url).toBe(
+    "https://i0.hdslb.com/bfs/archive/cover.jpg",
+  )
   const dashRef = decodeDashManifestRef(resolved.url.split("/eisha/dash/")[1] ?? "")
   expect(dashRef.video[0]?.url).toBe("https://upos.example.test/video.m4s")
   expect(dashRef.audio[0]?.url).toBe("https://upos.example.test/audio.m4s")

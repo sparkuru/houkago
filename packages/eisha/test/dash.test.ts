@@ -33,6 +33,7 @@ test("buildDashManifest emits proxied audio and video representations", async ()
   expect(urls).toHaveLength(2)
   expect(decodeProxyRef(urls[0]?.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://upos.example.test/video.m4s?sig=1",
+    fallbackUrls: ["https://upos-backup.example.test/video.m4s?sig=2"],
     headers: { referer: "https://www.bilibili.com/" },
   })
   expect(decodeProxyRef(urls[1]?.split("/eisha/proxy/")[1] ?? "")).toEqual({
@@ -61,6 +62,7 @@ function dashRef() {
       {
         id: "32",
         url: "https://upos.example.test/video.m4s?sig=1",
+        fallbackUrls: ["https://upos-backup.example.test/video.m4s?sig=2"],
         bandwidth: 155817,
         codecs: "avc1.64001E",
         width: 512,

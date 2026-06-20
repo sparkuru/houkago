@@ -26,7 +26,7 @@ import { useBushitsuStore } from "@/stores/bushitsu"
 
 // 2. props / emits (typed)
 const props = defineProps<{ enmoku: Enmoku }>()
-const emit = defineEmits<{ jouei: [enmokuId: string] }>()  // 上映：request to play this item
+const emit = defineEmits<{ jouei: [enmokuId: string | null] }>() // null cancels current item
 
 // 3. store / composable wiring
 const bushitsu = useBushitsuStore()
@@ -83,6 +83,29 @@ const bushitsu = useBushitsuStore()
   danmaku track version used in overlay render keys. Do not wait for the next
   ArtPlayer `timeupdate`/pause/play event; freshly-selected cues should appear at
   the current playback position without requiring user playback interaction.
+- Fetched danmaku from `Enmoku.danmaku` should reuse the timeline overlay path
+  and the same player time refs as local file danmaku. Local file cues override
+  fetched cues for the same `Enmoku.id`; a remote fetch failure degrades to no
+  fetched cues and must not break playback.
+- Timeline danmaku overlays must position cues from the media clock, not from
+  DOM insertion time. Derive visibility from `currentTime - cue.time`, choose a
+  mode-specific duration, and keep CSS animations continuous from their normal
+  starting position. Avoid negative animation delays for timeline cues; they can
+  make browser animation sampling look jumpy and may drop cues before they cross
+  the player.
+- Provider-aware 番組表 UI should read `Enmoku.provider` through small view-model
+  helpers. Bilibili-specific rendering (provider mark, cover, owner, stats,
+  external link) belongs in room/bangumi UI, while parsing/fetching those fields
+  belongs in `eisha`.
+- 番組表 rows should keep a stable scan order: source mark, video title, current
+  status (`上映中`), provider info button, play, cancel play, delete. Cancel play
+  sends `JOUEI { enmokuId: null }`, is enabled only for the current item, and
+  should be represented as a room-level action rather than local-only UI state.
+  The list container may fill the panel height, but rows should be compact
+  fixed-height flex rows (currently 32px). Keep the title as the only flexible
+  middle cell, put status/info/play/cancel/delete inside a fixed right-side
+  action group, and avoid hidden placeholder cells; otherwise empty or malformed
+  titles can swallow the action area or make sparse queues look broken.
 - Keep player controls ordered by interaction frequency on the right side:
   source/quality selection, danmaku toggle, danmaku settings, cinema layout, web
   fullscreen, native fullscreen. Quality/source selection belongs as a visible

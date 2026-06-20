@@ -27,8 +27,8 @@
 - Map rows to `houkago-kousoku` domain types at the `db/` boundary. The rest of
   the app sees `Enmoku`, `Buin`, etc. — never raw row shapes.
 - Small structured metadata on `Enmoku` (`headers`, `subtitles`, `sources`,
-  `danmaku`) is stored as JSON TEXT columns and parsed/stringified only in
-  `src/db/queries/enmoku.ts`. `live` is stored as nullable integer `0 | 1`.
+  `danmaku`, `provider`) is stored as JSON TEXT columns and parsed/stringified
+  only in `src/db/queries/enmoku.ts`. `live` is stored as nullable integer `0 | 1`.
   Keep `undefined` as SQL `NULL`; do not turn missing metadata into `{}`, `[]`,
   or `false` on read.
 - Multi-step writes that must be atomic use `db.transaction(fn)`.

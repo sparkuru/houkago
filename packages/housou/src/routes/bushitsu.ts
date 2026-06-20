@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia"
 import { resolveUrlWithMetadata } from "houkago-eisha"
 import type { Enmoku } from "houkago-kousoku"
-import { EnmokuTypeSchema } from "houkago-kousoku"
+import { EnmokuProviderSchema, EnmokuTypeSchema } from "houkago-kousoku"
 import {
   addEnmoku,
   createBushitsu,
@@ -27,6 +27,7 @@ const DirectEnmokuBody = t.Object({
       ref: t.String(),
     }),
   ),
+  provider: t.Optional(EnmokuProviderSchema),
   live: t.Optional(t.Boolean()),
   addedBy: t.String(),
 })
@@ -40,7 +41,16 @@ const ResolveEnmokuBody = t.Object({
 
 type DirectEnmokuInput = Pick<
   Enmoku,
-  "title" | "type" | "url" | "headers" | "subtitles" | "sources" | "danmaku" | "live" | "addedBy"
+  | "title"
+  | "type"
+  | "url"
+  | "headers"
+  | "subtitles"
+  | "sources"
+  | "danmaku"
+  | "live"
+  | "addedBy"
+  | "provider"
 >
 
 type ResolveEnmokuInput = {
@@ -96,6 +106,7 @@ async function createEnmoku(
       subtitles: resolved.subtitles,
       sources: resolved.sources,
       danmaku: resolved.danmaku,
+      provider: resolved.provider,
       live: resolved.live,
       addedBy: input.addedBy,
     })

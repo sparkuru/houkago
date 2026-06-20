@@ -107,6 +107,13 @@ test("add enmoku persists extended metadata in create response and bangumi", asy
     },
     sources: [{ name: "1080p", url: "https://media.example.test/1080.m3u8" }],
     danmaku: { type: "fetch", ref: "bilibili:av1" },
+    provider: {
+      kind: "bilibili",
+      url: "https://www.bilibili.com/video/BV1xx411c7mD/",
+      coverUrl: "https://i0.hdslb.com/bfs/archive/cover.jpg",
+      ownerName: "字幕君",
+      stats: { view: 100, danmaku: 20, reply: 3 },
+    },
     live: true,
   } as const
 
@@ -126,6 +133,7 @@ test("add enmoku persists extended metadata in create response and bangumi", asy
   expect(enmoku.subtitles).toEqual(metadata.subtitles)
   expect(enmoku.sources).toEqual(metadata.sources)
   expect(enmoku.danmaku).toEqual(metadata.danmaku)
+  expect(enmoku.provider).toEqual(metadata.provider)
   expect(enmoku.live).toBe(true)
 
   const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
@@ -133,6 +141,7 @@ test("add enmoku persists extended metadata in create response and bangumi", asy
   expect(bangumi[0].subtitles).toEqual(metadata.subtitles)
   expect(bangumi[0].sources).toEqual(metadata.sources)
   expect(bangumi[0].danmaku).toEqual(metadata.danmaku)
+  expect(bangumi[0].provider).toEqual(metadata.provider)
   expect(bangumi[0].live).toBe(true)
 })
 
@@ -220,7 +229,14 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
     if (url.pathname === "/x/web-interface/view") {
       return Response.json({
         code: 0,
-        data: { bvid: "BV1xx411c7mD", title: "Bilibili resolved", cid: 62131 },
+        data: {
+          bvid: "BV1xx411c7mD",
+          title: "Bilibili resolved",
+          pic: "https://i0.hdslb.com/bfs/archive/cover.jpg",
+          cid: 62131,
+          owner: { name: "Bili UP" },
+          stat: { view: 1000, danmaku: 10, reply: 20, coin: 30, like: 40 },
+        },
       })
     }
 
@@ -267,6 +283,16 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
     expect(enmoku.type).toBe("dash")
     expect(enmoku.sources?.[0]?.name).toBe("480P · 512x384 · avc1")
     expect(enmoku.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
+    expect(enmoku.provider).toEqual({
+      kind: "bilibili",
+      url: "https://www.bilibili.com/video/BV1xx411c7mD/",
+      coverUrl: expect.stringContaining(`${base}/eisha/proxy/`),
+      ownerName: "Bili UP",
+      stats: { view: 1000, danmaku: 10, reply: 20, coin: 30, like: 40 },
+    })
+    expect(decodeProxyRef(enmoku.provider.coverUrl.split("/eisha/proxy/")[1] ?? "").url).toBe(
+      "https://i0.hdslb.com/bfs/archive/cover.jpg",
+    )
     const dashRef = decodeDashManifestRef(enmoku.url.split("/eisha/dash/")[1] ?? "")
     expect(dashRef.video[0]?.url).toBe("https://upos.example.test/video-480.m4s?sig=1")
     expect(dashRef.audio[0]?.url).toBe("https://upos.example.test/audio-192.m4s?sig=1")
@@ -279,6 +305,7 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
     const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
     expect(bangumi[0].sources).toEqual(enmoku.sources)
     expect(bangumi[0].danmaku).toEqual(enmoku.danmaku)
+    expect(bangumi[0].provider).toEqual(enmoku.provider)
   } finally {
     globalThis.fetch = originalFetch
   }

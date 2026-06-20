@@ -6,7 +6,7 @@ import {
   encodeDashManifestRef,
 } from "../dash"
 import { EishaUpstreamError } from "../errors"
-import { type FetchLike, assertHttpUrl } from "../proxy"
+import { type FetchLike, assertHttpUrl, encodeProxyRef } from "../proxy"
 
 export type BilibiliResolveOptions = {
   proxyBase: string
@@ -19,19 +19,34 @@ export type BilibiliResolvedSource = {
   headers: Record<string, string>
   sources?: Enmoku["sources"]
   danmaku?: Enmoku["danmaku"]
+  provider?: Enmoku["provider"]
 }
 
 type BilibiliViewData = {
   title: string
   bvid: string
+  pic?: string
   duration?: number
   cid?: number
+  owner?: { name?: string }
+  stat?: BilibiliStat
   pages?: { cid: number; page?: number; part?: string }[]
+}
+
+type BilibiliStat = {
+  view?: number
+  danmaku?: number
+  reply?: number
+  favorite?: number
+  coin?: number
+  share?: number
+  like?: number
 }
 
 type BilibiliDashVideo = {
   id: number
   baseUrl: string
+  backupUrls?: string[]
   width?: number
   height?: number
   codecs?: string
@@ -42,6 +57,7 @@ type BilibiliDashVideo = {
 type BilibiliDashAudio = {
   id: number
   baseUrl: string
+  backupUrls?: string[]
   codecs?: string
   bandwidth?: number
   segmentBase?: DashSegmentBase
@@ -57,6 +73,7 @@ type BilibiliPlayData = {
 }
 
 const BVID_PATTERN = /BV[0-9A-Za-z]+/
+const URL_PATTERN = /https?:\/\/[^\s"'<>]+/g
 const BILIBILI_HOSTS = new Set(["bilibili.com", "www.bilibili.com"])
 const BILIBILI_MEDIA_HEADERS = {
   referer: "https://www.bilibili.com/",
@@ -69,12 +86,8 @@ export function isBilibiliUrl(raw: string): boolean {
 }
 
 export function bilibiliBvidFromUrl(raw: string): string | undefined {
-  let url: URL
-  try {
-    url = new URL(raw)
-  } catch {
-    return undefined
-  }
+  const url = extractBilibiliUrl(raw)
+  if (!url) return undefined
   if (url.protocol !== "http:" && url.protocol !== "https:") return undefined
   if (!isBilibiliHost(url.hostname)) return undefined
   return url.pathname.match(BVID_PATTERN)?.[0]
@@ -121,7 +134,35 @@ export async function resolveBilibiliUrl(
     headers,
     sources: sourcesFromVideos(playableVideos, audios, view, play, options, headers),
     danmaku: { type: "fetch", ref: `bilibili:${cid}` },
+    provider: bilibiliProvider(view, bvid, options, headers),
   }
+}
+
+function extractBilibiliUrl(raw: string): URL | undefined {
+  for (const candidate of urlCandidates(raw)) {
+    let url: URL
+    try {
+      url = new URL(candidate)
+    } catch {
+      continue
+    }
+    if (!isBilibiliHost(url.hostname)) continue
+    if (!url.pathname.match(BVID_PATTERN)) continue
+    return url
+  }
+  return undefined
+}
+
+function urlCandidates(raw: string): string[] {
+  const trimmed = raw.trim()
+  const matches = [...trimmed.matchAll(URL_PATTERN)].map((match) =>
+    stripTrailingPunctuation(match[0] ?? ""),
+  )
+  return matches.length > 0 ? matches : [stripTrailingPunctuation(trimmed)]
+}
+
+function stripTrailingPunctuation(value: string): string {
+  return value.replace(/[),，。！？、；;]+$/u, "")
 }
 
 function isBilibiliHost(hostname: string): boolean {
@@ -172,20 +213,49 @@ function bilibiliApiData(payload: unknown): unknown {
 
 function parseViewData(value: unknown): BilibiliViewData | undefined {
   if (!value || typeof value !== "object") return undefined
-  const data = value as { title?: unknown; bvid?: unknown; cid?: unknown; pages?: unknown }
+  const data = value as {
+    title?: unknown
+    bvid?: unknown
+    pic?: unknown
+    cid?: unknown
+    owner?: unknown
+    stat?: unknown
+    pages?: unknown
+  }
   if (typeof data.title !== "string" || typeof data.bvid !== "string") return undefined
 
   const view: BilibiliViewData = { title: data.title, bvid: data.bvid }
+  if (typeof data.pic === "string") view.pic = data.pic
   if (typeof (data as { duration?: unknown }).duration === "number") {
     view.duration = (data as { duration: number }).duration
   }
   if (typeof data.cid === "number") view.cid = data.cid
+  const owner = parseOwner(data.owner)
+  if (owner) view.owner = owner
+  const stat = parseStat(data.stat)
+  if (stat) view.stat = stat
   if (Array.isArray(data.pages)) {
     view.pages = data.pages
       .map((item) => parseBilibiliPage(item))
       .filter((item): item is NonNullable<typeof item> => item !== undefined)
   }
   return view
+}
+
+function parseOwner(value: unknown): { name?: string } | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  const owner = value as { name?: unknown }
+  return typeof owner.name === "string" ? { name: owner.name } : undefined
+}
+
+function parseStat(value: unknown): BilibiliStat | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  const raw = value as Record<string, unknown>
+  const stat: BilibiliStat = {}
+  for (const key of ["view", "danmaku", "reply", "favorite", "coin", "share", "like"] as const) {
+    if (typeof raw[key] === "number") stat[key] = raw[key]
+  }
+  return Object.keys(stat).length > 0 ? stat : undefined
 }
 
 function parseBilibiliPage(
@@ -246,6 +316,8 @@ function parseDashVideo(value: unknown): BilibiliDashVideo | undefined {
     id?: unknown
     baseUrl?: unknown
     base_url?: unknown
+    backupUrl?: unknown
+    backup_url?: unknown
     width?: unknown
     height?: unknown
     codecs?: unknown
@@ -257,6 +329,7 @@ function parseDashVideo(value: unknown): BilibiliDashVideo | undefined {
   return {
     id: video.id,
     baseUrl,
+    backupUrls: parseBackupUrls(video.backupUrl ?? video.backup_url),
     width: typeof video.width === "number" ? video.width : undefined,
     height: typeof video.height === "number" ? video.height : undefined,
     codecs: typeof video.codecs === "string" ? video.codecs : undefined,
@@ -271,6 +344,8 @@ function parseDashAudio(value: unknown): BilibiliDashAudio | undefined {
     id?: unknown
     baseUrl?: unknown
     base_url?: unknown
+    backupUrl?: unknown
+    backup_url?: unknown
     codecs?: unknown
     bandwidth?: unknown
     segment_base?: unknown
@@ -280,6 +355,7 @@ function parseDashAudio(value: unknown): BilibiliDashAudio | undefined {
   return {
     id: audio.id,
     baseUrl,
+    backupUrls: parseBackupUrls(audio.backupUrl ?? audio.backup_url),
     codecs: typeof audio.codecs === "string" ? audio.codecs : undefined,
     bandwidth: typeof audio.bandwidth === "number" ? audio.bandwidth : undefined,
     segmentBase: parseSegmentBase(audio.segment_base),
@@ -302,6 +378,12 @@ function parseSegmentBase(value: unknown): DashSegmentBase | undefined {
         ? segmentBase.indexRange
         : undefined
   return initialization || indexRange ? { initialization, indexRange } : undefined
+}
+
+function parseBackupUrls(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const urls = value.filter((item): item is string => typeof item === "string" && item.length > 0)
+  return urls.length > 0 && urls.length === value.length ? urls : undefined
 }
 
 function parseSupportFormat(
@@ -379,6 +461,31 @@ function sourceName(video: BilibiliDashVideo, play: BilibiliPlayData, index: num
   )
 }
 
+function bilibiliProvider(
+  view: BilibiliViewData,
+  bvid: string,
+  options: BilibiliResolveOptions,
+  headers: Record<string, string>,
+): Enmoku["provider"] {
+  const provider: NonNullable<Enmoku["provider"]> = {
+    kind: "bilibili",
+    url: `https://www.bilibili.com/video/${bvid}/`,
+  }
+  if (view.pic) provider.coverUrl = bilibiliAssetProxyUrl(view.pic, options, headers)
+  if (view.owner?.name) provider.ownerName = view.owner.name
+  if (view.stat) provider.stats = view.stat
+  return provider
+}
+
+function bilibiliAssetProxyUrl(
+  url: string,
+  options: BilibiliResolveOptions,
+  headers: Record<string, string>,
+): string {
+  const proxyBase = options.proxyBase.replace(/\/+$/, "")
+  return `${proxyBase}/eisha/proxy/${encodeProxyRef({ url, headers })}`
+}
+
 function bilibiliDashManifestUrl(
   videos: BilibiliDashVideo[],
   audios: BilibiliDashAudio[],
@@ -401,6 +508,7 @@ function dashVideoRepresentation(video: BilibiliDashVideo): DashRepresentation {
   return {
     id: String(video.id),
     url: video.baseUrl,
+    fallbackUrls: video.backupUrls,
     bandwidth: video.bandwidth,
     codecs: video.codecs,
     width: video.width,
@@ -414,6 +522,7 @@ function dashAudioRepresentation(audio: BilibiliDashAudio): DashRepresentation {
   return {
     id: String(audio.id),
     url: audio.baseUrl,
+    fallbackUrls: audio.backupUrls,
     bandwidth: audio.bandwidth,
     codecs: audio.codecs,
     segmentBase: audio.segmentBase,
