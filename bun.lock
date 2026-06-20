@@ -10,12 +10,25 @@
         "typescript": "^5.6.0",
       },
     },
+    "packages/eisha": {
+      "name": "houkago-eisha",
+      "version": "0.0.0",
+      "dependencies": {
+        "elysia": "^1.4.0",
+        "houkago-kousoku": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.6.0",
+      },
+    },
     "packages/housou": {
       "name": "houkago-housou",
       "version": "0.0.0",
       "dependencies": {
         "@elysiajs/cors": "^1.4.0",
         "elysia": "^1.4.0",
+        "houkago-eisha": "workspace:*",
         "houkago-kousoku": "workspace:*",
       },
       "devDependencies": {
@@ -223,6 +236,8 @@
     "hls.js": ["hls.js@1.6.16", "", {}, "sha512-VSIRpLfRwlAAdGL4wiTucx2ScRipo0ed1FBatWkyt832jC4CReKstga6yIhYVwGu9LOBjuX9wzmRMeQdBJtzEA=="],
 
     "hookable": ["hookable@5.5.3", "", {}, "sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ=="],
+
+    "houkago-eisha": ["houkago-eisha@workspace:packages/eisha"],
 
     "houkago-housou": ["houkago-housou@workspace:packages/housou"],
 

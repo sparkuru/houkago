@@ -247,6 +247,88 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 
 ---
 
+## Scenario: Eisha Resolver And Proxy Skeleton
+
+### 1. Scope / Trigger
+
+- Trigger: any change to `houkago-eisha`, stable media proxy URLs,
+  `/eisha/proxy/:token`, resolver output, or upstream Range/seek behavior.
+- `eisha` owns media-plane logic. `housou` may mount eisha's route for the v1
+  co-deployed process, but media fetch/proxy code must remain in
+  `packages/eisha`.
+
+### 2. Signatures
+
+- `resolveUrl(input, options) -> ResolvedEnmokuSource`
+- `encodeProxyRef(ref) -> token`
+- `decodeProxyRef(token) -> ProxyRef`
+- `proxyUpstream(ref, request) -> Response`
+- HTTP route: `GET /eisha/proxy/:token`
+
+### 3. Contracts
+
+- `ProxyRef`: `{ url: string, headers?: Record<string, string> }`.
+- `url` must be `http:` or `https:`; reject all other protocols.
+- Stable proxy URL format is `<proxyBase>/eisha/proxy/<base64url-json-token>`.
+- Resolver type inference:
+  - path ending `.m3u8` -> `Enmoku.type = "hls"`
+  - path ending `.mpd` -> `Enmoku.type = "dash"`
+  - otherwise -> `Enmoku.type = "direct"`
+- The proxy forwards the caller's `Range` header to upstream and preserves
+  seek-relevant response headers: `accept-ranges`, `content-length`,
+  `content-range`, `content-type`, plus cache validators when present.
+- The proxy must not expose arbitrary upstream response headers by default.
+
+### 4. Validation & Error Matrix
+
+- Malformed token -> `EISHA_BAD_REQUEST` / HTTP 400.
+- Token decodes but lacks string `url` -> `EISHA_BAD_REQUEST` / HTTP 400.
+- Upstream URL has unsupported protocol (`file:`, `ftp:`, etc.) ->
+  `EISHA_BAD_REQUEST` / HTTP 400.
+- Upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- Upstream returns non-2xx/3xx -> preserve upstream status and allowed headers;
+  do not rewrite it to 500.
+
+### 5. Good/Base/Bad Cases
+
+- Good: `.m3u8` input resolves to a stable proxy URL with type `hls`; a browser
+  seek sends `Range`, upstream responds `206`, and the route returns `206` with
+  `content-range`.
+- Base: direct `.mp4` input resolves to type `direct` and is proxied with
+  `content-type: video/mp4`.
+- Bad: route logic in `housou` hand-fetches upstream media or buffers bytes;
+  this violates the media-plane boundary and makes later eisha service split
+  harder.
+
+### 6. Tests Required
+
+- `houkago-eisha` unit tests:
+  - token round-trip and invalid-token rejection
+  - non-http URL rejection
+  - resolver type inference for direct/HLS/DASH
+  - `Range` forwarding and allowed response header preservation
+- `houkago-housou` e2e test:
+  - mount `/eisha/proxy/:token`, proxy to a local upstream server, assert `206`,
+    forwarded range evidence, and seek headers.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+// housou route owns the media fetch directly.
+app.get("/eisha/proxy/:token", ({ params }) => fetch(decode(params.token).url))
+```
+
+#### Correct
+
+```ts
+// eisha owns decode + proxy; housou only composes the route.
+export const app = new Elysia().use(eishaRoutes).use(bushitsuRoutes)
+```
+
+---
+
 ## Code Review Checklist
 
 - [ ] Identifiers romaji; domain terms match the §13 dictionary (no synonyms).

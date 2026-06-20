@@ -33,6 +33,8 @@ const STATUS: Record<string, number> = {
   UNAUTHORIZED: 401,
   NOT_BUCHOU: 403,
   FORBIDDEN: 403,
+  EISHA_BAD_REQUEST: 400,
+  EISHA_UPSTREAM_ERROR: 502,
 }
 
 export function statusFor(code: string): number {

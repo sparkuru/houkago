@@ -1,5 +1,6 @@
 import { cors } from "@elysiajs/cors"
 import { Elysia } from "elysia"
+import { eishaRoutes } from "houkago-eisha"
 import "./db/client" // applies idempotent schema on module load
 import { statusFor } from "./lib/errors"
 import { bushitsuRoutes } from "./routes/bushitsu"
@@ -31,6 +32,7 @@ export const app = new Elysia()
     return { error: { code: "INTERNAL", message: "internal error" } }
   })
   .get("/health", () => ({ ok: true }))
+  .use(eishaRoutes)
   .use(bushitsuRoutes)
   .use(wsRoutes)
 

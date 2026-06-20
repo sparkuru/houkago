@@ -212,7 +212,7 @@ houkago/
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
 | P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染 | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 meta 自动获取；无 danmubox/search |
-| P2 解析+代理 | 未开始 | `Enmoku` 类型预留 `headers`/`subtitles`/`sources`/`danmaku` | `houkago-eisha` 包不存在；无解析器接口；无稳定代理 URL；无过期 URL 续期；无 m3u8 manifest 重写；无浏览/搜索 UI |
+| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留 `headers`/`subtitles`/`sources`/`danmaku`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；base64url 稳定代理 token；housou 挂载 `/eisha/proxy/:token`；基础 Range/seek 代理测试 | 无平台解析器；无过期 URL 续期；无 m3u8 manifest 重写；无浏览/搜索 UI；前端 dev 表单尚未接 resolver |
 | P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板；`Enmoku` 扩展字段未持久化 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
 
@@ -228,10 +228,8 @@ houkago/
 
 **P2：eisha 解析与代理骨架**
 
-- 新建 `houkago-eisha` 包。
-- 定义解析器接口：平台链接 → `Enmoku` 扩展字段（稳定代理 URL、headers、subtitles、sources、danmakuRef、live）。
-- 先做通用直链 / m3u8 resolver，暂不碰复杂平台反爬。
-- 实现稳定流代理端点和 range/seek 基础行为。
+- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；稳定代理 token；housou co-deploy 挂载 `/eisha/proxy/:token`；range/seek 基础行为测试。
+- 下一刀：将前端 dev 直链表单接入 resolver/create 流程，或先做 m3u8 manifest segment 重写。
 - 后续再加入 m3u8 manifest 重写、过期 URL 自动重解析、平台浏览/搜索 API。
 
 **P3：房间与内容管理扩展**
