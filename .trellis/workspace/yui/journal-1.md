@@ -1197,3 +1197,36 @@ Implemented the first real eisha parser: Generic HLS manifest parsing for source
 ### Next Steps
 
 - None - task complete
+
+
+## Session 37: Finalize kyoushitsu player controls
+
+**Date**: 2026-06-20
+**Task**: Finalize kyoushitsu player controls
+**Branch**: `k-on`
+
+### Summary
+
+Refined room player controls, chat panel, danmaku settings, fullscreen/cinema-mode interactions, presence panel, theme handling, and archived the P2 frontend controls task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b825224` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
