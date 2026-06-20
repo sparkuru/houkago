@@ -177,8 +177,9 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 ### 2. Signatures
 
 - REST create: `POST /bushitsu/:id/enmoku` -> `Enmoku`
-  - legacy body: `{ title: string, type: Enmoku["type"], url: string, addedBy: string }`
-  - resolver body: `{ sourceUrl: string, title?: string, addedBy: string }`
+  - legacy body:
+    `{ title: string, type: Enmoku["type"], url: string, headers?, subtitles?, sources?, danmaku?, live?, addedBy: string }`
+  - resolver body: `{ sourceUrl: string, title?: string, headers?: Record<string, string>, addedBy: string }`
 - REST delete: `DELETE /bushitsu/:id/enmoku/:enmokuId` -> `{ ok: true }`
 - WS queue snapshot: `BANGUMI { enmoku: Enmoku[] }`
 - WS source switch: `JOUEI { enmokuId: string }`, followed by
@@ -192,6 +193,9 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
   store the returned stable proxy URL in the queued `Enmoku`. The frontend dev
   direct-link form submits `sourceUrl`; it must not infer HLS/DASH type or build
   proxy tokens itself.
+- Create/list/BANGUMI must preserve optional `Enmoku` metadata:
+  `headers`, `subtitles`, `sources`, `danmaku`, and `live`. Missing metadata
+  remains `undefined`, not empty containers or default `false`.
 - Legacy create remains supported for internal tests and callers that already
   have a fully resolved `Enmoku` source.
 - From HTTP handlers, `server.publish(topic, ...)` must send a serialized JSON
@@ -218,6 +222,9 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 - Good: frontend dev form posts `{ sourceUrl }`, server returns an `Enmoku` whose
   `url` is `/eisha/proxy/:token`, and the same full `BANGUMI` snapshot reaches
   connected clients.
+- Good: a parser-produced `Enmoku` with headers/subtitles/sources/danmaku/live is
+  returned from create, survives `GET /bangumi`, and appears unchanged in the
+  BANGUMI snapshot.
 - Base: adding a manual source still returns the created `Enmoku`, broadcasts the
   updated queue, and may then `JOUEI` it.
 - Base: legacy `{ title, type, url }` create still works for tests and already
@@ -235,6 +242,8 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 - REST/e2e: resolver-body create returns a stable eisha proxy URL and decodes to
   the original `sourceUrl`.
 - REST/e2e: resolver-body create broadcasts the full `BANGUMI` snapshot.
+- REST/e2e: extended `Enmoku` metadata survives create/list and BANGUMI broadcast.
+- REST/e2e: old minimal enmoku rows do not gain empty optional metadata fields.
 - Frontend typecheck: dev direct-link form posts `sourceUrl` via the Eden client.
 - Sync unit: `ShinkouSeigyo.jouei` resets transport to paused start.
 - WS/e2e: after prior playing `SHINKOU`, `JOUEI` broadcasts a `GENJOU` whose

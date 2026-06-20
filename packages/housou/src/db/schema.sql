@@ -17,12 +17,17 @@ CREATE TABLE IF NOT EXISTS buin (
 );
 
 CREATE TABLE IF NOT EXISTS enmoku (
-  id           TEXT PRIMARY KEY,
-  bushitsu_id  TEXT NOT NULL,
-  title        TEXT NOT NULL,
-  type         TEXT NOT NULL,
-  url          TEXT NOT NULL,
-  added_by     TEXT NOT NULL,
-  created_at   INTEGER NOT NULL,
+  id             TEXT PRIMARY KEY,
+  bushitsu_id    TEXT NOT NULL,
+  title          TEXT NOT NULL,
+  type           TEXT NOT NULL,
+  url            TEXT NOT NULL,
+  headers_json   TEXT,
+  subtitles_json TEXT,
+  sources_json   TEXT,
+  danmaku_json   TEXT,
+  live           INTEGER,
+  added_by       TEXT NOT NULL,
+  created_at     INTEGER NOT NULL,
   FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id)
 );

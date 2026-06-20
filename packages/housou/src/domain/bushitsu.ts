@@ -7,6 +7,11 @@ import { newId } from "../lib/id"
 // BushitsuKanri（部室管理）: room lifecycle + enmoku metadata. Pure orchestration;
 // validation happens at the transport edge, I/O lives in db/.
 
+type AddEnmokuInput = Pick<
+  Enmoku,
+  "title" | "type" | "url" | "addedBy" | "headers" | "subtitles" | "sources" | "danmaku" | "live"
+>
+
 // 部室を作る：create a room. The creator's buin id becomes 部長 (design §5).
 export function createBushitsu(name: string, buchouId: string): Bushitsu {
   const bushitsu: Bushitsu = {
@@ -36,10 +41,7 @@ export function buchouIdOf(id: string): string | null {
 }
 
 // 演目を投稿する：add a direct-link enmoku to a room.
-export function addEnmoku(
-  bushitsuId: string,
-  input: { title: string; type: Enmoku["type"]; url: string; addedBy: string },
-): Enmoku {
+export function addEnmoku(bushitsuId: string, input: AddEnmokuInput): Enmoku {
   fetchBushitsu(bushitsuId) // ensure the room exists
   const enmoku: Enmoku = {
     id: newId(),
@@ -49,6 +51,11 @@ export function addEnmoku(
     url: input.url,
     addedBy: input.addedBy,
   }
+  if (input.headers) enmoku.headers = input.headers
+  if (input.subtitles) enmoku.subtitles = input.subtitles
+  if (input.sources) enmoku.sources = input.sources
+  if (input.danmaku) enmoku.danmaku = input.danmaku
+  if (input.live !== undefined) enmoku.live = input.live
   insertEnmoku(enmoku, Date.now())
   return enmoku
 }

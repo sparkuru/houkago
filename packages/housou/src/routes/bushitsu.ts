@@ -18,25 +18,35 @@ const DirectEnmokuBody = t.Object({
   title: t.String(),
   type: EnmokuTypeSchema,
   url: t.String(),
+  headers: t.Optional(t.Record(t.String(), t.String())),
+  subtitles: t.Optional(t.Record(t.String(), t.Object({ url: t.String(), type: t.String() }))),
+  sources: t.Optional(t.Array(t.Object({ name: t.String(), url: t.String() }))),
+  danmaku: t.Optional(
+    t.Object({
+      type: t.Union([t.Literal("file"), t.Literal("fetch")]),
+      ref: t.String(),
+    }),
+  ),
+  live: t.Optional(t.Boolean()),
   addedBy: t.String(),
 })
 
 const ResolveEnmokuBody = t.Object({
   sourceUrl: t.String(),
   title: t.Optional(t.String()),
+  headers: t.Optional(t.Record(t.String(), t.String())),
   addedBy: t.String(),
 })
 
-type DirectEnmokuInput = {
-  title: string
-  type: Enmoku["type"]
-  url: string
-  addedBy: string
-}
+type DirectEnmokuInput = Pick<
+  Enmoku,
+  "title" | "type" | "url" | "headers" | "subtitles" | "sources" | "danmaku" | "live" | "addedBy"
+>
 
 type ResolveEnmokuInput = {
   sourceUrl: string
   title?: string
+  headers?: Record<string, string>
   addedBy: string
 }
 
@@ -74,11 +84,15 @@ function createEnmoku(
   proxyBase: string,
 ): Enmoku {
   if ("sourceUrl" in input) {
-    const resolved = resolveUrl({ title: input.title, url: input.sourceUrl }, { proxyBase })
+    const resolved = resolveUrl(
+      { title: input.title, url: input.sourceUrl, headers: input.headers },
+      { proxyBase },
+    )
     return addEnmoku(bushitsuId, {
       title: resolved.title,
       type: resolved.type,
       url: resolved.url,
+      headers: resolved.headers,
       addedBy: input.addedBy,
     })
   }

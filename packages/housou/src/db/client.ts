@@ -16,3 +16,19 @@ db.exec("PRAGMA foreign_keys = ON;")
 // module load so tables exist regardless of import order.
 const here = dirname(fileURLToPath(import.meta.url))
 db.exec(readFileSync(join(here, "schema.sql"), "utf8"))
+
+const enmokuColumns = new Set(
+  db
+    .query<{ name: string }, []>("PRAGMA table_info(enmoku)")
+    .all()
+    .map((column) => column.name),
+)
+for (const [name, type] of [
+  ["headers_json", "TEXT"],
+  ["subtitles_json", "TEXT"],
+  ["sources_json", "TEXT"],
+  ["danmaku_json", "TEXT"],
+  ["live", "INTEGER"],
+] as const) {
+  if (!enmokuColumns.has(name)) db.exec(`ALTER TABLE enmoku ADD COLUMN ${name} ${type}`)
+}

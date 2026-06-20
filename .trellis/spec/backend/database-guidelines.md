@@ -26,6 +26,11 @@
   `enmoku.ts`). Each exports plain functions returning typed rows.
 - Map rows to `houkago-kousoku` domain types at the `db/` boundary. The rest of
   the app sees `Enmoku`, `Buin`, etc. — never raw row shapes.
+- Small structured metadata on `Enmoku` (`headers`, `subtitles`, `sources`,
+  `danmaku`) is stored as JSON TEXT columns and parsed/stringified only in
+  `src/db/queries/enmoku.ts`. `live` is stored as nullable integer `0 | 1`.
+  Keep `undefined` as SQL `NULL`; do not turn missing metadata into `{}`, `[]`,
+  or `false` on read.
 - Multi-step writes that must be atomic use `db.transaction(fn)`.
 
 ```ts
@@ -53,6 +58,10 @@ export function addEnmoku(e: Enmoku): void {
 
 - v1: a single idempotent `src/db/schema.sql` applied on startup
   (`CREATE TABLE IF NOT EXISTS ...`). Bootstrap runs it once when the DB is empty.
+- For small additive v1 schema changes, `src/db/client.ts` may do a guarded
+  column upgrade after `schema.sql`: read `PRAGMA table_info(<table>)`, then
+  `ALTER TABLE ... ADD COLUMN` only for missing constant column names. This keeps
+  local developer databases working without manual deletion.
 - No migration framework in v1. When schema evolves, add a numbered SQL file and
   apply in order; record applied version in a `schema_version` table. Defer the
   full tooling until the Postgres move.
@@ -80,3 +89,5 @@ export function addEnmoku(e: Enmoku): void {
   client → file-lock contention and inconsistent pragmas.
 - Storing media URLs/headers that expire as if permanent — those live in `eisha`
   and are re-resolved on demand; housou stores only the stable reference.
+- Parsing JSON metadata in routes/domain code instead of at the DB boundary →
+  leaks storage format upward and makes BANGUMI snapshots inconsistent.

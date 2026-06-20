@@ -68,6 +68,54 @@ test("add enmoku and list bangumi", async () => {
   const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
   expect(Array.isArray(bangumi)).toBe(true)
   expect(bangumi[0].title).toBe("test")
+  expect(bangumi[0].headers).toBeUndefined()
+  expect(bangumi[0].subtitles).toBeUndefined()
+  expect(bangumi[0].sources).toBeUndefined()
+  expect(bangumi[0].danmaku).toBeUndefined()
+  expect(bangumi[0].live).toBeUndefined()
+})
+
+test("add enmoku persists extended metadata in create response and bangumi", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-extended", buchouId: "u1" }),
+  }).then((r) => r.json())
+  const metadata = {
+    headers: { authorization: "Bearer token", referer: "https://example.test/" },
+    subtitles: {
+      zh: { url: "https://media.example.test/sub.zh.vtt", type: "vtt" },
+      ja: { url: "https://media.example.test/sub.ja.ass", type: "ass" },
+    },
+    sources: [{ name: "1080p", url: "https://media.example.test/1080.m3u8" }],
+    danmaku: { type: "fetch", ref: "bilibili:av1" },
+    live: true,
+  } as const
+
+  const enmoku = await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      title: "extended",
+      type: "hls",
+      url: "https://media.example.test/master.m3u8",
+      addedBy: "u1",
+      ...metadata,
+    }),
+  }).then((r) => r.json())
+
+  expect(enmoku.headers).toEqual(metadata.headers)
+  expect(enmoku.subtitles).toEqual(metadata.subtitles)
+  expect(enmoku.sources).toEqual(metadata.sources)
+  expect(enmoku.danmaku).toEqual(metadata.danmaku)
+  expect(enmoku.live).toBe(true)
+
+  const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
+  expect(bangumi[0].headers).toEqual(metadata.headers)
+  expect(bangumi[0].subtitles).toEqual(metadata.subtitles)
+  expect(bangumi[0].sources).toEqual(metadata.sources)
+  expect(bangumi[0].danmaku).toEqual(metadata.danmaku)
+  expect(bangumi[0].live).toBe(true)
 })
 
 test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
@@ -83,16 +131,62 @@ test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
     body: JSON.stringify({
       title: "resolved",
       sourceUrl: "https://media.example.test/live/index.m3u8",
+      headers: { authorization: "Bearer resolver" },
       addedBy: "u1",
     }),
   }).then((r) => r.json())
 
   expect(enmoku.title).toBe("resolved")
   expect(enmoku.type).toBe("hls")
+  expect(enmoku.headers).toEqual({ authorization: "Bearer resolver" })
   expect(enmoku.url.startsWith(`${base}/eisha/proxy/`)).toBe(true)
   expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://media.example.test/live/index.m3u8",
+    headers: { authorization: "Bearer resolver" },
   })
+})
+
+test("add enmoku broadcasts extended metadata in BANGUMI", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-extended-broadcast", buchouId: "host" }),
+  }).then((r) => r.json())
+
+  const host = await open(room.id, "host")
+  const guest = await open(room.id, "guest")
+  const hostBangumi = nextMatch(host, (m) => m.type === "BANGUMI")
+  const guestBangumi = nextMatch(guest, (m) => m.type === "BANGUMI")
+
+  await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      title: "broadcast-extended",
+      type: "live",
+      url: "https://media.example.test/live.m3u8",
+      sources: [{ name: "main", url: "https://media.example.test/live.m3u8" }],
+      live: true,
+      addedBy: "host",
+    }),
+  })
+
+  const [hostMsg, guestMsg] = await Promise.all([hostBangumi, guestBangumi])
+  if (hostMsg.type === "BANGUMI") {
+    expect(hostMsg.payload.enmoku[0]?.sources).toEqual([
+      { name: "main", url: "https://media.example.test/live.m3u8" },
+    ])
+    expect(hostMsg.payload.enmoku[0]?.live).toBe(true)
+  }
+  if (guestMsg.type === "BANGUMI") {
+    expect(guestMsg.payload.enmoku[0]?.sources).toEqual([
+      { name: "main", url: "https://media.example.test/live.m3u8" },
+    ])
+    expect(guestMsg.payload.enmoku[0]?.live).toBe(true)
+  }
+
+  host.close()
+  guest.close()
 })
 
 test("add resolved enmoku broadcasts the full BANGUMI snapshot", async () => {
