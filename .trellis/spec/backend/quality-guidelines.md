@@ -263,6 +263,7 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `encodeProxyRef(ref) -> token`
 - `decodeProxyRef(token) -> ProxyRef`
 - `proxyUpstream(ref, request) -> Response`
+- `rewriteM3u8Manifest(manifest, options) -> string`
 - HTTP route: `GET /eisha/proxy/:token`
 
 ### 3. Contracts
@@ -278,6 +279,19 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   seek-relevant response headers: `accept-ranges`, `content-length`,
   `content-range`, `content-type`, plus cache validators when present.
 - The proxy must not expose arbitrary upstream response headers by default.
+- Full m3u8 playlist responses are text-rewritten by `eisha`:
+  - ordinary non-comment URI lines resolve relative to the upstream playlist URL
+    and become new `/eisha/proxy/:token` URLs;
+  - HLS `URI="..."` attributes, including key/map/media references, are
+    rewritten the same way;
+  - rewritten child `ProxyRef` values preserve the parent `headers`;
+  - non-http(s) URI values such as `data:` remain unchanged.
+- Do not rewrite partial playlist responses. If the caller sends `Range`, keep
+  the existing byte proxy behavior.
+- Rewritten playlist responses must not forward stale upstream byte/cache
+  validators such as `accept-ranges`, `content-range`, or `etag`. A hosting
+  layer may compute a fresh `content-length`; tests should assert it is not the
+  upstream stale value, not that it is always absent.
 
 ### 4. Validation & Error Matrix
 
@@ -288,17 +302,24 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
 - Upstream returns non-2xx/3xx -> preserve upstream status and allowed headers;
   do not rewrite it to 500.
+- Playlist contains malformed or unsupported URI -> leave that URI unchanged;
+  do not fail the whole manifest.
 
 ### 5. Good/Base/Bad Cases
 
 - Good: `.m3u8` input resolves to a stable proxy URL with type `hls`; a browser
   seek sends `Range`, upstream responds `206`, and the route returns `206` with
   `content-range`.
+- Good: a proxied m3u8 manifest containing `seg-1.ts` and
+  `#EXT-X-KEY:URI="key.bin"` returns proxy URLs whose decoded refs point at the
+  upstream absolute segment/key URLs.
 - Base: direct `.mp4` input resolves to type `direct` and is proxied with
   `content-type: video/mp4`.
 - Bad: route logic in `housou` hand-fetches upstream media or buffers bytes;
   this violates the media-plane boundary and makes later eisha service split
   harder.
+- Bad: a rewritten playlist forwards upstream `content-range` / `etag` from the
+  original body after changing the body text.
 
 ### 6. Tests Required
 
@@ -307,9 +328,14 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - non-http URL rejection
   - resolver type inference for direct/HLS/DASH
   - `Range` forwarding and allowed response header preservation
+  - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
+    resolution, child header preservation, and non-http URI passthrough
+  - rewritten m3u8 response headers do not retain stale byte headers
 - `houkago-housou` e2e test:
   - mount `/eisha/proxy/:token`, proxy to a local upstream server, assert `206`,
     forwarded range evidence, and seek headers.
+  - fetch a proxied local m3u8, assert its segment URL is rewritten to the same
+    route, then fetch that rewritten segment URL through the proxy.
 
 ### 7. Wrong vs Correct
 
@@ -325,6 +351,20 @@ app.get("/eisha/proxy/:token", ({ params }) => fetch(decode(params.token).url))
 ```ts
 // eisha owns decode + proxy; housou only composes the route.
 export const app = new Elysia().use(eishaRoutes).use(bushitsuRoutes)
+```
+
+#### Wrong
+
+```ts
+// Rewritten body, stale upstream byte metadata.
+return new Response(rewrittenManifest, { headers: upstream.headers })
+```
+
+#### Correct
+
+```ts
+// Rewritten playlist only keeps safe text-response headers.
+return new Response(rewrittenManifest, { headers: rewrittenPlaylistHeaders })
 ```
 
 ---

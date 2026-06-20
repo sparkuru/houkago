@@ -10,6 +10,12 @@ export type FetchLike = (
   init?: RequestInit,
 ) => Response | Promise<Response>
 
+export type RewriteM3u8Options = {
+  upstreamUrl: URL
+  proxyPrefix: string
+  headers?: Record<string, string>
+}
+
 const RESPONSE_HEADERS = [
   "accept-ranges",
   "cache-control",
@@ -19,6 +25,9 @@ const RESPONSE_HEADERS = [
   "etag",
   "last-modified",
 ] as const
+
+const REWRITTEN_RESPONSE_HEADERS = ["cache-control", "content-type", "last-modified"] as const
+const URI_ATTRIBUTE = /\bURI=(?:"([^"]*)"|'([^']*)'|([^,]*))/g
 
 export function assertHttpUrl(raw: string): URL {
   let url: URL
@@ -79,6 +88,30 @@ export async function proxyUpstream(
     if (value !== null) responseHeaders.set(name, value)
   }
 
+  if (!range && upstream.ok && shouldRewriteM3u8(upstreamUrl, upstream)) {
+    const rewrittenHeaders = new Headers()
+    for (const name of REWRITTEN_RESPONSE_HEADERS) {
+      const value = upstream.headers.get(name)
+      if (value !== null) rewrittenHeaders.set(name, value)
+    }
+    if (!rewrittenHeaders.has("content-type")) {
+      rewrittenHeaders.set("content-type", "application/vnd.apple.mpegurl")
+    }
+
+    const manifest = await upstream.text()
+    const rewritten = rewriteM3u8Manifest(manifest, {
+      upstreamUrl,
+      proxyPrefix: proxyPrefixFromRequest(request),
+      headers: ref.headers,
+    })
+
+    return new Response(rewritten, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: rewrittenHeaders,
+    })
+  }
+
   return new Response(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,
@@ -86,7 +119,59 @@ export async function proxyUpstream(
   })
 }
 
+export function rewriteM3u8Manifest(manifest: string, options: RewriteM3u8Options): string {
+  return manifest
+    .split("\n")
+    .map((line) => rewriteM3u8Line(line, options))
+    .join("\n")
+}
+
 function isHeaderRecord(value: unknown): value is Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
   return Object.entries(value).every(([key, v]) => key.length > 0 && typeof v === "string")
+}
+
+function rewriteM3u8Line(line: string, options: RewriteM3u8Options): string {
+  const trimmed = line.trim()
+  if (!trimmed) return line
+  if (!trimmed.startsWith("#")) return rewriteUri(trimmed, options) ?? line
+  if (!trimmed.includes("URI=")) return line
+
+  return line.replace(URI_ATTRIBUTE, (match, doubleQuoted, singleQuoted, unquoted) => {
+    const value = (doubleQuoted ?? singleQuoted ?? unquoted ?? "").trim()
+    const rewritten = rewriteUri(value, options)
+    if (!rewritten) return match
+    if (doubleQuoted !== undefined) return `URI="${rewritten}"`
+    if (singleQuoted !== undefined) return `URI='${rewritten}'`
+    return `URI=${rewritten}`
+  })
+}
+
+function rewriteUri(uri: string, options: RewriteM3u8Options): string | undefined {
+  let resolved: URL
+  try {
+    resolved = new URL(uri, options.upstreamUrl)
+  } catch {
+    return undefined
+  }
+  if (resolved.protocol !== "http:" && resolved.protocol !== "https:") return undefined
+  return `${options.proxyPrefix}${encodeProxyRef({ url: resolved.toString(), headers: options.headers })}`
+}
+
+function shouldRewriteM3u8(upstreamUrl: URL, upstream: Response): boolean {
+  const contentType = upstream.headers.get("content-type")?.toLowerCase() ?? ""
+  return (
+    upstreamUrl.pathname.toLowerCase().endsWith(".m3u8") ||
+    contentType.includes("mpegurl") ||
+    contentType.includes("m3u8")
+  )
+}
+
+function proxyPrefixFromRequest(request: Request): string {
+  const url = new URL(request.url)
+  const marker = "/proxy/"
+  const markerIndex = url.pathname.lastIndexOf(marker)
+  const pathPrefix =
+    markerIndex === -1 ? "/eisha/proxy/" : url.pathname.slice(0, markerIndex + marker.length)
+  return `${url.origin}${pathPrefix}`
 }
