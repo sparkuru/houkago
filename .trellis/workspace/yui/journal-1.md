@@ -1330,3 +1330,36 @@ Added DASH MPD composition for Bilibili video/audio streams, dashjs playback int
 ### Next Steps
 
 - None - task complete
+
+
+## Session 41: Bilibili provider enrichment
+
+**Date**: 2026-06-21
+**Task**: Bilibili provider enrichment
+**Branch**: `k-on`
+
+### Summary
+
+Implemented Bilibili share-link recognition, provider metadata, proxied covers, fetched danmaku, DASH fallback URLs, queue row controls including cancel playback, and a Trellis submit-ready human review gate. Verified with format, lint, typecheck, full tests, and user browser PASS.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `45bfb99` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

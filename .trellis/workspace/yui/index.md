@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 40
+- **Total Sessions**: 41
 - **Last Active**: 2026-06-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1332 | Active |
+| `journal-1.md` | ~1365 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 41 | 2026-06-21 | Bilibili provider enrichment | `45bfb99` | `k-on` |
 | 40 | 2026-06-21 | Bilibili DASH playback | `f00e97d` | `k-on` |
 | 39 | 2026-06-21 | Bilibili parser metadata and manual test checkpoint | `25c5dba`, `e578602` | `k-on` |
 | 38 | 2026-06-21 | P2 eisha HLS URL re-resolve | `c62869e` | `k-on` |
