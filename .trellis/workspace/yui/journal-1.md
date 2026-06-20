@@ -1098,3 +1098,36 @@ Implemented HLS m3u8 manifest rewriting in houkago-eisha: URI lines and URI attr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 34: P2 dev link resolver integration
+
+**Date**: 2026-06-20
+**Task**: P2 dev link resolver integration
+**Branch**: `k-on`
+
+### Summary
+
+Connected the kyoushitsu dev direct-link form to housou's enmoku create flow via eisha resolveUrl. The create endpoint now accepts sourceUrl, returns stable eisha proxy Enmoku URLs, preserves legacy create, broadcasts BANGUMI, and records the updated REST contract in backend spec and design.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `39fa403` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
