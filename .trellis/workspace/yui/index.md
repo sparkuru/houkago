@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 39
+- **Total Sessions**: 40
 - **Last Active**: 2026-06-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1299 | Active |
+| `journal-1.md` | ~1332 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 40 | 2026-06-21 | Bilibili DASH playback | `f00e97d` | `k-on` |
 | 39 | 2026-06-21 | Bilibili parser metadata and manual test checkpoint | `25c5dba`, `e578602` | `k-on` |
 | 38 | 2026-06-21 | P2 eisha HLS URL re-resolve | `c62869e` | `k-on` |
 | 37 | 2026-06-20 | Finalize kyoushitsu player controls | `b825224` | `k-on` |

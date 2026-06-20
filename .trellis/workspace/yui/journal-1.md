@@ -1297,3 +1297,36 @@ Implemented fixture-backed Bilibili BV metadata resolution through eisha and hou
 ### Next Steps
 
 - None - task complete
+
+
+## Session 40: Bilibili DASH playback
+
+**Date**: 2026-06-21
+**Task**: Bilibili DASH playback
+**Branch**: `k-on`
+
+### Summary
+
+Added DASH MPD composition for Bilibili video/audio streams, dashjs playback integration, source switching controls, codec filtering, tests, specs, and manual validation.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f00e97d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
