@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test"
+import { decodeDashManifestRef } from "../src/dash"
 import { EishaUpstreamError } from "../src/errors"
 import { bilibiliBvidFromUrl, isBilibiliUrl, resolveBilibiliUrl } from "../src/parsers/bilibili"
-import { type FetchLike, decodeProxyRef } from "../src/proxy"
+import type { FetchLike } from "../src/proxy"
 
 const proxyBase = "https://housou.example.test"
 
@@ -25,6 +26,7 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
         data: {
           bvid: "BV1xx411c7mD",
           title: "字幕君交流场所",
+          duration: 120,
           cid: 62131,
           pages: [{ cid: 62131, page: 1 }],
         },
@@ -48,6 +50,22 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
               height: 384,
               codecs: "avc1.64001E",
               bandwidth: 155817,
+              segment_base: {
+                initialization: "0-1023",
+                index_range: "1024-2048",
+              },
+            },
+            {
+              id: 32,
+              baseUrl: "https://upos.example.test/video-480-hvc1.m4s?sig=1",
+              width: 512,
+              height: 384,
+              codecs: "hvc1.1.6.L120.90",
+              bandwidth: 155817,
+              segment_base: {
+                initialization: "0-1023",
+                index_range: "1024-2048",
+              },
             },
             {
               id: 16,
@@ -55,6 +73,22 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
               width: 480,
               height: 360,
               codecs: "hev1.1.6.L120.90",
+              segment_base: {
+                initialization: "0-923",
+                index_range: "924-1600",
+              },
+            },
+          ],
+          audio: [
+            {
+              id: 30280,
+              baseUrl: "https://upos.example.test/audio-192.m4s?sig=1",
+              codecs: "mp4a.40.2",
+              bandwidth: 132000,
+              segment_base: {
+                initialization: "0-919",
+                index_range: "920-1100",
+              },
             },
           ],
         },
@@ -75,21 +109,34 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
   expect(resolved?.title).toBe("字幕君交流场所")
   expect(resolved?.type).toBe("dash")
   expect(resolved?.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
-  expect(resolved?.sources?.map((source) => source.name)).toEqual([
-    "480P · 512x384 · avc1",
-    "360P · 480x360 · hev1",
-  ])
+  expect(resolved?.sources?.map((source) => source.name)).toEqual(["480P · 512x384 · avc1"])
 
-  const primaryRef = decodeProxyRef(resolved?.url.split("/eisha/proxy/")[1] ?? "")
-  expect(primaryRef.url).toBe("https://upos.example.test/video-480.m4s?sig=1")
+  expect(resolved?.url.startsWith(`${proxyBase}/eisha/dash/`)).toBe(true)
+  const primaryRef = decodeDashManifestRef(resolved?.url.split("/eisha/dash/")[1] ?? "")
+  expect(primaryRef.duration).toBe(120)
+  expect(primaryRef.video.map((video) => video.url)).toEqual([
+    "https://upos.example.test/video-480.m4s?sig=1",
+  ])
+  expect(primaryRef.audio.map((audio) => audio.url)).toEqual([
+    "https://upos.example.test/audio-192.m4s?sig=1",
+  ])
   expect(primaryRef.headers?.referer).toBe("https://www.bilibili.com/")
   expect(primaryRef.headers?.["user-agent"]).toContain("Mozilla")
+  expect(primaryRef.video[0]?.segmentBase).toEqual({
+    initialization: "0-1023",
+    indexRange: "1024-2048",
+  })
 
-  const secondSourceRef = decodeProxyRef(
-    resolved?.sources?.[1]?.url.split("/eisha/proxy/")[1] ?? "",
+  const firstSourceRef = decodeDashManifestRef(
+    resolved?.sources?.[0]?.url.split("/eisha/dash/")[1] ?? "",
   )
-  expect(secondSourceRef.url).toBe("https://upos.example.test/video-360.m4s?sig=1")
-  expect(secondSourceRef.headers).toEqual(primaryRef.headers)
+  expect(firstSourceRef.video.map((video) => video.url)).toEqual([
+    "https://upos.example.test/video-480.m4s?sig=1",
+  ])
+  expect(firstSourceRef.audio.map((audio) => audio.url)).toEqual([
+    "https://upos.example.test/audio-192.m4s?sig=1",
+  ])
+  expect(firstSourceRef.headers).toEqual(primaryRef.headers)
 })
 
 test("returns undefined for non-Bilibili URLs", async () => {

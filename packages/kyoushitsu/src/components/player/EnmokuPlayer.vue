@@ -2,6 +2,7 @@
 import { t } from "@/i18n"
 import { canSeekTo } from "@/lib/seekable"
 import Artplayer from "artplayer"
+import * as dashjs from "dashjs"
 import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
@@ -96,6 +97,7 @@ const playerEl = ref<HTMLElement | null>(null)
 const danmakuSettingsOpen = ref(false)
 let art: Artplayer | null = null
 let stopFullscreenClickPatch: (() => void) | null = null
+let cleanupMediaEngine: (() => void) | null = null
 
 // 中途加入の追平 seek が早すぎて落ちる問題への対策（prd Bug2）: hls.js がまだ
 // メディアを読み込み切っておらず seek 不可（readyState 低 / video.seekable 空）の
@@ -125,15 +127,24 @@ function seekTo(target: number): void {
   pendingSeek = target
 }
 
-function playM3u8(video: HTMLVideoElement, url: string, artInstance: Artplayer) {
+function playM3u8(video: HTMLVideoElement, url: string, _artInstance: Artplayer) {
+  cleanupMediaEngine?.()
+  cleanupMediaEngine = null
   if (Hls.isSupported()) {
     const hls = new Hls()
     hls.loadSource(url)
     hls.attachMedia(video)
-    artInstance.on("destroy", () => hls.destroy())
+    cleanupMediaEngine = () => hls.destroy()
   } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src = url
   }
+}
+
+function playDash(video: HTMLVideoElement, url: string, _artInstance: Artplayer) {
+  cleanupMediaEngine?.()
+  const player: dashjs.MediaPlayerClass = dashjs.MediaPlayer().create()
+  player.initialize(video, url, false)
+  cleanupMediaEngine = () => player.reset()
 }
 
 // 唯一の art.play() 経路：autoplay ポリシーで未参加 follower の play() は拒否
@@ -199,24 +210,49 @@ function updateDanmakuTimeOffset(value: string): void {
   emit("danmakuTimeOffset", Number(value))
 }
 
-function sourceSetting() {
+function selectedSourceLabel(): string {
+  return (
+    props.sourceChoices.find((choice) => choice.value === props.selectedSourceValue)?.label ??
+    props.sourceChoices[0]?.label ??
+    t("sourceSelectLabel")
+  )
+}
+
+function sourceControl() {
   if (props.sourceChoices.length > 1) {
     return {
       name: "houkagoSource",
-      html: t("sourceSelectLabel"),
-      tooltip: props.sourceChoices.find((choice) => choice.value === props.selectedSourceValue)
-        ?.label,
+      position: "right",
+      index: 35,
+      html: sourceControlHtml(),
+      tooltip: selectedSourceLabel(),
       selector: props.sourceChoices.map((choice) => ({
-        html: choice.label,
+        html: escapeHtml(choice.label),
         value: choice.value,
         default: choice.value === props.selectedSourceValue,
       })),
-      onSelect: (item: { value?: string | number }) => {
-        if (typeof item.value === "string") emit("source", item.value)
+      onSelect: (item: { value?: string | number; html?: string | HTMLElement }) => {
+        if (typeof item.value === "string") {
+          emit("source", item.value)
+          return typeof item.html === "string" ? item.html : sourceControlHtml()
+        }
+        return sourceControlHtml()
       },
     }
   }
   return null
+}
+
+function sourceControlHtml(): string {
+  return `<span class="houkago-source-control" aria-hidden="true">${escapeHtml(selectedSourceLabel())}</span>`
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
 }
 
 function controlColor(active: boolean): string {
@@ -317,8 +353,18 @@ function cinemaControl() {
   }
 }
 
-function artSettings() {
-  return [sourceSetting()].filter((setting) => setting !== null)
+function artControls() {
+  return [
+    sourceControl(),
+    danmakuToggleControl(),
+    danmakuSettingsControl(),
+    cinemaControl(),
+  ].filter((control) => control !== null)
+}
+
+function refreshSourceControl(): void {
+  const control = sourceControl()
+  if (control) art?.controls.update(control)
 }
 
 // 放権（解锁: controlLocked true→false）時にコントロール条を能動的に再表示する。
@@ -342,19 +388,24 @@ defineExpose({ apply, alignTransport, setRate, snapshot, playerEl })
 onMounted(() => {
   if (!container.value) return
   const isHls = props.type === "hls" || props.type === "live" || props.url.endsWith(".m3u8")
+  const isDash = props.type === "dash" || props.url.endsWith(".mpd")
+  const mediaType = isHls ? "m3u8" : isDash ? "dash" : undefined
   art = new Artplayer({
     container: container.value,
     url: props.url,
-    type: isHls ? "m3u8" : undefined,
-    customType: isHls
-      ? { m3u8: (video, url, artInstance) => playM3u8(video, url, artInstance) }
-      : undefined,
+    type: mediaType,
+    customType:
+      mediaType === undefined
+        ? undefined
+        : {
+            m3u8: (video, url, artInstance) => playM3u8(video, url, artInstance),
+            dash: (video, url, artInstance) => playDash(video, url, artInstance),
+          },
     autoSize: false,
     fullscreenWeb: true,
     fullscreen: true,
-    setting: true,
-    settings: artSettings(),
-    controls: [danmakuToggleControl(), danmakuSettingsControl(), cinemaControl()],
+    setting: false,
+    controls: artControls(),
   })
 
   playerEl.value = (art.template as ArtTemplate).$player
@@ -412,6 +463,21 @@ watch(
 )
 
 watch(
+  () => [props.selectedSourceValue, props.sourceChoices.length, selectedSourceLabel()],
+  () => {
+    refreshSourceControl()
+  },
+)
+
+watch(
+  () => props.url,
+  (url, previous) => {
+    if (!art || url === previous) return
+    void art.switchQuality(url).catch(() => {})
+  },
+)
+
+watch(
   () => props.cinemaMode,
   () => {
     art?.controls.update(cinemaControl())
@@ -421,6 +487,8 @@ watch(
 onBeforeUnmount(() => {
   stopFullscreenClickPatch?.()
   stopFullscreenClickPatch = null
+  cleanupMediaEngine?.()
+  cleanupMediaEngine = null
   art?.destroy()
   art = null
   playerEl.value = null
@@ -538,10 +606,23 @@ onBeforeUnmount(() => {
 .enmoku-player :deep(.art-video) {
   object-fit: contain;
 }
+.enmoku-player :deep(.art-control-houkagoSource),
 .enmoku-player :deep(.art-control-houkagoDanmakuToggle),
 .enmoku-player :deep(.art-control-houkagoDanmakuSettings),
 .enmoku-player :deep(.art-control-houkagoCinema) {
   color: #fff;
+}
+.enmoku-player :deep(.houkago-source-control) {
+  display: block;
+  max-width: 74px;
+  padding: 0 4px;
+  overflow: hidden;
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .enmoku-player.file-danmaku-enabled :deep(.art-control-houkagoDanmakuToggle),
 .enmoku-player.cinema-mode :deep(.art-control-houkagoCinema) {

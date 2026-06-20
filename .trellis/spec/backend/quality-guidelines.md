@@ -317,9 +317,14 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `resolveBilibiliUrl(url, options, fetcher?) -> Promise<ResolvedEnmokuSource | undefined>`
 - `encodeProxyRef(ref) -> token`
 - `decodeProxyRef(token) -> ProxyRef`
+- `encodeDashManifestRef(ref) -> token`
+- `decodeDashManifestRef(token) -> DashManifestRef`
+- `buildDashManifest(ref, proxyPrefix) -> string`
+- `dashManifestResponse(ref, request) -> Response`
 - `proxyUpstream(ref, request) -> Response`
 - `rewriteM3u8Manifest(manifest, options) -> string`
 - HTTP route: `GET /eisha/proxy/:token`
+- HTTP route: `GET /eisha/dash/:token`
 
 ### 3. Contracts
 
@@ -332,6 +337,16 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `hls.manifestUrl` must also be `http:` or `https:`; reject malformed refresh
   context as an invalid proxy token.
 - Stable proxy URL format is `<proxyBase>/eisha/proxy/<base64url-json-token>`.
+- Stable DASH manifest URL format is
+  `<proxyBase>/eisha/dash/<base64url-json-token>`.
+- `DashManifestRef` is an eisha-only token payload:
+  `{ duration?, headers?, video: DashRepresentation[], audio: DashRepresentation[] }`.
+  Each representation carries an upstream http(s) media URL, optional
+  `bandwidth`/`codecs`/`width`/`height`, and optional
+  `segmentBase: { initialization?, indexRange? }`.
+- `/eisha/dash/:token` returns `application/dash+xml; charset=utf-8` with a
+  static MPD whose video/audio `BaseURL` values are `/eisha/proxy/:token` URLs.
+  It must not fetch or buffer media bytes.
 - `resolveUrl` stays synchronous and only performs URL validation, title/type
   inference, and stable proxy URL construction. Use it for fallback/simple
   resolution that must not touch the network.
@@ -357,13 +372,25 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - accept public BV video URLs from `*.bilibili.com/video/BV...`;
   - fetch `x/web-interface/view` for title and `cid`;
   - fetch `x/player/playurl` with `fnval=16` for DASH metadata;
-  - return `type: "dash"`, `title`, primary proxied video URL, `sources[]` from
-    DASH video variants, Bilibili media headers (`referer` and `user-agent`),
-    and `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`;
+  - parse DASH video, audio, and `segment_base` metadata from fixture-backed
+    `playurl` responses;
+  - return `type: "dash"`, `title`, a primary `/eisha/dash/:token` URL,
+    `sources[]` whose URLs are also playable eisha DASH manifests for each
+    video quality, Bilibili media headers (`referer` and `user-agent`), and
+    `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`;
+  - for the current web playback path, expose only browser-stable `avc1`
+    (H.264) video representations; omit `hvc1`/`hev1` Bilibili DASH video
+    variants because Chrome/MSE can load their audio while showing no picture;
+  - when Bilibili returns multiple playable video representations for the same
+    quality id, expose only the first representation for that quality in
+    `sources[]`. The user-facing source menu is a quality selector, not a codec
+    selector;
+  - the MPD route, not `housou` or the frontend, composes separate Bilibili
+    video/audio URLs into one browser-playable DASH manifest;
   - keep fetcher injection available so tests use fixtures instead of live
     Bilibili network;
-  - do not implement cookie/VIP/WBI signing, synthetic MPD generation, or remote
-    danmaku fetching in this parser slice.
+  - do not implement cookie/VIP/WBI signing or remote danmaku fetching in this
+    parser slice.
 - The proxy forwards the caller's `Range` header to upstream and preserves
   seek-relevant response headers: `accept-ranges`, `content-length`,
   `content-range`, `content-type`, plus cache validators when present.
@@ -400,8 +427,10 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `resolveUrlWithMetadata` HLS manifest fetch throws or returns non-OK ->
   `EISHA_UPSTREAM_ERROR` / HTTP 502.
 - Bilibili `view` / `playurl` fetch throws, returns non-OK, returns non-zero
-  `code`, lacks `cid`, or lacks playable DASH video -> `EISHA_UPSTREAM_ERROR` /
-  HTTP 502.
+  `code`, lacks `cid`, lacks playable DASH video, or lacks playable DASH audio
+  -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- DASH manifest token is malformed, lacks video/audio representations, or
+  contains non-http(s) media URLs -> `EISHA_BAD_REQUEST` / HTTP 400.
 - Proxy upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
 - Upstream returns non-2xx/3xx -> preserve upstream status and allowed headers;
   do not rewrite it to 500.
@@ -422,8 +451,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   persists `sources`/`subtitles` whose decoded proxy refs point at absolute child
   playlist URLs.
 - Good: resolver-body create for a public Bilibili BV URL returns and persists a
-  `dash` Enmoku with proxied `sources`, Bilibili media headers, and
-  `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`.
+  `dash` Enmoku whose primary URL and quality `sources` are `/eisha/dash/:token`
+  manifests containing proxied video/audio media URLs, Bilibili media headers,
+  and `danmaku: { type: "fetch", ref: "bilibili:<cid>" }`.
 - Base: direct `.mp4` input through `resolveUrlWithMetadata` does not fetch
   upstream and returns the same proxy result as `resolveUrl`.
 - Good: a proxied m3u8 manifest containing `seg-1.ts` and
@@ -440,6 +470,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Bad: `housou` parses HLS manifests itself or stores raw child playlist URLs
   without eisha proxy tokens; this leaks media-plane behavior into the control
   plane and bypasses header preservation.
+- Bad: kyoushitsu tries to pair Bilibili audio/video URLs itself. Platform media
+  composition belongs in eisha; the frontend should consume a normal DASH
+  manifest.
 - Bad: `housou` drops parser-produced `danmaku` when storing a resolved Enmoku;
   Bilibili metadata then looks present in the create response but disappears
   from `GET /bangumi` / `BANGUMI`.
@@ -464,8 +497,13 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     failures as `EISHA_UPSTREAM_ERROR`
   - Bilibili URL parser accepts common BV URL forms and rejects non-Bilibili
     URLs
-  - Bilibili parser maps fixture `view` + `playurl` JSON into proxied DASH
-    sources, media headers, and `danmaku` fetch ref
+  - DASH manifest token round-trip and generated MPD containing proxied
+    video/audio `BaseURL` entries
+  - Bilibili parser maps fixture `view` + `playurl` JSON into `/eisha/dash`
+    primary/source URLs, video/audio representations, media headers, and
+    `danmaku` fetch ref
+  - Bilibili parser filters non-AVC video variants and deduplicates playable
+    codec variants by quality id before building user-facing `sources[]`
   - `resolveUrlWithMetadata` dispatches Bilibili URLs to the platform parser
   - `Range` forwarding and allowed response header preservation
   - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
@@ -482,6 +520,8 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     route, then fetch that rewritten segment URL through the proxy.
   - fetch a proxied expired HLS child ref through the mounted route and assert it
     re-resolves to the refreshed segment.
+  - fetch `/eisha/dash/:token` through the mounted route and assert the MPD
+    includes `/eisha/proxy/` media URLs for video and audio.
   - resolver-body create from a local HLS manifest persists parser-produced
     `sources` and `subtitles` through create response and `GET /bangumi`.
   - resolver-body create from a fixture-backed Bilibili source URL persists
@@ -502,6 +542,20 @@ app.get("/eisha/proxy/:token", ({ params }) => fetch(decode(params.token).url))
 ```ts
 // eisha owns decode + proxy; housou only composes the route.
 export const app = new Elysia().use(eishaRoutes).use(bushitsuRoutes)
+```
+
+#### Wrong
+
+```ts
+// Frontend receives separate Bilibili m4s URLs and tries to pair them.
+const playable = `${videoUrl}#audio=${audioUrl}`
+```
+
+#### Correct
+
+```ts
+// eisha returns a normal DASH manifest URL; kyoushitsu only plays it.
+return { type: "dash", url: `${proxyBase}/eisha/dash/${encodeDashManifestRef(ref)}` }
 ```
 
 #### Wrong

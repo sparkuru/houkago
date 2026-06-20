@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import { Elysia } from "elysia"
-import { decodeProxyRef, encodeProxyRef } from "houkago-eisha"
+import { decodeProxyRef, encodeDashManifestRef, encodeProxyRef } from "houkago-eisha"
 import { app } from "../src/index"
 
 let base: string
@@ -115,4 +115,36 @@ test("eisha proxy route re-resolves expired HLS segment refs", async () => {
   expect(response.status).toBe(200)
   expect(response.headers.get("content-type")).toBe("video/mp2t")
   expect(await response.text()).toBe("fresh-segment")
+})
+
+test("eisha dash route serves generated MPD with proxied media URLs", async () => {
+  const token = encodeDashManifestRef({
+    duration: 120,
+    video: [
+      {
+        id: "32",
+        url: `${upstreamBase}/video.mp4`,
+        bandwidth: 155817,
+        codecs: "avc1.64001E",
+        width: 512,
+        height: 384,
+      },
+    ],
+    audio: [
+      {
+        id: "30280",
+        url: `${upstreamBase}/audio.m4s`,
+        bandwidth: 132000,
+        codecs: "mp4a.40.2",
+      },
+    ],
+  })
+  const response = await fetch(`${base}/eisha/dash/${token}`)
+  const body = await response.text()
+
+  expect(response.status).toBe(200)
+  expect(response.headers.get("content-type")).toBe("application/dash+xml; charset=utf-8")
+  expect(body).toContain('contentType="video"')
+  expect(body).toContain('contentType="audio"')
+  expect(body).toContain(`${base}/eisha/proxy/`)
 })

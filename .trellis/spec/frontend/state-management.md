@@ -69,6 +69,11 @@ Anything that is purely one component's view concern stays a local `ref`.
   field, `sources` selection stays local component state and only changes the
   URL passed into the local `EnmokuPlayer`; it must not mutate `Enmoku`, write to
   Pinia, or emit `JOUEI`/`SHINKOU` by itself.
+- `Enmoku.sources` may contain legacy duplicate codec variants for the same
+  quality. The source-choice view model should collapse labels that differ only
+  by trailing codec (`avc1`/`hev1`/`hvc1`/etc.) and keep the first source index.
+  It should hide explicit non-AVC video choices such as `hvc1`/`hev1`, so old
+  queued Bilibili items do not expose audio-only codec variants.
 - **Host-authority on the client:** only the 部長's player events emit `SHINKOU`.
   When applying a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo
   for ~200ms so the resulting local player event is not re-broadcast (design §5).

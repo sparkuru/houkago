@@ -387,7 +387,7 @@ onBeforeUnmount(() => {
           <div class="player-wrap">
             <EnmokuPlayer
               ref="playerRef"
-              :key="`${current.id}:${currentPlayableUrl}`"
+              :key="current.id"
               :url="currentPlayableUrl"
               :type="current.type"
               :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"

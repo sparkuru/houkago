@@ -1,6 +1,12 @@
 import type { Enmoku } from "houkago-kousoku"
+import {
+  type DashManifestRef,
+  type DashRepresentation,
+  type DashSegmentBase,
+  encodeDashManifestRef,
+} from "../dash"
 import { EishaUpstreamError } from "../errors"
-import { type FetchLike, type ProxyRef, assertHttpUrl, encodeProxyRef } from "../proxy"
+import { type FetchLike, assertHttpUrl } from "../proxy"
 
 export type BilibiliResolveOptions = {
   proxyBase: string
@@ -18,6 +24,7 @@ export type BilibiliResolvedSource = {
 type BilibiliViewData = {
   title: string
   bvid: string
+  duration?: number
   cid?: number
   pages?: { cid: number; page?: number; part?: string }[]
 }
@@ -29,12 +36,22 @@ type BilibiliDashVideo = {
   height?: number
   codecs?: string
   bandwidth?: number
+  segmentBase?: DashSegmentBase
+}
+
+type BilibiliDashAudio = {
+  id: number
+  baseUrl: string
+  codecs?: string
+  bandwidth?: number
+  segmentBase?: DashSegmentBase
 }
 
 type BilibiliPlayData = {
   quality?: number
   dash?: {
     video?: BilibiliDashVideo[]
+    audio?: BilibiliDashAudio[]
   }
   supportFormats?: { quality: number; displayDesc?: string; newDescription?: string }[]
 }
@@ -90,16 +107,19 @@ export async function resolveBilibiliUrl(
   )
 
   const videos = play.dash?.video ?? []
-  const primary = videos[0]
+  const audios = play.dash?.audio ?? []
+  const playableVideos = preferredVideos(videos)
+  const primary = playableVideos[0]
   if (!primary) throw new EishaUpstreamError("bilibili playurl has no playable video")
+  if (!audios[0]) throw new EishaUpstreamError("bilibili playurl has no playable audio")
 
   const headers = { ...BILIBILI_MEDIA_HEADERS }
   return {
     title: view.title,
     type: "dash",
-    url: proxyBilibiliUrl(primary.baseUrl, options, headers),
+    url: bilibiliDashManifestUrl(playableVideos, audios, view, options, headers),
     headers,
-    sources: sourcesFromVideos(videos, play, options, headers),
+    sources: sourcesFromVideos(playableVideos, audios, view, play, options, headers),
     danmaku: { type: "fetch", ref: `bilibili:${cid}` },
   }
 }
@@ -156,6 +176,9 @@ function parseViewData(value: unknown): BilibiliViewData | undefined {
   if (typeof data.title !== "string" || typeof data.bvid !== "string") return undefined
 
   const view: BilibiliViewData = { title: data.title, bvid: data.bvid }
+  if (typeof (data as { duration?: unknown }).duration === "number") {
+    view.duration = (data as { duration: number }).duration
+  }
   if (typeof data.cid === "number") view.cid = data.cid
   if (Array.isArray(data.pages)) {
     view.pages = data.pages
@@ -189,11 +212,19 @@ function parsePlayData(value: unknown): BilibiliPlayData | undefined {
   const play: BilibiliPlayData = {}
   if (typeof data.quality === "number") play.quality = data.quality
   if (data.dash && typeof data.dash === "object") {
-    const dash = data.dash as { video?: unknown }
+    const dash = data.dash as { video?: unknown; audio?: unknown }
     if (Array.isArray(dash.video)) {
       play.dash = {
         video: dash.video
           .map((item) => parseDashVideo(item))
+          .filter((item): item is NonNullable<typeof item> => item !== undefined),
+      }
+    }
+    if (Array.isArray(dash.audio)) {
+      play.dash = {
+        ...play.dash,
+        audio: dash.audio
+          .map((item) => parseDashAudio(item))
           .filter((item): item is NonNullable<typeof item> => item !== undefined),
       }
     }
@@ -219,6 +250,7 @@ function parseDashVideo(value: unknown): BilibiliDashVideo | undefined {
     height?: unknown
     codecs?: unknown
     bandwidth?: unknown
+    segment_base?: unknown
   }
   const baseUrl = typeof video.baseUrl === "string" ? video.baseUrl : video.base_url
   if (typeof video.id !== "number" || typeof baseUrl !== "string") return undefined
@@ -229,7 +261,47 @@ function parseDashVideo(value: unknown): BilibiliDashVideo | undefined {
     height: typeof video.height === "number" ? video.height : undefined,
     codecs: typeof video.codecs === "string" ? video.codecs : undefined,
     bandwidth: typeof video.bandwidth === "number" ? video.bandwidth : undefined,
+    segmentBase: parseSegmentBase(video.segment_base),
   }
+}
+
+function parseDashAudio(value: unknown): BilibiliDashAudio | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const audio = value as {
+    id?: unknown
+    baseUrl?: unknown
+    base_url?: unknown
+    codecs?: unknown
+    bandwidth?: unknown
+    segment_base?: unknown
+  }
+  const baseUrl = typeof audio.baseUrl === "string" ? audio.baseUrl : audio.base_url
+  if (typeof audio.id !== "number" || typeof baseUrl !== "string") return undefined
+  return {
+    id: audio.id,
+    baseUrl,
+    codecs: typeof audio.codecs === "string" ? audio.codecs : undefined,
+    bandwidth: typeof audio.bandwidth === "number" ? audio.bandwidth : undefined,
+    segmentBase: parseSegmentBase(audio.segment_base),
+  }
+}
+
+function parseSegmentBase(value: unknown): DashSegmentBase | undefined {
+  if (!value || typeof value !== "object") return undefined
+  const segmentBase = value as {
+    initialization?: unknown
+    index_range?: unknown
+    indexRange?: unknown
+  }
+  const initialization =
+    typeof segmentBase.initialization === "string" ? segmentBase.initialization : undefined
+  const indexRange =
+    typeof segmentBase.index_range === "string"
+      ? segmentBase.index_range
+      : typeof segmentBase.indexRange === "string"
+        ? segmentBase.indexRange
+        : undefined
+  return initialization || indexRange ? { initialization, indexRange } : undefined
 }
 
 function parseSupportFormat(
@@ -267,8 +339,23 @@ function selectCid(view: BilibiliViewData): number {
   return cid
 }
 
+function preferredVideos(videos: BilibiliDashVideo[]): BilibiliDashVideo[] {
+  const byQuality = new Map<number, BilibiliDashVideo>()
+  for (const video of videos.filter(isBrowserPlayableVideo)) {
+    if (!byQuality.has(video.id)) byQuality.set(video.id, video)
+  }
+  return [...byQuality.values()]
+}
+
+function isBrowserPlayableVideo(video: BilibiliDashVideo): boolean {
+  const codec = video.codecs?.toLowerCase()
+  return codec === undefined || codec.startsWith("avc1")
+}
+
 function sourcesFromVideos(
   videos: BilibiliDashVideo[],
+  audios: BilibiliDashAudio[],
+  view: BilibiliViewData,
   play: BilibiliPlayData,
   options: BilibiliResolveOptions,
   headers: Record<string, string>,
@@ -276,7 +363,7 @@ function sourcesFromVideos(
   if (videos.length === 0) return undefined
   return videos.map((video, index) => ({
     name: sourceName(video, play, index + 1),
-    url: proxyBilibiliUrl(video.baseUrl, options, headers),
+    url: bilibiliDashManifestUrl([video], audios, view, options, headers),
   }))
 }
 
@@ -292,13 +379,43 @@ function sourceName(video: BilibiliDashVideo, play: BilibiliPlayData, index: num
   )
 }
 
-function proxyBilibiliUrl(
-  rawUrl: string,
+function bilibiliDashManifestUrl(
+  videos: BilibiliDashVideo[],
+  audios: BilibiliDashAudio[],
+  view: BilibiliViewData,
   options: BilibiliResolveOptions,
   headers: Record<string, string>,
 ): string {
-  const upstream = assertHttpUrl(rawUrl)
   const proxyBase = options.proxyBase.replace(/\/+$/, "")
-  const ref: ProxyRef = { url: upstream.toString(), headers }
-  return `${proxyBase}/eisha/proxy/${encodeProxyRef(ref)}`
+  const ref: DashManifestRef = {
+    duration: view.duration,
+    headers,
+    video: videos.map(dashVideoRepresentation),
+    audio: audios.map(dashAudioRepresentation),
+  }
+  return `${proxyBase}/eisha/dash/${encodeDashManifestRef(ref)}`
+}
+
+function dashVideoRepresentation(video: BilibiliDashVideo): DashRepresentation {
+  assertHttpUrl(video.baseUrl)
+  return {
+    id: String(video.id),
+    url: video.baseUrl,
+    bandwidth: video.bandwidth,
+    codecs: video.codecs,
+    width: video.width,
+    height: video.height,
+    segmentBase: video.segmentBase,
+  }
+}
+
+function dashAudioRepresentation(audio: BilibiliDashAudio): DashRepresentation {
+  assertHttpUrl(audio.baseUrl)
+  return {
+    id: String(audio.id),
+    url: audio.baseUrl,
+    bandwidth: audio.bandwidth,
+    codecs: audio.codecs,
+    segmentBase: audio.segmentBase,
+  }
 }

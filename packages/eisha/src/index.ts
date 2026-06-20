@@ -1,4 +1,5 @@
 export * from "./errors"
+export * from "./dash"
 export * from "./parsers/bilibili"
 export * from "./parsers/hls"
 export * from "./proxy"

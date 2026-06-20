@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { decodeDashManifestRef } from "../src/dash"
 import { EishaBadRequest, EishaUpstreamError } from "../src/errors"
 import { decodeProxyRef } from "../src/proxy"
 import { resolveUrl, resolveUrlWithMetadata } from "../src/resolver"
@@ -102,6 +103,13 @@ test("dispatches Bilibili URLs to the platform parser", async () => {
                 codecs: "avc1.64001E",
               },
             ],
+            audio: [
+              {
+                id: 30280,
+                baseUrl: "https://upos.example.test/audio.m4s",
+                codecs: "mp4a.40.2",
+              },
+            ],
           },
         },
       })
@@ -111,9 +119,9 @@ test("dispatches Bilibili URLs to the platform parser", async () => {
   expect(resolved.title).toBe("Bilibili title")
   expect(resolved.type).toBe("dash")
   expect(resolved.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
-  expect(decodeProxyRef(resolved.url.split("/eisha/proxy/")[1] ?? "").url).toBe(
-    "https://upos.example.test/video.m4s",
-  )
+  const dashRef = decodeDashManifestRef(resolved.url.split("/eisha/dash/")[1] ?? "")
+  expect(dashRef.video[0]?.url).toBe("https://upos.example.test/video.m4s")
+  expect(dashRef.audio[0]?.url).toBe("https://upos.example.test/audio.m4s")
 })
 
 test("wraps HLS manifest fetch failures", async () => {

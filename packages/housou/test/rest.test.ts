@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import { Elysia } from "elysia"
-import { decodeProxyRef } from "houkago-eisha"
+import { decodeDashManifestRef, decodeProxyRef } from "houkago-eisha"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
 
@@ -236,6 +236,16 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
               width: 512,
               height: 384,
               codecs: "avc1.64001E",
+              segment_base: { initialization: "0-1023", index_range: "1024-2048" },
+            },
+          ],
+          audio: [
+            {
+              id: 30280,
+              baseUrl: "https://upos.example.test/audio-192.m4s?sig=1",
+              codecs: "mp4a.40.2",
+              bandwidth: 132000,
+              segment_base: { initialization: "0-919", index_range: "920-1100" },
             },
           ],
         },
@@ -257,13 +267,13 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
     expect(enmoku.type).toBe("dash")
     expect(enmoku.sources?.[0]?.name).toBe("480P · 512x384 · avc1")
     expect(enmoku.danmaku).toEqual({ type: "fetch", ref: "bilibili:62131" })
-    expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
-      url: "https://upos.example.test/video-480.m4s?sig=1",
-      headers: {
-        referer: "https://www.bilibili.com/",
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
-      },
+    const dashRef = decodeDashManifestRef(enmoku.url.split("/eisha/dash/")[1] ?? "")
+    expect(dashRef.video[0]?.url).toBe("https://upos.example.test/video-480.m4s?sig=1")
+    expect(dashRef.audio[0]?.url).toBe("https://upos.example.test/audio-192.m4s?sig=1")
+    expect(dashRef.headers).toEqual({
+      referer: "https://www.bilibili.com/",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
     })
 
     const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())

@@ -18,6 +18,7 @@ export type EnmokuMetadataSummary = {
 }
 
 export function enmokuSourceChoices(enmoku: Enmoku, primaryLabel: string): EnmokuSourceChoice[] {
+  const seen = new Set<string>()
   return [
     {
       value: PRIMARY_SOURCE_VALUE,
@@ -25,12 +26,21 @@ export function enmokuSourceChoices(enmoku: Enmoku, primaryLabel: string): Enmok
       url: enmoku.url,
       sourceIndex: null,
     },
-    ...(enmoku.sources ?? []).map((source, index) => ({
-      value: sourceValue(index),
-      label: source.name.trim() || `Source ${index + 1}`,
-      url: source.url,
-      sourceIndex: index,
-    })),
+    ...(enmoku.sources ?? []).flatMap((source, index) => {
+      const label = source.name.trim() || `Source ${index + 1}`
+      if (!isBrowserPlayableSourceChoice(label)) return []
+      const key = sourceChoiceKey(label)
+      if (seen.has(key)) return []
+      seen.add(key)
+      return [
+        {
+          value: sourceValue(index),
+          label,
+          url: source.url,
+          sourceIndex: index,
+        },
+      ]
+    }),
   ]
 }
 
@@ -60,4 +70,16 @@ export function sourceIndexFromValue(value: string): number | null {
 
   const index = Number(value.slice(SOURCE_VALUE_PREFIX.length))
   return Number.isInteger(index) && index >= 0 ? index : null
+}
+
+function sourceChoiceKey(label: string): string {
+  return label
+    .replace(/\s+·\s+(avc1|av01|hev1|hvc1|vp09)(?:\.[\w.-]+)?$/i, "")
+    .trim()
+    .toLowerCase()
+}
+
+function isBrowserPlayableSourceChoice(label: string): boolean {
+  const codec = label.match(/\s+·\s+([a-z0-9]+)(?:\.[\w.-]+)?$/i)?.[1]?.toLowerCase()
+  return codec === undefined || codec === "avc1"
 }

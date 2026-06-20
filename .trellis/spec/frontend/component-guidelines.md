@@ -45,10 +45,12 @@ const bushitsu = useBushitsuStore()
 
 - One component per file. Keep templates declarative; push branching logic into
   `computed`.
-- The ArtPlayer / danmaku engine are imperative third-party objects — wrap each
-  in a single dedicated component (`player/`, `danmaku/`) that owns the instance
-  lifecycle (`onMounted` create, `onUnmounted` destroy). Do not scatter player
-  `.seek()` / engine `.emit()` calls across many components.
+- The ArtPlayer / HLS / DASH / danmaku engine instances are imperative
+  third-party objects — wrap each player-facing lifecycle in the dedicated
+  `player/EnmokuPlayer.vue` wrapper and each danmaku lifecycle in `danmaku/`.
+  `EnmokuPlayer` owns `hls.js` and `dashjs` creation/destruction through
+  ArtPlayer `customType`; do not scatter player `.seek()`, HLS, DASH, or engine
+  `.emit()` calls across many components.
 - ArtPlayer controls/settings may host room UI entry points (quality, local
   file-danmaku controls, cinema layout), but the player component must emit typed
   events back to the parent view. Keep ownership of room UI state in
@@ -82,10 +84,22 @@ const bushitsu = useBushitsuStore()
   ArtPlayer `timeupdate`/pause/play event; freshly-selected cues should appear at
   the current playback position without requiring user playback interaction.
 - Keep player controls ordered by interaction frequency on the right side:
-  built-in settings, danmaku toggle, danmaku settings, cinema layout, web
-  fullscreen, native fullscreen. Quality/source selection belongs in the built-in
-  settings menu; danmaku settings belong behind the separate danmaku settings
-  control, not inside the generic settings menu.
+  source/quality selection, danmaku toggle, danmaku settings, cinema layout, web
+  fullscreen, native fullscreen. Quality/source selection belongs as a visible
+  bottom control immediately left of the danmaku toggle so it remains reachable
+  in normal, cinema, web fullscreen, and native fullscreen modes; danmaku
+  settings belong behind the separate danmaku settings control, not inside a
+  generic settings menu.
+- Source/quality switching must not remount `EnmokuPlayer`. Keep the Vue `key`
+  scoped to the current `Enmoku.id`, watch the URL prop inside the player, and
+  call ArtPlayer `switchQuality(url)` so current time and fullscreen/web
+  fullscreen state survive the change. A key that includes the selected source
+  URL resets playback to `0`, exits native fullscreen, and can leave ArtPlayer's
+  fullscreen controls stuck after web-fullscreen selector updates.
+- ArtPlayer control selectors must return display HTML from `onSelect`. The
+  control implementation writes the returned value into `.art-selector-value`;
+  returning `undefined` makes the visible control label literally become
+  `undefined`, especially obvious in web fullscreen.
 
 ---
 

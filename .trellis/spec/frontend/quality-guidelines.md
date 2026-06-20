@@ -45,7 +45,8 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
 - **Polling REST for realtime data** the WS already pushes (playback, presence,
   chat, danmaku).
 - **Imperative third-party calls scattered across components** — ArtPlayer and
-  the Danmaku engine are each owned by one wrapper component/composable.
+  its HLS/DASH playback engines and the Danmaku engine are each owned by one
+  wrapper component/composable.
 - **Self-rolling the final dense danmaku renderer.** Use `weizhenye/Danmaku`
   when implementing dense flying danmaku; do not reinvent it or reuse
   synctv-web's `artplayer-plugin-danmuku` (design §8). The existing Vue/CSS
@@ -65,8 +66,10 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   remote `SHINKOU` with `tsuijuuChuu`（追従中）echo suppression.
 - **Derive projected playback time on read** from last `Shinkou` +
   `shinkouServerTime`; don't store a ticking value (state-management.md).
-- **Contain third-party lifecycles:** create ArtPlayer / future Danmaku engine
-  in `onMounted`, destroy in `onUnmounted`.
+- **Contain third-party lifecycles:** create ArtPlayer and its `hls.js`/`dashjs`
+  playback engines inside `EnmokuPlayer` mount/custom-type paths and destroy
+  them through ArtPlayer/onUnmounted cleanup; create future Danmaku engines in
+  their own wrapper.
 - **Room/cinema pages are fixed-viewport layouts:** reset `html`, `body`, and
   `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`; then put
   scrolling only inside intentional panes such as chat logs and 番組表 lists.
@@ -100,6 +103,8 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
 - [ ] Only the host emits `SHINKOU`; remote apply uses echo suppression.
 - [ ] Projected time derived, not stored as a ticking value.
 - [ ] ArtPlayer / Danmaku instances created and destroyed in lifecycle hooks.
+- [ ] HLS/DASH engine instances are created only by `EnmokuPlayer` custom types
+      and are destroyed with the ArtPlayer instance.
 - [ ] P1 Vue/CSS danmaku overlays keep source data engine-agnostic; dense/final
       flying danmaku work uses `weizhenye/Danmaku` with the three-source
       priority chain.

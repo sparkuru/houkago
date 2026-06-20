@@ -16,6 +16,8 @@ const enmoku: Enmoku = {
   url: "https://housou.test/eisha/proxy/master",
   sources: [
     { name: "1080p", url: "https://housou.test/eisha/proxy/1080" },
+    { name: "1080p · hvc1", url: "https://housou.test/eisha/proxy/1080-hvc1" },
+    { name: "360p · hvc1", url: "https://housou.test/eisha/proxy/360-hvc1" },
     { name: "", url: "https://housou.test/eisha/proxy/fallback" },
   ],
   subtitles: {
@@ -30,12 +32,17 @@ test("builds source choices with primary and parsed source URLs", () => {
   expect(enmokuSourceChoices(enmoku, "自动").map((choice) => choice.label)).toEqual([
     "自动",
     "1080p",
-    "Source 2",
+    "Source 4",
   ])
   expect(enmokuSourceChoices(enmoku, "自动").map((choice) => choice.url)).toEqual([
     "https://housou.test/eisha/proxy/master",
     "https://housou.test/eisha/proxy/1080",
     "https://housou.test/eisha/proxy/fallback",
+  ])
+  expect(enmokuSourceChoices(enmoku, "自动").map((choice) => choice.sourceIndex)).toEqual([
+    null,
+    0,
+    3,
   ])
 })
 
@@ -47,7 +54,7 @@ test("resolves playable URL from selected source index with fallback", () => {
 
 test("summarizes optional metadata without inventing empty defaults", () => {
   expect(enmokuMetadataSummary(enmoku)).toEqual({
-    sourceCount: 2,
+    sourceCount: 4,
     subtitleNames: ["English", "Japanese"],
     live: false,
     hasMetadata: true,
