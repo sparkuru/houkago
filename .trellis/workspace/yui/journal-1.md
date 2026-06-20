@@ -1065,3 +1065,36 @@ Added houkago-eisha resolver and stable proxy skeleton, mounted eisha proxy rout
 ### Next Steps
 
 - None - task complete
+
+
+## Session 33: P2 eisha m3u8 manifest rewrite
+
+**Date**: 2026-06-20
+**Task**: P2 eisha m3u8 manifest rewrite
+**Branch**: `k-on`
+
+### Summary
+
+Implemented HLS m3u8 manifest rewriting in houkago-eisha: URI lines and URI attributes now resolve through stable proxy refs while media Range passthrough remains unchanged. Added eisha unit coverage, housou route e2e coverage, updated design backlog and backend spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `07eea48` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 32
+- **Total Sessions**: 33
 - **Last Active**: 2026-06-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1067 | Active |
+| `journal-1.md` | ~1100 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 33 | 2026-06-20 | P2 eisha m3u8 manifest rewrite | `07eea48` | `k-on` |
 | 32 | 2026-06-20 | P2 eisha resolver proxy skeleton | `f30312b` | `k-on` |
 | 31 | 2026-06-19 | Fix file danmaku pause and dev link | `3f4db17` | `k-on` |
 | 30 | 2026-06-19 | P1 file danmaku kokuban | `fa59004`, `fcf6c94` | `k-on` |
