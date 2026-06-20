@@ -161,11 +161,9 @@ async function playManual() {
   if (!url || !bushitsu.canPlaylist || manualSubmitting.value) return
   manualSubmitting.value = true
   try {
-    const isHls = url.endsWith(".m3u8")
     const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
       title: t("manualEnmokuTitle"),
-      type: isHls ? "hls" : "direct",
-      url,
+      sourceUrl: url,
       addedBy: bushitsu.senderId,
     })
     if (enmoku) sendJouei(enmoku.id)

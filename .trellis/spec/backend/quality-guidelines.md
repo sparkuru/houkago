@@ -177,6 +177,8 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 ### 2. Signatures
 
 - REST create: `POST /bushitsu/:id/enmoku` -> `Enmoku`
+  - legacy body: `{ title: string, type: Enmoku["type"], url: string, addedBy: string }`
+  - resolver body: `{ sourceUrl: string, title?: string, addedBy: string }`
 - REST delete: `DELETE /bushitsu/:id/enmoku/:enmokuId` -> `{ ok: true }`
 - WS queue snapshot: `BANGUMI { enmoku: Enmoku[] }`
 - WS source switch: `JOUEI { enmokuId: string }`, followed by
@@ -186,6 +188,12 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 
 - REST create/delete must call domain/db first, then broadcast
   `BANGUMI` with the full latest `fetchBangumi(bushitsuId)` result.
+- Resolver-body create must call `houkago-eisha.resolveUrl` server-side and
+  store the returned stable proxy URL in the queued `Enmoku`. The frontend dev
+  direct-link form submits `sourceUrl`; it must not infer HLS/DASH type or build
+  proxy tokens itself.
+- Legacy create remains supported for internal tests and callers that already
+  have a fully resolved `Enmoku` source.
 - From HTTP handlers, `server.publish(topic, ...)` must send a serialized JSON
   string. Passing a raw object produces `"[object Object]"` for websocket clients.
 - `JOUEI` resets authoritative transport to `{ isPlaying: false, currentTime: 0,
@@ -197,6 +205,9 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 
 - Delete missing `enmokuId` in an existing room -> `ENMOKU_NOT_FOUND` / HTTP 404.
 - Delete in a missing room -> `BUSHITSU_NOT_FOUND` / HTTP 404.
+- Resolver-body create with non-http(s) `sourceUrl` -> `EISHA_BAD_REQUEST` /
+  HTTP 400.
+- Malformed create body -> validation error / HTTP 422.
 - Unauthorized `JOUEI` -> `FORBIDDEN` / `KEIHOU`; do not update authority state
   or broadcast `JOUEI`/`GENJOU`.
 
@@ -204,16 +215,27 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 
 - Good: guest with playlist permission deletes an item; host and all guests
   receive the same `BANGUMI` snapshot without refreshing.
+- Good: frontend dev form posts `{ sourceUrl }`, server returns an `Enmoku` whose
+  `url` is `/eisha/proxy/:token`, and the same full `BANGUMI` snapshot reaches
+  connected clients.
 - Base: adding a manual source still returns the created `Enmoku`, broadcasts the
   updated queue, and may then `JOUEI` it.
+- Base: legacy `{ title, type, url }` create still works for tests and already
+  resolved sources.
 - Bad: source switch preserves old `Shinkou` (`isPlaying=true`, old timestamp),
   causing followers to autoplay/seek in the new source while the driver is
   paused.
+- Bad: frontend guesses `.m3u8` and submits the raw upstream URL directly,
+  bypassing eisha's proxy and m3u8 rewrite.
 
 ### 6. Tests Required
 
 - REST/e2e: create/delete updates DB and delete broadcasts `BANGUMI` to active
   host + guest sockets.
+- REST/e2e: resolver-body create returns a stable eisha proxy URL and decodes to
+  the original `sourceUrl`.
+- REST/e2e: resolver-body create broadcasts the full `BANGUMI` snapshot.
+- Frontend typecheck: dev direct-link form posts `sourceUrl` via the Eden client.
 - Sync unit: `ShinkouSeigyo.jouei` resets transport to paused start.
 - WS/e2e: after prior playing `SHINKOU`, `JOUEI` broadcasts a `GENJOU` whose
   `shinkou` is paused at `0`.
@@ -231,6 +253,20 @@ server?.publish(roomTopic(id), serverMsg("BANGUMI", { enmoku }))
 ```ts
 const msg = serverMsg("BANGUMI", { enmoku })
 server?.publish(roomTopic(id), JSON.stringify(msg))
+```
+
+#### Wrong
+
+```ts
+// Frontend bypasses resolver and stores upstream media URL directly.
+await housou.bushitsu({ id }).enmoku.post({ title, type: "hls", url: sourceUrl, addedBy })
+```
+
+#### Correct
+
+```ts
+// Housou owns queue mutation; eisha owns source resolution.
+await housou.bushitsu({ id }).enmoku.post({ title, sourceUrl, addedBy })
 ```
 
 #### Wrong

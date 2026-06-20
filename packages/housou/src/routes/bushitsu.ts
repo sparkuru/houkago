@@ -1,4 +1,6 @@
 import { Elysia, t } from "elysia"
+import { resolveUrl } from "houkago-eisha"
+import type { Enmoku } from "houkago-kousoku"
 import { EnmokuTypeSchema } from "houkago-kousoku"
 import {
   addEnmoku,
@@ -12,6 +14,32 @@ import { roomTopic, serverMsg } from "../ws/housou"
 // 部室 REST: thin handlers — validate (TypeBox), delegate to domain. No SQL or
 // business logic inline (directory-structure layer rule).
 
+const DirectEnmokuBody = t.Object({
+  title: t.String(),
+  type: EnmokuTypeSchema,
+  url: t.String(),
+  addedBy: t.String(),
+})
+
+const ResolveEnmokuBody = t.Object({
+  sourceUrl: t.String(),
+  title: t.Optional(t.String()),
+  addedBy: t.String(),
+})
+
+type DirectEnmokuInput = {
+  title: string
+  type: Enmoku["type"]
+  url: string
+  addedBy: string
+}
+
+type ResolveEnmokuInput = {
+  sourceUrl: string
+  title?: string
+  addedBy: string
+}
+
 export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   // 部室を作る
   .post("", ({ body }) => createBushitsu(body.name, body.buchouId), {
@@ -21,33 +49,46 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   .get("/:id", ({ params }) => fetchBushitsu(params.id))
   // 番組表：list a room's enmoku
   .get("/:id/bangumi", ({ params }) => fetchBangumi(params.id))
-  // 演目を投稿する：add a direct-link enmoku
+  // 演目を投稿する：add a legacy direct source or resolve a dev source URL.
   .post(
     "/:id/enmoku",
-    ({ params, body, server }) => {
-      const enmoku = addEnmoku(params.id, {
-        title: body.title,
-        type: body.type,
-        url: body.url,
-        addedBy: body.addedBy,
-      })
-      const bangumi = serverMsg("BANGUMI", { enmoku: fetchBangumi(params.id) })
-      server?.publish(roomTopic(params.id), JSON.stringify(bangumi))
+    ({ params, body, request, server }) => {
+      const enmoku = createEnmoku(params.id, body, new URL(request.url).origin)
+      broadcastBangumi(params.id, server)
       return enmoku
     },
     {
-      body: t.Object({
-        title: t.String(),
-        type: EnmokuTypeSchema,
-        url: t.String(),
-        addedBy: t.String(),
-      }),
+      body: t.Union([DirectEnmokuBody, ResolveEnmokuBody]),
     },
   )
   // 演目を消す：delete a queued enmoku from this room.
   .delete("/:id/enmoku/:enmokuId", ({ params, server }) => {
     const result = removeEnmoku(params.id, params.enmokuId)
-    const bangumi = serverMsg("BANGUMI", { enmoku: fetchBangumi(params.id) })
-    server?.publish(roomTopic(params.id), JSON.stringify(bangumi))
+    broadcastBangumi(params.id, server)
     return result
   })
+
+function createEnmoku(
+  bushitsuId: string,
+  input: DirectEnmokuInput | ResolveEnmokuInput,
+  proxyBase: string,
+): Enmoku {
+  if ("sourceUrl" in input) {
+    const resolved = resolveUrl({ title: input.title, url: input.sourceUrl }, { proxyBase })
+    return addEnmoku(bushitsuId, {
+      title: resolved.title,
+      type: resolved.type,
+      url: resolved.url,
+      addedBy: input.addedBy,
+    })
+  }
+  return addEnmoku(bushitsuId, input)
+}
+
+function broadcastBangumi(
+  bushitsuId: string,
+  server: { publish: (topic: string, message: string) => unknown } | null | undefined,
+): void {
+  const bangumi = serverMsg("BANGUMI", { enmoku: fetchBangumi(bushitsuId) })
+  server?.publish(roomTopic(bushitsuId), JSON.stringify(bangumi))
+}

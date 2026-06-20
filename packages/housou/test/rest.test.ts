@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
+import { decodeProxyRef } from "houkago-eisha"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
 
@@ -67,6 +68,60 @@ test("add enmoku and list bangumi", async () => {
   const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
   expect(Array.isArray(bangumi)).toBe(true)
   expect(bangumi[0].title).toBe("test")
+})
+
+test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-resolve", buchouId: "u1" }),
+  }).then((r) => r.json())
+
+  const enmoku = await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      title: "resolved",
+      sourceUrl: "https://media.example.test/live/index.m3u8",
+      addedBy: "u1",
+    }),
+  }).then((r) => r.json())
+
+  expect(enmoku.title).toBe("resolved")
+  expect(enmoku.type).toBe("hls")
+  expect(enmoku.url.startsWith(`${base}/eisha/proxy/`)).toBe(true)
+  expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
+    url: "https://media.example.test/live/index.m3u8",
+  })
+})
+
+test("add resolved enmoku broadcasts the full BANGUMI snapshot", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-resolve-broadcast", buchouId: "host" }),
+  }).then((r) => r.json())
+
+  const host = await open(room.id, "host")
+  const guest = await open(room.id, "guest")
+  const hostBangumi = nextMatch(host, (m) => m.type === "BANGUMI")
+  const guestBangumi = nextMatch(guest, (m) => m.type === "BANGUMI")
+
+  const enmoku = await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      sourceUrl: "https://media.example.test/video.mp4",
+      addedBy: "host",
+    }),
+  }).then((r) => r.json())
+
+  const [hostMsg, guestMsg] = await Promise.all([hostBangumi, guestBangumi])
+  if (hostMsg.type === "BANGUMI") expect(hostMsg.payload.enmoku[0]?.id).toBe(enmoku.id)
+  if (guestMsg.type === "BANGUMI") expect(guestMsg.payload.enmoku[0]?.id).toBe(enmoku.id)
+
+  host.close()
+  guest.close()
 })
 
 test("delete enmoku removes it from bangumi", async () => {
