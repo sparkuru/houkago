@@ -1032,3 +1032,36 @@ Fixed file danmaku CSS animations to pause with playback, removed manual-link op
 ### Next Steps
 
 - None - task complete
+
+
+## Session 32: P2 eisha resolver proxy skeleton
+
+**Date**: 2026-06-20
+**Task**: P2 eisha resolver proxy skeleton
+**Branch**: `k-on`
+
+### Summary
+
+Added houkago-eisha resolver and stable proxy skeleton, mounted eisha proxy route through housou, verified Range/seek proxy behavior, and recorded backend/design contracts.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f30312b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
