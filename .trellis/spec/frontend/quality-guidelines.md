@@ -67,6 +67,11 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   `shinkouServerTime`; don't store a ticking value (state-management.md).
 - **Contain third-party lifecycles:** create ArtPlayer / future Danmaku engine
   in `onMounted`, destroy in `onUnmounted`.
+- **Room/cinema pages are fixed-viewport layouts:** reset `html`, `body`, and
+  `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`; then put
+  scrolling only inside intentional panes such as chat logs and 番組表 lists.
+  A `100vh` room shell plus the browser's default body margin creates a stray
+  page scrollbar and breaks chat/player bottom alignment.
 - **Keep danmaku source data engine-agnostic.** Local file parsing belongs in
   `houkago-kokuban`; kyoushitsu stores only source selection, user display
   preference, and timeline cues. The long-term priority chain is 本地文件 /

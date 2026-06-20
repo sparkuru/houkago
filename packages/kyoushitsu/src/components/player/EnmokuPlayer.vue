@@ -24,12 +24,39 @@ import { onBeforeUnmount, onMounted, ref, watch } from "vue"
 // follower 同期は通常通り。.control-lock 帯は純視覚提示 (pointer-events:none)。
 // 弹幕 toggle は pointer-events:auto の子で依然押せ、join-gate は $player の兄弟で
 // 影響を受けない。The server also rejects any SHINKOU (双保険・最終保険).
-const props = defineProps<{
-  url: string
-  type: Enmoku["type"]
-  showJoinGate?: boolean
-  controlLocked?: boolean
-}>()
+// cinemaMode: parent-owned room layout mode (video left + chat right). ArtPlayer's
+// own fullscreenWeb remains pure-player fullscreen; this control only emits a
+// local layout request to BushitsuView.
+type PlayerSourceChoice = {
+  value: string
+  label: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    url: string
+    type: Enmoku["type"]
+    showJoinGate?: boolean
+    controlLocked?: boolean
+    cinemaMode?: boolean
+    sourceChoices?: PlayerSourceChoice[]
+    selectedSourceValue?: string
+    fileDanmakuEnabled?: boolean
+    fileDanmakuName?: string
+    danmakuSize?: number
+    danmakuOpacity?: number
+    danmakuTimeOffset?: number
+  }>(),
+  {
+    sourceChoices: () => [],
+    selectedSourceValue: "primary",
+    fileDanmakuEnabled: false,
+    fileDanmakuName: "",
+    danmakuSize: 22,
+    danmakuOpacity: 1,
+    danmakuTimeOffset: 0,
+  },
+)
 
 // Local playback changes (host drives → useShinkou broadcasts); `ready` lets the
 // parent run catch-up once the instance exists. `join`：部員 pressed the gate —
@@ -38,7 +65,10 @@ const props = defineProps<{
 // 連鎖を避け、普通／网页全屏／原生全屏の三態で確実に響応させる（prd Bug1）。
 // `time` feeds local file-danmaku rendering only; it never becomes playback
 // authority and never emits SHINKOU. `playing` feeds local file-danmaku CSS
-// animation state only; playback authority still comes from SHINKOU.
+// animation state only; playback authority still comes from SHINKOU. `cinema`
+// sets parent-owned layout and is not playback/session authority. Source and
+// file-danmaku controls also emit to the parent because those are local room UI
+// state, not ArtPlayer playback authority.
 const emit = defineEmits<{
   shinkou: [Shinkou]
   ready: []
@@ -46,6 +76,13 @@ const emit = defineEmits<{
   control: [boolean]
   time: [number]
   playing: [boolean]
+  cinema: [enabled: boolean]
+  source: [value: string]
+  toggleFileDanmaku: []
+  chooseFileDanmaku: []
+  danmakuSize: [value: number]
+  danmakuOpacity: [value: number]
+  danmakuTimeOffset: [value: number]
 }>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
@@ -56,7 +93,9 @@ const container = ref<HTMLDivElement | null>(null)
 // ArtPlayer の主播放器容器（$player）：原生全屏の対象元素。父级用它做 Teleport
 // target，让弹幕 overlay 进入全屏子树。ArtPlayer 类型不全 → 局部窄接口收窄，禁 any。
 const playerEl = ref<HTMLElement | null>(null)
+const danmakuSettingsOpen = ref(false)
 let art: Artplayer | null = null
+let stopFullscreenClickPatch: (() => void) | null = null
 
 // 中途加入の追平 seek が早すぎて落ちる問題への対策（prd Bug2）: hls.js がまだ
 // メディアを読み込み切っておらず seek 不可（readyState 低 / video.seekable 空）の
@@ -66,6 +105,7 @@ let art: Artplayer | null = null
 let pendingSeek: number | null = null
 
 type ArtTemplate = { $player: HTMLElement }
+type ArtFullscreen = { fullscreenWeb: boolean; fullscreen: boolean }
 
 // art.video（HTMLVideoElement）への型安全な参照。ArtPlayer 型不全のため局部で収窄。
 function videoEl(): HTMLVideoElement | null {
@@ -147,6 +187,140 @@ function onJoin(): void {
   emit("join")
 }
 
+function updateDanmakuSize(value: string): void {
+  emit("danmakuSize", Number(value))
+}
+
+function updateDanmakuOpacity(value: string): void {
+  emit("danmakuOpacity", Number(value))
+}
+
+function updateDanmakuTimeOffset(value: string): void {
+  emit("danmakuTimeOffset", Number(value))
+}
+
+function sourceSetting() {
+  if (props.sourceChoices.length > 1) {
+    return {
+      name: "houkagoSource",
+      html: t("sourceSelectLabel"),
+      tooltip: props.sourceChoices.find((choice) => choice.value === props.selectedSourceValue)
+        ?.label,
+      selector: props.sourceChoices.map((choice) => ({
+        html: choice.label,
+        value: choice.value,
+        default: choice.value === props.selectedSourceValue,
+      })),
+      onSelect: (item: { value?: string | number }) => {
+        if (typeof item.value === "string") emit("source", item.value)
+      },
+    }
+  }
+  return null
+}
+
+function controlColor(active: boolean): string {
+  return active ? "var(--art-theme, #f00)" : "currentColor"
+}
+
+function exitPlayerFullscreen(): void {
+  if (!art) return
+  const player = art as unknown as Partial<ArtFullscreen>
+  if (player.fullscreenWeb) player.fullscreenWeb = false
+  if (player.fullscreen) player.fullscreen = false
+  if (typeof document !== "undefined" && document.fullscreenElement) {
+    void document.exitFullscreen().catch(() => {})
+  }
+}
+
+function enterNativeFullscreenFromWeb(): boolean {
+  if (!art) return false
+  const player = art as unknown as Partial<ArtFullscreen>
+  if (!player.fullscreenWeb) return false
+  player.fullscreenWeb = false
+  emit("cinema", false)
+  player.fullscreen = true
+  return true
+}
+
+function isNativeFullscreenControl(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+  return (
+    target.closest(".art-control-fullscreen, .art-fullscreen") !== null &&
+    target.closest(".art-control-fullscreenWeb, .art-fullscreenWeb") === null
+  )
+}
+
+function patchFullscreenClick(player: HTMLElement): () => void {
+  const onClick = (event: MouseEvent) => {
+    if (!isNativeFullscreenControl(event.target)) return
+    if (!enterNativeFullscreenFromWeb()) return
+    event.preventDefault()
+    event.stopImmediatePropagation()
+  }
+  player.addEventListener("click", onClick, true)
+  return () => player.removeEventListener("click", onClick, true)
+}
+
+function danmakuToggleControl() {
+  const color = controlColor(props.fileDanmakuEnabled)
+  return {
+    name: "houkagoDanmakuToggle",
+    position: "right",
+    index: 40,
+    tooltip: props.fileDanmakuEnabled ? t("danmakuOff") : t("danmakuOn"),
+    html: `<span class="houkago-danmaku-toggle" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;color:${color};font-size:14px;font-weight:700;line-height:1;" aria-hidden="true">弹</span>`,
+    click: () => emit("toggleFileDanmaku"),
+  }
+}
+
+function danmakuSettingsControl() {
+  return {
+    name: "houkagoDanmakuSettings",
+    position: "right",
+    index: 50,
+    tooltip: t("danmakuSettings"),
+    html: `
+      <span class="houkago-danmaku-settings-icon" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;color:currentColor;" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M5 7h14"></path>
+          <path d="M5 12h14"></path>
+          <path d="M5 17h14"></path>
+        </svg>
+      </span>
+    `,
+    click: () => {
+      danmakuSettingsOpen.value = !danmakuSettingsOpen.value
+    },
+  }
+}
+
+function cinemaControl() {
+  const color = controlColor(props.cinemaMode)
+  return {
+    name: "houkagoCinema",
+    position: "right",
+    index: 55,
+    tooltip: t("cinemaMode"),
+    html: `
+      <span class="houkago-cinema-icon" style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;color:${color};" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <rect x="3" y="5" width="12" height="14" rx="1"></rect>
+          <rect x="17" y="5" width="4" height="14" rx="1"></rect>
+        </svg>
+      </span>
+    `,
+    click: () => {
+      exitPlayerFullscreen()
+      emit("cinema", !props.cinemaMode)
+    },
+  }
+}
+
+function artSettings() {
+  return [sourceSetting()].filter((setting) => setting !== null)
+}
+
 // 放権（解锁: controlLocked true→false）時にコントロール条を能動的に再表示する。
 // 加锁中は CSS `.control-locked` が `.art-bottom`/`.art-mask` を display:none で消す
 // が、解锁で display:none が外れても ArtPlayer 自身の显隐状態機は「隠れ」のまま
@@ -176,11 +350,15 @@ onMounted(() => {
       ? { m3u8: (video, url, artInstance) => playM3u8(video, url, artInstance) }
       : undefined,
     autoSize: false,
+    fullscreenWeb: true,
     fullscreen: true,
     setting: true,
+    settings: artSettings(),
+    controls: [danmakuToggleControl(), danmakuSettingsControl(), cinemaControl()],
   })
 
   playerEl.value = (art.template as ArtTemplate).$player
+  stopFullscreenClickPatch = patchFullscreenClick(playerEl.value)
 
   // Local playback events → Shinkou snapshots. useShinkou gates these by 部長 +
   // 追従中 before broadcasting, so emitting unconditionally here is safe.
@@ -204,6 +382,16 @@ onMounted(() => {
   // 可視か を渡す（typed event, 禁 any）。emit で送ることで暴露 ref→親 computed の
   // 脆い連鎖を排し、原生全屏含む三態で確実に響応する。art.destroy で listener 自清。
   art.on("control", (state) => emit("control", state))
+  // ArtPlayer の网页全屏/原生全屏は播放器子树だけを表示するため、親级の聊天室
+  // layout とは排他的。进入全屏时は親の cinemaMode を false にして、图标状态と
+  // 実際に見えるレイアウトを一致させる。退出全屏では元の cinemaMode を復元しない
+  // （ユーザーが全屏を明示選択した時点で播放器全屏を優先する）。
+  art.on("fullscreenWeb", (state) => {
+    if (state) emit("cinema", false)
+  })
+  art.on("fullscreen", (state) => {
+    if (state) emit("cinema", false)
+  })
 
   // 追平 seek の取りこぼし回収（prd Bug2）: catchUp/heartbeat が seek 可能になる前に
   // 控えた pendingSeek を、メディアが seek 可能になった時点で一度だけ flush する。
@@ -216,7 +404,23 @@ onMounted(() => {
   art.on("video:canplay", flushPending)
 })
 
+watch(
+  () => props.fileDanmakuEnabled,
+  () => {
+    art?.controls.update(danmakuToggleControl())
+  },
+)
+
+watch(
+  () => props.cinemaMode,
+  () => {
+    art?.controls.update(cinemaControl())
+  },
+)
+
 onBeforeUnmount(() => {
+  stopFullscreenClickPatch?.()
+  stopFullscreenClickPatch = null
   art?.destroy()
   art = null
   playerEl.value = null
@@ -224,13 +428,68 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="enmoku-player" :class="{ 'control-locked': controlLocked }">
+  <div
+    class="enmoku-player"
+    :class="{
+      'control-locked': controlLocked,
+      'cinema-mode': cinemaMode,
+      'file-danmaku-enabled': fileDanmakuEnabled,
+    }"
+  >
     <!-- ArtPlayer 専属マウント点：第三方ライブラリが内部 DOM を全権管理する。
          Vue はこの div 内に一切ノードを置かない — そうしないと ArtPlayer の DOM
          再配置と Vue の v-if patch が同一容器を奪い合い、comment アンカーの
          insertBefore で parent=null クラッシュを起こす（prd 根因）。浮層は下の
          兄弟として .enmoku-player 直下に置き、Vue が完全掌握する。 -->
     <div ref="container" class="art-host"></div>
+    <Teleport v-if="danmakuSettingsOpen && playerEl" :to="playerEl">
+      <section class="danmaku-settings-panel">
+        <label>
+          <span>{{ t("danmakuSize") }}</span>
+          <input
+            type="range"
+            min="14"
+            max="36"
+            step="1"
+            :value="danmakuSize"
+            @input="updateDanmakuSize(($event.target as HTMLInputElement).value)"
+          />
+          <output>{{ danmakuSize }}</output>
+        </label>
+        <label>
+          <span>{{ t("danmakuOpacity") }}</span>
+          <input
+            type="range"
+            min="0.2"
+            max="1"
+            step="0.05"
+            :value="danmakuOpacity"
+            @input="updateDanmakuOpacity(($event.target as HTMLInputElement).value)"
+          />
+          <output>{{ Math.round(danmakuOpacity * 100) }}%</output>
+        </label>
+        <label>
+          <span>{{ t("danmakuTimeOffset") }}</span>
+          <input
+            type="range"
+            min="-5"
+            max="5"
+            step="0.1"
+            :value="danmakuTimeOffset"
+            @input="updateDanmakuTimeOffset(($event.target as HTMLInputElement).value)"
+          />
+          <output>{{ danmakuTimeOffset.toFixed(1) }}s</output>
+        </label>
+        <div class="danmaku-source">
+          <span>{{ t("danmakuSource") }}</span>
+          <button type="button" @click="emit('chooseFileDanmaku')">
+            {{ t("danmakuSourceFile") }}
+          </button>
+          <button type="button" disabled>{{ t("danmakuSourceRemote") }}</button>
+          <small>{{ fileDanmakuName || t("danmakuNone") }}</small>
+        </div>
+      </section>
+    </Teleport>
     <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。遮断は CSS で
          .art-bottom/.art-mask を display:none + .art-video を pointer-events:none に
          して行い、この帯は純視覚 (pointer-events:none)。状態は文字併記で色だけに
@@ -279,6 +538,112 @@ onBeforeUnmount(() => {
 .enmoku-player :deep(.art-video) {
   object-fit: contain;
 }
+.enmoku-player :deep(.art-control-houkagoDanmakuToggle),
+.enmoku-player :deep(.art-control-houkagoDanmakuSettings),
+.enmoku-player :deep(.art-control-houkagoCinema) {
+  color: #fff;
+}
+.enmoku-player.file-danmaku-enabled :deep(.art-control-houkagoDanmakuToggle),
+.enmoku-player.cinema-mode :deep(.art-control-houkagoCinema) {
+  color: var(--art-theme);
+}
+.enmoku-player :deep(.houkago-danmaku-toggle) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.enmoku-player :deep(.houkago-danmaku-settings-icon) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  width: 24px;
+  height: 24px;
+  padding: 5px 3px;
+}
+.enmoku-player :deep(.houkago-danmaku-settings-icon span) {
+  display: block;
+  height: 2px;
+  background: currentColor;
+  border-radius: 999px;
+}
+.enmoku-player :deep(.houkago-cinema-icon) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7px;
+  gap: 3px;
+  align-items: stretch;
+  width: 24px;
+  height: 24px;
+  padding: 5px 4px;
+}
+.enmoku-player :deep(.houkago-cinema-main),
+.enmoku-player :deep(.houkago-cinema-side) {
+  display: block;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+.enmoku-player :deep(.houkago-cinema-side) {
+  opacity: 0.72;
+}
+.danmaku-settings-panel {
+  position: absolute;
+  right: 86px;
+  bottom: 54px;
+  z-index: 80;
+  width: min(320px, calc(100% - 24px));
+  padding: 12px;
+  color: #eee;
+  background: rgba(20, 20, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+.danmaku-settings-panel label,
+.danmaku-source {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+  font-size: 12px;
+}
+.danmaku-settings-panel label + label,
+.danmaku-source {
+  margin-top: 8px;
+}
+.danmaku-settings-panel input[type="range"] {
+  width: 100%;
+}
+.danmaku-settings-panel output,
+.danmaku-source small {
+  color: #bbb;
+  text-align: right;
+}
+.danmaku-source {
+  grid-template-columns: 76px auto auto;
+}
+.danmaku-source button {
+  min-height: 28px;
+  padding: 3px 8px;
+  color: #eee;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+}
+.danmaku-source button:disabled {
+  color: #777;
+}
+.danmaku-source small {
+  grid-column: 2 / 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* 再生制御ロック：ArtPlayer のコントロール条と中央再生ボタンを display:none で
    消し、video 本体は pointer-events:none で点击を殺す。display:none は控件自身の
    可点性に覆されない（前回 .art-video-player の pointer-events:none では控件が勝ち
@@ -315,7 +680,7 @@ onBeforeUnmount(() => {
 }
 .join-gate {
   position: absolute;
-  inset: 0 0 60px 0;
+  inset: 0;
   z-index: 10;
   display: flex;
   align-items: center;

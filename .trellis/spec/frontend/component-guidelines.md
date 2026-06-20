@@ -49,6 +49,43 @@ const bushitsu = useBushitsuStore()
   in a single dedicated component (`player/`, `danmaku/`) that owns the instance
   lifecycle (`onMounted` create, `onUnmounted` destroy). Do not scatter player
   `.seek()` / engine `.emit()` calls across many components.
+- ArtPlayer controls/settings may host room UI entry points (quality, local
+  file-danmaku controls, cinema layout), but the player component must emit typed
+  events back to the parent view. Keep ownership of room UI state in
+  `BushitsuView` (or the relevant store for server truth); do not let ArtPlayer
+  become the source of truth for source selection, file-danmaku preference, or
+  layout mode.
+- Custom ArtPlayer controls must render self-contained visible HTML/SVG and put
+  critical active-state styles in the control HTML itself. Do not rely on
+  outer-component scoped selectors for key control visibility/color: ArtPlayer's
+  web fullscreen can change the DOM/style boundary enough for those selectors to
+  miss, leaving blank controls or stale active colors.
+- If an ArtPlayer control opens a Vue-owned overlay/panel that must remain
+  usable in web fullscreen, Teleport that panel into ArtPlayer's `$player`
+  element. If a control switches to a parent-owned room layout mode (such as
+  cinema chat layout), exit both ArtPlayer `fullscreenWeb` and browser native
+  fullscreen first so the parent layout becomes visible.
+- Parent-owned cinema layout, ArtPlayer web fullscreen, and browser native
+  fullscreen are mutually exclusive visual modes. The player wrapper must emit a
+  `cinema(false)`-style state update when ArtPlayer enters either fullscreen
+  mode, so the parent layout state and the custom cinema icon never stay active
+  while fullscreen is actually covering the parent layout.
+- When the browser native fullscreen button is clicked while ArtPlayer
+  `fullscreenWeb` is active, intercept the built-in control click in the capture
+  phase, stop ArtPlayer's default handler, synchronously set `fullscreenWeb =
+  false`, then set native `fullscreen = true`. Letting ArtPlayer process both
+  fullscreen modes in the same default click path can briefly enter native
+  fullscreen and then snap back to the pre-fullscreen layout.
+- When a local file-danmaku source changes, `BushitsuView` must immediately read
+  `EnmokuPlayer.snapshot()` into the overlay's playback-time refs and increment a
+  danmaku track version used in overlay render keys. Do not wait for the next
+  ArtPlayer `timeupdate`/pause/play event; freshly-selected cues should appear at
+  the current playback position without requiring user playback interaction.
+- Keep player controls ordered by interaction frequency on the right side:
+  built-in settings, danmaku toggle, danmaku settings, cinema layout, web
+  fullscreen, native fullscreen. Quality/source selection belongs in the built-in
+  settings menu; danmaku settings belong behind the separate danmaku settings
+  control, not inside the generic settings menu.
 
 ---
 

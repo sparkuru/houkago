@@ -4,6 +4,7 @@ import {
   addPendingNyuushitsu,
   clearNyuushitsu,
   getNyuushitsuMode,
+  getNyuushitsuPassword,
   pendingNyuushitsuCount,
   pendingNyuushitsuRequests,
   removePendingNyuushitsuConnection,
@@ -24,6 +25,14 @@ test("default mode is open; set and clear reset the room mode", () => {
   expect(getNyuushitsuMode(room)).toBe("approval")
   clearNyuushitsu(room)
   expect(getNyuushitsuMode(room)).toBe("open")
+})
+
+test("password mode stores a room password and clear removes it", () => {
+  setNyuushitsuMode(room, "password", "tea-time")
+  expect(getNyuushitsuMode(room)).toBe("password")
+  expect(getNyuushitsuPassword(room)).toBe("tea-time")
+  setNyuushitsuMode(room, "open")
+  expect(getNyuushitsuPassword(room)).toBe("")
 })
 
 test("pending requests are grouped by senderId and expose public request shape", () => {

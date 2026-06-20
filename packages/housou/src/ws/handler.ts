@@ -135,7 +135,7 @@ export const wsRoutes = new Elysia().ws("/ws", {
       admit(ws.id)
       return
     }
-    if (mode === "closed") {
+    if (mode === "closed" || mode === "password") {
       sendNyuushitsu(ws.id, "closed")
       return
     }
@@ -230,14 +230,14 @@ export const wsRoutes = new Elysia().ws("/ws", {
           if (conn.senderId !== buchouIdOf(conn.bushitsuId)) {
             throw new NotBuchou("only 部長 may set admission")
           }
-          setNyuushitsuMode(conn.bushitsuId, msg.payload.mode)
+          setNyuushitsuMode(conn.bushitsuId, msg.payload.mode, msg.payload.password)
           if (msg.payload.mode === "open") {
             for (const request of pendingNyuushitsuRequests(conn.bushitsuId)) {
               for (const connId of takePendingNyuushitsu(conn.bushitsuId, request.senderId)) {
                 admit(connId)
               }
             }
-          } else if (msg.payload.mode === "closed") {
+          } else if (msg.payload.mode === "closed" || msg.payload.mode === "password") {
             for (const request of pendingNyuushitsuRequests(conn.bushitsuId)) {
               for (const connId of takePendingNyuushitsu(conn.bushitsuId, request.senderId)) {
                 rejectPending(connId, "closed")

@@ -9,12 +9,20 @@ import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
 import { canDeleteBangumiItem, canPlayBangumiItem, isCurrentEnmoku } from "@/lib/bangumi-actions"
+import { type ChatTheme, loadChatTheme, saveChatTheme } from "@/lib/chat-theme"
+import {
+  enmokuMetadataSummary,
+  enmokuPlayableUrl,
+  enmokuSourceChoices,
+  sourceIndexFromValue,
+  sourceValue,
+} from "@/lib/enmoku-metadata"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { loadFileDanmakuEnabled, saveFileDanmakuEnabled } from "@/lib/file-danmaku-pref"
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
-import { KousokuClient } from "@/ws/client"
+import { KousokuClient, type KousokuConnectionStatus } from "@/ws/client"
 import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
 import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
@@ -25,18 +33,42 @@ import { useRoute } from "vue-router"
 const route = useRoute()
 const bushitsu = useBushitsuStore()
 const bushitsuId = String(route.params.id)
+const roomName = ref("")
+const roomLink = computed(() => (typeof location === "undefined" ? bushitsuId : location.href))
 
 const current = ref<Enmoku | null>(null)
 const currentEnmokuId = computed(() => current.value?.id ?? null)
+const selectedSourceIndex = ref<number | null>(null)
+const currentSourceChoices = computed(() =>
+  current.value ? enmokuSourceChoices(current.value, t("sourcePrimary")) : [],
+)
+const currentMetadata = computed(() =>
+  current.value ? enmokuMetadataSummary(current.value) : null,
+)
+const hasInlineMetadata = computed(() => {
+  const metadata = currentMetadata.value
+  return metadata ? metadata.subtitleNames.length > 0 || metadata.live !== undefined : false
+})
+const currentPlayableUrl = computed(() =>
+  current.value ? enmokuPlayableUrl(current.value, selectedSourceIndex.value) : "",
+)
+const selectedSourceValue = computed({
+  get: () => sourceValue(selectedSourceIndex.value),
+  set: (value: string) => {
+    selectedSourceIndex.value = sourceIndexFromValue(value)
+  },
+})
 
 // scaffold: a hand-typed direct link to prove ArtPlayer playback.
 // 开发期默认值，上线前清除。
 const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 
-// 視聴 UI 態（pure view state, not store; state-management）：
-// 網全面（web fullscreen, keep chat docked）と 聊天展開（chat collapse arrow）.
-const webZenmen = ref(false)
+// 視聴 UI 態（pure view state, not store; state-management）：聊天展開（chat collapse arrow）
+// と聊天室模式（左播放器 + 右聊天，全屏式房间布局；不改变 ArtPlayer 原生网页全屏）。
 const chatHiraku = ref(true)
+const cinemaMode = ref(false)
+const chatTheme = ref<ChatTheme>(loadChatTheme())
+const wsStatus = ref<KousokuConnectionStatus>("closed")
 
 // 参加済みか（follower の autoplay ゲート用, pure view 態 → store 不要）。
 // 部長は遮罩自体が出ないので影響しない。
@@ -59,6 +91,21 @@ function onJoin() {
   shinkou.catchUp()
 }
 
+function setCinemaMode(enabled: boolean) {
+  cinemaMode.value = enabled
+  if (cinemaMode.value) chatHiraku.value = true
+}
+
+function collapseChat() {
+  chatHiraku.value = false
+  cinemaMode.value = false
+}
+
+function setChatTheme(theme: ChatTheme) {
+  chatTheme.value = theme
+  saveChatTheme(theme)
+}
+
 // ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
 const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
@@ -75,12 +122,17 @@ watch(current, () => {
   controlsShown.value = true
   playbackTime.value = 0
   playbackPlaying.value = false
+  selectedSourceIndex.value = null
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
 const fileDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
 const fileDanmakuNameByEnmoku = ref<Record<string, string>>({})
+const fileDanmakuTrackVersion = ref(0)
+const danmakuSize = ref(22)
+const danmakuOpacity = ref(1)
+const danmakuTimeOffset = ref(0)
 const manualSubmitting = ref(false)
 
 const currentFileDanmaku = computed(() => {
@@ -115,6 +167,12 @@ async function onFileDanmakuSelected(event: Event) {
     ...fileDanmakuNameByEnmoku.value,
     [enmokuId]: cues.length > 0 ? file.name : t("fileDanmakuEmpty"),
   }
+  fileDanmakuTrackVersion.value += 1
+  const snapshot = playerRef.value?.snapshot()
+  if (snapshot) {
+    playbackTime.value = snapshot.currentTime
+    playbackPlaying.value = snapshot.isPlaying
+  }
 }
 
 // 房主放映：register the source as a room 演目 (real enmokuId), refresh the local
@@ -128,12 +186,12 @@ function settei(kengen: Kengen) {
   client?.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
 }
 
-function nyuushitsuSettei(mode: NyuushitsuMode) {
+function nyuushitsuSettei(mode: NyuushitsuMode, password?: string) {
   client?.send({
     type: "NYUUSHITSU_SETTEI",
     ts: Date.now(),
     senderId: bushitsu.senderId,
-    payload: { mode },
+    payload: password === undefined ? { mode } : { mode, password },
   })
 }
 
@@ -209,12 +267,13 @@ function oshaberi(content: string) {
   })
 }
 
-function danmaku(content: string) {
+function danmaku(content: string, options?: { color?: string }) {
+  const payload = options?.color ? { content, color: options.color } : { content }
   client?.send({
     type: "DANMAKU",
     ts: Date.now(),
     senderId: bushitsu.senderId,
-    payload: { content },
+    payload,
   })
 }
 
@@ -236,7 +295,10 @@ async function enterRoom() {
   bootstrapped.value = true
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
   const { data: room } = await housou.bushitsu({ id: bushitsuId }).get()
-  if (room) bushitsu.buchouId = room.buchouId
+  if (room) {
+    bushitsu.buchouId = room.buchouId
+    roomName.value = room.name
+  }
 
   // 追いかけ: a 部員 asks for authority state to catch up; the host drives, so it
   // does not follow and does not ask.
@@ -261,13 +323,19 @@ async function startSession() {
   const base = housouUrl()
   bushitsu.nyuushitsuStatus = "idle"
   bootstrapped.value = false
-  client = new KousokuClient(base, (msg) => {
-    bushitsu.apply(msg) // keep the store the single source of truth first
-    if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
-      void enterRoom()
-    }
-    shinkou.handleRemote(msg) // then drive the player by message type
-  })
+  client = new KousokuClient(
+    base,
+    (msg) => {
+      bushitsu.apply(msg) // keep the store the single source of truth first
+      if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
+        void enterRoom()
+      }
+      shinkou.handleRemote(msg) // then drive the player by message type
+    },
+    (status) => {
+      wsStatus.value = status
+    },
+  )
   client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
 }
 
@@ -287,7 +355,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="bushitsu" :class="{ 'web-zenmen': webZenmen }">
+  <div class="bushitsu" :class="{ 'cinema-mode': cinemaMode, 'theme-dark': chatTheme === 'dark' }">
     <div v-if="nameGate" class="name-gate">
       <form class="name-form" @submit.prevent="submitName">
         <label>
@@ -315,119 +383,136 @@ onBeforeUnmount(() => {
     </div>
     <template v-else>
       <main class="stage">
-        <div class="bar">
-          <div v-if="current" class="file-danmaku-controls">
-            <button
-              type="button"
-              :aria-label="t('fileDanmakuToggleAria')"
-              :aria-pressed="fileDanmakuEnabled"
-              @click="toggleFileDanmaku"
-            >
-              {{ fileDanmakuEnabled ? t("fileDanmakuOn") : t("fileDanmakuOff") }}
-            </button>
-            <button type="button" @click="chooseFileDanmaku">
-              {{ t("fileDanmakuChoose") }}
-            </button>
+        <template v-if="current">
+          <div class="player-wrap">
+            <EnmokuPlayer
+              ref="playerRef"
+              :key="`${current.id}:${currentPlayableUrl}`"
+              :url="currentPlayableUrl"
+              :type="current.type"
+              :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
+              :control-locked="!bushitsu.canControl"
+              :cinema-mode="cinemaMode"
+              :source-choices="currentSourceChoices"
+              :selected-source-value="selectedSourceValue"
+              :file-danmaku-enabled="fileDanmakuEnabled"
+              :file-danmaku-name="currentFileDanmakuName || t('danmakuNone')"
+              :danmaku-size="danmakuSize"
+              :danmaku-opacity="danmakuOpacity"
+              :danmaku-time-offset="danmakuTimeOffset"
+              @shinkou="shinkou.onLocalShinkou"
+              @ready="shinkou.catchUp"
+              @join="onJoin"
+              @control="controlsShown = $event"
+              @time="playbackTime = $event"
+              @playing="playbackPlaying = $event"
+              @cinema="setCinemaMode"
+              @source="selectedSourceValue = $event"
+              @toggle-file-danmaku="toggleFileDanmaku"
+              @choose-file-danmaku="chooseFileDanmaku"
+              @danmaku-size="danmakuSize = $event"
+              @danmaku-opacity="danmakuOpacity = $event"
+              @danmaku-time-offset="danmakuTimeOffset = $event"
+            />
+            <FileDanmakuOverlay
+              :target="playerEl"
+              :cues="currentFileDanmaku"
+              :current-time="playbackTime"
+              :enabled="fileDanmakuEnabled"
+              :playing="playbackPlaying"
+              :size="danmakuSize"
+              :opacity="danmakuOpacity"
+              :time-offset="danmakuTimeOffset"
+              :track-version="fileDanmakuTrackVersion"
+            />
+            <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" :show-toggle="false" />
             <input
               ref="fileInput"
               class="file-danmaku-input"
               type="file"
               accept=".xml,text/xml,application/xml"
-              :aria-label="t('fileDanmakuChoose')"
+              :aria-label="t('danmakuSourceFile')"
               @change="onFileDanmakuSelected"
             />
-            <span class="file-danmaku-name">
-              {{ currentFileDanmakuName || t("fileDanmakuNone") }}
-            </span>
           </div>
-          <KengenPanel
-            v-if="bushitsu.isBuchou"
-            @settei="settei"
-            @nyuushitsu-settei="nyuushitsuSettei"
-            @nyuushitsu-hantei="nyuushitsuHantei"
-          />
-          <button
-            type="button"
-            :aria-label="webZenmen ? t('webZenmenExitAria') : t('webZenmenAria')"
-            :aria-pressed="webZenmen"
-            @click="webZenmen = !webZenmen"
-          >
-            {{ webZenmen ? t("webZenmenExit") : t("webZenmen") }}
-          </button>
-        </div>
-        <div v-if="current" class="player-wrap">
-          <EnmokuPlayer
-            ref="playerRef"
-            :key="current.url"
-            :url="current.url"
-            :type="current.type"
-            :show-join-gate="showJoinGate(bushitsu.isBuchou, joined)"
-            :control-locked="!bushitsu.canControl"
-            @shinkou="shinkou.onLocalShinkou"
-            @ready="shinkou.catchUp"
-            @join="onJoin"
-            @control="controlsShown = $event"
-            @time="playbackTime = $event"
-            @playing="playbackPlaying = $event"
-          />
-          <FileDanmakuOverlay
-            :target="playerEl"
-            :cues="currentFileDanmaku"
-            :current-time="playbackTime"
-            :enabled="fileDanmakuEnabled"
-            :playing="playbackPlaying"
-          />
-          <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" />
-        </div>
+        </template>
         <div v-else class="placeholder">
           <span>{{ t("waitingBuchouJouei") }}</span>
         </div>
-        <section class="bangumi">
-          <h3>{{ t("bangumiHeading") }}</h3>
-          <ul>
-            <li
-              v-for="e in bushitsu.bangumi"
-              :key="e.id"
-              class="bangumi-row"
-              :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
-              :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
-            >
-              <span class="bangumi-title">{{ e.title }}</span>
-              <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
-                {{ t("joueiChuu") }}
-              </span>
-              <span v-if="bushitsu.canPlaylist" class="bangumi-actions">
-                <button
-                  type="button"
-                  class="bangumi-action"
-                  :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
-                  @click="playBangumi(e.id)"
-                >
-                  {{ t("play") }}
-                </button>
-                <button
-                  type="button"
-                  class="bangumi-action danger"
-                  :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
-                  @click="deleteBangumiEnmoku(e.id)"
-                >
-                  {{ t("delete") }}
-                </button>
-              </span>
-            </li>
-          </ul>
-          <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
-            <h4>{{ t("devManualHeading") }}</h4>
-            <input
-              v-model="manualUrl"
-              :aria-label="t('manualUrlLabel')"
-              :placeholder="t('manualUrlPlaceholder')"
+        <div v-if="current && hasInlineMetadata" class="media-toolbar">
+          <section
+            v-if="currentMetadata"
+            class="enmoku-metadata"
+            :aria-label="t('enmokuMetadataHeading')"
+          >
+            <div v-if="currentMetadata.subtitleNames.length > 0" class="metadata-pill">
+              <span>{{ t("subtitlesLabel") }}</span>
+              <strong>{{ currentMetadata.subtitleNames.join(" / ") }}</strong>
+            </div>
+            <div v-if="currentMetadata.live !== undefined" class="metadata-pill">
+              <strong>{{ currentMetadata.live ? t("liveTrue") : t("liveFalse") }}</strong>
+            </div>
+          </section>
+        </div>
+        <div class="room-workbench" :class="{ 'without-control': !bushitsu.isBuchou }">
+          <aside v-if="bushitsu.isBuchou" class="room-control-panel">
+            <h3>{{ t("roomControlHeading") }}</h3>
+            <KengenPanel
+              :room-name="roomName || bushitsuId"
+              :room-link="roomLink"
+              :room-status="wsStatus"
+              @settei="settei"
+              @nyuushitsu-settei="nyuushitsuSettei"
+              @nyuushitsu-hantei="nyuushitsuHantei"
             />
-            <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
-              {{ t("play") }}
-            </button>
-          </form>
-        </section>
+          </aside>
+          <section class="bangumi">
+            <h3>{{ t("bangumiHeading") }}</h3>
+            <ul>
+              <li
+                v-for="e in bushitsu.bangumi"
+                :key="e.id"
+                class="bangumi-row"
+                :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
+                :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
+              >
+                <span class="bangumi-title">{{ e.title }}</span>
+                <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
+                  {{ t("joueiChuu") }}
+                </span>
+                <span v-if="bushitsu.canPlaylist" class="bangumi-actions">
+                  <button
+                    type="button"
+                    class="bangumi-action"
+                    :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
+                    @click="playBangumi(e.id)"
+                  >
+                    {{ t("play") }}
+                  </button>
+                  <button
+                    type="button"
+                    class="bangumi-action danger"
+                    :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
+                    @click="deleteBangumiEnmoku(e.id)"
+                  >
+                    {{ t("delete") }}
+                  </button>
+                </span>
+              </li>
+            </ul>
+            <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
+              <h4>{{ t("devManualHeading") }}</h4>
+              <input
+                v-model="manualUrl"
+                :aria-label="t('manualUrlLabel')"
+                :placeholder="t('manualUrlPlaceholder')"
+              />
+              <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
+                {{ t("play") }}
+              </button>
+            </form>
+          </section>
+        </div>
       </main>
       <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
          中の ‹ ボタンを浮現させる。既定は不可视（opacity:0）、keyboard でも focus で
@@ -445,9 +530,11 @@ onBeforeUnmount(() => {
       </div>
       <ChatPanel
         v-show="chatHiraku"
+        :chat-theme="chatTheme"
         @oshaberi="oshaberi"
         @danmaku="danmaku"
-        @toggle="chatHiraku = false"
+        @chat-theme="setChatTheme"
+        @toggle="collapseChat"
       />
     </template>
   </div>
@@ -457,63 +544,96 @@ onBeforeUnmount(() => {
 .bushitsu {
   display: flex;
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #fff;
+  color: #222;
+}
+.bushitsu.theme-dark {
+  background: #0f0f0f;
+  color: #eee;
 }
 .stage {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  container-type: inline-size;
+  padding: 0 12px 0 12px;
+  overflow: hidden;
 }
-.bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-.file-danmaku-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  margin-right: auto;
+.theme-dark .stage {
+  background: #0f0f0f;
 }
 .file-danmaku-input {
   display: none;
 }
-.file-danmaku-name {
-  max-width: 28ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  color: #444;
-}
 /* player + overlay share one positioned wrapper so the overlay covers the player. */
 .player-wrap {
   position: relative;
-  flex: 1;
+  flex: none;
   min-height: 0;
 }
-/* 普通模式：stage 为 flex column，player-wrap 占 bar 与 bangumi 之间的剩余高度
-   （flex:1 + min-height:0），16:9 由该高度推导 width → 与 stage 宽度/聊天显隐无关，
-   折叠聊天后不膨胀；margin-inline:auto 居中，多余横向空间留白。max-width:100% 防止
-   窄高窗口下推导 width 溢出（此时退化为宽度驱动，仍合理）。仅作用普通模式：
-   margin-inline:auto 会取消 flex 的默认 stretch，若漏到 web-zenmen 会令空 wrap 收成
-   0 宽，故用 :not(.web-zenmen) 隔离。 */
-.bushitsu:not(.web-zenmen) .player-wrap {
-  aspect-ratio: 16 / 9;
-  max-width: 100%;
-  margin-inline: auto;
+/* 普通模式：播放器吃满舞台宽度，但高度按 16:9 倾向计算，并给下方面板留保底。
+   宽屏/全屏窗口下会优先增高播放器，减少左右黑边；番組表自滚动，不反压播放器。 */
+.player-wrap {
+  flex: 0 1 min(56.25cqw, calc(100dvh - 260px), 820px);
+  width: 100%;
+  min-height: 280px;
 }
 .player-wrap :deep(.enmoku-player) {
   height: 100%;
 }
+.media-toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fbfbfb;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+.theme-dark .media-toolbar {
+  background: #151515;
+  border-color: #2a2a2a;
+}
+.enmoku-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-height: 28px;
+  font-size: 12px;
+}
+.metadata-control,
+.metadata-pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 8px;
+  background: #f7f7f7;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+}
+.theme-dark .metadata-control,
+.theme-dark .metadata-pill {
+  background: #1d1d1d;
+  border-color: #333;
+}
+.metadata-control select {
+  max-width: 24ch;
+}
+.metadata-pill strong {
+  font-weight: 600;
+}
 /* placeholder（上映前）も player-wrap と同じ高度驱动で、折叠聊天で膨胀しない。 */
 .placeholder {
-  flex: 1;
+  flex: none;
   min-height: 0;
   display: flex;
   align-items: center;
@@ -522,25 +642,140 @@ onBeforeUnmount(() => {
   background: #111;
   color: #fff;
 }
-.bushitsu:not(.web-zenmen) .placeholder {
-  aspect-ratio: 16 / 9;
-  max-width: 100%;
-  margin-inline: auto;
+.placeholder {
+  flex: 0 1 min(56.25cqw, calc(100dvh - 260px), 820px);
+  width: 100%;
+  min-height: 280px;
 }
-/* 普通模式：番組表は player の下に固定高で居座り、player の高度推导を侵さない。
-   長くなれば自前スクロール。web-zenmen では display:none で隐す（既存）。 */
-.bushitsu:not(.web-zenmen) .bangumi {
-  flex: none;
-  max-height: 30vh;
-  overflow-y: auto;
+.bushitsu.cinema-mode {
+  background: #000;
+}
+.bushitsu.cinema-mode .stage {
+  padding: 0;
+  background: #000;
+}
+.bushitsu.cinema-mode .player-wrap,
+.bushitsu.cinema-mode .placeholder {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.bushitsu.cinema-mode .media-toolbar,
+.bushitsu.cinema-mode .room-workbench,
+.bushitsu.cinema-mode .hiraku-handle {
+  display: none;
+}
+.bushitsu.cinema-mode :deep(.chat-panel) {
+  border-left-color: #222;
+}
+.room-workbench {
+  flex: 1 1 220px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 8px;
   margin-top: 8px;
+  overflow: hidden;
+}
+.room-workbench.without-control {
+  grid-template-columns: minmax(0, 1fr);
+}
+.room-control-panel,
+.bangumi {
+  --surface-muted: #f7f7f7;
+  --row-surface: #fff;
+  --row-border: #e5e5e5;
+  --row-current-border: #222;
+  --row-current-surface: #f7f7f7;
+  --panel-accent: #2a7;
+  --danger-text: #8a1f1f;
+  flex: 1 1 160px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+.theme-dark .room-control-panel,
+.theme-dark .bangumi {
+  --surface-muted: #0b0b0b;
+  --row-surface: #151515;
+  --row-border: #303030;
+  --row-current-border: #ff7a22;
+  --row-current-surface: #1b130e;
+  --panel-accent: #ff8a3d;
+  --danger-text: #ff8a8a;
+  background: #141414;
+  border-color: #2a2a2a;
+}
+.room-control-panel h3,
+.bangumi h3 {
+  flex: none;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+.theme-dark .room-control-panel h3,
+.theme-dark .bangumi h3 {
+  border-bottom-color: #2a2a2a;
+}
+.theme-dark .room-control-panel h3 {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #2a2a2a;
+  box-shadow: none;
+}
+.room-control-panel :deep(.kengen-panel) {
+  flex: 1;
+  align-content: flex-start;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 8px;
+  overflow-y: auto;
+}
+.room-control-panel :deep(.kengen-control-block),
+.room-control-panel :deep(.kengen-box) {
+  width: 100%;
+}
+.room-control-panel :deep(.kengen-switch-row) {
+  width: 100%;
+  text-align: left;
+}
+.theme-dark .room-control-panel :deep(.kengen-panel) {
+  --kengen-muted: #b8b8b8;
+  --kengen-text: #f1f1f1;
+  --kengen-accent: #ff8a3d;
+  --kengen-danger: #ff7474;
+  --kengen-separator: #ff7a22;
+  --kengen-switch-off: #0b0b0b;
+  --kengen-switch-on: #ff8a3d;
+  --kengen-knob: #fff;
+}
+.theme-dark .room-control-panel :deep(.kengen-section-title),
+.theme-dark .room-control-panel :deep(.kengen-state-text),
+.theme-dark .room-control-panel :deep(.room-info-key),
+.theme-dark .room-control-panel :deep(.room-info-value),
+.theme-dark .room-control-panel :deep(.nyuushitsu-mode-desc) {
+  color: #b8b8b8;
+}
+.theme-dark .room-control-panel :deep(.kengen-switch-row),
+.theme-dark .room-control-panel :deep(.nyuushitsu-option) {
+  color: #f1f1f1;
+  background: transparent;
+  border: 0;
 }
 .bangumi ul {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0;
+  padding: 8px;
   margin: 0;
+  overflow-y: auto;
   list-style: none;
 }
 .bangumi-row {
@@ -550,13 +785,21 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 34px;
   padding: 6px 8px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--row-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--row-surface);
+}
+.theme-dark .bangumi-row {
+  background: var(--row-surface);
+  border-color: var(--row-border);
 }
 .bangumi-row.current {
-  border-color: #222;
-  background: #f7f7f7;
+  border-color: var(--row-current-border);
+  background: var(--row-current-surface);
+}
+.theme-dark .bangumi-row.current {
+  border-color: var(--row-current-border);
+  background: var(--row-current-surface);
 }
 .bangumi-title {
   min-width: 0;
@@ -566,14 +809,23 @@ onBeforeUnmount(() => {
 }
 .bangumi-status {
   font-size: 12px;
-  color: #222;
+  color: var(--panel-accent);
+}
+.theme-dark .bangumi-status {
+  color: var(--panel-accent);
 }
 .dev-manual {
+  flex: none;
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) auto;
   gap: 8px;
   align-items: center;
-  margin-top: 10px;
+  padding: 8px;
+  border-top: 1px solid var(--row-border);
+  background: var(--surface-muted);
+}
+.theme-dark .dev-manual {
+  border-top-color: var(--row-border);
 }
 .dev-manual h4 {
   margin: 0;
@@ -582,6 +834,21 @@ onBeforeUnmount(() => {
 }
 .dev-manual input {
   min-width: 0;
+  min-height: 28px;
+  border: 1px solid var(--row-border);
+  border-radius: 4px;
+}
+.theme-dark input,
+.theme-dark textarea,
+.theme-dark select {
+  color: #eee;
+  background: #181818;
+  border-color: #444;
+}
+.theme-dark .bangumi input {
+  color: #eee;
+  background: #0b0b0b;
+  border-color: var(--row-border);
 }
 .bangumi-actions {
   display: flex;
@@ -591,9 +858,38 @@ onBeforeUnmount(() => {
   min-width: 48px;
   min-height: 28px;
   padding: 3px 8px;
+  border: 1px solid var(--row-border);
+  border-radius: 4px;
+  background: transparent;
+}
+.bangumi-action:not(:disabled):hover,
+.bangumi-action:not(:disabled):focus-visible,
+.dev-manual button:not(:disabled):hover,
+.dev-manual button:not(:disabled):focus-visible {
+  border-color: var(--panel-accent);
+}
+.theme-dark button {
+  color: #eee;
+  background: #1d1d1d;
+  border-color: #555;
+}
+.theme-dark .bangumi button {
+  color: #eee;
+  background: #0b0b0b;
+  border-color: var(--row-border);
+}
+.theme-dark .bangumi button:not(:disabled):hover,
+.theme-dark .bangumi button:not(:disabled):focus-visible {
+  border-color: var(--panel-accent);
+}
+.theme-dark button:disabled {
+  color: #777;
 }
 .bangumi-action.danger:not(:disabled) {
-  color: #8a1f1f;
+  color: var(--danger-text);
+}
+.theme-dark .bangumi-action.danger:not(:disabled) {
+  color: var(--danger-text);
 }
 /* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
    中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */
@@ -618,29 +914,16 @@ onBeforeUnmount(() => {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
+.theme-dark .hiraku-button {
+  color: #eee;
+  background: #1d1d1d;
+  border-color: #333;
+}
 .hiraku-handle:hover .hiraku-button,
 .hiraku-button:focus-visible {
   opacity: 1;
 }
 
-/* ウェブ全画面: layout-level full viewport that KEEPS the chat docked right
-   (synctv-web lacks this). ArtPlayer auto-fits the resized container. */
-.bushitsu.web-zenmen {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: #000;
-}
-/* 网页全屏：取消固定比例，填满左列高度；ArtPlayer 内部 contain 上下黑边居中，
-   无下方黑占位（B 站直播间式整块播放器） */
-.bushitsu.web-zenmen .player-wrap {
-  flex: 1;
-  min-height: 0;
-  aspect-ratio: auto;
-}
-.bushitsu.web-zenmen .bangumi {
-  display: none;
-}
 /* 昵称 gate: connect-time overlay, sits above the whole room until a name exists. */
 .name-gate {
   position: fixed;

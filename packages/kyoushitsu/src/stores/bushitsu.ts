@@ -23,8 +23,22 @@ const DEFAULT_NYUUSHITSU_MODE: NyuushitsuMode = "open"
 // client (state-management spec). The WS client is the writer; components read.
 // Sync math is deliberately absent (P0 task) — we only hold last-known truth.
 
-type ChatLine = { senderId: string; content: string; ts: number }
+type ChatLine = {
+  senderId: string
+  content: string
+  ts: number
+  kind: "oshaberi" | "danmaku"
+  color?: string
+}
 type DanmakuLine = { senderId: string; content: string; ts: number; color?: string; mode?: string }
+type BuinPresence = {
+  id: string
+  nickname: string
+  yakuwari: Yakuwari
+  joinedAt: number
+  lastSeenAt: number
+  online: boolean
+}
 
 function uniqueEnmokuById(enmoku: readonly Enmoku[]): Enmoku[] {
   const seen = new Set<string>()
@@ -47,6 +61,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   // 役割: senderId→yakuwari (部長/ゲスト), accumulated from SHUSSEKI alongside the
   // roster so departed members' roles resolve for historical lines too.
   const yakuwari = ref<Record<string, Yakuwari>>({})
+  const presenceById = ref<Record<string, BuinPresence>>({})
   const enmokuId = ref<string | null>(null) // 上映中
   const bangumi = ref<Enmoku[]>([])
   const chat = ref<ChatLine[]>([])
@@ -66,6 +81,16 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const canControl = computed(() => canDo(isBuchou.value, kengen.value, "playback"))
   const canChat = computed(() => canDo(isBuchou.value, kengen.value, "chat"))
   const canPlaylist = computed(() => canDo(isBuchou.value, kengen.value, "playlist"))
+  const onlineBuinInfo = computed(() =>
+    Object.values(presenceById.value)
+      .filter((member) => member.online)
+      .sort((a, b) => a.joinedAt - b.joinedAt),
+  )
+  const historyBuinInfo = computed(() =>
+    Object.values(presenceById.value)
+      .filter((member) => !member.online)
+      .sort((a, b) => b.lastSeenAt - a.lastSeenAt),
+  )
 
   // last authoritative Shinkou + its server time, for P0 projected-progress math.
   const shinkou = ref<Shinkou | null>(null)
@@ -76,7 +101,12 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   function apply(msg: KousokuMessage): void {
     switch (msg.type) {
       case "OSHABERI":
-        chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+        chat.value.push({
+          senderId: msg.senderId,
+          content: msg.payload.content,
+          ts: msg.ts,
+          kind: "oshaberi",
+        })
         break
       case "DANMAKU":
         danmaku.value.push({
@@ -85,6 +115,13 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
           ts: msg.ts,
           color: msg.payload.color,
           mode: msg.payload.mode,
+        })
+        chat.value.push({
+          senderId: msg.senderId,
+          content: msg.payload.content,
+          ts: msg.ts,
+          kind: "danmaku",
+          color: msg.payload.color,
         })
         break
       case "SHUSSEKI": {
@@ -97,12 +134,32 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         shusseki.value = msg.payload.n
         const merged = { ...roster.value }
         const mergedYakuwari = { ...yakuwari.value }
+        const nextPresence = { ...presenceById.value }
+        const onlineIds = new Set(msg.payload.members.map((m) => m.id))
+        for (const member of Object.values(nextPresence)) {
+          if (onlineIds.has(member.id) || !member.online) continue
+          nextPresence[member.id] = {
+            ...member,
+            online: false,
+            lastSeenAt: msg.ts,
+          }
+        }
         for (const m of msg.payload.members) {
           merged[m.id] = m.nickname
           mergedYakuwari[m.id] = m.yakuwari
+          const existing = nextPresence[m.id]
+          nextPresence[m.id] = {
+            id: m.id,
+            nickname: m.nickname,
+            yakuwari: m.yakuwari,
+            joinedAt: existing?.online ? existing.joinedAt : msg.ts,
+            lastSeenAt: msg.ts,
+            online: true,
+          }
         }
         roster.value = merged
         yakuwari.value = mergedYakuwari
+        presenceById.value = nextPresence
         break
       }
       case "KENGEN":
@@ -166,6 +223,9 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     shusseki,
     roster,
     yakuwari,
+    presenceById,
+    onlineBuinInfo,
+    historyBuinInfo,
     kengen,
     nyuushitsuMode,
     nyuushitsuStatus,

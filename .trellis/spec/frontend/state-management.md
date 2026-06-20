@@ -23,6 +23,11 @@
   client when envelopes arrive; components read it.
 - **Local UI state (component `ref`):** open/closed panels, input drafts,
   selected danmaku source, hover state. Never promote to a store.
+- **Room layout modes are local UI state:** `cinemaMode` / chat-open flags live
+  in `BushitsuView` as refs. ArtPlayer's `fullscreenWeb` is pure-player
+  fullscreen and intentionally does not include the chat panel; any "video left,
+  chat right" mode must be a room layout mode that emits from `EnmokuPlayer` and
+  is applied by the parent view.
 - **Cross-component derived state (`computed` / store getters):** e.g. "am I the
   部長", projected playback time. Derive, do not duplicate.
 - **URL state (router):** current 部室 id, browse query.
@@ -59,6 +64,11 @@ Anything that is purely one component's view concern stays a local `ref`.
   REST create/delete can race with WS snapshots, and dev/manual source flows may
   be tempted to append locally after a POST. Deduping by id in the store prevents
   transient duplicate rows while preserving the first occurrence order.
+- Parser-produced `Enmoku` metadata is server state, but per-client source
+  selection is not. Until the protocol grows a room-authoritative source-track
+  field, `sources` selection stays local component state and only changes the
+  URL passed into the local `EnmokuPlayer`; it must not mutate `Enmoku`, write to
+  Pinia, or emit `JOUEI`/`SHINKOU` by itself.
 - **Host-authority on the client:** only the 部長's player events emit `SHINKOU`.
   When applying a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo
   for ~200ms so the resulting local player event is not re-broadcast (design §5).
@@ -73,26 +83,43 @@ Anything that is purely one component's view concern stays a local `ref`.
 
 - `OSHABERI` and `DANMAKU` are separate realtime streams even though they share
   the same websocket transport and the same room-level `chat` permission gate.
-- `useBushitsuStore.chat` stores chat-panel lines from `OSHABERI` only.
+- `useBushitsuStore.chat` stores chat-panel lines from `OSHABERI` and a marked
+  mirror of `DANMAKU`. The mirror must carry `kind: "danmaku"` (and optional
+  color) so the chat UI can badge/style it differently from normal speech.
 - `useBushitsuStore.danmaku` stores realtime overlay lines from `DANMAKU` only.
 - `DanmakuOverlay` reads `bushitsu.danmaku`; it must not watch `chat` as a
-  shortcut. Chat may later be mirrored into danmaku by an explicit product
-  decision, but the store streams remain separate.
+  shortcut. `DANMAKU -> chat mirror` is allowed for history visibility, but
+  `OSHABERI/chat -> danmaku overlay` remains forbidden unless the product
+  explicitly changes that direction.
 
 ```ts
 // Good: each envelope commits to its own server-truth stream.
 case "OSHABERI":
-  chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+  chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts, kind: "oshaberi" })
   break
 case "DANMAKU":
   danmaku.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts })
+  chat.value.push({ senderId: msg.senderId, content: msg.payload.content, ts: msg.ts, kind: "danmaku" })
   break
 ```
 
 **Tests required:** store tests must assert that applying `OSHABERI` does not
-append to `danmaku`, and applying `DANMAKU` does not append to `chat`. Backend
-WS tests should cover `DANMAKU` room broadcast and the shared chat-permission
-rejection path.
+append to `danmaku`, and applying `DANMAKU` appends both a `danmaku` overlay line
+and a `chat` line marked `kind: "danmaku"`. Backend WS tests should cover
+`DANMAKU` room broadcast and the shared chat-permission rejection path.
+
+### Local Room Theme
+
+- Room theme is local UI preference. `loadChatTheme()` follows
+  `prefers-color-scheme` only when no saved value exists; once the user toggles
+  the day/night button, persist the explicit `light`/`dark` value in
+  `localStorage` and keep it across page refreshes.
+- Theme state lives in `BushitsuView` plus `lib/chat-theme.ts`, and is passed
+  into `ChatPanel` as a prop. This lets one toggle recolor the whole room
+  surface (chat, room controls, 番組表, dev source row) while staying local to the
+  current viewer.
+- Do not promote theme to `useBushitsuStore` because it is not room/session truth
+  and must not sync across viewers.
 
 ---
 
@@ -115,4 +142,5 @@ rejection path.
   coupling and re-renders.
 - Rendering chat messages as realtime danmaku by watching `chat` in
   `DanmakuOverlay` → the product loses the ability to distinguish chat history
-  from actual `DANMAKU` events.
+  from actual `DANMAKU` events. Mirroring `DANMAKU` into chat is fine only when
+  the mirrored line is marked and `DanmakuOverlay` still reads `danmaku`.

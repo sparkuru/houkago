@@ -59,13 +59,13 @@ function open(bushitsuId: string, senderId: string): Promise<Peer> {
   })
 }
 
-function setMode(ws: WebSocket, senderId: string, mode: NyuushitsuMode): void {
+function setMode(ws: WebSocket, senderId: string, mode: NyuushitsuMode, password?: string): void {
   ws.send(
     JSON.stringify({
       type: "NYUUSHITSU_SETTEI",
       ts: Date.now(),
       senderId,
-      payload: { mode },
+      payload: password === undefined ? { mode } : { mode, password },
     } satisfies KousokuMessage),
   )
 }
@@ -153,6 +153,24 @@ test("approval mode waits, blocks room actions, then admits on host approval", a
   expect((await entered).type).toBe("NYUUSHITSU")
   const kengen = await guest.nextMatch((m) => m.type === "KENGEN")
   expect(kengen.type).toBe("KENGEN")
+
+  host.ws.close()
+  guest.ws.close()
+})
+
+test("password mode rejects new guests until password-entry join is implemented", async () => {
+  const room = await makeRoom("host-password")
+  const host = await open(room.id, "host-password")
+  await host.nextMatch((m) => m.type === "NYUUSHITSU")
+  setMode(host.ws, "host-password", "password", "tea-time")
+  await host.nextMatch((m) => m.type === "NYUUSHITSU" && m.payload.mode === "password")
+
+  const guest = await open(room.id, "guest-password")
+  const closed = await guest.nextMatch((m) => m.type === "NYUUSHITSU")
+  if (closed.type === "NYUUSHITSU") {
+    expect(closed.payload.mode).toBe("password")
+    expect(closed.payload.status).toBe("closed")
+  }
 
   host.ws.close()
   guest.ws.close()

@@ -9,14 +9,28 @@ export const DEFAULT_NYUUSHITSU_MODE: NyuushitsuMode = "open"
 type PendingRequest = NyuushitsuRequest & { connIds: Set<string> }
 
 const modes = new Map<string, NyuushitsuMode>()
+const passwords = new Map<string, string>()
 const pending = new Map<string, Map<string, PendingRequest>>()
 
 export function getNyuushitsuMode(bushitsuId: string): NyuushitsuMode {
   return modes.get(bushitsuId) ?? DEFAULT_NYUUSHITSU_MODE
 }
 
-export function setNyuushitsuMode(bushitsuId: string, mode: NyuushitsuMode): void {
+export function getNyuushitsuPassword(bushitsuId: string): string {
+  return passwords.get(bushitsuId) ?? ""
+}
+
+export function setNyuushitsuMode(
+  bushitsuId: string,
+  mode: NyuushitsuMode,
+  password?: string,
+): void {
   modes.set(bushitsuId, mode)
+  if (mode !== "password") {
+    passwords.delete(bushitsuId)
+  } else if (password !== undefined) {
+    passwords.set(bushitsuId, password)
+  }
 }
 
 export function addPendingNyuushitsu(
@@ -75,6 +89,7 @@ export function removePendingNyuushitsuConnection(
 
 export function clearNyuushitsu(bushitsuId: string): void {
   modes.delete(bushitsuId)
+  passwords.delete(bushitsuId)
   pending.delete(bushitsuId)
 }
 

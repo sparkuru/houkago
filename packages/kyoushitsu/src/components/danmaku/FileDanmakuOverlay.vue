@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { fileDanmakuAnimationState, visibleFileDanmakuCues } from "@/lib/file-danmaku"
+import {
+  fileDanmakuAnimationState,
+  fileDanmakuRenderKey,
+  visibleFileDanmakuCues,
+} from "@/lib/file-danmaku"
 import type { DanmakuCue } from "houkago-kokuban"
 import { computed } from "vue"
 
@@ -9,20 +13,32 @@ const props = defineProps<{
   currentTime: number
   enabled: boolean
   playing: boolean
+  size: number
+  opacity: number
+  timeOffset: number
+  trackVersion: number
 }>()
 
 const visible = computed(() =>
-  props.enabled ? visibleFileDanmakuCues(props.cues, props.currentTime) : [],
+  props.enabled ? visibleFileDanmakuCues(props.cues, props.currentTime + props.timeOffset) : [],
 )
 const animationState = computed(() => fileDanmakuAnimationState(props.playing))
 </script>
 
 <template>
   <Teleport :to="props.target" :disabled="!props.target">
-    <div v-if="enabled" class="file-danmaku-overlay" aria-hidden="true">
+    <div
+      v-if="enabled"
+      class="file-danmaku-overlay"
+      aria-hidden="true"
+      :style="{
+        '--danmaku-size': `${size}px`,
+        '--danmaku-opacity': opacity,
+      }"
+    >
       <span
         v-for="cue in visible"
-        :key="cue.key"
+        :key="fileDanmakuRenderKey(cue, trackVersion)"
         class="file-danmaku-cue"
         :class="[`mode-${cue.mode}`]"
         :style="{
@@ -51,9 +67,10 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
   top: calc(10px + var(--lane) * 30px);
   max-width: 80%;
   white-space: nowrap;
-  font-size: 22px;
+  font-size: var(--danmaku-size);
   line-height: 1.2;
   font-weight: 600;
+  opacity: var(--danmaku-opacity);
   text-shadow:
     1px 1px 2px #000,
     -1px -1px 2px #000,

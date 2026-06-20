@@ -98,9 +98,9 @@ Container services must listen on `0.0.0.0` to be reachable from the host
 
 - Shared protocol source: `packages/kousoku/src/messages.ts`.
 - `NYUUSHITSU` S→C payload:
-  `{ mode: "open" | "approval" | "closed", status: "entered" | "waiting" | "rejected" | "closed", pending: { senderId: string, nickname: string, requestedAt: number }[] }`
+  `{ mode: "open" | "approval" | "closed" | "password", status: "entered" | "waiting" | "rejected" | "closed", pending: { senderId: string, nickname: string, requestedAt: number }[] }`
 - `NYUUSHITSU_SETTEI` C→S payload:
-  `{ mode: "open" | "approval" | "closed" }`
+  `{ mode: "open" | "approval" | "closed" | "password", password?: string }`
 - `NYUUSHITSU_HANTEI` C→S payload:
   `{ senderId: string, approved: boolean }`
 
@@ -113,6 +113,10 @@ Container services must listen on `0.0.0.0` to be reachable from the host
   the room topic. The 部長 receives pending requests in `NYUUSHITSU.pending`.
 - `mode=closed`: guest receives `NYUUSHITSU(status="closed")` and is not added
   to roster.
+- `mode=password`: the room stores the host-provided password in memory, but
+  until the visitor password-entry flow exists, new guests receive
+  `NYUUSHITSU(status="closed")` and are not added to roster. Do not admit by
+  mode alone.
 - The 部長 (`senderId === buchouId`) is always admitted and is the only actor
   allowed to send `NYUUSHITSU_SETTEI` or `NYUUSHITSU_HANTEI`.
 - Room-level admission mode is in-memory per room id and is not tied to the
@@ -140,7 +144,8 @@ Container services must listen on `0.0.0.0` to be reachable from the host
 - Unit-test the admission state module: default mode, set/clear, pending grouping,
   pending connection removal.
 - WS e2e-test default open, closed rejection, approval wait, approval admit,
-  host-offline pending visibility after reconnect, and non-host rejection.
+  password-mode rejection, host-offline pending visibility after reconnect, and
+  non-host rejection.
 - Frontend store test: applying `NYUUSHITSU` updates mode, own status, and
   pending request list.
 

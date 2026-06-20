@@ -6,6 +6,8 @@ import type { KousokuMessage } from "houkago-kousoku"
 // tsuijuuChuu, OIKAKE→GENJOU catch-up, drift tiers) is the P0 task — NOT here.
 
 type OnMessage = (msg: KousokuMessage) => void
+export type KousokuConnectionStatus = "connecting" | "open" | "closed" | "error"
+type OnStatus = (status: KousokuConnectionStatus) => void
 
 export class KousokuClient {
   private ws: WebSocket | null = null
@@ -16,9 +18,11 @@ export class KousokuClient {
   constructor(
     private readonly baseUrl: string,
     private readonly onMessage: OnMessage,
+    private readonly onStatus: OnStatus = () => {},
   ) {}
 
   connect(bushitsuId: string, senderId: string, nickname?: string): void {
+    this.onStatus("connecting")
     const url = new URL(this.baseUrl)
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
     url.pathname = "/ws"
@@ -33,7 +37,14 @@ export class KousokuClient {
       this.onMessage(msg)
     })
     ws.addEventListener("open", () => {
+      this.onStatus("open")
       this.flush()
+    })
+    ws.addEventListener("error", () => {
+      this.onStatus("error")
+    })
+    ws.addEventListener("close", () => {
+      this.onStatus("closed")
     })
     this.ws = ws
   }
@@ -66,5 +77,6 @@ export class KousokuClient {
     this.ws?.close()
     this.ws = null
     this.sendQueue = []
+    this.onStatus("closed")
   }
 }

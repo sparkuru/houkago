@@ -9,6 +9,7 @@ import { KousokuClient } from "../src/ws/client"
 const READY = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 } as const
 
 type OpenHandler = () => void
+type EventHandler = () => void
 
 class MockWebSocket {
   static readonly CONNECTING = READY.CONNECTING
@@ -22,6 +23,8 @@ class MockWebSocket {
   sent: string[] = []
   closed = false
   private openHandlers: OpenHandler[] = []
+  private closeHandlers: EventHandler[] = []
+  private errorHandlers: EventHandler[] = []
 
   constructor(public readonly url: string | URL) {
     MockWebSocket.last = this
@@ -29,12 +32,18 @@ class MockWebSocket {
 
   addEventListener(type: string, handler: (ev: unknown) => void): void {
     if (type === "open") this.openHandlers.push(handler as OpenHandler)
+    if (type === "close") this.closeHandlers.push(handler as EventHandler)
+    if (type === "error") this.errorHandlers.push(handler as EventHandler)
   }
 
   // テスト用：接続完了をシミュレートし open を発火。
   fireOpen(): void {
     this.readyState = READY.OPEN
     for (const h of this.openHandlers) h()
+  }
+
+  fireError(): void {
+    for (const h of this.errorHandlers) h()
   }
 
   send(data: string): void {
@@ -47,6 +56,7 @@ class MockWebSocket {
   close(): void {
     this.closed = true
     this.readyState = READY.CLOSING
+    for (const h of this.closeHandlers) h()
   }
 }
 
@@ -74,6 +84,25 @@ function makeClient(): { client: KousokuClient; ws: MockWebSocket } {
   const ws = MockWebSocket.last
   if (!ws) throw new Error("mock ws not created")
   return { client, ws }
+}
+
+function makeClientWithStatus(): {
+  client: KousokuClient
+  ws: MockWebSocket
+  statuses: string[]
+} {
+  const statuses: string[] = []
+  const client = new KousokuClient(
+    "http://x",
+    () => {},
+    (status) => {
+      statuses.push(status)
+    },
+  )
+  client.connect("rA", "b1")
+  const ws = MockWebSocket.last
+  if (!ws) throw new Error("mock ws not created")
+  return { client, ws, statuses }
 }
 
 test("CONNECTING 中の send は入队し底層 send を呼ばず投げない", () => {
@@ -122,4 +151,15 @@ test("close 後の send は ws=null で安全に破棄", () => {
   expect(ws.closed).toBe(true)
   expect(() => client.send(oshaberi("a"))).not.toThrow()
   expect(ws.sent).toEqual([])
+})
+
+test("connection status callback follows websocket lifecycle", () => {
+  const { client, ws, statuses } = makeClientWithStatus()
+  expect(statuses).toEqual(["connecting"])
+  ws.fireOpen()
+  expect(statuses).toEqual(["connecting", "open"])
+  ws.fireError()
+  expect(statuses).toEqual(["connecting", "open", "error"])
+  client.close()
+  expect(statuses.at(-1)).toBe("closed")
 })

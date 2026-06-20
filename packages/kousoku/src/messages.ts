@@ -19,6 +19,7 @@ export const NyuushitsuModeSchema = Type.Union([
   Type.Literal("open"),
   Type.Literal("approval"),
   Type.Literal("closed"),
+  Type.Literal("password"),
 ])
 export type NyuushitsuMode = Static<typeof NyuushitsuModeSchema>
 
@@ -114,7 +115,7 @@ export const NyuushitsuSchema = envelope(
 )
 export const NyuushitsuSetteiSchema = envelope(
   "NYUUSHITSU_SETTEI",
-  Type.Object({ mode: NyuushitsuModeSchema }),
+  Type.Object({ mode: NyuushitsuModeSchema, password: Type.Optional(Type.String()) }),
 )
 export const NyuushitsuHanteiSchema = envelope(
   "NYUUSHITSU_HANTEI",

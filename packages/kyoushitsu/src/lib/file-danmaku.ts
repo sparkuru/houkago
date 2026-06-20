@@ -14,6 +14,10 @@ export function fileDanmakuAnimationState(playing: boolean): FileDanmakuAnimatio
   return playing ? "running" : "paused"
 }
 
+export function fileDanmakuRenderKey(cue: VisibleDanmakuCue, trackVersion: number): string {
+  return `${trackVersion}:${cue.key}`
+}
+
 export function visibleFileDanmakuCues(
   cues: readonly DanmakuCue[],
   currentTime: number,

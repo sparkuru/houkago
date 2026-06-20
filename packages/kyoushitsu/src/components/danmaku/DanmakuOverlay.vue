@@ -15,7 +15,10 @@ const bushitsu = useBushitsuStore()
 // 时 :disabled 让其原地渲染做 fallback，不报错。
 // controlsShown：ArtPlayer コントロール条の显隐（親が EnmokuPlayer から下す, prd #3）。
 // 気泡トラックの bottom をこれに追従させ、条が出たら遮られないよう上へ、隐れたら底へ。
-const props = defineProps<{ target?: HTMLElement | null; controlsShown?: boolean }>()
+const props = withDefaults(
+  defineProps<{ target?: HTMLElement | null; controlsShown?: boolean; showToggle?: boolean }>(),
+  { showToggle: true },
+)
 
 // 条が可視のとき上げる／隐れたとき底に寄せる。純関数 danmakuTrackBottom に委譲
 // （CSS length 文字列 — 大屏/原生全屏では clamp で控制条上まで抬げる, Bug1）。
@@ -99,6 +102,7 @@ onUnmounted(clearAll)
   <Teleport :to="props.target" :disabled="!props.target">
     <div class="danmaku-overlay">
       <button
+        v-if="props.showToggle"
         type="button"
         class="danmaku-toggle"
         :aria-label="hyouji ? t('danmakuHideAria') : t('danmakuShowAria')"

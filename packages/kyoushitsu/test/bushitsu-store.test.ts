@@ -22,9 +22,9 @@ const mem = new Map<string, string>()
 const { useBushitsuStore } = await import("../src/stores/bushitsu")
 
 type M = { id: string; nickname: string; yakuwari?: Yakuwari }
-const shusseki = (members: M[]): KousokuMessage => ({
+const shusseki = (members: M[], ts = Date.now()): KousokuMessage => ({
   type: "SHUSSEKI",
-  ts: Date.now(),
+  ts,
   senderId: "server",
   payload: {
     n: members.length,
@@ -83,7 +83,54 @@ test("apply SHUSSEKI records yakuwari; yakuwariOf resolves and defaults to ã‚²ã‚
   expect(store.yakuwariOf("unknown")).toBe("kengaku")
 })
 
-test("apply OSHABERI and DANMAKU keep chat and danmaku streams separate", () => {
+test("apply SHUSSEKI tracks online members and departed member history", () => {
+  const store = useBushitsuStore()
+  store.apply(
+    shusseki(
+      [
+        { id: "u1", nickname: "Yui", yakuwari: "buchou" },
+        { id: "u2", nickname: "Mio", yakuwari: "kengaku" },
+      ],
+      1000,
+    ),
+  )
+
+  expect(store.onlineBuinInfo.map((member) => member.id)).toEqual(["u1", "u2"])
+  expect(store.onlineBuinInfo[0]).toMatchObject({
+    id: "u1",
+    nickname: "Yui",
+    yakuwari: "buchou",
+    joinedAt: 1000,
+    lastSeenAt: 1000,
+    online: true,
+  })
+  expect(store.historyBuinInfo).toEqual([])
+
+  store.apply(shusseki([{ id: "u2", nickname: "Mio", yakuwari: "kengaku" }], 5000))
+
+  expect(store.onlineBuinInfo).toEqual([
+    {
+      id: "u2",
+      nickname: "Mio",
+      yakuwari: "kengaku",
+      joinedAt: 1000,
+      lastSeenAt: 5000,
+      online: true,
+    },
+  ])
+  expect(store.historyBuinInfo).toEqual([
+    {
+      id: "u1",
+      nickname: "Yui",
+      yakuwari: "buchou",
+      joinedAt: 1000,
+      lastSeenAt: 5000,
+      online: false,
+    },
+  ])
+})
+
+test("apply OSHABERI stores chat while DANMAKU stores overlay and a marked chat mirror", () => {
   const store = useBushitsuStore()
   store.apply({
     type: "OSHABERI",
@@ -98,7 +145,10 @@ test("apply OSHABERI and DANMAKU keep chat and danmaku streams separate", () => 
     payload: { content: "danmaku line", color: "#fff", mode: "scroll" },
   })
 
-  expect(store.chat).toEqual([{ senderId: "u1", content: "chat line", ts: 100 }])
+  expect(store.chat).toEqual([
+    { senderId: "u1", content: "chat line", ts: 100, kind: "oshaberi" },
+    { senderId: "u2", content: "danmaku line", ts: 200, kind: "danmaku", color: "#fff" },
+  ])
   expect(store.danmaku).toEqual([
     { senderId: "u2", content: "danmaku line", ts: 200, color: "#fff", mode: "scroll" },
   ])
@@ -111,7 +161,7 @@ const kengenMsg = (payload: {
 }): KousokuMessage => ({ type: "KENGEN", ts: Date.now(), senderId: "server", payload })
 
 const nyuushitsuMsg = (payload: {
-  mode: "open" | "approval" | "closed"
+  mode: "open" | "approval" | "closed" | "password"
   status: "entered" | "waiting" | "rejected" | "closed"
   pending: { senderId: string; nickname: string; requestedAt: number }[]
 }): KousokuMessage => ({ type: "NYUUSHITSU", ts: Date.now(), senderId: "server", payload })
@@ -172,6 +222,19 @@ test("apply NYUUSHITSU updates mode, my admission status, and pending requests",
   expect(store.nyuushitsuMode).toBe("approval")
   expect(store.nyuushitsuStatus).toBe("entered")
   expect(store.pendingNyuushitsu).toEqual([{ senderId: "u2", nickname: "Mio", requestedAt: 123 }])
+})
+
+test("apply NYUUSHITSU accepts password admission mode snapshot", () => {
+  const store = useBushitsuStore()
+  store.apply(
+    nyuushitsuMsg({
+      mode: "password",
+      status: "closed",
+      pending: [],
+    }),
+  )
+  expect(store.nyuushitsuMode).toBe("password")
+  expect(store.nyuushitsuStatus).toBe("closed")
 })
 
 test("apply BANGUMI updates the room queue snapshot", () => {
