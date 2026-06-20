@@ -15,6 +15,7 @@ export function parseHlsManifest(manifest: string, options: HlsParseOptions): Hl
   const lines = manifest.split(/\r?\n/)
   let pendingStream: Record<string, string> | undefined
   let isMasterPlaylist = false
+  let uriIndex = 0
 
   for (const line of lines) {
     const trimmed = line.trim()
@@ -28,8 +29,11 @@ export function parseHlsManifest(manifest: string, options: HlsParseOptions): Hl
 
     if (trimmed.startsWith("#EXT-X-MEDIA:")) {
       const media = parseAttributeList(trimmed.slice("#EXT-X-MEDIA:".length))
-      if (media.TYPE === "SUBTITLES" && media.URI) {
-        const url = proxyHlsUrl(media.URI, options)
+      if (media.URI) {
+        const currentUriIndex = uriIndex
+        if (isRewriteableHlsUri(media.URI, options.upstreamUrl)) uriIndex += 1
+        const url =
+          media.TYPE === "SUBTITLES" ? proxyHlsUrl(media.URI, options, currentUriIndex) : undefined
         if (url) {
           subtitles[
             media.NAME || media.LANGUAGE || `subtitles-${Object.keys(subtitles).length + 1}`
@@ -44,7 +48,9 @@ export function parseHlsManifest(manifest: string, options: HlsParseOptions): Hl
     }
 
     if (pendingStream && !trimmed.startsWith("#")) {
-      const url = proxyHlsUrl(trimmed, options)
+      const currentUriIndex = uriIndex
+      if (isRewriteableHlsUri(trimmed, options.upstreamUrl)) uriIndex += 1
+      const url = proxyHlsUrl(trimmed, options, currentUriIndex)
       if (url) {
         sources.push({
           name: sourceName(pendingStream, sources.length + 1),
@@ -62,7 +68,7 @@ export function parseHlsManifest(manifest: string, options: HlsParseOptions): Hl
   }
 }
 
-function proxyHlsUrl(uri: string, options: HlsParseOptions): string | undefined {
+function proxyHlsUrl(uri: string, options: HlsParseOptions, uriIndex: number): string | undefined {
   let resolved: URL
   try {
     resolved = new URL(uri, options.upstreamUrl)
@@ -72,8 +78,25 @@ function proxyHlsUrl(uri: string, options: HlsParseOptions): string | undefined 
   if (resolved.protocol !== "http:" && resolved.protocol !== "https:") return undefined
 
   const proxyBase = options.proxyBase.replace(/\/+$/, "")
-  const ref: ProxyRef = { url: resolved.toString(), headers: options.headers }
+  const ref: ProxyRef = {
+    url: resolved.toString(),
+    headers: options.headers,
+    hls: {
+      manifestUrl: options.upstreamUrl.toString(),
+      uri,
+      uriIndex,
+    },
+  }
   return `${proxyBase}/eisha/proxy/${encodeProxyRef(ref)}`
+}
+
+function isRewriteableHlsUri(uri: string, upstreamUrl: URL): boolean {
+  try {
+    const resolved = new URL(uri, upstreamUrl)
+    return resolved.protocol === "http:" || resolved.protocol === "https:"
+  } catch {
+    return false
+  }
 }
 
 function sourceName(attrs: Record<string, string>, index: number): string {

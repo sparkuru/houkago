@@ -38,6 +38,14 @@ const upstream = new Elysia()
       },
     })
   })
+  .get(
+    "/refresh/index.m3u8",
+    () => new Response(["#EXTM3U", "#EXTINF:4,", "seg.ts?sig=new"].join("\n")),
+  )
+  .get("/refresh/seg.ts", ({ query }) => {
+    if (query.sig === "old") return new Response("expired", { status: 403 })
+    return new Response("fresh-segment", { headers: { "content-type": "video/mp2t" } })
+  })
 
 beforeAll(() => {
   app.listen(0)
@@ -78,6 +86,11 @@ test("eisha proxy route rewrites m3u8 segment URLs back through the proxy", asyn
   expect(response.headers.get("accept-ranges")).toBeNull()
   expect(decodeProxyRef(segmentUrl.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: `${upstreamBase}/playlist/seg-1.ts`,
+    hls: {
+      manifestUrl: `${upstreamBase}/playlist/index.m3u8`,
+      uri: "seg-1.ts",
+      uriIndex: 0,
+    },
   })
 
   const segment = await fetch(segmentUrl, { headers: { range: "bytes=0-3" } })
@@ -86,4 +99,20 @@ test("eisha proxy route rewrites m3u8 segment URLs back through the proxy", asyn
   expect(segment.headers.get("content-range")).toBe("bytes 0-3/10")
   expect(segment.headers.get("content-type")).toBe("video/mp2t")
   expect(await segment.text()).toBe("segment:bytes=0-3")
+})
+
+test("eisha proxy route re-resolves expired HLS segment refs", async () => {
+  const token = encodeProxyRef({
+    url: `${upstreamBase}/refresh/seg.ts?sig=old`,
+    hls: {
+      manifestUrl: `${upstreamBase}/refresh/index.m3u8`,
+      uri: "seg.ts?sig=old",
+      uriIndex: 0,
+    },
+  })
+  const response = await fetch(`${base}/eisha/proxy/${token}`)
+
+  expect(response.status).toBe(200)
+  expect(response.headers.get("content-type")).toBe("video/mp2t")
+  expect(await response.text()).toBe("fresh-segment")
 })

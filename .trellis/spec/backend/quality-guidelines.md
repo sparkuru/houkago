@@ -321,8 +321,14 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 
 ### 3. Contracts
 
-- `ProxyRef`: `{ url: string, headers?: Record<string, string> }`.
+- Legacy `ProxyRef`: `{ url: string, headers?: Record<string, string> }`.
+- HLS child `ProxyRef` may additionally include
+  `hls: { manifestUrl: string, uri: string, uriIndex: number }`. This refresh
+  context is optional and backwards-compatible; do not require it when decoding
+  old tokens or direct media refs.
 - `url` must be `http:` or `https:`; reject all other protocols.
+- `hls.manifestUrl` must also be `http:` or `https:`; reject malformed refresh
+  context as an invalid proxy token.
 - Stable proxy URL format is `<proxyBase>/eisha/proxy/<base64url-json-token>`.
 - `resolveUrl` stays synchronous and only performs URL validation, title/type
   inference, and stable proxy URL construction. Use it for fallback/simple
@@ -341,7 +347,7 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     entry with `type: "hls"`;
   - child playlist/subtitle URLs resolve relative to the parent manifest URL,
     are wrapped in stable `/eisha/proxy/:token` URLs, and preserve parent
-    headers in the decoded `ProxyRef`;
+    headers plus HLS refresh context in the decoded `ProxyRef`;
   - master playlists leave `live` undefined; media playlists set `live: true`
     when `#EXT-X-ENDLIST` is absent and `live: false` when it is present.
 - The proxy forwards the caller's `Range` header to upstream and preserves
@@ -353,10 +359,19 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     and become new `/eisha/proxy/:token` URLs;
   - HLS `URI="..."` attributes, including key/map/media references, are
     rewritten the same way;
-  - rewritten child `ProxyRef` values preserve the parent `headers`;
+  - rewritten child `ProxyRef` values preserve the parent `headers` and carry
+    `{ manifestUrl, uri, uriIndex }` so expired signed URLs can be re-resolved;
+  - `uriIndex` counts only rewriteable http(s) HLS URIs, in the same order used
+    by both manifest rewrite and refresh lookup; non-http(s) values like
+    `data:` must not advance the index;
   - non-http(s) URI values such as `data:` remain unchanged.
 - Do not rewrite partial playlist responses. If the caller sends `Range`, keep
   the existing byte proxy behavior.
+- If a proxied HLS child ref returns `401`, `403`, `404`, or `410`, `eisha`
+  fetches `hls.manifestUrl`, picks the current rewriteable URI at `uriIndex`,
+  resolves it relative to the refreshed manifest response URL, and retries the
+  upstream request once. If refresh fails or the retry also fails, preserve the
+  normal upstream/error behavior; never recurse indefinitely.
 - Rewritten playlist responses must not forward stale upstream byte/cache
   validators such as `accept-ranges`, `content-range`, or `etag`. A hosting
   layer may compute a fresh `content-length`; tests should assert it is not the
@@ -375,6 +390,11 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   do not rewrite it to 500.
 - Playlist contains malformed or unsupported URI -> leave that URI unchanged;
   do not fail the whole manifest.
+- HLS refresh context is malformed -> `EISHA_BAD_REQUEST` / HTTP 400.
+- HLS child request returns an expiry-like status and refreshed manifest fetch
+  throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- HLS child request returns an expiry-like status but refreshed manifest is
+  non-OK or lacks the indexed URI -> preserve the original upstream status.
 
 ### 5. Good/Base/Bad Cases
 
@@ -389,6 +409,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Good: a proxied m3u8 manifest containing `seg-1.ts` and
   `#EXT-X-KEY:URI="key.bin"` returns proxy URLs whose decoded refs point at the
   upstream absolute segment/key URLs.
+- Good: a proxied HLS segment whose old signed URL returns `403` re-fetches the
+  origin manifest, picks the refreshed URI at the same `uriIndex`, forwards the
+  caller's `Range`, and returns the fresh segment.
 - Base: direct `.mp4` input resolves to type `direct` and is proxied with
   `content-type: video/mp4`.
 - Bad: route logic in `housou` hand-fetches upstream media or buffers bytes;
@@ -399,6 +422,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   plane and bypasses header preservation.
 - Bad: a rewritten playlist forwards upstream `content-range` / `etag` from the
   original body after changing the body text.
+- Bad: refresh retry calls `proxyUpstream` without disabling further refresh,
+  causing an infinite loop when the refreshed URL also returns an expiry-like
+  status.
 
 ### 6. Tests Required
 
@@ -416,12 +442,18 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - `Range` forwarding and allowed response header preservation
   - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
     resolution, child header preservation, and non-http URI passthrough
+  - rewritten HLS child refs include refresh context with stable `manifestUrl`,
+    original `uri`, and rewriteable-only `uriIndex`
+  - an expired HLS child ref refreshes from its origin manifest and retries only
+    once, preserving the caller's `Range`
   - rewritten m3u8 response headers do not retain stale byte headers
 - `houkago-housou` e2e test:
   - mount `/eisha/proxy/:token`, proxy to a local upstream server, assert `206`,
     forwarded range evidence, and seek headers.
   - fetch a proxied local m3u8, assert its segment URL is rewritten to the same
     route, then fetch that rewritten segment URL through the proxy.
+  - fetch a proxied expired HLS child ref through the mounted route and assert it
+    re-resolves to the refreshed segment.
   - resolver-body create from a local HLS manifest persists parser-produced
     `sources` and `subtitles` through create response and `GET /bangumi`.
 
@@ -453,6 +485,22 @@ return new Response(rewrittenManifest, { headers: upstream.headers })
 ```ts
 // Rewritten playlist only keeps safe text-response headers.
 return new Response(rewrittenManifest, { headers: rewrittenPlaylistHeaders })
+```
+
+#### Wrong
+
+```ts
+// data: URI shifts later segment indexes, so refresh picks the wrong URI.
+const uriIndex = nextUriIndex()
+if (!isHttpUri(uri)) return uri
+```
+
+#### Correct
+
+```ts
+// Only rewritten http(s) HLS URIs participate in refresh lookup indexes.
+if (!isHttpUri(uri)) return uri
+const uriIndex = nextUriIndex()
 ```
 
 ---

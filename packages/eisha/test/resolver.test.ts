@@ -57,12 +57,22 @@ test("resolves HLS URLs with parsed manifest metadata", async () => {
   expect(decodeProxyRef(resolved.sources?.[0]?.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://media.example.test/live/variant/720.m3u8",
     headers: { authorization: "Bearer resolver" },
+    hls: {
+      manifestUrl: "https://media.example.test/live/master.m3u8",
+      uri: "variant/720.m3u8",
+      uriIndex: 1,
+    },
   })
   const english = resolved.subtitles?.English
   expect(english).toBeDefined()
   expect(decodeProxyRef(english?.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://media.example.test/live/subs/en.m3u8",
     headers: { authorization: "Bearer resolver" },
+    hls: {
+      manifestUrl: "https://media.example.test/live/master.m3u8",
+      uri: "subs/en.m3u8",
+      uriIndex: 0,
+    },
   })
 })
 

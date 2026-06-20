@@ -26,10 +26,20 @@ test("parses HLS master playlist sources through stable proxy refs", () => {
   expect(decodeProxyRef(proxyToken(parsed.sources?.[0]?.url))).toEqual({
     url: "https://media.example.test/hls/hi/prog.m3u8",
     headers: { authorization: "Bearer hls" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master.m3u8",
+      uri: "hi/prog.m3u8",
+      uriIndex: 0,
+    },
   })
   expect(decodeProxyRef(proxyToken(parsed.sources?.[1]?.url))).toEqual({
     url: "https://cdn.example.test/lo/prog.m3u8",
     headers: { authorization: "Bearer hls" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master.m3u8",
+      uri: "https://cdn.example.test/lo/prog.m3u8",
+      uriIndex: 1,
+    },
   })
 })
 
@@ -50,6 +60,11 @@ test("parses HLS subtitle media tags", () => {
   expect(english?.type).toBe("hls")
   expect(decodeProxyRef(proxyToken(english?.url))).toEqual({
     url: "https://media.example.test/hls/subs/en.m3u8",
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master.m3u8",
+      uri: "subs/en.m3u8",
+      uriIndex: 0,
+    },
   })
 })
 

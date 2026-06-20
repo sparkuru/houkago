@@ -184,10 +184,20 @@ test("add enmoku from HLS sourceUrl persists parser metadata", async () => {
   expect(enmoku.sources?.[0]?.name).toBe("1280x720 · 2400k")
   expect(decodeProxyRef(enmoku.sources?.[0]?.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: `${upstreamBase}/live/variant/720.m3u8`,
+    hls: {
+      manifestUrl: `${upstreamBase}/live/index.m3u8`,
+      uri: "variant/720.m3u8",
+      uriIndex: 1,
+    },
   })
   expect(enmoku.subtitles?.English.type).toBe("hls")
   expect(decodeProxyRef(enmoku.subtitles?.English.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: `${upstreamBase}/live/subs/en.m3u8`,
+    hls: {
+      manifestUrl: `${upstreamBase}/live/index.m3u8`,
+      uri: "subs/en.m3u8",
+      uriIndex: 0,
+    },
   })
 
   const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())

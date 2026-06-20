@@ -88,28 +88,58 @@ test("rewriteM3u8Manifest rewrites URI lines and URI attributes through proxy re
   expect(refFromProxyUrl(attributeUri(rewritten, "EXT-X-KEY"))).toEqual({
     url: "https://media.example.test/hls/master/keys/key.bin",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "keys/key.bin",
+      uriIndex: 0,
+    },
   })
   expect(refFromProxyUrl(attributeUri(rewritten, "EXT-X-MAP"))).toEqual({
     url: "https://media.example.test/hls/master/init.mp4",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "init.mp4",
+      uriIndex: 1,
+    },
   })
   expect(refFromProxyUrl(attributeUri(rewritten, "EXT-X-MEDIA"))).toEqual({
     url: "https://media.example.test/hls/master/audio/main.m3u8",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "audio/main.m3u8",
+      uriIndex: 2,
+    },
   })
 
   const uriLines = rewritten.split("\n").filter((line) => line && !line.startsWith("#"))
   expect(refFromProxyUrl(uriLines[0] ?? "")).toEqual({
     url: "https://media.example.test/hls/master/seg-1.ts",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "seg-1.ts",
+      uriIndex: 3,
+    },
   })
   expect(refFromProxyUrl(uriLines[1] ?? "")).toEqual({
     url: "https://media.example.test/hls/variant/high.m3u8",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "../variant/high.m3u8",
+      uriIndex: 4,
+    },
   })
   expect(refFromProxyUrl(uriLines[2] ?? "")).toEqual({
     url: "https://cdn.example.test/abs.ts",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/hls/master/index.m3u8?sig=1",
+      uri: "https://cdn.example.test/abs.ts",
+      uriIndex: 5,
+    },
   })
   expect(uriLines[3]).toBe("data:text/plain;base64,AAAA")
 })
@@ -144,7 +174,54 @@ test("proxyUpstream rewrites m3u8 responses and removes stale byte headers", asy
   expect(refFromProxyUrl(segmentLine)).toEqual({
     url: "https://media.example.test/live/seg-1.ts",
     headers: { authorization: "Bearer x" },
+    hls: {
+      manifestUrl: "https://media.example.test/live/index.m3u8",
+      uri: "seg-1.ts",
+      uriIndex: 0,
+    },
   })
+})
+
+test("proxyUpstream refreshes expired HLS child refs from the origin manifest once", async () => {
+  const seen: string[] = []
+  const fetcher: FetchLike = async (input, init) => {
+    seen.push(String(input))
+    const headers = new Headers(init?.headers)
+
+    if (String(input).endsWith("seg.ts?sig=old")) {
+      return new Response("expired", { status: 403 })
+    }
+
+    if (String(input).endsWith("index.m3u8")) {
+      return new Response(["#EXTM3U", "#EXTINF:4,", "seg.ts?sig=new"].join("\n"))
+    }
+
+    return new Response(`fresh:${headers.get("range")}`, {
+      headers: { "content-type": "video/mp2t" },
+    })
+  }
+
+  const response = await proxyUpstream(
+    {
+      url: "https://media.example.test/live/seg.ts?sig=old",
+      hls: {
+        manifestUrl: "https://media.example.test/live/index.m3u8",
+        uri: "seg.ts?sig=old",
+        uriIndex: 0,
+      },
+    },
+    new Request("https://proxy.test/eisha/proxy/token", { headers: { range: "bytes=0-3" } }),
+    fetcher,
+  )
+
+  expect(seen).toEqual([
+    "https://media.example.test/live/seg.ts?sig=old",
+    "https://media.example.test/live/index.m3u8",
+    "https://media.example.test/live/seg.ts?sig=new",
+  ])
+  expect(response.status).toBe(200)
+  expect(response.headers.get("content-type")).toBe("video/mp2t")
+  expect(await response.text()).toBe("fresh:bytes=0-3")
 })
 
 function refFromProxyUrl(raw: string): ProxyRef {
