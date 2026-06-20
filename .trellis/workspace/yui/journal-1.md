@@ -1131,3 +1131,36 @@ Connected the kyoushitsu dev direct-link form to housou's enmoku create flow via
 ### Next Steps
 
 - None - task complete
+
+
+## Session 35: P2 persist Enmoku metadata
+
+**Date**: 2026-06-20
+**Task**: P2 persist Enmoku metadata
+**Branch**: `k-on`
+
+### Summary
+
+Persisted Enmoku extended metadata in housou SQLite: headers/subtitles/sources/danmaku as JSON columns and live as nullable integer, with guarded column upgrades for old local DBs. Updated REST create/domain/DB mapping to preserve metadata, added tests for create/list/BANGUMI/resolver headers, and updated design plus backend specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ea77ed4` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
