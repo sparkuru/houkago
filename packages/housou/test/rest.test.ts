@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
+import { Elysia } from "elysia"
 import { decodeProxyRef } from "houkago-eisha"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
@@ -8,8 +9,24 @@ import { app } from "../src/index"
 
 let base: string
 let baseWs: string
+let upstream: Elysia
+let upstreamBase: string
 
 beforeAll(() => {
+  upstream = new Elysia()
+    .get("/live/index.m3u8", () =>
+      [
+        "#EXTM3U",
+        '#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",URI="subs/en.m3u8"',
+        "#EXT-X-STREAM-INF:BANDWIDTH=2400000,RESOLUTION=1280x720",
+        "variant/720.m3u8",
+      ].join("\n"),
+    )
+    .get("/live/subs/en.m3u8", () => "#EXTM3U\n#EXTINF:4,\nsub.ts\n#EXT-X-ENDLIST")
+    .get("/live/variant/720.m3u8", () => "#EXTM3U\n#EXTINF:4,\nsegment.ts\n#EXT-X-ENDLIST")
+  upstream.listen(0)
+  upstreamBase = `http://localhost:${upstream.server?.port}`
+
   app.listen(0)
   base = `http://localhost:${app.server?.port}`
   baseWs = `ws://localhost:${app.server?.port}/ws`
@@ -17,6 +34,7 @@ beforeAll(() => {
 
 afterAll(() => {
   app.server?.stop()
+  upstream.server?.stop()
 })
 
 function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
@@ -130,20 +148,51 @@ test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       title: "resolved",
-      sourceUrl: "https://media.example.test/live/index.m3u8",
+      sourceUrl: "https://media.example.test/video.mp4",
       headers: { authorization: "Bearer resolver" },
       addedBy: "u1",
     }),
   }).then((r) => r.json())
 
   expect(enmoku.title).toBe("resolved")
-  expect(enmoku.type).toBe("hls")
+  expect(enmoku.type).toBe("direct")
   expect(enmoku.headers).toEqual({ authorization: "Bearer resolver" })
   expect(enmoku.url.startsWith(`${base}/eisha/proxy/`)).toBe(true)
   expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
-    url: "https://media.example.test/live/index.m3u8",
+    url: "https://media.example.test/video.mp4",
     headers: { authorization: "Bearer resolver" },
   })
+})
+
+test("add enmoku from HLS sourceUrl persists parser metadata", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-hls-metadata", buchouId: "u1" }),
+  }).then((r) => r.json())
+
+  const enmoku = await fetch(`${base}/bushitsu/${room.id}/enmoku`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      sourceUrl: `${upstreamBase}/live/index.m3u8`,
+      addedBy: "u1",
+    }),
+  }).then((r) => r.json())
+
+  expect(enmoku.type).toBe("hls")
+  expect(enmoku.sources?.[0]?.name).toBe("1280x720 · 2400k")
+  expect(decodeProxyRef(enmoku.sources?.[0]?.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
+    url: `${upstreamBase}/live/variant/720.m3u8`,
+  })
+  expect(enmoku.subtitles?.English.type).toBe("hls")
+  expect(decodeProxyRef(enmoku.subtitles?.English.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
+    url: `${upstreamBase}/live/subs/en.m3u8`,
+  })
+
+  const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
+  expect(bangumi[0].sources).toEqual(enmoku.sources)
+  expect(bangumi[0].subtitles).toEqual(enmoku.subtitles)
 })
 
 test("add enmoku broadcasts extended metadata in BANGUMI", async () => {

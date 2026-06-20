@@ -189,10 +189,11 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 
 - REST create/delete must call domain/db first, then broadcast
   `BANGUMI` with the full latest `fetchBangumi(bushitsuId)` result.
-- Resolver-body create must call `houkago-eisha.resolveUrl` server-side and
-  store the returned stable proxy URL in the queued `Enmoku`. The frontend dev
-  direct-link form submits `sourceUrl`; it must not infer HLS/DASH type or build
-  proxy tokens itself.
+- Resolver-body create must call `houkago-eisha.resolveUrlWithMetadata`
+  server-side and store the returned stable proxy URL plus any parser-produced
+  metadata in the queued `Enmoku`. The frontend dev direct-link form submits
+  `sourceUrl`; it must not infer HLS/DASH type, parse manifests, or build proxy
+  tokens itself.
 - Create/list/BANGUMI must preserve optional `Enmoku` metadata:
   `headers`, `subtitles`, `sources`, `danmaku`, and `live`. Missing metadata
   remains `undefined`, not empty containers or default `false`.
@@ -305,6 +306,8 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 ### 2. Signatures
 
 - `resolveUrl(input, options) -> ResolvedEnmokuSource`
+- `resolveUrlWithMetadata(input, options, fetcher?) -> Promise<ResolvedEnmokuSource>`
+- `parseHlsManifest(manifest, options) -> Pick<Enmoku, "sources" | "subtitles" | "live">`
 - `encodeProxyRef(ref) -> token`
 - `decodeProxyRef(token) -> ProxyRef`
 - `proxyUpstream(ref, request) -> Response`
@@ -316,10 +319,26 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - `ProxyRef`: `{ url: string, headers?: Record<string, string> }`.
 - `url` must be `http:` or `https:`; reject all other protocols.
 - Stable proxy URL format is `<proxyBase>/eisha/proxy/<base64url-json-token>`.
+- `resolveUrl` stays synchronous and only performs URL validation, title/type
+  inference, and stable proxy URL construction. Use it for fallback/simple
+  resolution that must not touch the network.
+- `resolveUrlWithMetadata` wraps `resolveUrl`; for non-HLS inputs it returns the
+  same result, and for HLS inputs it fetches the upstream manifest and merges the
+  Generic HLS parser output.
 - Resolver type inference:
   - path ending `.m3u8` -> `Enmoku.type = "hls"`
   - path ending `.mpd` -> `Enmoku.type = "dash"`
   - otherwise -> `Enmoku.type = "direct"`
+- Generic HLS parser output:
+  - `#EXT-X-STREAM-INF` plus the next URI line becomes a `sources` item;
+  - source names use `RESOLUTION` and/or rounded `BANDWIDTH` kbit/s labels;
+  - `#EXT-X-MEDIA:TYPE=SUBTITLES,...,URI="..."` becomes a `subtitles` record
+    entry with `type: "hls"`;
+  - child playlist/subtitle URLs resolve relative to the parent manifest URL,
+    are wrapped in stable `/eisha/proxy/:token` URLs, and preserve parent
+    headers in the decoded `ProxyRef`;
+  - master playlists leave `live` undefined; media playlists set `live: true`
+    when `#EXT-X-ENDLIST` is absent and `live: false` when it is present.
 - The proxy forwards the caller's `Range` header to upstream and preserves
   seek-relevant response headers: `accept-ranges`, `content-length`,
   `content-range`, `content-type`, plus cache validators when present.
@@ -344,7 +363,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Token decodes but lacks string `url` -> `EISHA_BAD_REQUEST` / HTTP 400.
 - Upstream URL has unsupported protocol (`file:`, `ftp:`, etc.) ->
   `EISHA_BAD_REQUEST` / HTTP 400.
-- Upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- `resolveUrlWithMetadata` HLS manifest fetch throws or returns non-OK ->
+  `EISHA_UPSTREAM_ERROR` / HTTP 502.
+- Proxy upstream fetch throws -> `EISHA_UPSTREAM_ERROR` / HTTP 502.
 - Upstream returns non-2xx/3xx -> preserve upstream status and allowed headers;
   do not rewrite it to 500.
 - Playlist contains malformed or unsupported URI -> leave that URI unchanged;
@@ -355,6 +376,11 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Good: `.m3u8` input resolves to a stable proxy URL with type `hls`; a browser
   seek sends `Range`, upstream responds `206`, and the route returns `206` with
   `content-range`.
+- Good: resolver-body create for a local HLS master playlist returns and
+  persists `sources`/`subtitles` whose decoded proxy refs point at absolute child
+  playlist URLs.
+- Base: direct `.mp4` input through `resolveUrlWithMetadata` does not fetch
+  upstream and returns the same proxy result as `resolveUrl`.
 - Good: a proxied m3u8 manifest containing `seg-1.ts` and
   `#EXT-X-KEY:URI="key.bin"` returns proxy URLs whose decoded refs point at the
   upstream absolute segment/key URLs.
@@ -363,6 +389,9 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
 - Bad: route logic in `housou` hand-fetches upstream media or buffers bytes;
   this violates the media-plane boundary and makes later eisha service split
   harder.
+- Bad: `housou` parses HLS manifests itself or stores raw child playlist URLs
+  without eisha proxy tokens; this leaks media-plane behavior into the control
+  plane and bypasses header preservation.
 - Bad: a rewritten playlist forwards upstream `content-range` / `etag` from the
   original body after changing the body text.
 
@@ -372,6 +401,13 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
   - token round-trip and invalid-token rejection
   - non-http URL rejection
   - resolver type inference for direct/HLS/DASH
+  - Generic HLS parser converts master `#EXT-X-STREAM-INF` entries into
+    `sources` with decoded child proxy refs
+  - Generic HLS parser converts subtitle `#EXT-X-MEDIA` URI entries into
+    `subtitles`
+  - Generic HLS parser marks media playlists live based on `#EXT-X-ENDLIST`
+  - `resolveUrlWithMetadata` fetches HLS manifests and wraps fetch/non-OK
+    failures as `EISHA_UPSTREAM_ERROR`
   - `Range` forwarding and allowed response header preservation
   - m3u8 URI-line and `URI="..."` attribute rewriting, including relative URL
     resolution, child header preservation, and non-http URI passthrough
@@ -381,6 +417,8 @@ state.set(room, { enmokuId, shinkou: DEFAULT_SHINKOU, shinkouServerTime: Date.no
     forwarded range evidence, and seek headers.
   - fetch a proxied local m3u8, assert its segment URL is rewritten to the same
     route, then fetch that rewritten segment URL through the proxy.
+  - resolver-body create from a local HLS manifest persists parser-produced
+    `sources` and `subtitles` through create response and `GET /bangumi`.
 
 ### 7. Wrong vs Correct
 

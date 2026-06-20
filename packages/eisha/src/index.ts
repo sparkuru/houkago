@@ -1,4 +1,5 @@
 export * from "./errors"
+export * from "./parsers/hls"
 export * from "./proxy"
 export * from "./resolver"
 export * from "./routes"

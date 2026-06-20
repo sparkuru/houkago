@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia"
-import { resolveUrl } from "houkago-eisha"
+import { resolveUrlWithMetadata } from "houkago-eisha"
 import type { Enmoku } from "houkago-kousoku"
 import { EnmokuTypeSchema } from "houkago-kousoku"
 import {
@@ -62,8 +62,8 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   // 演目を投稿する：add a legacy direct source or resolve a dev source URL.
   .post(
     "/:id/enmoku",
-    ({ params, body, request, server }) => {
-      const enmoku = createEnmoku(params.id, body, new URL(request.url).origin)
+    async ({ params, body, request, server }) => {
+      const enmoku = await createEnmoku(params.id, body, new URL(request.url).origin)
       broadcastBangumi(params.id, server)
       return enmoku
     },
@@ -78,13 +78,13 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     return result
   })
 
-function createEnmoku(
+async function createEnmoku(
   bushitsuId: string,
   input: DirectEnmokuInput | ResolveEnmokuInput,
   proxyBase: string,
-): Enmoku {
+): Promise<Enmoku> {
   if ("sourceUrl" in input) {
-    const resolved = resolveUrl(
+    const resolved = await resolveUrlWithMetadata(
       { title: input.title, url: input.sourceUrl, headers: input.headers },
       { proxyBase },
     )
@@ -93,6 +93,9 @@ function createEnmoku(
       type: resolved.type,
       url: resolved.url,
       headers: resolved.headers,
+      subtitles: resolved.subtitles,
+      sources: resolved.sources,
+      live: resolved.live,
       addedBy: input.addedBy,
     })
   }
