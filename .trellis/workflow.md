@@ -198,7 +198,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 [workflow-state:in_progress]
 **Tools**: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill — there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
 **Flow**: trellis-implement → trellis-check → trellis-update-spec → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
-**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, show the ChatGPT/Codex co-author trailer for applicable AI-edited work commits, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `trellis-implement`, implement directly from the loaded task context and do NOT spawn another `trellis-implement`; if you are already running as `trellis-check`, review/fix directly and do NOT spawn another `trellis-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `trellis-implement` / `trellis-check` / `trellis-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `trellis-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
 **Inline override** (per-turn only, escape hatch for sub-agent dispatch): the user's CURRENT message MUST explicitly contain one of: "do it inline" / "no sub-agent" / "你直接改" / "别派 sub-agent" / "main session 写就行" / "不用 sub-agent". **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
@@ -213,7 +213,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 **Flow** (inline mode): main session loads `trellis-before-dev` → main session edits code → main session loads `trellis-check` → run lint / type-check / tests → fix → `trellis-update-spec` → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `trellis-implement` / `trellis-check` sub-agents. Load the `trellis-before-dev` skill before writing code; load the `trellis-check` skill before reporting completion.
 Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing.
-Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, show the ChatGPT/Codex co-author trailer for applicable AI-edited work commits, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -680,7 +680,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    - **AI-edited this session** — files you wrote/edited via Edit/Write/Bash tool calls in this session. You know what changed and why.
    - **Unrecognized** — dirty files you did NOT touch this session (could be the user's manual edits, leftover WIP from a previous session, or unrelated work). Do NOT silently include these.
 
-4. **Draft a commit plan**. Group AI-edited files into logical commits (1 commit per coherent change unit, not 1 commit per file). Each entry: `<commit message>` + file list. List unrecognized files separately at the bottom.
+4. **Draft a commit plan**. Group AI-edited files into logical commits (1 commit per coherent change unit, not 1 commit per file). Each entry: `<commit message>` + file list. For commits containing files edited by ChatGPT/Codex in this Trellis session, also show `trailer: Co-authored-by: OpenAI Codex <codex@openai.com>`. List unrecognized files separately at the bottom.
 
 5. **Present the plan once, ask for one-shot confirmation**. Format:
    ```
@@ -688,6 +688,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
      1. <message>
         - <file>
         - <file>
+        trailer: Co-authored-by: OpenAI Codex <codex@openai.com>
      2. <message>
         - <file>
 
@@ -698,11 +699,17 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    Reply 'ok' / '行' to execute. Reply with edits, or '我自己来' / 'manual' to abort.
    ```
 
-6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. Do not amend. Do not push.
+6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. For any batch containing files edited by ChatGPT/Codex in this Trellis session, add the trailer as a separate message paragraph:
+   ```bash
+   git commit -m "<msg>" -m "Co-authored-by: OpenAI Codex <codex@openai.com>"
+   ```
+   Do not amend. Do not push.
 
 7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.6 once they confirm.
 
 **Rules**:
+- Add `Co-authored-by: OpenAI Codex <codex@openai.com>` only to Phase 3.5 work commits containing files edited by ChatGPT/Codex in the current Trellis session. Preserve any existing project-specific Codex/OpenAI trailer convention if recent history already shows one.
+- Do not add the ChatGPT/Codex trailer to commits containing only user-authored or unrecognized dirty files, Trellis archive commits, Trellis journal commits, or commits the user says they will make manually.
 - No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
 - Never push to remote in this step.
 - If the user wants different message wording but accepts the file grouping, edit the message and re-confirm once — but if they reject the grouping, exit to manual mode.
