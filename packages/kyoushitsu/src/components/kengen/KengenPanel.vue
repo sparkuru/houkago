@@ -5,12 +5,8 @@ import type { KousokuConnectionStatus } from "@/ws/client"
 import type { Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, onBeforeUnmount, ref } from "vue"
 
-// 権限設定パネル: host-only switch panel for the three guest permissions
-// (prd §4). Thin presentation — it reads the store's current kengen and emits the
-// romaji domain verb `settei` with the next snapshot; the parent owns the WS send.
-// Mounted only when isBuchou (the parent v-if guards it), so it never shows to a
-// guest. Real <button> toggles, keyboard-operable, label + aria-pressed (not color
-// alone) per accessibility guidelines.
+// 房間情報 + host-only settings. All viewers need the connection/status block;
+// only the host sees controls that emit room-setting messages.
 const props = defineProps<{
   roomName: string
   roomLink: string
@@ -133,7 +129,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </div>
-    <div class="kengen-control-block mode">
+    <div v-if="bushitsu.isBuchou" class="kengen-control-block mode">
       <div id="nyuushitsu-mode-heading" class="kengen-block-label vertical">
         <span v-for="(char, index) in t('nyuushitsuModeHeading')" :key="`${char}-${index}`">
           {{ char }}
@@ -208,7 +204,7 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </div>
-    <div class="kengen-control-block">
+    <div v-if="bushitsu.isBuchou" class="kengen-control-block">
       <div id="guest-kengen-heading" class="kengen-block-label vertical">
         <span v-for="(char, index) in t('guestKengenGroupAria')" :key="`${char}-${index}`">
           {{ char }}
@@ -256,7 +252,7 @@ onBeforeUnmount(() => {
         </button>
       </section>
     </div>
-    <div v-if="bushitsu.pendingNyuushitsu.length > 0" class="pending-list">
+    <div v-if="bushitsu.isBuchou && bushitsu.pendingNyuushitsu.length > 0" class="pending-list">
       <div v-for="p in bushitsu.pendingNyuushitsu" :key="p.senderId" class="pending-row">
         <span>{{ p.nickname }}</span>
         <button type="button" @click="emit('nyuushitsuHantei', p.senderId, true)">{{ t("approve") }}</button>

@@ -77,6 +77,18 @@ const chatHiraku = ref(true)
 const cinemaMode = ref(false)
 const chatTheme = ref<ChatTheme>(loadChatTheme())
 const wsStatus = ref<KousokuConnectionStatus>("closed")
+const wsStatusLabel = computed(() => {
+  switch (wsStatus.value) {
+    case "connecting":
+      return t("roomStatusConnecting")
+    case "open":
+      return t("roomStatusNormal")
+    case "error":
+      return t("roomStatusError")
+    case "closed":
+      return t("roomStatusClosed")
+  }
+})
 
 // 参加済みか（follower の autoplay ゲート用, pure view 態 → store 不要）。
 // 部長は遮罩自体が出ないので影響しない。
@@ -446,6 +458,9 @@ async function startSession() {
     },
     (status) => {
       wsStatus.value = status
+      if (status === "connecting") {
+        bootstrapped.value = false
+      }
     },
   )
   client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
@@ -492,6 +507,9 @@ onBeforeUnmount(() => {
         {{ t("nyuushitsuRejected") }}
       </p>
       <p v-else>{{ t("enteringBushitsu") }}</p>
+      <p class="nyuushitsu-status">
+        {{ t("roomInfoStatus") }}: {{ wsStatusLabel }}
+      </p>
     </div>
     <template v-else>
       <main class="stage">
@@ -567,9 +585,9 @@ onBeforeUnmount(() => {
             </div>
           </section>
         </div>
-        <div class="room-workbench" :class="{ 'without-control': !bushitsu.isBuchou }">
-          <aside v-if="bushitsu.isBuchou" class="room-control-panel">
-            <h3>{{ t("roomControlHeading") }}</h3>
+        <div class="room-workbench">
+          <aside class="room-control-panel">
+            <h3>{{ bushitsu.isBuchou ? t("roomControlHeading") : t("roomInfoHeading") }}</h3>
             <KengenPanel
               :room-name="roomName || bushitsuId"
               :room-link="roomLink"
@@ -843,9 +861,6 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-top: 8px;
   overflow: hidden;
-}
-.room-workbench.without-control {
-  grid-template-columns: minmax(0, 1fr);
 }
 .room-control-panel,
 .bangumi {
@@ -1250,6 +1265,8 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 1050;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
   align-items: center;
   justify-content: center;
   padding: 24px;
@@ -1262,5 +1279,11 @@ onBeforeUnmount(() => {
   background: #111;
   border: 1px solid #333;
   border-radius: 8px;
+}
+.nyuushitsu-gate .nyuushitsu-status {
+  padding: 8px 12px;
+  color: #ccc;
+  font-size: 13px;
+  background: rgba(17, 17, 17, 0.8);
 }
 </style>

@@ -81,6 +81,17 @@ function decide(ws: WebSocket, senderId: string, targetId: string, approved: boo
   )
 }
 
+function setKengen(ws: WebSocket, senderId: string): void {
+  ws.send(
+    JSON.stringify({
+      type: "SETTEI",
+      ts: Date.now(),
+      senderId,
+      payload: { playback: true, chat: true, playlist: false },
+    } satisfies KousokuMessage),
+  )
+}
+
 test("default open mode admits a guest and sends the admission snapshot", async () => {
   const room = await makeRoom("host-open")
   const guest = await open(room.id, "guest-open")
@@ -92,6 +103,35 @@ test("default open mode admits a guest and sends the admission snapshot", async 
   const k = await guest.nextMatch((m) => m.type === "KENGEN")
   expect(k.type).toBe("KENGEN")
   guest.ws.close()
+})
+
+test("reconnected guest receives admission, permission, and roster snapshots", async () => {
+  const room = await makeRoom("host-recovery")
+  const host = await open(room.id, "host-recovery")
+  await host.nextMatch((m) => m.type === "NYUUSHITSU")
+  setKengen(host.ws, "host-recovery")
+
+  const guest = await open(room.id, "guest-recovery")
+  await guest.nextMatch((m) => m.type === "NYUUSHITSU" && m.payload.status === "entered")
+  guest.ws.close()
+  await new Promise((r) => setTimeout(r, 50))
+
+  const guestAgain = await open(room.id, "guest-recovery")
+  const shusseki = await guestAgain.nextMatch(
+    (m) => m.type === "SHUSSEKI" && m.payload.members.some((b) => b.id === "guest-recovery"),
+  )
+  expect(shusseki.type).toBe("SHUSSEKI")
+
+  const kengen = await guestAgain.nextMatch((m) => m.type === "KENGEN")
+  if (kengen.type === "KENGEN") expect(kengen.payload.playback).toBe(true)
+
+  const nyuushitsu = await guestAgain.nextMatch(
+    (m) => m.type === "NYUUSHITSU" && m.payload.status === "entered",
+  )
+  expect(nyuushitsu.type).toBe("NYUUSHITSU")
+
+  host.ws.close()
+  guestAgain.ws.close()
 })
 
 test("closed mode rejects new guests before roster join", async () => {

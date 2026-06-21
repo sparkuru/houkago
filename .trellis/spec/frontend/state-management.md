@@ -91,6 +91,89 @@ Anything that is purely one component's view concern stays a local `ref`.
   or future danmaku store; do not write fetched cues back into `Enmoku` or
   broadcast them over `BANGUMI`.
 
+### WebSocket Reconnect Recovery
+
+#### 1. Scope / Trigger
+
+- Trigger: any change to `src/ws/client.ts`, room connection status, browser
+  online/offline handling, manual retry UI, or reconnect-time room/bootstrap
+  behavior.
+- Reconnect is frontend-owned transport recovery around the existing `/ws`
+  protocol. It must not introduce a second room-state source of truth.
+
+#### 2. Signatures
+
+- `KousokuClient.connect(bushitsuId: string, senderId: string, nickname?: string)`
+  stores the latest room identity for same-tab reconnect.
+- `KousokuClient.close()` is deliberate shutdown: it cancels retry timers, clears
+  pending sends, and must not reconnect.
+- Connection status remains the existing
+  `"connecting" | "open" | "closed" | "error"` union.
+
+#### 3. Contracts
+
+- Unexpected socket `close` schedules bounded backoff reconnect with the same
+  `bushitsuId`, stable `senderId`, and optional nickname query params.
+- Browser `offline` actively drops the current socket and reports closed; browser
+  `online` reconnects immediately when the room view is still mounted.
+- A successful reconnect relies on the existing server `open`/`admit` snapshots:
+  `SHUSSEKI`, `KENGEN`, and `NYUUSHITSU`.
+- Room information and connection status must be visible to all admitted
+  viewers. Host-only settings such as admission mode, guest permissions, and
+  pending approvals remain gated by `isBuchou`.
+- Non-host room views must repeat the existing `OIKAKE -> GENJOU` catch-up after
+  reconnect. Do not invent a parallel playback recovery path in components.
+- The send queue only covers the active socket's `CONNECTING -> OPEN` window.
+  If that socket closes before opening, queued sends are dropped; offline command
+  replay is out of scope.
+
+#### 4. Validation & Error Matrix
+
+- Malformed or rejected room actions still travel over WS as `KEIHOU`; reconnect
+  must not mask domain errors.
+- Manual route unmount / `close()` -> no reconnect, no replay.
+- Browser offline -> socket is deliberately closed locally; playback controls
+  from peers must not continue to arrive over a stale socket.
+- Dead server / network failure -> capped retry delay, no hot loop.
+
+#### 5. Good/Base/Bad Cases
+
+- Good: HMR or a transient network drop closes the socket; the client reconnects,
+  receives admission/permission/presence snapshots, then a viewer catches up via
+  `OIKAKE`.
+- Good: non-hosts can see room name/link/status in the shared room information
+  panel without receiving host-only controls.
+- Base: initial connect behavior and `CONNECTING` send buffering remain intact.
+- Bad: a component creates its own WebSocket for manual retry, bypassing the
+  store writer and duplicating room state.
+- Bad: queued playback/chat commands are replayed after a reconnect and surprise
+  the room.
+
+#### 6. Tests Required
+
+- Frontend unit: unexpected close reconnects with the same room identity.
+- Frontend unit: manual `close()` cancels reconnect and clears queued sends.
+- Frontend unit: browser `offline` drops the active socket and `online`
+  reconnects immediately.
+- Backend e2e: reconnecting with the same sender receives admission, permission,
+  and roster snapshots.
+
+#### 7. Wrong vs Correct
+
+Wrong:
+
+```ts
+// A room component starts a second socket for retry.
+new WebSocket(roomUrl)
+```
+
+Correct:
+
+```ts
+// Retry stays inside the single WS writer.
+client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
+```
+
 ### Realtime Chat vs Danmaku Streams
 
 - `OSHABERI` and `DANMAKU` are separate realtime streams even though they share
