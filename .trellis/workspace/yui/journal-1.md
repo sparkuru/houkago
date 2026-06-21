@@ -1430,3 +1430,36 @@ Fixed fetched Bilibili timeline danmaku startup and smoothness, speed/duration b
 ### Next Steps
 
 - None - task complete
+
+
+## Session 44: WS reconnect state recovery
+
+**Date**: 2026-06-21
+**Task**: WS reconnect state recovery
+**Branch**: `k-on`
+
+### Summary
+
+Implemented same-tab WebSocket reconnect recovery with bounded retry, browser offline/online handling, non-host room information visibility, backend recovery coverage, frontend reconnect tests, and user browser PASS.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e37489f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
