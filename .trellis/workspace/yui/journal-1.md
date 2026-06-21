@@ -1397,3 +1397,36 @@ Added and refined the Trellis Phase 3.5 ChatGPT/Codex commit attribution workflo
 ### Next Steps
 
 - None - task complete
+
+
+## Session 43: Bilibili danmaku timing and settings
+
+**Date**: 2026-06-21
+**Task**: Bilibili danmaku timing and settings
+**Branch**: `k-on`
+
+### Summary
+
+Fixed fetched Bilibili timeline danmaku startup and smoothness, speed/duration behavior, video-rect clipping, and compact danmaku settings controls.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1360a6b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
