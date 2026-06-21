@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { t } from "@/i18n"
+import { formatLastSeen, formatOnlineDuration } from "@/lib/member-presence"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { KousokuConnectionStatus } from "@/ws/client"
-import type { Kengen, NyuushitsuMode } from "houkago-kousoku"
-import { computed, onBeforeUnmount, ref } from "vue"
+import type { Kengen, NyuushitsuMode, NyuushitsuStatus, Yakuwari } from "houkago-kousoku"
+import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 
 // 房間情報 + host-only settings. All viewers need the connection/status block;
 // only the host sees controls that emit room-setting messages.
@@ -16,11 +17,14 @@ const emit = defineEmits<{
   settei: [kengen: Kengen]
   nyuushitsuSettei: [mode: NyuushitsuMode, password?: string]
   nyuushitsuHantei: [senderId: string, approved: boolean]
+  reconnect: []
 }>()
 const bushitsu = useBushitsuStore()
 const admissionPassword = ref("")
 const passwordPlaceholder = ref(t("nyuushitsuModePasswordHint"))
+const now = ref(Date.now())
 let passwordPromptTimer: ReturnType<typeof setTimeout> | null = null
+let clockTimer: ReturnType<typeof setInterval> | null = null
 const roomStatusLabel = computed(() => {
   switch (props.roomStatus) {
     case "connecting":
@@ -33,6 +37,49 @@ const roomStatusLabel = computed(() => {
       return t("roomStatusClosed")
   }
 })
+const canRetryConnection = computed(
+  () => props.roomStatus === "closed" || props.roomStatus === "error",
+)
+
+function nyuushitsuModeLabel(mode: NyuushitsuMode) {
+  switch (mode) {
+    case "open":
+      return t("nyuushitsuModeOpen")
+    case "approval":
+      return t("nyuushitsuModeApproval")
+    case "closed":
+      return t("nyuushitsuModeClosed")
+    case "password":
+      return t("nyuushitsuModePassword")
+  }
+}
+
+function nyuushitsuStatusLabel(status: NyuushitsuStatus | "idle") {
+  switch (status) {
+    case "idle":
+      return t("nyuushitsuStatusIdle")
+    case "entered":
+      return t("nyuushitsuStatusEntered")
+    case "waiting":
+      return t("nyuushitsuStatusWaiting")
+    case "rejected":
+      return t("nyuushitsuStatusRejected")
+    case "closed":
+      return t("nyuushitsuStatusClosed")
+  }
+}
+
+function roleLabel(yakuwari: Yakuwari) {
+  return yakuwari === "buchou" ? t("buchouRole") : t("guestRole")
+}
+
+function onlineDurationLabel(startedAt: number) {
+  return formatOnlineDuration(startedAt, now.value, {
+    hour: t("durationHour"),
+    minute: t("durationMinute"),
+    second: t("durationSecond"),
+  })
+}
 
 function toggle(action: keyof Kengen) {
   emit("settei", { ...bushitsu.kengen, [action]: !bushitsu.kengen[action] })
@@ -85,8 +132,15 @@ function showPasswordRequired() {
   }, 1800)
 }
 
+onMounted(() => {
+  clockTimer = setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
+})
+
 onBeforeUnmount(() => {
   if (passwordPromptTimer) clearTimeout(passwordPromptTimer)
+  if (clockTimer) clearInterval(clockTimer)
 })
 </script>
 
@@ -109,7 +163,20 @@ onBeforeUnmount(() => {
             <span class="room-status-dot" aria-hidden="true" />
             <span>{{ roomStatusLabel }}</span>
           </span>
-          <span aria-hidden="true" />
+          <button
+            v-if="canRetryConnection"
+            type="button"
+            class="copy-button"
+            :aria-label="t('retryConnectionAria')"
+            :data-tooltip="t('retryConnection')"
+            @click="emit('reconnect')"
+          >
+            <svg class="retry-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 12a8 8 0 1 1-2.3-5.7" />
+              <path d="M20 4v6h-6" />
+            </svg>
+          </button>
+          <span v-else aria-hidden="true" />
         </div>
         <div class="room-info-row">
           <span class="room-info-key">{{ t("roomInfoLink") }}</span>
@@ -126,6 +193,75 @@ onBeforeUnmount(() => {
               <path d="M5 15V7a2 2 0 0 1 2-2h8" />
             </svg>
           </button>
+        </div>
+      </section>
+    </div>
+    <div class="kengen-control-block admission">
+      <div id="admission-info-heading" class="kengen-block-label vertical">
+        <span v-for="(char, index) in t('roomAdmissionHeading')" :key="`${char}-${index}`">
+          {{ char }}
+        </span>
+      </div>
+      <section class="kengen-box room-info-box" :aria-labelledby="'admission-info-heading'">
+        <div class="room-info-row">
+          <span class="room-info-key">{{ t("roomInfoAdmissionMode") }}</span>
+          <span class="room-info-value">{{ nyuushitsuModeLabel(bushitsu.nyuushitsuMode) }}</span>
+          <span aria-hidden="true" />
+        </div>
+        <div class="room-info-row">
+          <span class="room-info-key">{{ t("roomInfoAdmissionStatus") }}</span>
+          <span class="room-info-value">{{ nyuushitsuStatusLabel(bushitsu.nyuushitsuStatus) }}</span>
+          <span aria-hidden="true" />
+        </div>
+        <div v-if="bushitsu.isBuchou" class="room-info-row">
+          <span class="room-info-key">{{ t("roomInfoPending") }}</span>
+          <span class="room-info-value">{{ bushitsu.pendingNyuushitsu.length }}</span>
+          <span aria-hidden="true" />
+        </div>
+      </section>
+    </div>
+    <div class="kengen-control-block members">
+      <div id="member-info-heading" class="kengen-block-label vertical">
+        <span v-for="(char, index) in t('roomMembersHeading')" :key="`${char}-${index}`">
+          {{ char }}
+        </span>
+      </div>
+      <section class="kengen-box member-info-box" :aria-labelledby="'member-info-heading'">
+        <div class="member-list-block">
+          <h4>{{ t("onlineMembersHeading") }}</h4>
+          <div class="member-table member-table-head">
+            <span>{{ t("memberName") }}</span>
+            <span>{{ t("memberRole") }}</span>
+            <span>{{ t("memberOnlineDuration") }}</span>
+          </div>
+          <div v-if="bushitsu.onlineBuinInfo.length === 0" class="member-empty">
+            {{ t("noOnlineMembers") }}
+          </div>
+          <template v-else>
+            <div v-for="member in bushitsu.onlineBuinInfo" :key="member.id" class="member-table">
+              <span class="member-name">{{ member.nickname }}</span>
+              <span class="member-role" :class="member.yakuwari">{{ roleLabel(member.yakuwari) }}</span>
+              <span>{{ onlineDurationLabel(member.joinedAt) }}</span>
+            </div>
+          </template>
+        </div>
+        <div class="member-list-block">
+          <h4>{{ t("historyMembersHeading") }}</h4>
+          <div class="member-table member-table-head">
+            <span>{{ t("memberName") }}</span>
+            <span>{{ t("memberRole") }}</span>
+            <span>{{ t("memberLastLogin") }}</span>
+          </div>
+          <div v-if="bushitsu.historyBuinInfo.length === 0" class="member-empty">
+            {{ t("noHistoryMembers") }}
+          </div>
+          <template v-else>
+            <div v-for="member in bushitsu.historyBuinInfo" :key="member.id" class="member-table">
+              <span class="member-name">{{ member.nickname }}</span>
+              <span class="member-role" :class="member.yakuwari">{{ roleLabel(member.yakuwari) }}</span>
+              <span>{{ formatLastSeen(member.lastSeenAt) }}</span>
+            </div>
+          </template>
         </div>
       </section>
     </div>
@@ -436,7 +572,8 @@ onBeforeUnmount(() => {
   opacity: 1;
   transform: translateX(50%) translateY(0);
 }
-.copy-icon {
+.copy-icon,
+.retry-icon {
   width: 14px;
   height: 14px;
   fill: none;
@@ -448,6 +585,56 @@ onBeforeUnmount(() => {
 .copy-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+.member-info-box {
+  gap: 12px;
+  min-width: 0;
+}
+.member-list-block {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.member-list-block h4 {
+  margin: 0;
+  color: var(--kengen-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.member-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(64px, auto);
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  min-height: 22px;
+  color: var(--kengen-text);
+  font-size: 12px;
+}
+.member-table > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.member-table-head {
+  color: var(--kengen-muted);
+  font-weight: 700;
+}
+.member-name {
+  font-weight: 600;
+}
+.member-role {
+  justify-self: start;
+  color: var(--kengen-muted);
+}
+.member-role.buchou {
+  color: var(--kengen-accent);
+}
+.member-empty {
+  min-height: 22px;
+  color: var(--kengen-muted);
+  font-size: 12px;
 }
 .kengen-switch-row {
   display: grid;

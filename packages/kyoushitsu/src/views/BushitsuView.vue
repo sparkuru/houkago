@@ -126,6 +126,10 @@ function setChatTheme(theme: ChatTheme) {
   saveChatTheme(theme)
 }
 
+function reconnectKousoku() {
+  client?.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
+}
+
 // ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
 // 才有值，computed 在其可用后更新，Teleport 自动迁移到全屏子树。
 const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ?? null)
@@ -595,6 +599,7 @@ onBeforeUnmount(() => {
               @settei="settei"
               @nyuushitsu-settei="nyuushitsuSettei"
               @nyuushitsu-hantei="nyuushitsuHantei"
+              @reconnect="reconnectKousoku"
             />
           </aside>
           <section class="bangumi">

@@ -145,6 +145,38 @@ const bushitsu = useBushitsuStore()
   returning `undefined` makes the visible control label literally become
   `undefined`, especially obvious in web fullscreen.
 
+### Room Information Panel Boundary
+
+The room side panel is shared room awareness for every admitted viewer, even
+when the heading changes by role (`房间控制` for the host, `房间信息` for
+non-hosts). Keep these concerns together in the room panel:
+
+- Read-only room identity, client connection status, share link, admission
+  mode/status, and member presence are visible to host and non-host viewers.
+- Host-only actions such as admission mode changes, approval decisions, and
+  guest permission switches stay gated by `bushitsu.isBuchou`.
+- Member presence must reuse `useBushitsuStore.onlineBuinInfo` and
+  `historyBuinInfo`; do not add a second roster source in chat or the panel.
+- Manual reconnect UI must emit a parent-handled event and call the existing
+  `KousokuClient.connect()` owner from `BushitsuView`; child components must not
+  instantiate or retain their own websocket client.
+
+#### Wrong
+
+```vue
+<!-- Non-host viewers lose room status because the whole panel is host-only. -->
+<KengenPanel v-if="bushitsu.isBuchou" />
+```
+
+#### Correct
+
+```vue
+<KengenPanel
+  :room-status="wsStatus"
+  @reconnect="reconnectKousoku"
+/>
+```
+
 ### Architecture Boundary: Player, Room View, Danmaku, Parser
 
 **Current assessment**: the existing split is acceptable for the P1

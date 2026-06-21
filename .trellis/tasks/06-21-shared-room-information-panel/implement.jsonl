@@ -1,0 +1,5 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"KengenPanel and ChatPanel component boundaries, props, emits, and UI composition rules."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Room/member/admission data should remain in Pinia store while panel-local timers and UI affordances stay local."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Frontend quality gate and behavior-preserving refactor expectations."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Typed i18n keys, message status unions, and new helper API type safety."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Confirm the room information slice reuses existing protocol/store data without backend changes."}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t } from "@/i18n"
 import { type ChatTheme, nextChatTheme } from "@/lib/chat-theme"
+import { formatLastSeen, formatOnlineDuration } from "@/lib/member-presence"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { Yakuwari } from "houkago-kousoku"
 import { onBeforeUnmount, onMounted, ref, watch } from "vue"
@@ -64,23 +65,12 @@ function roleLabel(yakuwari: Yakuwari) {
   return yakuwari === "buchou" ? t("buchouRole") : t("guestRole")
 }
 
-function formatOnlineDuration(startedAt: number) {
-  const totalSeconds = Math.max(0, Math.floor((now.value - startedAt) / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  if (hours > 0) return `${hours}${t("durationHour")}${minutes}${t("durationMinute")}`
-  if (minutes > 0) return `${minutes}${t("durationMinute")}${seconds}${t("durationSecond")}`
-  return `${seconds}${t("durationSecond")}`
-}
-
-function formatLastSeen(lastSeenAt: number) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(lastSeenAt))
+function onlineDurationLabel(startedAt: number) {
+  return formatOnlineDuration(startedAt, now.value, {
+    hour: t("durationHour"),
+    minute: t("durationMinute"),
+    second: t("durationSecond"),
+  })
 }
 
 function composerBounds() {
@@ -187,7 +177,7 @@ onBeforeUnmount(() => {
           <div v-for="member in bushitsu.onlineBuinInfo" :key="member.id" class="member-table">
             <span class="member-name">{{ member.nickname }}</span>
             <span class="member-role" :class="member.yakuwari">{{ roleLabel(member.yakuwari) }}</span>
-            <span>{{ formatOnlineDuration(member.joinedAt) }}</span>
+            <span>{{ onlineDurationLabel(member.joinedAt) }}</span>
           </div>
         </template>
       </div>

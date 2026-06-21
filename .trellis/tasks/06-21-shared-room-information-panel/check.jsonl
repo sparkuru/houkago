@@ -1,0 +1,5 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Submit-ready frontend quality gate and browser-visible manual review requirement."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Final check of role-aware panel composition and parent-owned WebSocket reconnect event."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Final check that derived room information uses existing store state and local UI-only state stays local."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Final lint/typecheck/test and no-debug/no-warning review."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Final type-safety check for extracted helper, typed emits, and i18n labels."}
