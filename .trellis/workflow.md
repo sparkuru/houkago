@@ -198,7 +198,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 [workflow-state:in_progress]
 **Tools**: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill — there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
 **Flow**: trellis-implement → trellis-check → trellis-update-spec → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
-**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, show the ChatGPT/Codex co-author trailer for applicable AI-edited work commits, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+**Main-session default (no override)**: dispatch the `trellis-implement` / `trellis-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing. Phase 3.5 commit (required, once): after trellis-update-spec and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, classify ChatGPT/Codex attribution for each work commit, show the completion body preview and `Co-authored-by: OpenAI Codex <codex@openai.com>` trailer only when attribution is warranted, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `trellis-implement`, implement directly from the loaded task context and do NOT spawn another `trellis-implement`; if you are already running as `trellis-check`, review/fix directly and do NOT spawn another `trellis-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `trellis-implement` / `trellis-check` / `trellis-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `trellis-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
 **Inline override** (per-turn only, escape hatch for sub-agent dispatch): the user's CURRENT message MUST explicitly contain one of: "do it inline" / "no sub-agent" / "你直接改" / "别派 sub-agent" / "main session 写就行" / "不用 sub-agent". **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
@@ -213,7 +213,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 **Flow** (inline mode): main session loads `trellis-before-dev` → main session edits code → main session loads `trellis-check` → run lint / type-check / tests → fix → `trellis-update-spec` → manual test checkpoint (Phase 3.4) → commit (Phase 3.5) → `/trellis:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `trellis-implement` / `trellis-check` sub-agents. Load the `trellis-before-dev` skill before writing code; load the `trellis-check` skill before reporting completion.
 Phase 3.4 manual test checkpoint (required, once): whenever implementation is verifiably complete, apply the Submit-Ready Human Review Gate below; if human review is required, list what to test, expected feedback format, and wait for the user's feedback before committing.
-Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, show the ChatGPT/Codex co-author trailer for applicable AI-edited work commits, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
+Phase 3.5 commit (required, once): after `trellis-update-spec` and the manual test checkpoint, the main agent **drives the commit** — state the commit plan in user-facing text, classify ChatGPT/Codex attribution for each work commit, show the completion body preview and `Co-authored-by: OpenAI Codex <codex@openai.com>` trailer only when attribution is warranted, then run `git commit` — BEFORE suggesting `/trellis:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.trellis/workspace/` and `.trellis/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -271,12 +271,46 @@ documentation-only and the diff cannot affect runtime behavior:
 - `./dx bun run typecheck`
 - `./dx bun test`
 
-Use focused package tests first while iterating, then the full suite before the
-manual checkpoint or commit. The repository currently has no committed browser
-E2E or visual regression command, so browser-visible player, chat, room control,
-layout, fullscreen, danmaku, and Bilibili-provider behavior requires a targeted
-manual checkpoint. Real upstream video/CDN/API behavior should be validated by
-user smoke testing when mocks and fixtures cannot prove the production path.
+Evidence: `./dx` runs Bun inside `oven/bun:1`; root `package.json` provides
+`format`, `lint`, and workspace `typecheck`; package tests live under
+`packages/*/test`; there is currently no committed `.github` workflow, browser
+E2E runner, or visual regression command.
+
+Use focused package checks while iterating, for example
+`./dx sh -c 'cd packages/eisha && bun test'`,
+`./dx sh -c 'cd packages/housou && bun test'`, or
+`./dx sh -c 'cd packages/kyoushitsu && bun test'`, then run the full required
+suite before the manual checkpoint or commit. For risky frontend changes, also
+consider `./dx sh -c 'cd packages/kyoushitsu && bun run build'`.
+
+Browser-visible player, chat, room control, layout, fullscreen, danmaku, and
+Bilibili-provider behavior requires a targeted manual checkpoint. Real upstream
+video/CDN/API behavior should be validated by user smoke testing when mocks and
+fixtures cannot prove the production path.
+
+#### Trellis Plus: ChatGPT/Codex Commit Attribution
+
+During Phase 3.5, decide for each proposed work commit whether ChatGPT/Codex
+made a substantial author-level contribution. For commits above that threshold,
+write a useful task completion summary body and add this trailer:
+
+`Co-authored-by: OpenAI Codex <codex@openai.com>`
+
+Use `yes` when ChatGPT/Codex implemented a meaningful task slice, changed
+behavior across multiple files or layers, designed or debugged non-obvious
+logic, added significant tests or validation strategy, or generated enough code
+that omitting attribution would hide material authorship. Use `no` for typo,
+formatting, narrow config, simple docs, exact user-directed edits, small
+follow-up fixes, user-authored/unrecognized-only files, and Trellis archive or
+journal commits. Use `ask` only when recent project history is ambiguous and the
+commit sits near the threshold.
+
+For `yes`, the commit plan must show the attribution reason, a body preview, and
+the trailer before asking for confirmation. The body should summarize the
+request or problem, implementation by subsystem, relevant boundaries preserved,
+and validation results. Do not add attribution merely because Codex touched a
+file, and do not inflate small commits into fake summaries. Preserve the local
+Codex/OpenAI convention above unless recent history establishes a newer one.
 
 <!-- Per-turn breadcrumb: shown while status='completed'.
      Currently DEAD in normal flow: cmd_archive writes status='completed' in
@@ -680,7 +714,7 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    - **AI-edited this session** — files you wrote/edited via Edit/Write/Bash tool calls in this session. You know what changed and why.
    - **Unrecognized** — dirty files you did NOT touch this session (could be the user's manual edits, leftover WIP from a previous session, or unrelated work). Do NOT silently include these.
 
-4. **Draft a commit plan**. Group AI-edited files into logical commits (1 commit per coherent change unit, not 1 commit per file). Each entry: `<commit message>` + file list. For commits containing files edited by ChatGPT/Codex in this Trellis session, also show `trailer: Co-authored-by: OpenAI Codex <codex@openai.com>`. List unrecognized files separately at the bottom.
+4. **Draft a commit plan**. Group AI-edited files into logical commits (1 commit per coherent change unit, not 1 commit per file). For each proposed work commit, classify AI attribution as `yes`, `no`, or `ask` using the Trellis Plus attribution threshold above. Each entry includes `<commit message>` + file list. For `yes`, also show the attribution reason, a compact completion body preview, and `trailer: Co-authored-by: OpenAI Codex <codex@openai.com>`. For `ask`, ask one concise attribution question before committing. For `no`, omit the trailer line unless the user explicitly requested an attribution audit. List unrecognized files separately at the bottom.
 
 5. **Present the plan once, ask for one-shot confirmation**. Format:
    ```
@@ -688,6 +722,8 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
      1. <message>
         - <file>
         - <file>
+        AI attribution: yes - <short threshold reason>
+        body: <problem/request; implementation; validation; preserved boundaries>
         trailer: Co-authored-by: OpenAI Codex <codex@openai.com>
      2. <message>
         - <file>
@@ -699,16 +735,17 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
    Reply 'ok' / '行' to execute. Reply with edits, or '我自己来' / 'manual' to abort.
    ```
 
-6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. For any batch containing files edited by ChatGPT/Codex in this Trellis session, add the trailer as a separate message paragraph:
+6. **On confirmation**: run `git add <files>` + `git commit -m "<msg>"` for each batch in order. For `yes` attribution commits, include the completion body and add the trailer as the final message paragraph:
    ```bash
-   git commit -m "<msg>" -m "Co-authored-by: OpenAI Codex <codex@openai.com>"
+   git commit -m "<msg>" -m "<completion body>" -m "Co-authored-by: OpenAI Codex <codex@openai.com>"
    ```
-   Do not amend. Do not push.
+   If the body is long or quoting would be fragile, write the full message to a temporary file and use `git commit -F <file>`. Do not amend. Do not push.
 
 7. **On rejection** (user replies "不行" / "我自己来" / "manual" / any pushback on the plan): stop. Do not attempt a second plan. The user will commit by hand; you skip ahead to 3.6 once they confirm.
 
 **Rules**:
-- Add `Co-authored-by: OpenAI Codex <codex@openai.com>` only to Phase 3.5 work commits containing files edited by ChatGPT/Codex in the current Trellis session. Preserve any existing project-specific Codex/OpenAI trailer convention if recent history already shows one.
+- Add `Co-authored-by: OpenAI Codex <codex@openai.com>` only to Phase 3.5 work commits where ChatGPT/Codex made a substantial author-level contribution. Preserve any existing project-specific Codex/OpenAI trailer convention if recent history already shows one.
+- Attributed commits need a useful task completion body, not just a trailer. Keep it short for medium work; use a longer body only when it helps review a large task.
 - Do not add the ChatGPT/Codex trailer to commits containing only user-authored or unrecognized dirty files, Trellis archive commits, Trellis journal commits, or commits the user says they will make manually.
 - No `git commit --amend` anywhere — three-stage three-commit flow (work commits → archive commit → journal commit).
 - Never push to remote in this step.
