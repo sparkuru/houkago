@@ -1363,3 +1363,37 @@ Implemented Bilibili share-link recognition, provider metadata, proxied covers, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 42: Refine Codex commit attribution workflow
+
+**Date**: 2026-06-21
+**Task**: Refine Codex commit attribution workflow
+**Branch**: `k-on`
+
+### Summary
+
+Added and refined the Trellis Phase 3.5 ChatGPT/Codex commit attribution workflow so commit plans classify attribution, show completion body previews, and use the OpenAI Codex co-author trailer only when warranted.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ea6ae05` | (see git log) |
+| `fcc3f53` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

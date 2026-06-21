@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 41
+- **Total Sessions**: 42
 - **Last Active**: 2026-06-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1365 | Active |
+| `journal-1.md` | ~1399 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 42 | 2026-06-21 | Refine Codex commit attribution workflow | `ea6ae05`, `fcc3f53` | `k-on` |
 | 41 | 2026-06-21 | Bilibili provider enrichment | `45bfb99` | `k-on` |
 | 40 | 2026-06-21 | Bilibili DASH playback | `f00e97d` | `k-on` |
 | 39 | 2026-06-21 | Bilibili parser metadata and manual test checkpoint | `25c5dba`, `e578602` | `k-on` |
