@@ -1463,3 +1463,36 @@ Implemented same-tab WebSocket reconnect recovery with bounded retry, browser of
 ### Next Steps
 
 - None - task complete
+
+
+## Session 45: Shared room information panel
+
+**Date**: 2026-06-22
+**Task**: Shared room information panel
+**Branch**: `k-on`
+
+### Summary
+
+Added a role-aware shared room information panel for host and non-host viewers, including admission readouts, member presence, and safe reconnect via the existing websocket client owner. Verified automated checks and manual host/non-host UI checkpoint.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `07a3f19` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

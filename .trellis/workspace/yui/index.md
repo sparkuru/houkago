@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 44
-- **Last Active**: 2026-06-21
+- **Total Sessions**: 45
+- **Last Active**: 2026-06-22
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1465 | Active |
+| `journal-1.md` | ~1498 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 45 | 2026-06-22 | Shared room information panel | `07a3f19` | `k-on` |
 | 44 | 2026-06-21 | WS reconnect state recovery | `e37489f` | `k-on` |
 | 43 | 2026-06-21 | Bilibili danmaku timing and settings | `1360a6b` | `k-on` |
 | 42 | 2026-06-21 | Refine Codex commit attribution workflow | `ea6ae05`, `fcc3f53` | `k-on` |
