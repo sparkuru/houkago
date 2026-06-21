@@ -92,7 +92,28 @@ const bushitsu = useBushitsuStore()
   mode-specific duration, and keep CSS animations continuous from their normal
   starting position. Avoid negative animation delays for timeline cues; they can
   make browser animation sampling look jumpy and may drop cues before they cross
-  the player.
+  the player. Feed the overlay a smooth media-time signal while playback is
+  running, for example from a player-owned `requestAnimationFrame` ticker;
+  browser `timeupdate` alone is too sparse for smooth flying danmaku. That
+  ticker should read `HTMLVideoElement.currentTime` directly; player-wrapper
+  getters such as `art.currentTime` may be cached at `timeupdate` cadence and
+  can make cues jump on first play until a later pause/play refresh.
+- Timeline danmaku overlays must be clipped to the rendered video content rect,
+  not the whole ArtPlayer container or browser viewport. When `object-fit:
+  contain` creates letterbox bars, compute the contained media rect from the
+  video element size and `videoWidth`/`videoHeight`, position the overlay there,
+  and compute flying cue distance from that overlay width. Do not use `100vw`
+  for cue travel; it makes danmaku cross the page viewport instead of the video
+  picture and can leave lines visible in black bars or side panels.
+- If dense timeline danmaku needs a visible-cue cap, keep the earliest
+  currently-active cues so already-visible lines can finish crossing the player.
+  Do not cap by taking only the newest cues; lower speed multipliers increase
+  the active window and would make older on-screen lines disappear mid-flight.
+- Timeline danmaku speed is a local presentation multiplier, not playback rate
+  or room state. Keep the cue timestamp unchanged, clamp the multiplier in the
+  timeline utility, and scale mode-specific display duration as
+  `effectiveDuration = baseDuration / speed`. Tests should assert the `1.0x`
+  baseline plus the slow/fast boundary behavior.
 - Provider-aware 番組表 UI should read `Enmoku.provider` through small view-model
   helpers. Bilibili-specific rendering (provider mark, cover, owner, stats,
   external link) belongs in room/bangumi UI, while parsing/fetching those fields
@@ -123,6 +144,58 @@ const bushitsu = useBushitsuStore()
   control implementation writes the returned value into `.art-selector-value`;
   returning `undefined` makes the visible control label literally become
   `undefined`, especially obvious in web fullscreen.
+
+### Architecture Boundary: Player, Room View, Danmaku, Parser
+
+**Current assessment**: the existing split is acceptable for the P1
+Vue/CSS timeline overlay, but future player/provider/danmaku work must preserve
+these boundaries so `BushitsuView` does not become the permanent owner of every
+media concern.
+
+- `eisha` owns provider parsing and upstream fetch details. `kyoushitsu`
+  consumes `Enmoku.url`, `Enmoku.sources`, `Enmoku.danmaku`, and
+  `Enmoku.provider`; frontend components must not duplicate Bilibili API,
+  HLS manifest, DASH, or upstream header parsing.
+- `housou` may call `eisha` while creating or serving an `Enmoku`, then
+  persist/broadcast the resulting domain fields. It should stay a thin
+  orchestration layer, not a second provider parser.
+- `EnmokuPlayer` owns ArtPlayer, hls.js, dash.js, fullscreen patches, and
+  imperative playback commands. Sync, room authority, provider metadata, and
+  danmaku source priority must stay outside the ArtPlayer instance.
+- `useShinkou` owns playback authority math and talks to the player only through
+  the narrow `PlayerHandle` shape: `apply`, `alignTransport`, `setRate`, and
+  `snapshot`. Do not pass ArtPlayer, `HTMLVideoElement`, or media-engine
+  instances into sync logic.
+- `BushitsuView` may compose room state, player props, and overlay props, but it
+  should not accumulate new reusable danmaku/provider logic. When adding another
+  timeline source, source priority rule, fetch cache, or derived timeline state,
+  first extract a composable such as `useTimelineDanmaku`.
+- Timeline danmaku source data should be engine-agnostic. Local file cues and
+  fetched `Enmoku.danmaku` cues share one timeline path; realtime chat danmaku
+  remains a separate websocket overlay stream.
+- Provider-specific frontend checks should go through small helpers near
+  `lib/enmoku-metadata.ts`. Avoid scattering checks such as
+  `ref.startsWith("bilibili:")` through components unless the surrounding code
+  is explicitly a provider adapter.
+
+#### Wrong
+
+```ts
+// A route component grows provider fetch and parsing rules inline.
+if (enmoku.danmaku?.ref.startsWith("bilibili:")) {
+  const cid = enmoku.danmaku.ref.slice("bilibili:".length)
+  const xml = await fetch(`https://comment.bilibili.com/${cid}.xml`).then((r) => r.text())
+  cues.value = parseBilibiliXml(xml)
+}
+```
+
+#### Correct
+
+```ts
+// The route or composable consumes the typed API/domain contract.
+const response = await housou.eisha.danmaku({ ref: enmoku.danmaku.ref }).get()
+timeline.setFetchedCues(enmoku.id, response.data ?? [])
+```
 
 ---
 

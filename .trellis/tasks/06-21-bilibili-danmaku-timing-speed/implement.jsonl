@@ -1,0 +1,9 @@
+{"file":"packages/kyoushitsu/src/lib/file-danmaku.ts","reason":"Moved visible cue state to media-clock progress, added speed-normalized durations, fixed fixed-position fade, capped dense cues without dropping already-active ones, and added contained-video viewport calculation."}
+{"file":"packages/kyoushitsu/src/components/danmaku/FileDanmakuOverlay.vue","reason":"Rendered danmaku position from current media time with transform3d instead of insertion-time CSS animations, and constrained travel to the rendered video content rect instead of the browser viewport."}
+{"file":"packages/kyoushitsu/src/components/player/EnmokuPlayer.vue","reason":"Added danmaku size, opacity, speed, and time-offset controls; introduced requestAnimationFrame time ticks while playing from native video currentTime; revised settings labels, opacity ticks, offset reset, and panel spacing per feedback."}
+{"file":"packages/kyoushitsu/src/views/BushitsuView.vue","reason":"Stored danmaku size as multiplier and passed speed/time-offset settings into player and overlay."}
+{"file":"packages/kyoushitsu/src/i18n/messages.ts","reason":"Updated danmaku settings labels, reset labels, and source wording for the settings panel."}
+{"file":"packages/kyoushitsu/test/file-danmaku.test.ts","reason":"Covered speed scaling, media-clock progress, render key changes, dense visible cue cap behavior, and contained video viewport calculation."}
+{"file":"design.md","reason":"Removed the skipped quality-selection broadcast item from the roadmap and documented the Bilibili danmaku timing/speed fixes."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Recorded the learned contract that media-synchronized overlays must derive position from media time instead of CSS animation insertion time."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Recorded the media provider / player / danmaku boundary checklist learned during the Bilibili timeline danmaku fix."}

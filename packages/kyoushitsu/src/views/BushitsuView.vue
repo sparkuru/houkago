@@ -123,13 +123,12 @@ const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ??
 // 避け、原生全屏含む三態で確実に響応させる。pure view 態 → store 不要。
 const controlsShown = ref(true)
 const playbackTime = ref(0)
-const playbackPlaying = ref(false)
+const DANMAKU_BASE_SIZE = 22
 // 演目切替（current 変更）で player が再 mount され control 発火前は条あり扱いに
 // 復位させる。EnmokuPlayer 卸載は control を停発するので親側で戻す。
 watch(current, () => {
   controlsShown.value = true
   playbackTime.value = 0
-  playbackPlaying.value = false
   selectedSourceIndex.value = null
 })
 
@@ -141,8 +140,9 @@ const fetchedDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
 const fetchedDanmakuNameByEnmoku = ref<Record<string, string>>({})
 const fileDanmakuTrackVersion = ref(0)
 const fetchedDanmakuTrackVersion = ref(0)
-const danmakuSize = ref(22)
+const danmakuSize = ref(1)
 const danmakuOpacity = ref(1)
+const danmakuSpeed = ref(1)
 const danmakuTimeOffset = ref(0)
 const manualSubmitting = ref(false)
 const providerInfoEnmoku = ref<Enmoku | null>(null)
@@ -205,7 +205,6 @@ async function onFileDanmakuSelected(event: Event) {
   const snapshot = playerRef.value?.snapshot()
   if (snapshot) {
     playbackTime.value = snapshot.currentTime
-    playbackPlaying.value = snapshot.isPlaying
   }
 }
 
@@ -239,7 +238,6 @@ async function loadFetchedDanmaku(enmoku: Enmoku | null) {
   const snapshot = playerRef.value?.snapshot()
   if (snapshot) {
     playbackTime.value = snapshot.currentTime
-    playbackPlaying.value = snapshot.isPlaying
   }
 }
 
@@ -513,19 +511,20 @@ onBeforeUnmount(() => {
               :file-danmaku-name="currentTimelineDanmakuName || t('danmakuNone')"
               :danmaku-size="danmakuSize"
               :danmaku-opacity="danmakuOpacity"
+              :danmaku-speed="danmakuSpeed"
               :danmaku-time-offset="danmakuTimeOffset"
               @shinkou="shinkou.onLocalShinkou"
               @ready="shinkou.catchUp"
               @join="onJoin"
               @control="controlsShown = $event"
               @time="playbackTime = $event"
-              @playing="playbackPlaying = $event"
               @cinema="setCinemaMode"
               @source="selectedSourceValue = $event"
               @toggle-file-danmaku="toggleFileDanmaku"
               @choose-file-danmaku="chooseFileDanmaku"
               @danmaku-size="danmakuSize = $event"
               @danmaku-opacity="danmakuOpacity = $event"
+              @danmaku-speed="danmakuSpeed = $event"
               @danmaku-time-offset="danmakuTimeOffset = $event"
             />
             <FileDanmakuOverlay
@@ -533,9 +532,9 @@ onBeforeUnmount(() => {
               :cues="currentTimelineDanmaku"
               :current-time="playbackTime"
               :enabled="fileDanmakuEnabled"
-              :playing="playbackPlaying"
-              :size="danmakuSize"
+              :size="DANMAKU_BASE_SIZE * danmakuSize"
               :opacity="danmakuOpacity"
+              :speed="danmakuSpeed"
               :time-offset="danmakuTimeOffset"
               :track-version="timelineDanmakuTrackVersion"
             />

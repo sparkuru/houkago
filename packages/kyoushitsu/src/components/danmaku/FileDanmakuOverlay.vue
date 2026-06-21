@@ -1,28 +1,105 @@
 <script setup lang="ts">
 import {
-  fileDanmakuAnimationState,
+  type FileDanmakuViewport,
+  type VisibleDanmakuCue,
   fileDanmakuRenderKey,
+  fileDanmakuViewport,
   visibleFileDanmakuCues,
 } from "@/lib/file-danmaku"
 import type { DanmakuCue } from "houkago-kokuban"
-import { computed } from "vue"
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue"
 
 const props = defineProps<{
   target?: HTMLElement | null
   cues: readonly DanmakuCue[]
   currentTime: number
   enabled: boolean
-  playing: boolean
   size: number
   opacity: number
+  speed: number
   timeOffset: number
   trackVersion: number
 }>()
 
 const visible = computed(() =>
-  props.enabled ? visibleFileDanmakuCues(props.cues, props.currentTime + props.timeOffset) : [],
+  props.enabled
+    ? visibleFileDanmakuCues(props.cues, props.currentTime + props.timeOffset, props.speed)
+    : [],
 )
-const animationState = computed(() => fileDanmakuAnimationState(props.playing))
+const viewport = ref<FileDanmakuViewport>({ left: 0, top: 0, width: 0, height: 0 })
+
+let resizeObserver: ResizeObserver | null = null
+let observedVideo: HTMLVideoElement | null = null
+
+function updateViewport(): void {
+  const target = props.target
+  if (!target) {
+    viewport.value = { left: 0, top: 0, width: 0, height: 0 }
+    return
+  }
+
+  const targetRect = target.getBoundingClientRect()
+  const video = target.querySelector("video")
+  if (!(video instanceof HTMLVideoElement)) {
+    viewport.value = { left: 0, top: 0, width: targetRect.width, height: targetRect.height }
+    return
+  }
+
+  const videoRect = video.getBoundingClientRect()
+  const local = fileDanmakuViewport(
+    videoRect.width,
+    videoRect.height,
+    video.videoWidth,
+    video.videoHeight,
+  )
+  viewport.value = {
+    left: videoRect.left - targetRect.left + local.left,
+    top: videoRect.top - targetRect.top + local.top,
+    width: local.width,
+    height: local.height,
+  }
+}
+
+function cleanupViewportObservers(): void {
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  observedVideo?.removeEventListener("loadedmetadata", updateViewport)
+  observedVideo?.removeEventListener("resize", updateViewport)
+  observedVideo = null
+  if (typeof window !== "undefined") window.removeEventListener("resize", updateViewport)
+}
+
+async function observeViewport(): Promise<void> {
+  cleanupViewportObservers()
+  await nextTick()
+  const target = props.target
+  if (!target) return
+
+  resizeObserver = new ResizeObserver(updateViewport)
+  resizeObserver.observe(target)
+  const video = target.querySelector("video")
+  if (video instanceof HTMLVideoElement) {
+    observedVideo = video
+    resizeObserver.observe(video)
+    video.addEventListener("loadedmetadata", updateViewport)
+    video.addEventListener("resize", updateViewport)
+  }
+  if (typeof window !== "undefined") window.addEventListener("resize", updateViewport)
+  updateViewport()
+}
+
+function cueTransform(cue: VisibleDanmakuCue): string {
+  const amount = cue.progress * 100
+  const distance = cue.progress * viewport.value.width
+  if (cue.mode === "reverse") return `translate3d(calc(${distance}px + ${amount}%), 0, 0)`
+  if (cue.mode === "top" || cue.mode === "bottom" || cue.mode === "special") {
+    return "translate3d(-50%, 0, 0)"
+  }
+  return `translate3d(calc(-${distance}px - ${amount}%), 0, 0)`
+}
+
+watch(() => props.target, observeViewport, { immediate: true })
+onBeforeUnmount(cleanupViewportObservers)
 </script>
 
 <template>
@@ -34,6 +111,10 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
       :style="{
         '--danmaku-size': `${size}px`,
         '--danmaku-opacity': opacity,
+        left: `${viewport.left}px`,
+        top: `${viewport.top}px`,
+        width: `${viewport.width}px`,
+        height: `${viewport.height}px`,
       }"
     >
       <span
@@ -43,9 +124,9 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
         :class="[`mode-${cue.mode}`]"
         :style="{
           '--lane': cue.lane,
-          '--danmaku-duration': `${cue.duration}s`,
-          animationPlayState: animationState,
+          '--cue-opacity': cue.opacity,
           color: cue.color,
+          transform: cueTransform(cue),
         }"
       >
         {{ cue.text }}
@@ -57,9 +138,9 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
 <style scoped>
 .file-danmaku-overlay {
   position: absolute;
-  inset: 0;
   z-index: 50;
   pointer-events: none;
+  contain: layout style paint;
   overflow: hidden;
 }
 .file-danmaku-cue {
@@ -71,18 +152,16 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
   font-size: var(--danmaku-size);
   line-height: 1.2;
   font-weight: 600;
-  opacity: var(--danmaku-opacity);
+  opacity: calc(var(--danmaku-opacity) * var(--cue-opacity, 1));
   text-shadow:
     1px 1px 2px #000,
     -1px -1px 2px #000,
     0 0 3px #000;
-  animation: file-danmaku-scroll var(--danmaku-duration) linear forwards;
+  will-change: transform, opacity;
 }
 .file-danmaku-cue.mode-top,
 .file-danmaku-cue.mode-bottom {
   left: 50%;
-  transform: translateX(-50%);
-  animation: file-danmaku-fixed var(--danmaku-duration) linear forwards;
 }
 .file-danmaku-cue.mode-top {
   top: calc(12px + var(--lane) * 30px);
@@ -94,47 +173,9 @@ const animationState = computed(() => fileDanmakuAnimationState(props.playing))
 .file-danmaku-cue.mode-reverse {
   left: auto;
   right: 100%;
-  animation-name: file-danmaku-reverse;
 }
 .file-danmaku-cue.mode-special {
   left: 50%;
   top: calc(20% + var(--lane) * 24px);
-  transform: translateX(-50%);
-  animation: file-danmaku-fixed var(--danmaku-duration) linear forwards;
-}
-
-@keyframes file-danmaku-scroll {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(calc(-100vw - 100%));
-    opacity: 1;
-  }
-}
-
-@keyframes file-danmaku-reverse {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(calc(100vw + 100%));
-    opacity: 1;
-  }
-}
-
-@keyframes file-danmaku-fixed {
-  0% {
-    opacity: 0;
-  }
-  8%,
-  88% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
 }
 </style>

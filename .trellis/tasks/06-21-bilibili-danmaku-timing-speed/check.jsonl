@@ -1,0 +1,8 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Read before editing Vue player and danmaku overlay components; used Teleport ownership and scoped UI constraints."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Reviewed cross-layer boundaries for provider parsing, player lifecycle, room state, and timeline danmaku before finalizing spec sync."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Read before changing local danmaku settings state and parent-owned room playback state boundaries."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Read before adding typed danmaku speed/size/time-offset props and emits."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Read before final verification; ran format, lint, typecheck, tests, and diff whitespace checks."}
+{"file":"/tmp/tmp/2026-06-21 12-41-50.mkv","reason":"User-provided visual evidence for settings panel alignment and danmaku motion symptoms; inspected extracted frames at 2s and 6s."}
+{"file":"/tmp/tmp/1.mkv","reason":"User-provided visual evidence showing timeline danmaku traveling across the page/player viewport instead of the rendered video content rect."}
+{"file":"quality-gate","reason":"2026-06-21: `./dx bun run format`, `./dx bun run lint`, `./dx bun run typecheck`, `./dx bun test`, and `git diff --check` all passed."}

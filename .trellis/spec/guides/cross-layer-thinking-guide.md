@@ -85,6 +85,39 @@ After implementation:
 
 ---
 
+## Media Provider / Player / Danmaku Boundary Checklist
+
+Use this checklist before changing player controls, provider parsing, source
+selection, or timeline danmaku. The detailed implementation constraints live in
+`../frontend/component-guidelines.md` under "Architecture Boundary: Player, Room
+View, Danmaku, Parser".
+
+Before implementation:
+- [ ] Identify whether the change belongs to provider parsing (`eisha`), room
+  orchestration (`housou` / `BushitsuView`), player lifecycle
+  (`EnmokuPlayer`), sync authority (`useShinkou`), realtime danmaku
+  (`DanmakuOverlay`), or timeline danmaku (`FileDanmakuOverlay` /
+  timeline utilities).
+- [ ] Confirm provider-specific parsing or upstream fetch behavior is not being
+  duplicated in frontend components.
+- [ ] Confirm ArtPlayer, hls.js, dash.js, and fullscreen details stay inside
+  `EnmokuPlayer`.
+- [ ] Confirm playback authority logic reaches the player only through
+  `PlayerHandle`, never through an ArtPlayer or `HTMLVideoElement` reference.
+- [ ] If `BushitsuView` would gain another provider rule, danmaku source, source
+  priority rule, or fetch cache, consider extracting a composable before adding
+  more route-level state.
+
+After implementation:
+- [ ] Verify local file timeline cues still override fetched timeline cues for
+  the same `Enmoku.id`.
+- [ ] Verify realtime `DANMAKU` overlay behavior is unchanged unless the product
+  requirement explicitly targets realtime chat danmaku.
+- [ ] Verify provider parser tests cover source/danmaku/provider metadata, and
+  frontend tests cover only the consumed domain/view-model behavior.
+
+---
+
 ## Cross-Platform Template Consistency
 
 In Trellis, command templates (e.g., `record-session.md`) exist in **multiple platforms** with identical or near-identical content. This is a cross-layer boundary.

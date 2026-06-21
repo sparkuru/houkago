@@ -46,6 +46,7 @@ const props = withDefaults(
     fileDanmakuName?: string
     danmakuSize?: number
     danmakuOpacity?: number
+    danmakuSpeed?: number
     danmakuTimeOffset?: number
   }>(),
   {
@@ -53,8 +54,9 @@ const props = withDefaults(
     selectedSourceValue: "primary",
     fileDanmakuEnabled: false,
     fileDanmakuName: "",
-    danmakuSize: 22,
+    danmakuSize: 1,
     danmakuOpacity: 1,
+    danmakuSpeed: 1,
     danmakuTimeOffset: 0,
   },
 )
@@ -65,30 +67,34 @@ const props = withDefaults(
 // ArtPlayer コントロール条の显隐を親へ直送（emit）— 暴露 ref→親 computed の脆い
 // 連鎖を避け、普通／网页全屏／原生全屏の三態で確実に響応させる（prd Bug1）。
 // `time` feeds local file-danmaku rendering only; it never becomes playback
-// authority and never emits SHINKOU. `playing` feeds local file-danmaku CSS
-// animation state only; playback authority still comes from SHINKOU. `cinema`
-// sets parent-owned layout and is not playback/session authority. Source and
-// file-danmaku controls also emit to the parent because those are local room UI
-// state, not ArtPlayer playback authority.
+// authority and never emits SHINKOU. `cinema` sets parent-owned layout and is
+// not playback/session authority. Source and file-danmaku controls also emit to
+// the parent because those are local room UI state, not ArtPlayer playback
+// authority.
 const emit = defineEmits<{
   shinkou: [Shinkou]
   ready: []
   join: []
   control: [boolean]
   time: [number]
-  playing: [boolean]
   cinema: [enabled: boolean]
   source: [value: string]
   toggleFileDanmaku: []
   chooseFileDanmaku: []
   danmakuSize: [value: number]
   danmakuOpacity: [value: number]
+  danmakuSpeed: [value: number]
   danmakuTimeOffset: [value: number]
 }>()
 
 // Sub-threshold position diffs are ignored on apply to avoid a seek→echo→seek
 // loop (design §5 ≤0.3s ignore tier).
 const SEEK_EPSILON = 0.3
+const DANMAKU_SIZE_OPTIONS = [0.5, 1, 1.5, 2] as const
+const DANMAKU_OPACITY_PRESETS = [0.4, 0.7, 1] as const
+const DANMAKU_SPEED_OPTIONS = [0.5, 1, 1.5, 2] as const
+const DANMAKU_TIME_OFFSET_MIN = -5
+const DANMAKU_TIME_OFFSET_MAX = 5
 
 const container = ref<HTMLDivElement | null>(null)
 // ArtPlayer の主播放器容器（$player）：原生全屏の対象元素。父级用它做 Teleport
@@ -98,6 +104,7 @@ const danmakuSettingsOpen = ref(false)
 let art: Artplayer | null = null
 let stopFullscreenClickPatch: (() => void) | null = null
 let cleanupMediaEngine: (() => void) | null = null
+let timeRaf: number | null = null
 
 // 中途加入の追平 seek が早すぎて落ちる問題への対策（prd Bug2）: hls.js がまだ
 // メディアを読み込み切っておらず seek 不可（readyState 低 / video.seekable 空）の
@@ -159,7 +166,7 @@ function safePlay(): void {
 function snapshot(): Shinkou {
   return {
     isPlaying: art ? art.playing : false,
-    currentTime: art?.currentTime ?? 0,
+    currentTime: mediaCurrentTime(),
     playbackRate: art?.playbackRate ?? 1,
   }
 }
@@ -168,7 +175,7 @@ function snapshot(): Shinkou {
 // place that mutates the ArtPlayer instance from outside its own events.
 function apply(s: Shinkou): void {
   if (!art) return
-  if (Math.abs(art.currentTime - s.currentTime) > SEEK_EPSILON) seekTo(s.currentTime)
+  if (Math.abs(mediaCurrentTime() - s.currentTime) > SEEK_EPSILON) seekTo(s.currentTime)
   art.playbackRate = s.playbackRate
   if (s.isPlaying && !art.playing) safePlay()
   else if (!s.isPlaying && art.playing) art.pause()
@@ -198,16 +205,82 @@ function onJoin(): void {
   emit("join")
 }
 
-function updateDanmakuSize(value: string): void {
-  emit("danmakuSize", Number(value))
-}
-
 function updateDanmakuOpacity(value: string): void {
   emit("danmakuOpacity", Number(value))
 }
 
-function updateDanmakuTimeOffset(value: string): void {
-  emit("danmakuTimeOffset", Number(value))
+function updateDanmakuSpeed(value: number): void {
+  emit("danmakuSpeed", value)
+}
+
+function clampDanmakuTimeOffset(value: number): number {
+  if (!Number.isFinite(value)) return props.danmakuTimeOffset
+  return Math.min(DANMAKU_TIME_OFFSET_MAX, Math.max(DANMAKU_TIME_OFFSET_MIN, value))
+}
+
+function adjustDanmakuTimeOffset(delta: number): void {
+  emit(
+    "danmakuTimeOffset",
+    Number(clampDanmakuTimeOffset(props.danmakuTimeOffset + delta).toFixed(1)),
+  )
+}
+
+function commitDanmakuTimeOffset(value: string): void {
+  const normalized = value.trim().replace(/s$/i, "")
+  const parsed = Number(normalized)
+  emit("danmakuTimeOffset", Number(clampDanmakuTimeOffset(parsed).toFixed(1)))
+}
+
+function mediaCurrentTime(): number {
+  return videoEl()?.currentTime ?? art?.currentTime ?? 0
+}
+
+function isMediaPlaying(): boolean {
+  const video = videoEl()
+  return video ? !video.paused && !video.ended : (art?.playing ?? false)
+}
+
+function emitCurrentTime(): void {
+  emit("time", mediaCurrentTime())
+}
+
+function stopTimeTicker(): void {
+  if (timeRaf === null) return
+  cancelAnimationFrame(timeRaf)
+  timeRaf = null
+}
+
+function startTimeTicker(): void {
+  if (timeRaf !== null) return
+  const tick = () => {
+    emitCurrentTime()
+    if (isMediaPlaying()) {
+      timeRaf = requestAnimationFrame(tick)
+    } else {
+      timeRaf = null
+    }
+  }
+  timeRaf = requestAnimationFrame(tick)
+}
+
+function onPlaybackChange(): void {
+  emit("shinkou", snapshot())
+  emitCurrentTime()
+  if (isMediaPlaying()) {
+    startTimeTicker()
+  } else {
+    stopTimeTicker()
+  }
+}
+
+function onNativePlaybackStart(): void {
+  emitCurrentTime()
+  startTimeTicker()
+}
+
+function onNativePlaybackStop(): void {
+  emitCurrentTime()
+  stopTimeTicker()
 }
 
 function selectedSourceLabel(): string {
@@ -413,21 +486,20 @@ onMounted(() => {
 
   // Local playback events → Shinkou snapshots. useShinkou gates these by 部長 +
   // 追従中 before broadcasting, so emitting unconditionally here is safe.
-  const emitPlaying = () => emit("playing", art?.playing ?? false)
-  const onChange = () => {
-    emit("shinkou", snapshot())
-    emitPlaying()
-  }
-  art.on("play", onChange)
-  art.on("pause", onChange)
-  art.on("seek", onChange)
-  art.on("video:ratechange", onChange)
+  art.on("play", onPlaybackChange)
+  art.on("pause", onPlaybackChange)
+  art.on("seek", onPlaybackChange)
+  art.on("video:play", onNativePlaybackStart)
+  art.on("video:playing", onNativePlaybackStart)
+  art.on("video:pause", onNativePlaybackStop)
+  art.on("video:ratechange", onPlaybackChange)
   art.on("ready", () => {
     emit("ready")
-    emitPlaying()
+    emitCurrentTime()
+    if (isMediaPlaying()) startTimeTicker()
   })
-  art.on("video:timeupdate", () => emit("time", art?.currentTime ?? 0))
-  art.on("video:seeked", () => emit("time", art?.currentTime ?? 0))
+  art.on("video:timeupdate", emitCurrentTime)
+  art.on("video:seeked", emitCurrentTime)
 
   // コントロール条の显隐を親へ直送（prd Bug1）。ArtPlayer 'control' は state=条が
   // 可視か を渡す（typed event, 禁 any）。emit で送ることで暴露 ref→親 computed の
@@ -485,6 +557,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  stopTimeTicker()
   stopFullscreenClickPatch?.()
   stopFullscreenClickPatch = null
   cleanupMediaEngine?.()
@@ -512,44 +585,98 @@ onBeforeUnmount(() => {
     <div ref="container" class="art-host"></div>
     <Teleport v-if="danmakuSettingsOpen && playerEl" :to="playerEl">
       <section class="danmaku-settings-panel">
-        <label>
-          <span>{{ t("danmakuSize") }}</span>
-          <input
-            type="range"
-            min="14"
-            max="36"
-            step="1"
-            :value="danmakuSize"
-            @input="updateDanmakuSize(($event.target as HTMLInputElement).value)"
-          />
-          <output>{{ danmakuSize }}</output>
-        </label>
-        <label>
-          <span>{{ t("danmakuOpacity") }}</span>
-          <input
-            type="range"
-            min="0.2"
-            max="1"
-            step="0.05"
-            :value="danmakuOpacity"
-            @input="updateDanmakuOpacity(($event.target as HTMLInputElement).value)"
-          />
+        <div class="segmented-setting">
+          <span class="setting-label">{{ t("danmakuSize") }}</span>
+          <div class="setting-options">
+            <button
+              v-for="value in DANMAKU_SIZE_OPTIONS"
+              :key="value"
+              type="button"
+              :class="{ active: Math.abs(danmakuSize - value) < 0.001 }"
+              @click="emit('danmakuSize', value)"
+            >
+              {{ value }}x
+            </button>
+          </div>
+        </div>
+        <label class="opacity-setting">
+          <span class="setting-label">{{ t("danmakuOpacity") }}</span>
+          <div class="range-stack">
+            <div class="opacity-track" aria-hidden="true">
+              <span
+                class="opacity-fill"
+                :style="{ width: `${((danmakuOpacity - 0.4) / 0.6) * 100}%` }"
+              ></span>
+            </div>
+            <input
+              class="opacity-range"
+              type="range"
+              min="0.4"
+              max="1"
+              step="0.05"
+              :value="danmakuOpacity"
+              @input="updateDanmakuOpacity(($event.target as HTMLInputElement).value)"
+            />
+            <div class="preset-points">
+              <button
+                v-for="value in DANMAKU_OPACITY_PRESETS"
+                :key="value"
+                type="button"
+                :aria-label="`${t('danmakuOpacity')} ${Math.round(value * 100)}%`"
+                :style="{ left: `${((value - 0.4) / 0.6) * 100}%` }"
+                @click="emit('danmakuOpacity', value)"
+              ></button>
+            </div>
+            <span
+              class="opacity-thumb"
+              :style="{ left: `${((danmakuOpacity - 0.4) / 0.6) * 100}%` }"
+            ></span>
+          </div>
           <output>{{ Math.round(danmakuOpacity * 100) }}%</output>
         </label>
-        <label>
-          <span>{{ t("danmakuTimeOffset") }}</span>
-          <input
-            type="range"
-            min="-5"
-            max="5"
-            step="0.1"
-            :value="danmakuTimeOffset"
-            @input="updateDanmakuTimeOffset(($event.target as HTMLInputElement).value)"
-          />
-          <output>{{ danmakuTimeOffset.toFixed(1) }}s</output>
-        </label>
+        <div class="segmented-setting">
+          <span class="setting-label">{{ t("danmakuSpeed") }}</span>
+          <div class="setting-options">
+            <button
+              v-for="value in DANMAKU_SPEED_OPTIONS"
+              :key="value"
+              type="button"
+              :aria-label="value === 1 ? t('danmakuResetSpeed') : undefined"
+              :class="{ active: Math.abs(danmakuSpeed - value) < 0.001 }"
+              :title="value === 1 ? t('danmakuResetSpeed') : undefined"
+              @click="updateDanmakuSpeed(value)"
+            >
+              {{ value }}x
+            </button>
+          </div>
+        </div>
+        <div class="stepper-setting">
+          <span class="setting-label">{{ t("danmakuTimeOffset") }}</span>
+          <div class="offset-stepper">
+            <button type="button" @click="adjustDanmakuTimeOffset(-1)">
+              -1s
+            </button>
+            <button type="button" @click="adjustDanmakuTimeOffset(-0.1)">
+              -0.1s
+            </button>
+            <input
+              type="text"
+              inputmode="decimal"
+              :aria-label="t('danmakuTimeOffset')"
+              :value="`${danmakuTimeOffset.toFixed(1)}s`"
+              @change="commitDanmakuTimeOffset(($event.target as HTMLInputElement).value)"
+              @keydown.enter="commitDanmakuTimeOffset(($event.target as HTMLInputElement).value)"
+            />
+            <button type="button" @click="adjustDanmakuTimeOffset(0.1)">
+              +0.1s
+            </button>
+            <button type="button" @click="adjustDanmakuTimeOffset(1)">
+              +1s
+            </button>
+          </div>
+        </div>
         <div class="danmaku-source">
-          <span>{{ t("danmakuSource") }}</span>
+          <span class="setting-label">{{ t("danmakuSource") }}</span>
           <button type="button" @click="emit('chooseFileDanmaku')">
             {{ t("danmakuSourceFile") }}
           </button>
@@ -671,12 +798,14 @@ onBeforeUnmount(() => {
   opacity: 0.72;
 }
 .danmaku-settings-panel {
+  --settings-edge: clamp(12px, 8vw, 86px);
+  --range-thumb-inset: 8px;
   position: absolute;
-  right: 86px;
+  right: var(--settings-edge);
   bottom: 54px;
   z-index: 80;
-  width: min(320px, calc(100% - 24px));
-  padding: 12px;
+  width: min(420px, calc(100% - var(--settings-edge) * 2));
+  padding: 9px;
   color: #eee;
   background: rgba(20, 20, 20, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -684,19 +813,34 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
 }
 .danmaku-settings-panel label,
+.segmented-setting,
+.stepper-setting,
 .danmaku-source {
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr) 48px;
-  gap: 8px;
+  grid-template-columns: 56px minmax(0, 1fr) 42px;
+  column-gap: 6px;
+  row-gap: 5px;
   align-items: center;
-  min-height: 32px;
+  min-height: 24px;
   font-size: 12px;
 }
-.danmaku-settings-panel label + label,
-.danmaku-source {
-  margin-top: 8px;
+.setting-label {
+  display: block;
+  width: 100%;
+  color: #f2f2f2;
+  text-align: left;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
-.danmaku-settings-panel input[type="range"] {
+.danmaku-settings-panel label + label,
+.segmented-setting + .segmented-setting,
+.danmaku-settings-panel label + .segmented-setting,
+.segmented-setting + .stepper-setting,
+.stepper-setting + .danmaku-source,
+.danmaku-source {
+  margin-top: 6px;
+}
+.danmaku-settings-panel input[type="range"]:not(.opacity-range) {
   width: 100%;
 }
 .danmaku-settings-panel output,
@@ -704,12 +848,113 @@ onBeforeUnmount(() => {
   color: #bbb;
   text-align: right;
 }
+.range-stack {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: 22px;
+}
+.opacity-track,
+.opacity-range,
+.preset-points {
+  grid-area: 1 / 1;
+}
+.opacity-track {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  background: #d7d9df;
+  border-radius: 999px;
+}
+.opacity-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #0078ff;
+  border-radius: inherit;
+}
+.opacity-range {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+.preset-points {
+  position: absolute;
+  z-index: 5;
+  inset: 50% 0 auto;
+  pointer-events: none;
+}
+.preset-points button {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  cursor: pointer;
+  background: #8f969f;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(20, 20, 20, 0.94);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+.opacity-thumb {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background: var(--art-theme);
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(20, 20, 20, 0.94);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.setting-options {
+  display: grid;
+  grid-column: 2 / 4;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.setting-options button,
+.offset-stepper button {
+  min-height: 22px;
+  color: #eee;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+}
+.setting-options button.active {
+  color: #fff;
+  background: color-mix(in srgb, var(--art-theme) 56%, transparent);
+  border-color: var(--art-theme);
+}
+.offset-stepper {
+  display: grid;
+  grid-column: 2 / 4;
+  grid-template-columns: 34px 44px minmax(52px, 1fr) 44px 34px;
+  gap: 4px;
+  align-items: center;
+}
+.offset-stepper input {
+  width: 100%;
+  min-width: 0;
+  height: 22px;
+  color: #eee;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+}
 .danmaku-source {
-  grid-template-columns: 76px auto auto;
+  grid-template-columns: 56px auto auto;
 }
 .danmaku-source button {
-  min-height: 28px;
-  padding: 3px 8px;
+  min-height: 22px;
+  padding: 2px 7px;
   color: #eee;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.24);
