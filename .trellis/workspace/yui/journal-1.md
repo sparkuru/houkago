@@ -1596,3 +1596,36 @@ Implemented public URL preview and explicit queue/switch playback, added public-
 ### Next Steps
 
 - None - task complete
+
+
+## Session 49: Add Playwright validation workflow
+
+**Date**: 2026-07-19
+**Task**: Add Playwright validation workflow
+**Branch**: `k-on`
+
+### Summary
+
+Added durable automate-first Playwright validation rules to Trellis and the frontend specification. Documented the existing kyoushitsu configuration, viewport projects, host-Chrome command, evidence format, failure-artifact retention, and residual-only human review handoff. Verified documentation consistency with git diff --check and Playwright CLI 1.61.1.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `be27769` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

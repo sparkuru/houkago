@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 48
-- **Last Active**: 2026-07-18
+- **Total Sessions**: 49
+- **Last Active**: 2026-07-19
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1598 | Active |
+| `journal-1.md` | ~1631 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 49 | 2026-07-19 | Add Playwright validation workflow | `be27769` | `k-on` |
 | 48 | 2026-07-18 | Verified room URL playback flow | `cdb035a` | `k-on` |
 | 47 | 2026-07-18 | Portrait mobile room chat | `d96e378` | `k-on` |
 | 46 | 2026-07-18 | Warm club-room frontend refactor | `f7f836d`, `8350155` | `k-on` |
