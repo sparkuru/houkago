@@ -1530,3 +1530,36 @@ Initialized project-local UUPM and Trellis Plus frontend workflow, then delivere
 ### Next Steps
 
 - None - task complete
+
+
+## Session 47: Portrait mobile room chat
+
+**Date**: 2026-07-18
+**Task**: Portrait mobile room chat
+**Branch**: `k-on`
+
+### Summary
+
+Implemented and manually approved a portrait-first room experience: accessible native chat sheet, compact room and playlist disclosures, and 375px/iPad Playwright regression coverage. Fixed dialog visibility so close reliably hides the sheet.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d96e378` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
