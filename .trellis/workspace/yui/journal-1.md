@@ -1496,3 +1496,37 @@ Added a role-aware shared room information panel for host and non-host viewers, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 46: Warm club-room frontend refactor
+
+**Date**: 2026-07-18
+**Task**: Warm club-room frontend refactor
+**Branch**: `k-on`
+
+### Summary
+
+Initialized project-local UUPM and Trellis Plus frontend workflow, then delivered a warm semantic-token room UI with scoped Anime.js motion and portrait responsive player sizing. Verified lint, typecheck, 105 tests, production build, and user browser review.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f7f836d` | (see git log) |
+| `8350155` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
