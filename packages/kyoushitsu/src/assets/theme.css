@@ -1,0 +1,74 @@
+:root[data-theme="warm-club"] {
+  color-scheme: light;
+  --color-canvas: #f6f0e5;
+  --color-canvas-glow: #fffaf1;
+  --color-surface: #fffdf8;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #eee4d3;
+  --color-text: #30291f;
+  --color-text-muted: #6d6253;
+  --color-border: #d8c8b1;
+  --color-border-strong: #b99b74;
+  --color-accent: #8b5b2d;
+  --color-accent-strong: #6c421f;
+  --color-on-accent: #fffaf2;
+  --color-danger: #a8443f;
+  --color-danger-surface: #f3d6d4;
+  --color-warning: #b7791f;
+  --color-media-surface: #111111;
+  --color-cinema-canvas: #000000;
+  --color-on-media: #ffffff;
+  --color-overlay: rgb(0 0 0 / 60%);
+  --color-overlay-strong: rgb(0 0 0 / 72%);
+  --color-overlay-surface: rgb(17 17 17 / 80%);
+  --color-overlay-muted: #cccccc;
+  --color-provider-brand: #00a1d6;
+  --color-provider-on-brand: #ffffff;
+  --color-tooltip-surface: #222222;
+  --color-tooltip-text: #ffffff;
+  --color-focus-ring: #2f7669;
+  --shadow-soft: 0 14px 32px rgb(89 60 30 / 12%);
+  --shadow-panel: 0 8px 20px rgb(89 60 30 / 10%);
+  --shadow-floating: 0 18px 48px rgb(89 60 30 / 18%);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
+
+html {
+  background: var(--color-canvas);
+}
+
+body {
+  color: var(--color-text);
+  font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans CJK SC", "Microsoft YaHei",
+    system-ui, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

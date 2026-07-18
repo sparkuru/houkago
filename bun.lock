@@ -60,6 +60,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@elysiajs/eden": "^1.4.0",
+        "animejs": "^4.5.0",
         "artplayer": "^5.4.0",
         "dashjs": "^5.0.3",
         "hls.js": "^1.6.0",
@@ -222,6 +223,8 @@
     "@vue/shared": ["@vue/shared@3.5.38", "", {}, "sha512-FTW0AFZNaK5/mOqvGBwVfUlNLU38TiQn4+DQgIFUnrBBJQ1crMJ82yeGQLV5jyKFsO8yRukpbuP7x+nRbH6aug=="],
 
     "alien-signals": ["alien-signals@3.2.1", "", {}, "sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g=="],
+
+    "animejs": ["animejs@4.5.0", "", { "peerDependencies": { "@types/three": ">=0.150.0", "three": ">=0.150.0" }, "optionalPeers": ["@types/three", "three"] }, "sha512-NQimYX+lz8WaXonGS9zVVoviCIAjONeJayxacUditaivYLqyXgGjFKjuyl0aUUhFKm5MriX9ty1TGovNzoJQWA=="],
 
     "artplayer": ["artplayer@5.4.0", "", { "dependencies": { "option-validator": "^2.0.6" } }, "sha512-2B+plbx8N2yNsjK4nJU3+EOG8TULm1LRZk/QPkWRAMEX2Ee/MSnZG/WJYz8kcoZxZuLKcQ3uXifqLuPxZOH29A=="],
 

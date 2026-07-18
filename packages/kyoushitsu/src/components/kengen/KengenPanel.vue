@@ -400,28 +400,18 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .kengen-panel {
-  --kengen-muted: #666;
-  --kengen-text: #222;
-  --kengen-accent: #2a7;
-  --kengen-danger: #c44;
-  --kengen-separator: #e5e5e5;
-  --kengen-switch-off: #d9d9d9;
-  --kengen-switch-on: #2a7;
-  --kengen-knob: #fff;
+  --kengen-muted: var(--color-text-muted);
+  --kengen-text: var(--color-text);
+  --kengen-accent: var(--color-accent);
+  --kengen-danger: var(--color-danger);
+  --kengen-separator: var(--color-border);
+  --kengen-switch-off: var(--color-surface-muted);
+  --kengen-switch-on: var(--color-accent);
+  --kengen-knob: var(--color-on-accent);
   display: flex;
   flex-direction: column;
   gap: 14px;
   color: var(--kengen-text);
-}
-:global(.theme-dark) .kengen-panel {
-  --kengen-muted: #aaa;
-  --kengen-text: #f0f0f0;
-  --kengen-accent: #ff8a3d;
-  --kengen-danger: #ff7474;
-  --kengen-separator: #ff7a22;
-  --kengen-switch-off: #0b0b0b;
-  --kengen-switch-on: #ff8a3d;
-  --kengen-knob: #fff;
 }
 .kengen-control-block {
   position: relative;
@@ -517,7 +507,7 @@ onBeforeUnmount(() => {
   color: var(--kengen-accent);
 }
 .room-status.connecting {
-  color: #b7791f;
+  color: var(--color-warning);
 }
 .room-status.error,
 .room-status.closed {
@@ -555,11 +545,11 @@ onBeforeUnmount(() => {
   bottom: calc(100% + 6px);
   z-index: 2;
   padding: 2px 6px;
-  color: #fff;
+  color: var(--color-tooltip-text);
   font-size: 12px;
   pointer-events: none;
   content: attr(data-tooltip);
-  background: #222;
+  background: var(--color-tooltip-surface);
   border-radius: 4px;
   opacity: 0;
   transform: translateX(50%) translateY(2px);
@@ -783,7 +773,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   align-items: center;
   padding-left: 6px;
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--kengen-separator);
   font-size: 12px;
 }
 </style>

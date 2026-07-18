@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { t } from "@/i18n"
-import { type ChatTheme, nextChatTheme } from "@/lib/chat-theme"
 import { formatLastSeen, formatOnlineDuration } from "@/lib/member-presence"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { Yakuwari } from "houkago-kousoku"
-import { onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { onBeforeUnmount, onMounted, ref } from "vue"
 
 // B-station-live-style chat side panel (scaffold shell). Emits the romaji domain
 // verb so the parent decides how to send; this component does not own the WS.
-const props = defineProps<{ chatTheme: ChatTheme }>()
 const bushitsu = useBushitsuStore()
 // toggle：折叠要求。親（BushitsuView）が chatHiraku を畳む。ChatPanel は WS も
 // 折叠態も自管せず emit で親へ委ねる（component-guidelines）。
@@ -16,7 +14,6 @@ const emit = defineEmits<{
   oshaberi: [content: string]
   danmaku: [content: string, options?: { color?: string }]
   toggle: []
-  chatTheme: [theme: ChatTheme]
 }>()
 
 const panelEl = ref<HTMLElement | null>(null)
@@ -25,15 +22,11 @@ const memberPanelOpen = ref(false)
 const now = ref(Date.now())
 const composerSettingsOpen = ref(false)
 const composerFontSize = ref(16)
-const composerColor = ref(defaultComposerColor(props.chatTheme))
+const composerColor = ref("#8b5b2d")
 const composerHeight = ref(168)
 let resizeStartY = 0
 let resizeStartHeight = 0
 let clockTimer: ReturnType<typeof setInterval> | null = null
-
-function defaultComposerColor(theme: "light" | "dark"): string {
-  return theme === "dark" ? "#ffffff" : "#222222"
-}
 
 function sendOshaberi() {
   const content = draft.value.trim()
@@ -51,14 +44,6 @@ function sendDanmaku() {
 
 function insertToken(token: string) {
   draft.value = `${draft.value}${draft.value ? " " : ""}${token}`
-}
-
-function toggleChatTheme() {
-  const next = nextChatTheme(props.chatTheme)
-  if (composerColor.value === defaultComposerColor(props.chatTheme)) {
-    composerColor.value = defaultComposerColor(next)
-  }
-  emit("chatTheme", next)
 }
 
 function roleLabel(yakuwari: Yakuwari) {
@@ -106,8 +91,6 @@ function startComposerResize(event: PointerEvent) {
   window.addEventListener("pointerup", stopComposerResize)
 }
 
-watch(() => props.chatTheme, syncComposerHeightToBounds)
-
 onMounted(() => {
   composerHeight.value = composerBounds().min
   clockTimer = setInterval(() => {
@@ -124,7 +107,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside ref="panelEl" class="chat-panel" :class="`theme-${props.chatTheme}`">
+  <aside ref="panelEl" class="chat-panel">
     <header class="chat-head">
       <div class="chat-presence-summary">
         <span>{{ t("shusseki") }} {{ bushitsu.shusseki }}</span>
@@ -143,15 +126,6 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <div class="chat-head-actions">
-        <button
-          type="button"
-          class="chat-theme"
-          :aria-label="t('chatThemeToggleAria')"
-          :aria-pressed="props.chatTheme === 'dark'"
-          @click="toggleChatTheme"
-        >
-          {{ props.chatTheme === "dark" ? "☾" : "☀" }}
-        </button>
         <button
           type="button"
           class="chat-collapse"
@@ -261,6 +235,14 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .chat-panel {
+  --chat-muted: var(--color-text-muted);
+  --chat-border: var(--color-border);
+  --chat-surface: var(--color-surface);
+  --chat-surface-raised: var(--color-surface-raised);
+  --chat-surface-muted: var(--color-surface-muted);
+  --chat-accent: var(--color-accent);
+  --chat-accent-strong: var(--color-accent-strong);
+  --chat-accent-soft: color-mix(in srgb, var(--color-accent) 13%, var(--color-surface));
   position: relative;
   flex: 0 0 320px;
   display: flex;
@@ -269,14 +251,9 @@ onBeforeUnmount(() => {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  border-left: 1px solid #ddd;
-  background: #fff;
-  color: #222;
-}
-.chat-panel.theme-dark {
-  border-left-color: #222;
-  background: #111;
-  color: #eee;
+  border-left: 1px solid var(--chat-border);
+  background: var(--chat-surface);
+  color: var(--color-text);
 }
 .chat-head {
   display: flex;
@@ -284,10 +261,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   padding: 8px;
   font-weight: bold;
-  border-bottom: 1px solid #eee;
-}
-.theme-dark .chat-head {
-  border-bottom-color: #262626;
+  border-bottom: 1px solid var(--chat-border);
 }
 .chat-head-actions {
   display: flex;
@@ -302,14 +276,13 @@ onBeforeUnmount(() => {
 }
 /* header 右端の小さな折叠ボタン（prd #4 展开態）。中間の粗竖条は廃止。 */
 .member-info-button,
-.chat-theme,
 .chat-collapse {
   min-width: 24px;
   min-height: 24px;
   padding: 0 6px;
   font-size: 16px;
   line-height: 1;
-  color: #888;
+  color: var(--chat-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -325,12 +298,7 @@ onBeforeUnmount(() => {
 }
 .member-info-button:hover,
 .chat-collapse:hover {
-  color: #222;
-}
-.theme-dark .member-info-button:hover,
-.theme-dark .chat-theme:hover,
-.theme-dark .chat-collapse:hover {
-  color: #fff;
+  color: var(--color-text);
 }
 .member-popover {
   position: absolute;
@@ -343,15 +311,10 @@ onBeforeUnmount(() => {
   max-height: min(460px, calc(100% - 58px));
   padding: 10px;
   overflow: auto;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 10px 26px rgb(0 0 0 / 16%);
-}
-.theme-dark .member-popover {
-  background: #151515;
-  border-color: #333;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 40%);
+  background: var(--chat-surface);
+  border: 1px solid var(--chat-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
 }
 .member-section {
   display: grid;
@@ -370,7 +333,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 .member-table-head {
-  color: #888;
+  color: var(--chat-muted);
 }
 .member-name {
   min-width: 0;
@@ -381,19 +344,19 @@ onBeforeUnmount(() => {
 .member-role {
   justify-self: start;
   padding: 0 4px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--chat-border);
   border-radius: 3px;
 }
 .member-role.buchou {
-  color: #2a7;
-  border-color: #2a7;
+  color: var(--chat-accent-strong);
+  border-color: var(--chat-accent);
 }
 .member-role.kengaku {
-  color: #888;
+  color: var(--chat-muted);
 }
 .member-empty {
   min-height: 28px;
-  color: #888;
+  color: var(--chat-muted);
   font-size: 12px;
 }
 .chat-log {
@@ -412,12 +375,8 @@ onBeforeUnmount(() => {
   margin-top: 6px;
 }
 .chat-log li.danmaku {
-  background: #fff7e6;
-  border: 1px solid #ffd591;
-}
-.theme-dark .chat-log li.danmaku {
-  background: #2a2110;
-  border-color: #6a4a18;
+  background: var(--chat-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 45%, var(--chat-border));
 }
 .chat-meta {
   display: flex;
@@ -426,7 +385,7 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 .sender {
-  color: #888;
+  color: var(--chat-muted);
 }
 /* 役割バッジ: 部長/ゲストを軽量に区別。色だけでなくテキストで状態を伝える。 */
 .yakuwari {
@@ -434,27 +393,22 @@ onBeforeUnmount(() => {
   padding: 0 4px;
   font-size: 11px;
   border-radius: 3px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--chat-border);
 }
 .yakuwari.buchou {
-  border-color: #2a7;
-  color: #2a7;
+  border-color: var(--chat-accent);
+  color: var(--chat-accent-strong);
 }
 .yakuwari.kengaku {
-  color: #888;
+  color: var(--chat-muted);
 }
 .chat-kind {
   padding: 0 5px;
   font-size: 11px;
-  color: #ad6800;
-  background: #fff1b8;
-  border: 1px solid #ffd666;
+  color: var(--chat-accent-strong);
+  background: var(--chat-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--chat-accent) 50%, var(--chat-border));
   border-radius: 999px;
-}
-.theme-dark .chat-kind {
-  color: #ffd666;
-  background: #3a2a0c;
-  border-color: #805b10;
 }
 .chat-content {
   margin: 4px 0 0;
@@ -463,11 +417,8 @@ onBeforeUnmount(() => {
 .chat-readonly {
   margin: 0;
   padding: 8px;
-  color: #888;
-  border-top: 1px solid #eee;
-}
-.theme-dark .chat-readonly {
-  border-top-color: #262626;
+  color: var(--chat-muted);
+  border-top: 1px solid var(--chat-border);
 }
 .chat-input {
   flex: none;
@@ -475,7 +426,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--chat-border);
 }
 .composer-resizer {
   width: 44px;
@@ -492,39 +443,26 @@ onBeforeUnmount(() => {
   height: 4px;
   margin: 3px 0;
   content: "";
-  background: #d0d0d0;
+  background: var(--chat-border);
   border-radius: 999px;
-}
-.theme-dark .composer-resizer::before {
-  background: #444;
-}
-.theme-dark .chat-input {
-  border-top-color: #262626;
 }
 .chat-input textarea {
   width: 100%;
   min-height: 0;
   resize: none;
   padding: 8px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-.theme-dark .chat-input textarea {
-  background: #191919;
-  border-color: #333;
+  color: var(--color-text);
+  background: var(--chat-surface-raised, var(--chat-surface));
+  border: 1px solid var(--chat-border);
+  border-radius: var(--radius-sm);
 }
 .composer-settings {
   display: grid;
   gap: 6px;
   padding: 8px;
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-}
-.theme-dark .composer-settings {
-  background: #181818;
-  border-color: #333;
+  background: var(--chat-surface-muted);
+  border: 1px solid var(--chat-border);
+  border-radius: var(--radius-sm);
 }
 .composer-settings label {
   display: grid;
@@ -553,5 +491,15 @@ onBeforeUnmount(() => {
 }
 .primary-send {
   font-weight: 600;
+}
+
+@media (max-width: 800px) and (orientation: portrait) {
+  .chat-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    height: min(48dvh, 440px);
+    border-top: 1px solid var(--chat-border);
+    border-left: 0;
+  }
 }
 </style>

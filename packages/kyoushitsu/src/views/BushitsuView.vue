@@ -6,6 +6,7 @@ import FileDanmakuOverlay from "@/components/danmaku/FileDanmakuOverlay.vue"
 import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
+import { useRoomMotion } from "@/composables/use-room-motion"
 import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
 import {
@@ -14,7 +15,6 @@ import {
   canPlayBangumiItem,
   isCurrentEnmoku,
 } from "@/lib/bangumi-actions"
-import { type ChatTheme, loadChatTheme, saveChatTheme } from "@/lib/chat-theme"
 import {
   type ProviderStatKey,
   bilibiliProvider,
@@ -33,13 +33,15 @@ import { useBushitsuStore } from "@/stores/bushitsu"
 import { KousokuClient, type KousokuConnectionStatus } from "@/ws/client"
 import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
 import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 
 // 放映 page: player + chat side panel. Wires the WS client to the store
 // (writer) and exposes a manual direct-link enmoku for the scaffold demo.
 const route = useRoute()
 const bushitsu = useBushitsuStore()
+const roomShell = ref<HTMLElement | null>(null)
+const roomMotion = useRoomMotion()
 const bushitsuId = String(route.params.id)
 const roomName = ref("")
 const roomLink = computed(() => (typeof location === "undefined" ? bushitsuId : location.href))
@@ -75,7 +77,6 @@ const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 // と聊天室模式（左播放器 + 右聊天，全屏式房间布局；不改变 ArtPlayer 原生网页全屏）。
 const chatHiraku = ref(true)
 const cinemaMode = ref(false)
-const chatTheme = ref<ChatTheme>(loadChatTheme())
 const wsStatus = ref<KousokuConnectionStatus>("closed")
 const wsStatusLabel = computed(() => {
   switch (wsStatus.value) {
@@ -121,11 +122,6 @@ function collapseChat() {
   cinemaMode.value = false
 }
 
-function setChatTheme(theme: ChatTheme) {
-  chatTheme.value = theme
-  saveChatTheme(theme)
-}
-
 function reconnectKousoku() {
   client?.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
 }
@@ -162,7 +158,13 @@ const danmakuSpeed = ref(1)
 const danmakuTimeOffset = ref(0)
 const manualSubmitting = ref(false)
 const providerInfoEnmoku = ref<Enmoku | null>(null)
+const providerDialog = ref<HTMLElement | null>(null)
 let fetchedDanmakuRequest = 0
+
+watch(providerInfoEnmoku, (provider) => {
+  if (!provider) return
+  void nextTick(() => roomMotion.enterPanel(providerDialog.value))
+})
 
 const currentFileDanmaku = computed(() => {
   const id = currentEnmokuId.value
@@ -465,12 +467,14 @@ async function startSession() {
       if (status === "connecting") {
         bootstrapped.value = false
       }
+      if (status === "open") roomMotion.confirm(roomShell.value)
     },
   )
   client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
 }
 
 onMounted(() => {
+  roomMotion.enterRoom(roomShell.value)
   bushitsu.bushitsuId = bushitsuId
   if (bushitsu.nickname) {
     startSession()
@@ -486,7 +490,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="bushitsu" :class="{ 'cinema-mode': cinemaMode, 'theme-dark': chatTheme === 'dark' }">
+  <div ref="roomShell" class="bushitsu" :class="{ 'cinema-mode': cinemaMode }">
     <div v-if="nameGate" class="name-gate">
       <form class="name-form" @submit.prevent="submitName">
         <label>
@@ -680,7 +684,7 @@ onBeforeUnmount(() => {
         class="provider-dialog-backdrop"
         @click.self="closeProviderInfo"
       >
-        <section class="provider-dialog" role="dialog" :aria-label="t('providerInfoAria')">
+        <section ref="providerDialog" class="provider-dialog" role="dialog" :aria-label="t('providerInfoAria')">
           <header>
             <strong>{{ t("providerBilibili") }}</strong>
             <button type="button" :aria-label="t('providerDialogClose')" @click="closeProviderInfo">
@@ -720,10 +724,8 @@ onBeforeUnmount(() => {
       </div>
       <ChatPanel
         v-show="chatHiraku"
-        :chat-theme="chatTheme"
         @oshaberi="oshaberi"
         @danmaku="danmaku"
-        @chat-theme="setChatTheme"
         @toggle="collapseChat"
       />
     </template>
@@ -736,12 +738,8 @@ onBeforeUnmount(() => {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #fff;
-  color: #222;
-}
-.bushitsu.theme-dark {
-  background: #0f0f0f;
-  color: #eee;
+  background: radial-gradient(circle at top left, var(--color-canvas-glow), var(--color-canvas));
+  color: var(--color-text);
 }
 .stage {
   flex: 1;
@@ -752,9 +750,6 @@ onBeforeUnmount(() => {
   container-type: inline-size;
   padding: 0 12px 0 12px;
   overflow: hidden;
-}
-.theme-dark .stage {
-  background: #0f0f0f;
 }
 .file-danmaku-input {
   display: none;
@@ -783,13 +778,10 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-top: 8px;
   padding: 8px 10px;
-  background: #fbfbfb;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-}
-.theme-dark .media-toolbar {
-  background: #151515;
-  border-color: #2a2a2a;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
 }
 .enmoku-metadata {
   display: flex;
@@ -806,14 +798,9 @@ onBeforeUnmount(() => {
   align-items: center;
   min-height: 28px;
   padding: 4px 8px;
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-}
-.theme-dark .metadata-control,
-.theme-dark .metadata-pill {
-  background: #1d1d1d;
-  border-color: #333;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 .metadata-control select {
   max-width: 24ch;
@@ -829,8 +816,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #111;
-  color: #fff;
+  background: var(--color-media-surface);
+  color: var(--color-on-media);
 }
 .placeholder {
   flex: 0 1 min(56.25cqw, calc(100dvh - 260px), 820px);
@@ -838,11 +825,11 @@ onBeforeUnmount(() => {
   min-height: 280px;
 }
 .bushitsu.cinema-mode {
-  background: #000;
+  background: var(--color-cinema-canvas);
 }
 .bushitsu.cinema-mode .stage {
   padding: 0;
-  background: #000;
+  background: var(--color-cinema-canvas);
 }
 .bushitsu.cinema-mode .player-wrap,
 .bushitsu.cinema-mode .placeholder {
@@ -856,7 +843,7 @@ onBeforeUnmount(() => {
   display: none;
 }
 .bushitsu.cinema-mode :deep(.chat-panel) {
-  border-left-color: #222;
+  border-left-color: var(--color-media-surface);
 }
 .room-workbench {
   flex: 1 1 220px;
@@ -869,33 +856,22 @@ onBeforeUnmount(() => {
 }
 .room-control-panel,
 .bangumi {
-  --surface-muted: #f7f7f7;
-  --row-surface: #fff;
-  --row-border: #e5e5e5;
-  --row-current-border: #222;
-  --row-current-surface: #f7f7f7;
-  --panel-accent: #2a7;
-  --danger-text: #8a1f1f;
+  --surface-muted: var(--color-surface-muted);
+  --row-surface: var(--color-surface-raised);
+  --row-border: var(--color-border);
+  --row-current-border: var(--color-accent);
+  --row-current-surface: var(--color-surface-muted);
+  --panel-accent: var(--color-accent);
+  --danger-text: var(--color-danger);
   flex: 1 1 160px;
   min-height: 120px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-}
-.theme-dark .room-control-panel,
-.theme-dark .bangumi {
-  --surface-muted: #0b0b0b;
-  --row-surface: #151515;
-  --row-border: #303030;
-  --row-current-border: #ff7a22;
-  --row-current-surface: #1b130e;
-  --panel-accent: #ff8a3d;
-  --danger-text: #ff8a8a;
-  background: #141414;
-  border-color: #2a2a2a;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
 }
 .room-control-panel h3,
 .bangumi h3 {
@@ -903,19 +879,16 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 10px 12px;
   font-size: 20px;
-  border-bottom: 1px solid #e5e5e5;
-}
-.theme-dark .room-control-panel h3,
-.theme-dark .bangumi h3 {
-  border-bottom-color: #2a2a2a;
-}
-.theme-dark .room-control-panel h3 {
-  margin: 0;
-  border: 0;
-  border-bottom: 1px solid #2a2a2a;
-  box-shadow: none;
+  border-bottom: 1px solid var(--color-border);
 }
 .room-control-panel :deep(.kengen-panel) {
+  --kengen-muted: var(--color-text-muted);
+  --kengen-text: var(--color-text);
+  --kengen-accent: var(--color-accent);
+  --kengen-danger: var(--color-danger);
+  --kengen-separator: var(--color-border);
+  --kengen-switch-on: var(--color-accent);
+  --kengen-knob: var(--color-on-accent);
   flex: 1;
   align-content: flex-start;
   align-items: stretch;
@@ -931,29 +904,6 @@ onBeforeUnmount(() => {
 .room-control-panel :deep(.kengen-switch-row) {
   width: 100%;
   text-align: left;
-}
-.theme-dark .room-control-panel :deep(.kengen-panel) {
-  --kengen-muted: #b8b8b8;
-  --kengen-text: #f1f1f1;
-  --kengen-accent: #ff8a3d;
-  --kengen-danger: #ff7474;
-  --kengen-separator: #ff7a22;
-  --kengen-switch-off: #0b0b0b;
-  --kengen-switch-on: #ff8a3d;
-  --kengen-knob: #fff;
-}
-.theme-dark .room-control-panel :deep(.kengen-section-title),
-.theme-dark .room-control-panel :deep(.kengen-state-text),
-.theme-dark .room-control-panel :deep(.room-info-key),
-.theme-dark .room-control-panel :deep(.room-info-value),
-.theme-dark .room-control-panel :deep(.nyuushitsu-mode-desc) {
-  color: #b8b8b8;
-}
-.theme-dark .room-control-panel :deep(.kengen-switch-row),
-.theme-dark .room-control-panel :deep(.nyuushitsu-option) {
-  color: #f1f1f1;
-  background: transparent;
-  border: 0;
 }
 .bangumi ul {
   flex: 1 1 auto;
@@ -979,15 +929,7 @@ onBeforeUnmount(() => {
 .bangumi-row + .bangumi-row {
   margin-top: 6px;
 }
-.theme-dark .bangumi-row {
-  background: var(--row-surface);
-  border-color: var(--row-border);
-}
 .bangumi-row.current {
-  border-color: var(--row-current-border);
-  background: var(--row-current-surface);
-}
-.theme-dark .bangumi-row.current {
   border-color: var(--row-current-border);
   background: var(--row-current-surface);
 }
@@ -1017,8 +959,8 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
-  background: #00a1d6;
+  color: var(--color-provider-on-brand);
+  background: var(--color-provider-brand);
   border-radius: 4px;
 }
 .provider-info-button {
@@ -1040,9 +982,6 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: var(--panel-accent);
 }
-.theme-dark .bangumi-status {
-  color: var(--panel-accent);
-}
 .dev-manual {
   flex: none;
   display: grid;
@@ -1052,9 +991,6 @@ onBeforeUnmount(() => {
   padding: 8px;
   border-top: 1px solid var(--row-border);
   background: var(--surface-muted);
-}
-.theme-dark .dev-manual {
-  border-top-color: var(--row-border);
 }
 .dev-manual h4 {
   margin: 0;
@@ -1066,18 +1002,6 @@ onBeforeUnmount(() => {
   min-height: 28px;
   border: 1px solid var(--row-border);
   border-radius: 4px;
-}
-.theme-dark input,
-.theme-dark textarea,
-.theme-dark select {
-  color: #eee;
-  background: #181818;
-  border-color: #444;
-}
-.theme-dark .bangumi input {
-  color: #eee;
-  background: #0b0b0b;
-  border-color: var(--row-border);
 }
 .bangumi-actions {
   display: flex;
@@ -1098,27 +1022,7 @@ onBeforeUnmount(() => {
 .dev-manual button:not(:disabled):focus-visible {
   border-color: var(--panel-accent);
 }
-.theme-dark button {
-  color: #eee;
-  background: #1d1d1d;
-  border-color: #555;
-}
-.theme-dark .bangumi button {
-  color: #eee;
-  background: #0b0b0b;
-  border-color: var(--row-border);
-}
-.theme-dark .bangumi button:not(:disabled):hover,
-.theme-dark .bangumi button:not(:disabled):focus-visible {
-  border-color: var(--panel-accent);
-}
-.theme-dark button:disabled {
-  color: #777;
-}
 .bangumi-action.danger:not(:disabled) {
-  color: var(--danger-text);
-}
-.theme-dark .bangumi-action.danger:not(:disabled) {
   color: var(--danger-text);
 }
 .provider-dialog-backdrop {
@@ -1129,39 +1033,31 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-overlay);
 }
 .provider-dialog {
   width: min(420px, 100%);
   max-height: min(680px, calc(100dvh - 48px));
   overflow-y: auto;
-  color: #222;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
-}
-.theme-dark .provider-dialog {
-  color: #eee;
-  background: #151515;
-  border-color: #333;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
 }
 .provider-dialog header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-bottom: 1px solid #e5e5e5;
-}
-.theme-dark .provider-dialog header {
-  border-bottom-color: #333;
+  border-bottom: 1px solid var(--color-border);
 }
 .provider-dialog header button {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   background: transparent;
 }
 .provider-dialog img {
@@ -1169,7 +1065,7 @@ onBeforeUnmount(() => {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: #111;
+  background: var(--color-media-surface);
 }
 .provider-dialog h4,
 .provider-dialog p,
@@ -1190,21 +1086,14 @@ onBeforeUnmount(() => {
 .provider-stats div {
   min-width: 0;
   padding: 8px;
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
-  border-radius: 6px;
-}
-.theme-dark .provider-stats div {
-  background: #1d1d1d;
-  border-color: #333;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 .provider-stats dt {
   margin: 0 0 4px;
   font-size: 12px;
-  color: #666;
-}
-.theme-dark .provider-stats dt {
-  color: #aaa;
+  color: var(--color-text-muted);
 }
 .provider-stats dd {
   margin: 0;
@@ -1228,19 +1117,14 @@ onBeforeUnmount(() => {
   padding: 12px 0;
   font-size: 14px;
   line-height: 1;
-  color: #222;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   border-right: none;
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s ease;
-}
-.theme-dark .hiraku-button {
-  color: #eee;
-  background: #1d1d1d;
-  border-color: #333;
 }
 .hiraku-handle:hover .hiraku-button,
 .hiraku-button:focus-visible {
@@ -1255,15 +1139,17 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-overlay);
 }
 .name-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 24px;
-  background: #fff;
-  border-radius: 8px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
 }
 .nyuushitsu-gate {
   position: fixed;
@@ -1275,20 +1161,56 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.72);
+  color: var(--color-on-accent);
+  background: var(--color-overlay-strong);
 }
 .nyuushitsu-gate p {
   margin: 0;
   padding: 20px 24px;
-  background: #111;
-  border: 1px solid #333;
+  background: var(--color-media-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
 }
 .nyuushitsu-gate .nyuushitsu-status {
   padding: 8px 12px;
-  color: #ccc;
+  color: var(--color-overlay-muted);
   font-size: 13px;
-  background: rgba(17, 17, 17, 0.8);
+  background: var(--color-overlay-surface);
+}
+
+@media (max-width: 800px) and (orientation: portrait) {
+  .bushitsu {
+    display: block;
+    overflow-y: auto;
+  }
+  .stage {
+    min-height: 100dvh;
+    padding: 0 var(--space-3) var(--space-4);
+    overflow: visible;
+  }
+  .player-wrap,
+  .placeholder {
+    flex: none;
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .room-workbench {
+    display: flex;
+    flex-direction: column;
+    min-height: auto;
+    overflow: visible;
+  }
+  .room-control-panel,
+  .bangumi {
+    min-height: 260px;
+  }
+  .bushitsu > :deep(.chat-panel) {
+    width: 100%;
+    height: min(72dvh, 620px);
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
 }
 </style>
