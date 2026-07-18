@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 47
+- **Total Sessions**: 48
 - **Last Active**: 2026-07-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1565 | Active |
+| `journal-1.md` | ~1598 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 48 | 2026-07-18 | Verified room URL playback flow | `cdb035a` | `k-on` |
 | 47 | 2026-07-18 | Portrait mobile room chat | `d96e378` | `k-on` |
 | 46 | 2026-07-18 | Warm club-room frontend refactor | `f7f836d`, `8350155` | `k-on` |
 | 45 | 2026-06-22 | Shared room information panel | `07a3f19` | `k-on` |

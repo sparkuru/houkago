@@ -1563,3 +1563,36 @@ Implemented and manually approved a portrait-first room experience: accessible n
 ### Next Steps
 
 - None - task complete
+
+
+## Session 48: Verified room URL playback flow
+
+**Date**: 2026-07-18
+**Task**: Verified room URL playback flow
+**Branch**: `k-on`
+
+### Summary
+
+Implemented public URL preview and explicit queue/switch playback, added public-source validation and mobile/desktop Playwright coverage, fixed desktop room overflow, and reduced first room-entry latency with route prefetch plus parallel bootstrap reads.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cdb035a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
