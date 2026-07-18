@@ -209,18 +209,20 @@ append to `danmaku`, and applying `DANMAKU` appends both a `danmaku` overlay lin
 and a `chat` line marked `kind: "danmaku"`. Backend WS tests should cover
 `DANMAKU` room broadcast and the shared chat-permission rejection path.
 
-### Local Room Theme
+### Application Theme Boundary
 
-- Room theme is local UI preference. `loadChatTheme()` follows
-  `prefers-color-scheme` only when no saved value exists; once the user toggles
-  the day/night button, persist the explicit `light`/`dark` value in
-  `localStorage` and keep it across page refreshes.
-- Theme state lives in `BushitsuView` plus `lib/chat-theme.ts`, and is passed
-  into `ChatPanel` as a prop. This lets one toggle recolor the whole room
-  surface (chat, room controls, 番組表, dev source row) while staying local to the
-  current viewer.
-- Do not promote theme to `useBushitsuStore` because it is not room/session truth
-  and must not sync across viewers.
+- The active application theme is a root `data-theme` attribute set by
+  `applyTheme()` from `lib/theme.ts`; the current default is `warm-club`.
+  Theme identity is local presentation state, never room/session truth, so it
+  must not enter `useBushitsuStore` or travel through WebSocket messages.
+- Shared palette values live only in `assets/theme.css` as semantic tokens.
+  Components consume tokens such as `--color-surface`, `--color-text`,
+  `--color-border`, and `--color-accent`; component-local variables may derive
+  from them but may not introduce a second literal palette.
+- `houkago:chat-theme` remains readable as a legacy local-storage value for a
+  future migration, but the current UI does not apply it and has no chat-only
+  theme prop, class, or toggle. A future selectable theme adds another root token
+  block under the same contract rather than branching component selectors.
 
 ---
 

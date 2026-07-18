@@ -70,11 +70,17 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   playback engines inside `EnmokuPlayer` mount/custom-type paths and destroy
   them through ArtPlayer/onUnmounted cleanup; create future Danmaku engines in
   their own wrapper.
-- **Room/cinema pages are fixed-viewport layouts:** reset `html`, `body`, and
-  `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`; then put
-  scrolling only inside intentional panes such as chat logs and 番組表 lists.
-  A `100vh` room shell plus the browser's default body margin creates a stray
-  page scrollbar and breaks chat/player bottom alignment.
+- **Room/cinema pages are fixed-viewport layouts on desktop:** reset `html`,
+  `body`, and `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`;
+  then put scrolling only inside intentional panes such as chat logs and 番組表
+  lists. At the portrait responsive breakpoint (currently `max-width: 800px`),
+  the room shell may switch to document scrolling so the player stays first and
+  the stacked controls, playlist, and expandable chat remain reachable. Give
+  the player container a definite `aspect-ratio: 16 / 9` in that mode: a
+  `min-height` alone does not resolve a nested player's `height: 100%` and can
+  leave a blank player area. A `100vh` room shell plus the browser's default
+  body margin creates a stray page scrollbar and breaks desktop chat/player
+  bottom alignment.
 - **Keep danmaku source data engine-agnostic.** Local file parsing belongs in
   `houkago-kokuban`; kyoushitsu stores only source selection, user display
   preference, and timeline cues. The long-term priority chain is 本地文件 /

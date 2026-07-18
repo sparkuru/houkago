@@ -53,3 +53,10 @@ Browser-visible changes require the Trellis Submit-Ready Human Review Gate from
 `.trellis/workflow.md`. Ask for manual feedback for player controls, room
 layout, fullscreen modes, chat ergonomics, danmaku rendering, Bilibili provider
 metadata, and any visual/copy change that automated tests cannot judge.
+
+## UI/UX Pro Max Workflow
+
+For a user-visible frontend task, use the project-local Codex UUPM skill at
+`.codex/skills/ui-ux-pro-max/SKILL.md` during planning. Keep raw design-system
+research inside the active task, make approved decisions in `design.md`, and
+promote only stable rules back into this frontend specification after validation.

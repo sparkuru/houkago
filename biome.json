@@ -6,7 +6,16 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["dist", "node_modules", "archive", ".trellis", ".claude", "*.db", "*.sqlite"]
+    "ignore": [
+      "dist",
+      "node_modules",
+      "archive",
+      ".trellis",
+      ".claude",
+      ".codex",
+      "*.db",
+      "*.sqlite"
+    ]
   },
   "organizeImports": { "enabled": true },
   "formatter": {

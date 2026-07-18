@@ -351,6 +351,12 @@ When considering a parent/child split:
 
 Return to this step whenever requirements change and revise the relevant artifact.
 
+##### Trellis Plus: UUPM frontend workflow
+
+For every task that changes user-visible UI, confirm that the active platform has a complete project-local UI/UX Pro Max (UUPM) entry point. For Codex, this is `.codex/skills/ui-ux-pro-max/SKILL.md`; a global installation does not satisfy this check. If it is absent or incomplete, ask the user whether to run `uipro init --ai codex` before any UUPM-specific command or design artifact is created.
+
+When UUPM is available, load its skill and use its `--design-system` flow before implementation. Save raw task-specific output under `{TASK_DIR}/research/ui-ux-pro-max.md`, then record only the approved visual, responsive, interaction, accessibility, and state decisions in `design.md`. Define loading, empty, error, disabled, success, keyboard, and reduced-motion behavior up front. Do not treat raw UUPM output as an approved design by itself, and do not create a competing project-wide design-system file.
+
 #### 1.2 Research `[optional · repeatable]`
 
 Research can happen at any time during requirement exploration. It isn't limited to local code — you can use any available tool (MCP servers, skills, web search, etc.) to look up external information, including third-party library docs, industry practices, API references, etc.
@@ -476,16 +482,13 @@ Goal: turn reviewed planning artifacts into code that passes quality checks.
 
 Before implementation or validation, check whether this repository has a dev-command wrapper. This project uses `./dx`, a Docker-backed `oven/bun:1` wrapper that publishes housou `3000` and kyoushitsu/Vite `5173` when the ports are free, stores HOME/cache in `.devhome/`, and runs the normal validation commands as `./dx bun run format`, `./dx bun run lint`, `./dx bun run typecheck`, and `./dx bun test`.
 
-If `./dx` is missing or a future package needs install/lint/typecheck/test/build commands that cannot run through it, apply the `dev-it-in-docker` skill before coding:
-- detect the actual toolchain and dev-server ports from repository files
-- create or update the repo-local wrapper instead of adding raw host package-manager usage
-- ensure `.devhome/` is gitignored
-- register only the narrow wrapper allow rule in active agent config, such as `Bash(./dx *)` or `prefix_rule(pattern=["./dx"], decision="allow")`
-- verify with the cheapest available `./dx <tool> --version` command
+If `./dx` is missing or a future package needs install/lint/typecheck/test/build commands that cannot run through it, apply the `dev-it-in-docker` skill before coding. Reuse the existing wrapper rather than creating a competing one; keep permission approval scoped to that wrapper and do not broaden raw Docker, shell, or package-manager permissions.
 
-Do not broaden allow rules to raw `docker`, `bash`, `sh`, or package-manager commands just to make validation convenient.
+##### Trellis Plus: UUPM implementation context
 
 [Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+For frontend tasks, read the approved `design.md`, the task's UUPM research, and the frontend spec before changing UI. Respect the approved decisions; if a technical constraint invalidates one, update `design.md` and the relevant context together rather than silently replacing it. UI work must preserve responsive behavior, accessible names and focus order, visible interaction feedback, and reduced-motion behavior.
+
 
 Spawn the implement sub-agent:
 
@@ -566,6 +569,10 @@ If issues are found → fix → re-check, until green.
 
 [/codex-inline, Kilo, Antigravity, Devin]
 
+##### Trellis Plus: UUPM frontend verification
+
+For a browser-visible change, verify the implementation against both task acceptance criteria and approved UUPM decisions. At minimum inspect narrow mobile width and supported breakpoints; typography, spacing, contrast, focus states, keyboard navigation, and accessible names; loading, empty, error, disabled, success, and permission states; touch targets and feedback; reduced motion; and relevant image, list, and media performance. Lint, type-check, unit tests, and build success are not enough for UI verification: use browser or manual evidence when the risk requires it, then feed that result into the submit-ready human review gate.
+
 **Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
 
 #### 2.3 Rollback `[on demand]`
@@ -597,6 +604,8 @@ Load the `trellis-update-spec` skill and review whether this task produced new k
 - New technical decisions
 
 Update the docs under `.trellis/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
+
+For a completed frontend task, promote only stable, reusable UUPM-derived rules into `.trellis/spec/frontend/`; keep task-specific choices and raw UUPM research in the task directory.
 
 #### 3.4 Commit changes `[required · once]`
 
