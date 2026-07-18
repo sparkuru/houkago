@@ -15,8 +15,16 @@ const nickname = ref("")
 const roomId = ref("")
 const newRoomName = ref("")
 const error = ref("")
+let roomViewPrefetched = false
+
+function prefetchRoomView(): void {
+  if (roomViewPrefetched) return
+  roomViewPrefetched = true
+  void import("@/views/BushitsuView.vue")
+}
 
 function enter(bushitsuId: string) {
+  prefetchRoomView()
   bushitsu.setNickname(nickname.value) // persist so reload/direct-link keeps the name
   bushitsu.bushitsuId = bushitsuId
   router.push({ name: "bushitsu", params: { id: bushitsuId } })
@@ -25,6 +33,7 @@ function enter(bushitsuId: string) {
 // 部室を作る then enter as 部長. The room's buchouId must be this browser's stable
 // buinId (= the WS senderId), or host-authority never matches (design §5).
 async function create() {
+  prefetchRoomView()
   error.value = ""
   if (!nickname.value) return
   const { data, error: err } = await housou.bushitsu.post({
@@ -57,7 +66,12 @@ function join() {
 
     <label class="nickname-field">
       <span>{{ t("nicknameLabel") }}</span>
-      <input v-model="nickname" :aria-label="t('nicknameLabel')" autocomplete="nickname" />
+      <input
+        v-model="nickname"
+        :aria-label="t('nicknameLabel')"
+        autocomplete="nickname"
+        @focus="prefetchRoomView"
+      />
     </label>
 
     <form class="entry-card entry-primary" @submit.prevent="join">
@@ -66,6 +80,7 @@ function join() {
         v-model="roomId"
         :aria-label="t('bushitsuIdLabel')"
         :placeholder="t('bushitsuIdPlaceholder')"
+        @focus="prefetchRoomView"
       />
       <button type="submit" :disabled="!nickname || !roomId">{{ t("joinBushitsu") }}</button>
     </form>
@@ -76,6 +91,7 @@ function join() {
         v-model="newRoomName"
         :aria-label="t('bushitsuNameLabel')"
         :placeholder="t('bushitsuNamePlaceholder')"
+        @focus="prefetchRoomView"
       />
       <button type="submit" :disabled="!nickname">{{ t("createAndJoin") }}</button>
     </form>

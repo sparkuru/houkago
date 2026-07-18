@@ -1,4 +1,4 @@
-import { EishaBadRequest, EishaUpstreamError } from "./errors"
+import { EishaBadRequest, EishaPrivateUpstream, EishaUpstreamError } from "./errors"
 
 export type ProxyRef = {
   url: string
@@ -49,6 +49,51 @@ export function assertHttpUrl(raw: string): URL {
     throw new EishaBadRequest("only http(s) upstream URLs are supported")
   }
   return url
+}
+
+export function assertPublicHttpUrl(raw: string): URL {
+  const url = assertHttpUrl(raw)
+  if (isPrivateHostname(url.hostname)) {
+    throw new EishaPrivateUpstream("private and local upstream URLs are not supported")
+  }
+  return url
+}
+
+function isPrivateHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "")
+  if (host === "localhost" || host.endsWith(".localhost")) return true
+  if (host === "::" || host === "::1" || host.startsWith("fc") || host.startsWith("fd")) return true
+  if (host.startsWith("::ffff:")) return true
+  if (
+    host.startsWith("fe8") ||
+    host.startsWith("fe9") ||
+    host.startsWith("fea") ||
+    host.startsWith("feb")
+  ) {
+    return true
+  }
+
+  const octets = host.split(".").map(Number)
+  if (
+    octets.length !== 4 ||
+    octets.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+  ) {
+    return false
+  }
+
+  const first = octets[0]
+  const second = octets[1]
+  if (first === undefined || second === undefined) return false
+  return (
+    first === 0 ||
+    first === 10 ||
+    first === 127 ||
+    first >= 224 ||
+    (first === 100 && second >= 64 && second <= 127) ||
+    (first === 169 && second === 254) ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  )
 }
 
 export function encodeProxyRef(ref: ProxyRef): string {

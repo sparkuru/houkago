@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia"
-import { resolveUrlWithMetadata } from "houkago-eisha"
+import { previewPublicUrlWithMetadata, resolveUrlWithMetadata } from "houkago-eisha"
 import type { Enmoku } from "houkago-kousoku"
 import { EnmokuProviderSchema, EnmokuTypeSchema } from "houkago-kousoku"
 import {
@@ -39,6 +39,11 @@ const ResolveEnmokuBody = t.Object({
   addedBy: t.String(),
 })
 
+const PreviewEnmokuBody = t.Object({
+  sourceUrl: t.String(),
+  title: t.Optional(t.String()),
+})
+
 type DirectEnmokuInput = Pick<
   Enmoku,
   | "title"
@@ -69,6 +74,13 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   .get("/:id", ({ params }) => fetchBushitsu(params.id))
   // 番組表：list a room's enmoku
   .get("/:id/bangumi", ({ params }) => fetchBangumi(params.id))
+  // 演目を下見する：parse a public URL without changing the room queue.
+  .post(
+    "/:id/enmoku/preview",
+    async ({ params, body, request }) =>
+      previewEnmoku(params.id, body, new URL(request.url).origin),
+    { body: PreviewEnmokuBody },
+  )
   // 演目を投稿する：add a legacy direct source or resolve a dev source URL.
   .post(
     "/:id/enmoku",
@@ -112,6 +124,29 @@ async function createEnmoku(
     })
   }
   return addEnmoku(bushitsuId, input)
+}
+
+async function previewEnmoku(
+  bushitsuId: string,
+  input: { sourceUrl: string; title?: string },
+  proxyBase: string,
+) {
+  fetchBushitsu(bushitsuId)
+  const source = await previewPublicUrlWithMetadata(
+    { title: input.title, url: input.sourceUrl },
+    { proxyBase },
+  )
+  return {
+    state: "ready" as const,
+    title: source.title,
+    type: source.type,
+    provider: source.provider
+      ? { kind: source.provider.kind, ownerName: source.provider.ownerName }
+      : undefined,
+    sourceCount: source.sources?.length,
+    subtitleCount: source.subtitles ? Object.keys(source.subtitles).length : undefined,
+    live: source.live,
+  }
 }
 
 function broadcastBangumi(

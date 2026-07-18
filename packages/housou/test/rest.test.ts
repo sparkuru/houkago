@@ -93,6 +93,65 @@ test("add enmoku and list bangumi", async () => {
   expect(bangumi[0].live).toBeUndefined()
 })
 
+test("previewing a public source does not write the room queue", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-preview", buchouId: "u1" }),
+  }).then((r) => r.json())
+  const originalFetch = globalThis.fetch
+  const previewFetch: typeof fetch = async (input, init) => {
+    const url =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
+    if (new URL(url).hostname === "media.example.test") {
+      return new Response(null, { headers: { "content-type": "video/mp4" } })
+    }
+    return originalFetch(input, init)
+  }
+  globalThis.fetch = previewFetch
+
+  try {
+    const preview = await fetch(`${base}/bushitsu/${room.id}/enmoku/preview`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sourceUrl: "https://media.example.test/video.mp4",
+        title: "Preview title",
+      }),
+    }).then((r) => r.json())
+
+    expect(preview).toEqual({ state: "ready", title: "Preview title", type: "direct" })
+    const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
+    expect(bangumi).toEqual([])
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test("preview rejects a private source before it can be queued", async () => {
+  const room = await fetch(`${base}/bushitsu`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "r-private-preview", buchouId: "u1" }),
+  }).then((r) => r.json())
+
+  const response = await fetch(`${base}/bushitsu/${room.id}/enmoku/preview`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sourceUrl: "http://127.0.0.1/video.mp4" }),
+  })
+
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({
+    error: {
+      code: "EISHA_PRIVATE_UPSTREAM",
+      message: "private and local upstream URLs are not supported",
+    },
+  })
+  const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
+  expect(bangumi).toEqual([])
+})
+
 test("add enmoku persists extended metadata in create response and bangumi", async () => {
   const room = await fetch(`${base}/bushitsu`, {
     method: "POST",

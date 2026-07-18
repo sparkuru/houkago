@@ -1,8 +1,13 @@
 import { expect, test } from "bun:test"
 import { decodeDashManifestRef } from "../src/dash"
-import { EishaBadRequest, EishaUpstreamError } from "../src/errors"
-import { decodeProxyRef } from "../src/proxy"
-import { resolveUrl, resolveUrlWithMetadata } from "../src/resolver"
+import {
+  EishaBadRequest,
+  EishaPrivateUpstream,
+  EishaUnsupportedSource,
+  EishaUpstreamError,
+} from "../src/errors"
+import { assertPublicHttpUrl, decodeProxyRef } from "../src/proxy"
+import { previewPublicUrlWithMetadata, resolveUrl, resolveUrlWithMetadata } from "../src/resolver"
 
 const proxyBase = "https://housou.example.test"
 
@@ -28,6 +33,40 @@ test("infers HLS and DASH types from URL path", () => {
 
 test("rejects non-http URLs", () => {
   expect(() => resolveUrl({ url: "file:///tmp/video.mp4" }, { proxyBase })).toThrow(EishaBadRequest)
+})
+
+test("rejects local and private upstream URLs for public previews", () => {
+  for (const url of [
+    "http://localhost/video.mp4",
+    "http://127.0.0.1/video.mp4",
+    "http://10.0.0.1/video.mp4",
+    "http://192.168.1.1/video.mp4",
+    "http://[::1]/video.mp4",
+    "http://[::ffff:127.0.0.1]/video.mp4",
+  ]) {
+    expect(() => assertPublicHttpUrl(url)).toThrow(EishaPrivateUpstream)
+  }
+})
+
+test("previews verified direct media without exposing its proxy URL", async () => {
+  const preview = await previewPublicUrlWithMetadata(
+    { url: "https://media.example.test/video.mp4", title: "Room film" },
+    { proxyBase },
+    () => new Response(null, { headers: { "content-type": "video/mp4" } }),
+  )
+
+  expect(preview).toEqual({ title: "Room film", type: "direct" })
+  expect("url" in preview).toBe(false)
+})
+
+test("rejects a web page during public preview", async () => {
+  await expect(
+    previewPublicUrlWithMetadata(
+      { url: "https://example.test/watch" },
+      { proxyBase },
+      () => new Response("<html></html>", { headers: { "content-type": "text/html" } }),
+    ),
+  ).rejects.toBeInstanceOf(EishaUnsupportedSource)
 })
 
 test("resolves HLS URLs with parsed manifest metadata", async () => {

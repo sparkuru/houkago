@@ -13,6 +13,7 @@ export default defineConfig({
   projects: [
     {
       name: "phone-375",
+      testMatch: /mobile-room\.spec\.ts/,
       use: {
         browserName: "chromium",
         viewport: { width: 375, height: 812 },
@@ -22,7 +23,18 @@ export default defineConfig({
     },
     {
       name: "ipad-mini",
+      testMatch: /mobile-room\.spec\.ts/,
       use: { ...devices["iPad Mini"], browserName: "chromium" },
+    },
+    {
+      name: "desktop-short",
+      testMatch: /desktop-room\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 640 } },
+    },
+    {
+      name: "desktop-tall",
+      testMatch: /desktop-room\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 1200 } },
     },
   ],
 })

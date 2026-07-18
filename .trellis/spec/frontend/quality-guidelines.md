@@ -72,15 +72,27 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   their own wrapper.
 - **Room/cinema pages are fixed-viewport layouts on desktop:** reset `html`,
   `body`, and `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`;
-  then put scrolling only inside intentional panes such as chat logs and 番組表
-  lists. At the portrait responsive breakpoint (currently `max-width: 800px`),
-  the room shell may switch to document scrolling so the player stays first and
-  the stacked controls, playlist, and expandable chat remain reachable. Give
-  the player container a definite `aspect-ratio: 16 / 9` in that mode: a
-  `min-height` alone does not resolve a nested player's `height: 100%` and can
-  leave a blank player area. A `100vh` room shell plus the browser's default
-  body margin creates a stray page scrollbar and breaks desktop chat/player
-  bottom alignment.
+  then put scrolling only inside intentional panes such as chat logs, 番組表
+  lists, or the left `stage` when its player, room controls, and expanded
+  composer must remain reachable together. Do not restore document scrolling
+  on desktop. In that `stage` pattern, keep the player 16:9 and let
+  `room-workbench` use content height (`flex-grow: 0`); forcing it to fill the
+  remaining viewport either clips an expanded composer in a short window or
+  stretches empty panels in a tall one. At the portrait responsive breakpoint
+  (currently `max-width: 800px`), the room shell may switch to document
+  scrolling so the player stays first and the stacked controls, playlist, and
+  expandable chat remain reachable. Give the player container a definite
+  `aspect-ratio: 16 / 9` in that mode: a `min-height` alone does not resolve a
+  nested player's `height: 100%` and can leave a blank player area. A `100vh`
+  room shell plus the browser's default body margin creates a stray page
+  scrollbar and breaks desktop chat/player bottom alignment.
+- **Prefetch the room route on entry intent.** `BushitsuView` imports the
+  player stack, so leave it lazy at router startup but call the same dynamic
+  import when the user focuses a room-entry field or submits creation. This
+  overlaps the first Vite/module load with the user's input and the create
+  request. After WebSocket admission, start independent room-detail and
+  Bangumi REST reads together; preserve the existing order that establishes
+  `buchouId` before deciding whether to send `OIKAKE`.
 - **Keep danmaku source data engine-agnostic.** Local file parsing belongs in
   `houkago-kokuban`; kyoushitsu stores only source selection, user display
   preference, and timeline cues. The long-term priority chain is 本地文件 /

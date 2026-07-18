@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { housou } from "@/api"
+import EnmokuComposer from "@/components/bangumi/EnmokuComposer.vue"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
 import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
 import FileDanmakuOverlay from "@/components/danmaku/FileDanmakuOverlay.vue"
@@ -68,10 +69,6 @@ const selectedSourceValue = computed({
     selectedSourceIndex.value = sourceIndexFromValue(value)
   },
 })
-
-// scaffold: a hand-typed direct link to prove ArtPlayer playback.
-// 开发期默认值，上线前清除。
-const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 
 // 視聴 UI 態（pure view state, not store; state-management）：聊天展開（chat collapse arrow）
 // と聊天室模式（左播放器 + 右聊天，全屏式房间布局；不改变 ArtPlayer 原生网页全屏）。
@@ -199,7 +196,6 @@ const danmakuSize = ref(1)
 const danmakuOpacity = ref(1)
 const danmakuSpeed = ref(1)
 const danmakuTimeOffset = ref(0)
-const manualSubmitting = ref(false)
 const providerInfoEnmoku = ref<Enmoku | null>(null)
 const providerDialog = ref<HTMLElement | null>(null)
 let fetchedDanmakuRequest = 0
@@ -364,21 +360,6 @@ function sendJouei(enmokuId: string | null) {
   })
 }
 
-async function playManual() {
-  const url = manualUrl.value.trim()
-  if (!url || !bushitsu.canPlaylist || manualSubmitting.value) return
-  manualSubmitting.value = true
-  try {
-    const { data: enmoku } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
-      sourceUrl: url,
-      addedBy: bushitsu.senderId,
-    })
-    if (enmoku) sendJouei(enmoku.id)
-  } finally {
-    manualSubmitting.value = false
-  }
-}
-
 function playBangumi(enmokuId: string) {
   sendJouei(enmokuId)
 }
@@ -466,8 +447,11 @@ function submitName() {
 async function enterRoom() {
   if (bootstrapped.value) return
   bootstrapped.value = true
+  const roomRequest = housou.bushitsu({ id: bushitsuId }).get()
+  const bangumiRequest = housou.bushitsu({ id: bushitsuId }).bangumi.get()
+
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
-  const { data: room } = await housou.bushitsu({ id: bushitsuId }).get()
+  const { data: room } = await roomRequest
   if (room) {
     bushitsu.buchouId = room.buchouId
     roomName.value = room.name
@@ -479,7 +463,7 @@ async function enterRoom() {
     client.send({ type: "OIKAKE", ts: Date.now(), senderId: bushitsu.senderId, payload: {} })
   }
 
-  const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
+  const { data } = await bangumiRequest
   if (data) bushitsu.setBangumi(data)
 
   // store.enmokuId is the single source of truth for 上映中, written by the WS
@@ -681,6 +665,12 @@ onBeforeUnmount(() => {
               </summary>
               <div class="bangumi-content">
                 <h3>{{ t("bangumiHeading") }}</h3>
+                <EnmokuComposer
+                  v-if="bushitsu.canPlaylist"
+                  :bushitsu-id="bushitsuId"
+                  :added-by="bushitsu.senderId"
+                  @jouei="playBangumi"
+                />
                 <ul>
               <li
                 v-for="e in bushitsu.bangumi"
@@ -738,17 +728,6 @@ onBeforeUnmount(() => {
                 </span>
               </li>
                 </ul>
-                <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
-                  <h4>{{ t("devManualHeading") }}</h4>
-                  <input
-                    v-model="manualUrl"
-                    :aria-label="t('manualUrlLabel')"
-                    :placeholder="t('manualUrlPlaceholder')"
-                  />
-                  <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
-                    {{ t("play") }}
-                  </button>
-                </form>
               </div>
             </details>
           </section>
@@ -847,7 +826,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   container-type: inline-size;
   padding: 0 12px 0 12px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 .file-danmaku-input {
   display: none;
@@ -858,10 +839,10 @@ onBeforeUnmount(() => {
   flex: none;
   min-height: 0;
 }
-/* 普通模式：播放器吃满舞台宽度，但高度按 16:9 倾向计算，并给下方面板留保底。
-   宽屏/全屏窗口下会优先增高播放器，减少左右黑边；番組表自滚动，不反压播放器。 */
+/* 普通模式：播放器吃满舞台宽度，但高度按 16:9 倾向计算。
+   下方面板按内容高度布局；矮窗口由 stage 滚动，而不是裁掉番組表。 */
 .player-wrap {
-  flex: 0 1 min(56.25cqw, calc(100dvh - 260px), 820px);
+  flex: 0 0 min(56.25cqw, calc(100dvh - 260px), 820px);
   width: 100%;
   min-height: 280px;
 }
@@ -918,7 +899,7 @@ onBeforeUnmount(() => {
   color: var(--color-on-media);
 }
 .placeholder {
-  flex: 0 1 min(56.25cqw, calc(100dvh - 260px), 820px);
+  flex: 0 0 min(56.25cqw, calc(100dvh - 260px), 820px);
   width: 100%;
   min-height: 280px;
 }
@@ -945,8 +926,8 @@ onBeforeUnmount(() => {
   border-left-color: var(--color-media-surface);
 }
 .room-workbench {
-  flex: 1 1 220px;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: 120px;
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
   gap: 8px;
@@ -1094,27 +1075,6 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: var(--panel-accent);
 }
-.dev-manual {
-  flex: none;
-  display: grid;
-  grid-template-columns: auto minmax(180px, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-  padding: 8px;
-  border-top: 1px solid var(--row-border);
-  background: var(--surface-muted);
-}
-.dev-manual h4 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-}
-.dev-manual input {
-  min-width: 0;
-  min-height: 28px;
-  border: 1px solid var(--row-border);
-  border-radius: 4px;
-}
 .bangumi-actions {
   display: flex;
   gap: 6px;
@@ -1129,9 +1089,7 @@ onBeforeUnmount(() => {
   background: transparent;
 }
 .bangumi-action:not(:disabled):hover,
-.bangumi-action:not(:disabled):focus-visible,
-.dev-manual button:not(:disabled):hover,
-.dev-manual button:not(:disabled):focus-visible {
+.bangumi-action:not(:disabled):focus-visible {
   border-color: var(--panel-accent);
 }
 .bangumi-action.danger:not(:disabled) {
@@ -1387,12 +1345,6 @@ onBeforeUnmount(() => {
   }
   .bangumi-content ul {
     max-height: min(48dvh, 360px);
-  }
-  .dev-manual {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .dev-manual h4 {
-    grid-column: 1 / -1;
   }
   .mobile-chat-sheet[open] {
     position: fixed;
