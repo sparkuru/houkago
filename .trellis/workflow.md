@@ -573,6 +573,26 @@ If issues are found → fix → re-check, until green.
 
 For a browser-visible change, verify the implementation against both task acceptance criteria and approved UUPM decisions. At minimum inspect narrow mobile width and supported breakpoints; typography, spacing, contrast, focus states, keyboard navigation, and accessible names; loading, empty, error, disabled, success, and permission states; touch targets and feedback; reduced motion; and relevant image, list, and media performance. Lint, type-check, unit tests, and build success are not enough for UI verification: use browser or manual evidence when the risk requires it, then feed that result into the submit-ready human review gate.
 
+##### Trellis Plus: Playwright automated frontend validation
+
+For every browser-accessible UI change, decide before final check whether the changed acceptance criteria are `playwright-required`, `playwright-existing-equivalent`, `playwright-not-effective`, or `playwright-unavailable`. Browser-accessible routes, interactions, states, responsive behavior, and accessible controls are normally `playwright-required` when a local or test deployment can exercise them. Reuse the project's existing browser-test runner, configuration, fixtures, reporter, and snapshot policy; do not introduce or migrate a runner merely to satisfy this rule.
+
+For `playwright-required`, add or extend the smallest focused, reproducible browser test and run it before submit-ready. Use semantic locators where stable user-facing semantics exist. Cover only acceptance-criterion-relevant routes, actions, states, keyboard/focus behavior, and changed desktop or mobile viewports. Do not accept snapshot changes automatically or mask a failure by loosening assertions, selectors, or timeouts.
+
+Record the exact command, selected browser project, covered routes/states/interactions/viewports, fixture or mock strategy, and result in check evidence. On failure, preserve reporter output, logs, screenshots, network or console evidence, and traces when configured. `playwright-unavailable` must name the failed prerequisite and attempted command; it is not passing browser validation. `playwright-not-effective` must name the smallest specific manual check that replaces automation.
+
+After a relevant Playwright check passes, do not ask for a generic browser smoke test. The submit-ready handoff asks only for residual subjective visual, real-device, assistive-technology, private-environment, security-sensitive, or otherwise unautomatable risk.
+
+Use this evidence shape:
+
+```markdown
+Browser validation: Playwright passed | unavailable | not effective
+- command: <exact command>
+- coverage: <routes, states, interactions, viewports>
+- fixtures: <none or controlled fixture/mock summary>
+- residual human review: <none or specific remaining risk>
+```
+
 **Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python3 ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.
 
 #### 2.3 Rollback `[on demand]`
@@ -619,11 +639,11 @@ Before proposing a commit, running `git add`, running `git commit`, marking a ta
 - `human-optional`: ask for optional feedback and say whether it blocks commit.
 - `human-not-needed`: include one concrete reason in the commit plan.
 
-Require human review when UI, UX, copy, visual layout, animation, accessibility, or workflow ergonomics changed; product behavior depends on preference or ambiguous acceptance criteria; validation needs a browser, local app run, mobile device, credentials, external services, production-like data, or private environment; a material automated check could not run; the diff touches auth, deletion, permissions, security, deployment, CI/CD, data migration, generated assets, or irreversible operations; or tests cover only mechanics instead of the user-facing behavior promised in `prd.md`.
+For browser-accessible work, apply the Playwright automated frontend validation rule first. Require human review when residual UI, UX, copy, visual layout, animation, accessibility, or workflow-ergonomics judgment remains; product behavior depends on preference or ambiguous acceptance criteria; validation needs a mobile device, credentials, external services, production-like data, or private environment; a material automated check could not run; the diff touches auth, deletion, permissions, security, deployment, CI/CD, data migration, generated assets, or irreversible operations; or tests cover only mechanics instead of the user-facing behavior promised in `prd.md`.
 
 The feedback request must include what changed, which automated checks ran and their result, what the user should test manually, the useful feedback format, and any question that affects commit readiness. Do not ask a generic "please review"; ask for the smallest useful human signal.
 
-**Project validation profile**: before submit-ready, run `./dx bun run format`, `./dx bun run lint`, `./dx bun run typecheck`, and `./dx bun test` unless the task is documentation-only and cannot affect runtime behavior. Use focused package tests while iterating, then the full suite before commit. Manual review is normally required for browser-visible room/player/chat/danmaku changes, real upstream provider behavior, permissions, deletion, migrations, credentialed flows, and any skipped material check.
+**Project validation profile**: before submit-ready, run `./dx bun run format`, `./dx bun run lint`, `./dx bun run typecheck`, and `./dx bun test` unless the task is documentation-only and cannot affect runtime behavior. Use focused package tests while iterating, then the full suite before commit. For eligible browser-visible room/player/chat/danmaku changes, run the focused Playwright coverage before requesting human review. Manual review remains required for real upstream provider behavior, permissions, deletion, migrations, credentialed flows, skipped material checks, and any residual risk automation cannot resolve.
 
 ##### Trellis Plus: ChatGPT/Codex commit attribution
 
