@@ -77,6 +77,13 @@ const manualUrl = ref("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
 // と聊天室模式（左播放器 + 右聊天，全屏式房间布局；不改变 ArtPlayer 原生网页全屏）。
 const chatHiraku = ref(true)
 const cinemaMode = ref(false)
+const portraitRoom = ref(false)
+const chatSheet = ref<HTMLDialogElement | null>(null)
+const chatLauncher = ref<HTMLButtonElement | null>(null)
+const chatSheetOpen = ref(false)
+const chatSheetExpanded = ref(false)
+let portraitRoomQuery: MediaQueryList | null = null
+let chatLauncherFocus: HTMLElement | null = null
 const wsStatus = ref<KousokuConnectionStatus>("closed")
 const wsStatusLabel = computed(() => {
   switch (wsStatus.value) {
@@ -114,12 +121,48 @@ function onJoin() {
 
 function setCinemaMode(enabled: boolean) {
   cinemaMode.value = enabled
-  if (cinemaMode.value) chatHiraku.value = true
+  if (cinemaMode.value) {
+    chatHiraku.value = true
+    closeChatSheet(false)
+  }
 }
 
 function collapseChat() {
   chatHiraku.value = false
   cinemaMode.value = false
+}
+
+function closeChatSheet(restoreFocus = true) {
+  chatSheetExpanded.value = false
+  const dialog = chatSheet.value
+  if (dialog?.open) dialog.close()
+  chatSheetOpen.value = false
+  if (restoreFocus) void nextTick(() => chatLauncherFocus?.focus())
+}
+
+function openChatSheet() {
+  if (!portraitRoom.value) {
+    chatHiraku.value = true
+    return
+  }
+  chatLauncherFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  chatSheetOpen.value = true
+  void nextTick(() => {
+    const dialog = chatSheet.value
+    if (!dialog) return
+    if (!dialog.open) dialog.showModal()
+    roomMotion.enterPanel(dialog)
+  })
+}
+
+function toggleChatSheetExpanded() {
+  chatSheetExpanded.value = !chatSheetExpanded.value
+}
+
+function syncPortraitRoom() {
+  const isPortraitRoom = portraitRoomQuery?.matches ?? false
+  if (!isPortraitRoom) closeChatSheet(false)
+  portraitRoom.value = isPortraitRoom
 }
 
 function reconnectKousoku() {
@@ -474,6 +517,9 @@ async function startSession() {
 }
 
 onMounted(() => {
+  portraitRoomQuery = window.matchMedia("(max-width: 800px) and (orientation: portrait)")
+  syncPortraitRoom()
+  portraitRoomQuery.addEventListener("change", syncPortraitRoom)
   roomMotion.enterRoom(roomShell.value)
   bushitsu.bushitsuId = bushitsuId
   if (bushitsu.nickname) {
@@ -484,6 +530,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  portraitRoomQuery?.removeEventListener("change", syncPortraitRoom)
+  closeChatSheet(false)
   stopEnmokuWatch?.()
   client?.close()
 })
@@ -593,22 +641,47 @@ onBeforeUnmount(() => {
             </div>
           </section>
         </div>
+        <button
+          v-if="portraitRoom"
+          ref="chatLauncher"
+          type="button"
+          class="mobile-chat-launcher"
+          :aria-controls="'mobile-chat-sheet'"
+          :aria-expanded="chatSheetOpen"
+          @click="openChatSheet"
+        >
+          {{ t("chatLauncher") }}
+        </button>
         <div class="room-workbench">
           <aside class="room-control-panel">
-            <h3>{{ bushitsu.isBuchou ? t("roomControlHeading") : t("roomInfoHeading") }}</h3>
-            <KengenPanel
-              :room-name="roomName || bushitsuId"
-              :room-link="roomLink"
-              :room-status="wsStatus"
-              @settei="settei"
-              @nyuushitsu-settei="nyuushitsuSettei"
-              @nyuushitsu-hantei="nyuushitsuHantei"
-              @reconnect="reconnectKousoku"
-            />
+            <details class="room-disclosure" :open="!portraitRoom">
+              <summary>
+                <strong>{{ bushitsu.isBuchou ? t("roomControlHeading") : t("roomInfoHeading") }}</strong>
+                <span>{{ roomName || bushitsuId }} · {{ wsStatusLabel }}</span>
+              </summary>
+              <div class="room-control-content">
+                <h3>{{ bushitsu.isBuchou ? t("roomControlHeading") : t("roomInfoHeading") }}</h3>
+                <KengenPanel
+                  :room-name="roomName || bushitsuId"
+                  :room-link="roomLink"
+                  :room-status="wsStatus"
+                  @settei="settei"
+                  @nyuushitsu-settei="nyuushitsuSettei"
+                  @nyuushitsu-hantei="nyuushitsuHantei"
+                  @reconnect="reconnectKousoku"
+                />
+              </div>
+            </details>
           </aside>
           <section class="bangumi">
-            <h3>{{ t("bangumiHeading") }}</h3>
-            <ul>
+            <details class="bangumi-disclosure" :open="!portraitRoom">
+              <summary>
+                <strong>{{ t("bangumiHeading") }}</strong>
+                <span>{{ bushitsu.bangumi.length }}</span>
+              </summary>
+              <div class="bangumi-content">
+                <h3>{{ t("bangumiHeading") }}</h3>
+                <ul>
               <li
                 v-for="e in bushitsu.bangumi"
                 :key="e.id"
@@ -664,18 +737,20 @@ onBeforeUnmount(() => {
                   </button>
                 </span>
               </li>
-            </ul>
-            <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
-              <h4>{{ t("devManualHeading") }}</h4>
-              <input
-                v-model="manualUrl"
-                :aria-label="t('manualUrlLabel')"
-                :placeholder="t('manualUrlPlaceholder')"
-              />
-              <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
-                {{ t("play") }}
-              </button>
-            </form>
+                </ul>
+                <form v-if="bushitsu.canPlaylist" class="dev-manual" @submit.prevent="playManual">
+                  <h4>{{ t("devManualHeading") }}</h4>
+                  <input
+                    v-model="manualUrl"
+                    :aria-label="t('manualUrlLabel')"
+                    :placeholder="t('manualUrlPlaceholder')"
+                  />
+                  <button type="submit" :disabled="manualSubmitting || !manualUrl.trim()">
+                    {{ t("play") }}
+                  </button>
+                </form>
+              </div>
+            </details>
           </section>
         </div>
       </main>
@@ -708,10 +783,32 @@ onBeforeUnmount(() => {
           </a>
         </section>
       </div>
+      <dialog
+        id="mobile-chat-sheet"
+        ref="chatSheet"
+        class="mobile-chat-sheet"
+        :class="{ 'is-expanded': chatSheetExpanded }"
+        :aria-label="t('chatSheetAria')"
+        @cancel.prevent="closeChatSheet()"
+        @click.self="closeChatSheet()"
+      >
+        <div class="mobile-chat-sheet-shell">
+          <header>
+            <span>{{ t("chatSheetAria") }}</span>
+            <span class="mobile-chat-sheet-actions">
+              <button type="button" @click="toggleChatSheetExpanded">
+                {{ chatSheetExpanded ? t("chatSheetShrink") : t("chatSheetExpand") }}
+              </button>
+              <button type="button" @click="closeChatSheet()">{{ t("chatSheetClose") }}</button>
+            </span>
+          </header>
+          <ChatPanel @oshaberi="oshaberi" @danmaku="danmaku" @toggle="closeChatSheet()" />
+        </div>
+      </dialog>
       <!-- 折叠態の展开手柄（prd #4）：右缘の常駐ホットゾーンが hover/focus を受け、
          中の ‹ ボタンを浮現させる。既定は不可视（opacity:0）、keyboard でも focus で
          浮現し可達。展开中は v-if で消す（header 内の › で畳む）。 -->
-      <div v-if="!chatHiraku" class="hiraku-handle">
+      <div v-if="!portraitRoom && !chatHiraku" class="hiraku-handle">
         <button
           type="button"
           class="hiraku-button"
@@ -723,6 +820,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <ChatPanel
+        v-if="!portraitRoom"
         v-show="chatHiraku"
         @oshaberi="oshaberi"
         @danmaku="danmaku"
@@ -839,6 +937,7 @@ onBeforeUnmount(() => {
 }
 .bushitsu.cinema-mode .media-toolbar,
 .bushitsu.cinema-mode .room-workbench,
+.bushitsu.cinema-mode .mobile-chat-launcher,
 .bushitsu.cinema-mode .hiraku-handle {
   display: none;
 }
@@ -873,15 +972,28 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
 }
-.room-control-panel h3,
-.bangumi h3 {
+.room-disclosure,
+.bangumi-disclosure,
+.room-control-content,
+.bangumi-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.room-disclosure summary,
+.bangumi-disclosure summary {
+  display: none;
+}
+.room-control-content h3,
+.bangumi-content h3 {
   flex: none;
   margin: 0;
   padding: 10px 12px;
   font-size: 20px;
   border-bottom: 1px solid var(--color-border);
 }
-.room-control-panel :deep(.kengen-panel) {
+.room-control-content :deep(.kengen-panel) {
   --kengen-muted: var(--color-text-muted);
   --kengen-text: var(--color-text);
   --kengen-accent: var(--color-accent);
@@ -897,15 +1009,15 @@ onBeforeUnmount(() => {
   padding: 12px 8px;
   overflow-y: auto;
 }
-.room-control-panel :deep(.kengen-control-block),
-.room-control-panel :deep(.kengen-box) {
+.room-control-content :deep(.kengen-control-block),
+.room-control-content :deep(.kengen-box) {
   width: 100%;
 }
-.room-control-panel :deep(.kengen-switch-row) {
+.room-control-content :deep(.kengen-switch-row) {
   width: 100%;
   text-align: left;
 }
-.bangumi ul {
+.bangumi-content ul {
   flex: 1 1 auto;
   display: block;
   padding: 8px;
@@ -1130,6 +1242,9 @@ onBeforeUnmount(() => {
 .hiraku-button:focus-visible {
   opacity: 1;
 }
+.mobile-chat-sheet {
+  display: none;
+}
 
 /* 昵称 gate: connect-time overlay, sits above the whole room until a name exists. */
 .name-gate {
@@ -1199,16 +1314,144 @@ onBeforeUnmount(() => {
   .room-workbench {
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
     min-height: auto;
     overflow: visible;
   }
   .room-control-panel,
   .bangumi {
-    min-height: 260px;
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
-  .bushitsu > :deep(.chat-panel) {
+  .mobile-chat-launcher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    height: min(72dvh, 620px);
+    min-height: 44px;
+    margin-top: var(--space-2);
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    border: 1px solid var(--color-accent-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-panel);
+  }
+  .room-disclosure,
+  .bangumi-disclosure {
+    display: block;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-panel);
+  }
+  .room-disclosure summary,
+  .bangumi-disclosure summary {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: space-between;
+    min-height: 52px;
+    padding: 0 var(--space-3);
+    cursor: pointer;
+    list-style: none;
+  }
+  .room-disclosure summary::-webkit-details-marker,
+  .bangumi-disclosure summary::-webkit-details-marker {
+    display: none;
+  }
+  .room-disclosure summary span,
+  .bangumi-disclosure summary span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .room-disclosure[open] summary,
+  .bangumi-disclosure[open] summary {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .room-control-content h3,
+  .bangumi-content h3 {
+    display: none;
+  }
+  .room-control-content :deep(.kengen-panel) {
+    max-height: min(58dvh, 520px);
+    padding: var(--space-3) var(--space-2);
+  }
+  .bangumi-content ul {
+    max-height: min(48dvh, 360px);
+  }
+  .dev-manual {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .dev-manual h4 {
+    grid-column: 1 / -1;
+  }
+  .mobile-chat-sheet[open] {
+    position: fixed;
+    inset: auto 0 0;
+    display: block;
+    width: 100%;
+    height: min(60dvh, 620px);
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--color-text);
+    background: transparent;
+    border: 0;
+  }
+  .mobile-chat-sheet[open].is-expanded {
+    height: min(90dvh, 900px);
+  }
+  .mobile-chat-sheet::backdrop {
+    background: var(--color-overlay);
+  }
+  .mobile-chat-sheet-shell {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-bottom: 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    box-shadow: var(--shadow-floating);
+  }
+  .mobile-chat-sheet-shell > header {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0 var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-chat-sheet-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .mobile-chat-sheet-actions button {
+    min-height: 36px;
+    padding: 0 var(--space-2);
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+  .mobile-chat-sheet :deep(.chat-panel) {
+    flex: 1;
+    width: 100%;
+    height: auto;
     border-top: 1px solid var(--color-border);
     border-left: 0;
   }

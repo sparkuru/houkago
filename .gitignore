@@ -8,6 +8,8 @@ dist/
 # bun
 .vite/
 .devhome/
+test-results/
+playwright-report/
 
 # data
 *.sqlite

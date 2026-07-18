@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test test",
+    "test:e2e": "playwright test --config playwright.config.ts"
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.0",

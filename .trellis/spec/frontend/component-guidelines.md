@@ -281,6 +281,31 @@ This keeps the default Chinese UI configurable while preserving the project's
 Japanese-style product vocabulary, and prevents label drift between visible text
 and accessibility text.
 
+### Native Modal Sheets
+
+Use a native `<dialog>` for a focus-managed modal sheet when it fits the
+interaction. Presentation rules that make the sheet visible must target its
+`[open]` state. A broad `dialog { display: block }` or `.sheet { display:
+block }` rule can override the browser's hidden closed state: `dialog.close()`
+removes `open`, yet the sheet remains visibly on the page.
+
+```css
+/* Wrong: a closed dialog may remain painted. */
+.mobile-chat-sheet {
+  display: block;
+}
+
+/* Correct: closed state remains owned by the platform. */
+.mobile-chat-sheet[open] {
+  display: block;
+}
+```
+
+For room chat sheets, retain a labelled launcher, a visible close action, and
+Escape/backdrop dismissal. Add a browser regression test that asserts both the
+`open` attribute and visibility after closing; checking only `open` misses this
+CSS failure mode.
+
 ---
 
 ## Common Mistakes
