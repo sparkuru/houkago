@@ -236,8 +236,8 @@ test("unexpected close reconnects with the same room identity", async () => {
   expect(url.protocol).toBe("wss:")
   expect(url.pathname).toBe("/ws")
   expect(url.searchParams.get("bushitsuId")).toBe("rA")
-  expect(url.searchParams.get("senderId")).toBe("b1")
-  expect(url.searchParams.get("nickname")).toBe("mio")
+  expect(url.searchParams.has("senderId")).toBe(false)
+  expect(url.searchParams.has("nickname")).toBe(false)
   expect(statuses).toEqual(["connecting", "open", "closed", "connecting"])
 })
 

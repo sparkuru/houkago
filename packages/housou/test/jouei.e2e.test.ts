@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import type { Enmoku, KousokuMessage } from "houkago-kousoku"
+import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
+import {
+  addAuthenticatedEnmoku,
+  makeAuthenticatedRoom,
+  openAuthenticatedSocket,
+} from "./auth-fixture"
 
 // JOUEI source-sync over the real WS surface: the 部長 sets a 演目, every client
 // (including the host echo) receives JOUEI; a 部員 attempt is rejected with
@@ -19,27 +24,6 @@ afterAll(() => {
   app.server?.stop()
 })
 
-async function makeRoom(buchouId: string): Promise<{ id: string }> {
-  return fetch(`${base}/bushitsu`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "r", buchouId }),
-  }).then((r) => r.json())
-}
-
-async function addEnmoku(roomId: string): Promise<Enmoku> {
-  return fetch(`${base}/bushitsu/${roomId}/enmoku`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ title: "s", type: "hls", url: "https://e/v.m3u8", addedBy: "host" }),
-  }).then((r) => r.json())
-}
-
-function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
-  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
-  return new Promise((resolve) => ws.addEventListener("open", () => resolve(ws), { once: true }))
-}
-
 function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise<KousokuMessage> {
   return new Promise((resolve) => {
     const onMsg = (ev: MessageEvent) => {
@@ -54,11 +38,10 @@ function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise
 }
 
 test("部長 JOUEI broadcasts to a 部員 and echoes back to the host", async () => {
-  const room = await makeRoom("host")
-  const enmoku = await addEnmoku(room.id)
-
-  const host = await open(room.id, "host")
-  const member = await open(room.id, "member")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const enmoku = await addAuthenticatedEnmoku(base, room.id)
+  const member = await openAuthenticatedSocket(base, baseWs, room.id, "member")
 
   const gotByMember = nextMatch(member, (m) => m.type === "JOUEI")
   const gotByHost = nextMatch(host, (m) => m.type === "JOUEI")
@@ -81,11 +64,10 @@ test("部長 JOUEI broadcasts to a 部員 and echoes back to the host", async ()
 })
 
 test("JOUEI resets transport and broadcasts GENJOU for the new source", async () => {
-  const room = await makeRoom("host")
-  const enmoku = await addEnmoku(room.id)
-
-  const host = await open(room.id, "host")
-  const member = await open(room.id, "member")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const enmoku = await addAuthenticatedEnmoku(base, room.id)
+  const member = await openAuthenticatedSocket(base, baseWs, room.id, "member")
 
   host.send(
     JSON.stringify({
@@ -119,11 +101,10 @@ test("JOUEI resets transport and broadcasts GENJOU for the new source", async ()
 })
 
 test("non-部長 JOUEI is rejected with KEIHOU and does not broadcast", async () => {
-  const room = await makeRoom("host")
-  const enmoku = await addEnmoku(room.id)
-
-  const host = await open(room.id, "host")
-  const intruder = await open(room.id, "intruder")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const enmoku = await addAuthenticatedEnmoku(base, room.id)
+  const intruder = await openAuthenticatedSocket(base, baseWs, room.id, "intruder")
 
   let hostSawJouei = false
   host.addEventListener("message", (ev) => {
@@ -154,10 +135,9 @@ test("non-部長 JOUEI is rejected with KEIHOU and does not broadcast", async ()
 })
 
 test("late joiner OIKAKE → GENJOU carries the current enmokuId", async () => {
-  const room = await makeRoom("host")
-  const enmoku = await addEnmoku(room.id)
-
-  const host = await open(room.id, "host")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const enmoku = await addAuthenticatedEnmoku(base, room.id)
   host.send(
     JSON.stringify({
       type: "JOUEI",
@@ -168,7 +148,7 @@ test("late joiner OIKAKE → GENJOU carries the current enmokuId", async () => {
   )
   await nextMatch(host, (m) => m.type === "JOUEI")
 
-  const late = await open(room.id, "late")
+  const late = await openAuthenticatedSocket(base, baseWs, room.id, "late")
   const genjou = nextMatch(late, (m) => m.type === "GENJOU")
   late.send(
     JSON.stringify({

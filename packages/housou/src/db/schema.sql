@@ -1,11 +1,30 @@
--- v1 idempotent schema (database-guidelines): applied on startup.
+-- v2 authenticated schema (database-guidelines): applied on startup.
 -- snake_case columns, string ids, epoch-ms timestamps. Media bytes never stored.
+
+CREATE TABLE IF NOT EXISTS seito (
+  id               TEXT PRIMARY KEY,
+  username         TEXT NOT NULL,
+  username_norm    TEXT NOT NULL UNIQUE,
+  password_hash    TEXT NOT NULL,
+  created_at       INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS seitoshou (
+  token_digest     TEXT PRIMARY KEY,
+  seito_id         TEXT NOT NULL,
+  created_at       INTEGER NOT NULL,
+  expires_at       INTEGER NOT NULL,
+  FOREIGN KEY (seito_id) REFERENCES seito(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS seitoshou_expires_at ON seitoshou(expires_at);
 
 CREATE TABLE IF NOT EXISTS bushitsu (
   id         TEXT PRIMARY KEY,
   name       TEXT NOT NULL,
   buchou_id  TEXT NOT NULL,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (buchou_id) REFERENCES seito(id)
 );
 
 CREATE TABLE IF NOT EXISTS buin (
@@ -30,5 +49,6 @@ CREATE TABLE IF NOT EXISTS enmoku (
   live           INTEGER,
   added_by       TEXT NOT NULL,
   created_at     INTEGER NOT NULL,
-  FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id)
+  FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id),
+  FOREIGN KEY (added_by) REFERENCES seito(id)
 );

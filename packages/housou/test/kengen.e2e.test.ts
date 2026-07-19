@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
+import { makeAuthenticatedRoom, openAuthenticatedSocket } from "./auth-fixture"
 
 // 権限 enforcement over the real WS surface (prd role-permissions §2):
 // - a new joiner receives a KENGEN snapshot on open
@@ -21,19 +22,6 @@ afterAll(() => {
   app.server?.stop()
 })
 
-async function makeRoom(buchouId: string): Promise<{ id: string }> {
-  return fetch(`${base}/bushitsu`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "r", buchouId }),
-  }).then((r) => r.json())
-}
-
-function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
-  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
-  return new Promise((resolve) => ws.addEventListener("open", () => resolve(ws), { once: true }))
-}
-
 function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise<KousokuMessage> {
   return new Promise((resolve) => {
     const onMsg = (ev: MessageEvent) => {
@@ -48,8 +36,8 @@ function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise
 }
 
 test("new joiner receives a KENGEN snapshot with the default permissions", async () => {
-  const room = await makeRoom("host")
-  const host = await open(room.id, "host")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
   const k = await nextMatch(host, (m) => m.type === "KENGEN")
   if (k.type === "KENGEN") {
     expect(k.payload).toEqual({ playback: false, chat: true, playlist: false })
@@ -58,9 +46,9 @@ test("new joiner receives a KENGEN snapshot with the default permissions", async
 })
 
 test("non-部長 SETTEI is rejected with KEIHOU; host SETTEI broadcasts KENGEN", async () => {
-  const room = await makeRoom("host")
-  const host = await open(room.id, "host")
-  const guest = await open(room.id, "guest")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const guest = await openAuthenticatedSocket(base, baseWs, room.id, "guest")
   await nextMatch(guest, (m) => m.type === "KENGEN") // consume initial snapshot
 
   // guest tries to set permissions → rejected
@@ -93,9 +81,9 @@ test("non-部長 SETTEI is rejected with KEIHOU; host SETTEI broadcasts KENGEN",
 })
 
 test("guest without chat permission: OSHABERI and DANMAKU are rejected and not broadcast", async () => {
-  const room = await makeRoom("host")
-  const host = await open(room.id, "host")
-  const guest = await open(room.id, "guest")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const guest = await openAuthenticatedSocket(base, baseWs, room.id, "guest")
   await nextMatch(guest, (m) => m.type === "KENGEN")
 
   // host turns chat OFF for guests
@@ -149,9 +137,9 @@ test("guest without chat permission: OSHABERI and DANMAKU are rejected and not b
 })
 
 test("guest WITH playback permission may drive SHINKOU", async () => {
-  const room = await makeRoom("host")
-  const host = await open(room.id, "host")
-  const guest = await open(room.id, "guest")
+  const room = await makeAuthenticatedRoom(base)
+  const host = await openAuthenticatedSocket(base, baseWs, room.id, "host")
+  const guest = await openAuthenticatedSocket(base, baseWs, room.id, "guest")
   await nextMatch(guest, (m) => m.type === "KENGEN")
 
   // host grants playback to guests

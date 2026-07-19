@@ -103,8 +103,9 @@ Anything that is purely one component's view concern stays a local `ref`.
 
 #### 2. Signatures
 
-- `KousokuClient.connect(bushitsuId: string, senderId: string, nickname?: string)`
-  stores the latest room identity for same-tab reconnect.
+- `KousokuClient.connect(bushitsuId: string)` stores the latest room id for
+  same-tab reconnect. The browser cookie authenticates every handshake; no
+  sender id or nickname belongs in the URL.
 - `KousokuClient.close()` is deliberate shutdown: it cancels retry timers, clears
   pending sends, and must not reconnect.
 - Connection status remains the existing
@@ -113,7 +114,7 @@ Anything that is purely one component's view concern stays a local `ref`.
 #### 3. Contracts
 
 - Unexpected socket `close` schedules bounded backoff reconnect with the same
-  `bushitsuId`, stable `senderId`, and optional nickname query params.
+  `bushitsuId` and the current authenticated cookie.
 - Browser `offline` actively drops the current socket and reports closed; browser
   `online` reconnects immediately when the room view is still mounted.
 - A successful reconnect relies on the existing server `open`/`admit` snapshots:
@@ -170,8 +171,8 @@ new WebSocket(roomUrl)
 Correct:
 
 ```ts
-// Retry stays inside the single WS writer.
-client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
+// Retry stays inside the single WS writer; identity comes from the cookie.
+client.connect(bushitsuId)
 ```
 
 ### Realtime Chat vs Danmaku Streams

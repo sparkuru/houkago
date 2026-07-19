@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import type { KousokuMessage, NyuushitsuMode } from "houkago-kousoku"
 import { app } from "../src/index"
+import { makeAuthenticatedRoom, openAuthenticatedSocket } from "./auth-fixture"
 
 let base: string
 let baseWs: string
@@ -16,11 +17,7 @@ afterAll(() => {
 })
 
 async function makeRoom(buchouId: string): Promise<{ id: string }> {
-  return fetch(`${base}/bushitsu`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "r", buchouId }),
-  }).then((r) => r.json())
+  return makeAuthenticatedRoom(base, buchouId)
 }
 
 type Peer = {
@@ -28,8 +25,8 @@ type Peer = {
   nextMatch(pred: (m: KousokuMessage) => boolean): Promise<KousokuMessage>
 }
 
-function open(bushitsuId: string, senderId: string): Promise<Peer> {
-  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
+async function open(bushitsuId: string, senderId: string): Promise<Peer> {
+  const ws = await openAuthenticatedSocket(base, baseWs, bushitsuId, senderId)
   const inbox: KousokuMessage[] = []
   const waiters: { pred: (m: KousokuMessage) => boolean; resolve: (m: KousokuMessage) => void }[] =
     []
@@ -54,9 +51,7 @@ function open(bushitsuId: string, senderId: string): Promise<Peer> {
       return new Promise((resolve) => waiters.push({ pred, resolve }))
     },
   }
-  return new Promise((resolve) => {
-    ws.addEventListener("open", () => resolve(peer), { once: true })
-  })
+  return peer
 }
 
 function setMode(ws: WebSocket, senderId: string, mode: NyuushitsuMode, password?: string): void {
@@ -118,7 +113,7 @@ test("reconnected guest receives admission, permission, and roster snapshots", a
 
   const guestAgain = await open(room.id, "guest-recovery")
   const shusseki = await guestAgain.nextMatch(
-    (m) => m.type === "SHUSSEKI" && m.payload.members.some((b) => b.id === "guest-recovery"),
+    (m) => m.type === "SHUSSEKI" && m.payload.members.length >= 2,
   )
   expect(shusseki.type).toBe("SHUSSEKI")
 
@@ -150,7 +145,7 @@ test("closed mode rejects new guests before roster join", async () => {
   let hostSawGuest = false
   host.ws.addEventListener("message", (ev) => {
     const m = JSON.parse(ev.data) as KousokuMessage
-    if (m.type === "SHUSSEKI" && m.payload.members.some((b) => b.id === "guest-closed")) {
+    if (m.type === "SHUSSEKI" && m.payload.members.length > 1) {
       hostSawGuest = true
     }
   })
@@ -172,8 +167,7 @@ test("approval mode waits, blocks room actions, then admits on host approval", a
   if (waiting.type === "NYUUSHITSU") expect(waiting.payload.status).toBe("waiting")
 
   const hostPending = await host.nextMatch(
-    (m) =>
-      m.type === "NYUUSHITSU" && m.payload.pending.some((p) => p.senderId === "guest-approval"),
+    (m) => m.type === "NYUUSHITSU" && m.payload.pending.length > 0,
   )
   if (hostPending.type === "NYUUSHITSU") expect(hostPending.payload.pending).toHaveLength(1)
 
@@ -189,7 +183,9 @@ test("approval mode waits, blocks room actions, then admits on host approval", a
   expect((await blocked).type).toBe("KEIHOU")
 
   const entered = guest.nextMatch((m) => m.type === "NYUUSHITSU" && m.payload.status === "entered")
-  decide(host.ws, "host-approval", "guest-approval", true)
+  if (hostPending.type === "NYUUSHITSU") {
+    decide(host.ws, "host-approval", hostPending.payload.pending[0]?.senderId ?? "", true)
+  }
   expect((await entered).type).toBe("NYUUSHITSU")
   const kengen = await guest.nextMatch((m) => m.type === "KENGEN")
   expect(kengen.type).toBe("KENGEN")
@@ -234,7 +230,7 @@ test("approval mode survives host offline; host sees pending after reconnect", a
 
   const hostAgain = await open(room.id, "host-offline")
   const pending = await hostAgain.nextMatch(
-    (m) => m.type === "NYUUSHITSU" && m.payload.pending.some((p) => p.senderId === "guest-offline"),
+    (m) => m.type === "NYUUSHITSU" && m.payload.pending.length > 0,
   )
   if (pending.type === "NYUUSHITSU") expect(pending.payload.status).toBe("entered")
 

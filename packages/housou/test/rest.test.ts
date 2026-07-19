@@ -11,8 +11,11 @@ let base: string
 let baseWs: string
 let upstream: Elysia
 let upstreamBase: string
+let authCookie: string
+const admittedSockets = new Map<string, WebSocket>()
+const originalFetch = globalThis.fetch
 
-beforeAll(() => {
+beforeAll(async () => {
   upstream = new Elysia()
     .get("/live/index.m3u8", () =>
       [
@@ -30,15 +33,57 @@ beforeAll(() => {
   app.listen(0)
   base = `http://localhost:${app.server?.port}`
   baseWs = `ws://localhost:${app.server?.port}/ws`
+  const registered = await originalFetch(`${base}/seitoshou/register`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "http://127.0.0.1:5173" },
+    body: JSON.stringify({ username: "rest_suite_owner", password: "correct-horse-battery" }),
+  })
+  authCookie = registered.headers.get("set-cookie")?.split(";")[0] ?? ""
+  globalThis.fetch = async (input, init) => {
+    const url =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url
+    if (!url.startsWith(base)) return originalFetch(input, init)
+    const headers = new Headers(init?.headers)
+    headers.set("origin", "http://127.0.0.1:5173")
+    headers.set("cookie", authCookie)
+    const response = await originalFetch(input, { ...init, headers })
+    if (new URL(url).pathname === "/bushitsu" && init?.method === "POST" && response.ok) {
+      const room = (await response.clone().json()) as { id: string }
+      await admit(room.id)
+    }
+    return response
+  }
 })
 
 afterAll(() => {
+  globalThis.fetch = originalFetch
+  for (const ws of admittedSockets.values()) ws.close()
   app.server?.stop()
   upstream.server?.stop()
 })
 
+async function admit(bushitsuId: string): Promise<void> {
+  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}`, {
+    headers: { cookie: authCookie, origin: "http://127.0.0.1:5173" },
+  })
+  admittedSockets.set(bushitsuId, ws)
+  await new Promise<void>((resolve) => ws.addEventListener("open", () => resolve(), { once: true }))
+  await new Promise<void>((resolve) => {
+    ws.addEventListener(
+      "message",
+      (event) => {
+        const message = JSON.parse(event.data) as KousokuMessage
+        if (message.type === "NYUUSHITSU" && message.payload.status === "entered") resolve()
+      },
+      { once: false },
+    )
+  })
+}
+
 function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
-  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
+  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}`, {
+    headers: { cookie: authCookie, origin: "http://127.0.0.1:5173" },
+  })
   return new Promise((resolve) => ws.addEventListener("open", () => resolve(ws), { once: true }))
 }
 
@@ -63,7 +108,8 @@ test("create bushitsu, then read it back", async () => {
   }).then((r) => r.json())
 
   expect(created.id).toBeTruthy()
-  expect(created.buchouId).toBe("u1")
+  expect(created.buchouId).toBeTruthy()
+  expect(created.buchouId).not.toBe("u1")
 
   const fetched = await fetch(`${base}/bushitsu/${created.id}`).then((r) => r.json())
   expect(fetched.id).toBe(created.id)
@@ -188,7 +234,7 @@ test("add enmoku persists extended metadata in create response and bangumi", asy
     }),
   }).then((r) => r.json())
 
-  expect(enmoku.headers).toEqual(metadata.headers)
+  expect(enmoku.headers).toBeUndefined()
   expect(enmoku.subtitles).toEqual(metadata.subtitles)
   expect(enmoku.sources).toEqual(metadata.sources)
   expect(enmoku.danmaku).toEqual(metadata.danmaku)
@@ -196,7 +242,7 @@ test("add enmoku persists extended metadata in create response and bangumi", asy
   expect(enmoku.live).toBe(true)
 
   const bangumi = await fetch(`${base}/bushitsu/${room.id}/bangumi`).then((r) => r.json())
-  expect(bangumi[0].headers).toEqual(metadata.headers)
+  expect(bangumi[0].headers).toBeUndefined()
   expect(bangumi[0].subtitles).toEqual(metadata.subtitles)
   expect(bangumi[0].sources).toEqual(metadata.sources)
   expect(bangumi[0].danmaku).toEqual(metadata.danmaku)
@@ -224,11 +270,10 @@ test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
 
   expect(enmoku.title).toBe("resolved")
   expect(enmoku.type).toBe("direct")
-  expect(enmoku.headers).toEqual({ authorization: "Bearer resolver" })
+  expect(enmoku.headers).toBeUndefined()
   expect(enmoku.url.startsWith(`${base}/eisha/proxy/`)).toBe(true)
   expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://media.example.test/video.mp4",
-    headers: { authorization: "Bearer resolver" },
   })
 })
 

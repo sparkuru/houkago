@@ -11,8 +11,6 @@ type OnStatus = (status: KousokuConnectionStatus) => void
 
 type ConnectParams = {
   bushitsuId: string
-  senderId: string
-  nickname?: string
 }
 
 type ReconnectOptions = {
@@ -46,12 +44,12 @@ export class KousokuClient {
     this.maxReconnectDelayMs = reconnect.maxDelayMs ?? DEFAULT_RECONNECT_MAX_DELAY_MS
   }
 
-  connect(bushitsuId: string, senderId: string, nickname?: string): void {
+  connect(bushitsuId: string): void {
     const oldWs = this.ws
     this.ws = null
     oldWs?.close()
     this.sendQueue = []
-    this.connectParams = { bushitsuId, senderId, nickname }
+    this.connectParams = { bushitsuId }
     this.shouldReconnect = true
     this.reconnectAttempt = 0
     this.clearReconnectTimer()
@@ -71,9 +69,6 @@ export class KousokuClient {
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
     url.pathname = "/ws"
     url.searchParams.set("bushitsuId", params.bushitsuId)
-    url.searchParams.set("senderId", params.senderId)
-    // nickname rides the connect query so housou's open() has it atomically (prd Decision §1).
-    if (params.nickname) url.searchParams.set("nickname", params.nickname)
 
     const ws = new WebSocket(url)
     ws.addEventListener("message", (ev) => {

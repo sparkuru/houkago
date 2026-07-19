@@ -31,16 +31,19 @@ import { loadFileDanmakuEnabled, saveFileDanmakuEnabled } from "@/lib/file-danma
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
+import { useSeitoStore } from "@/stores/seito"
 import { KousokuClient, type KousokuConnectionStatus } from "@/ws/client"
 import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
 import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 // 放映 page: player + chat side panel. Wires the WS client to the store
 // (writer) and exposes a manual direct-link enmoku for the scaffold demo.
 const route = useRoute()
+const router = useRouter()
 const bushitsu = useBushitsuStore()
+const seito = useSeitoStore()
 const roomShell = ref<HTMLElement | null>(null)
 const roomMotion = useRoomMotion()
 const bushitsuId = String(route.params.id)
@@ -163,7 +166,7 @@ function syncPortraitRoom() {
 }
 
 function reconnectKousoku() {
-  client?.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
+  client?.connect(bushitsuId)
 }
 
 // ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
@@ -497,7 +500,7 @@ async function startSession() {
       if (status === "open") roomMotion.confirm(roomShell.value)
     },
   )
-  client.connect(bushitsuId, bushitsu.senderId, bushitsu.nickname)
+  client.connect(bushitsuId)
 }
 
 onMounted(() => {
@@ -506,11 +509,14 @@ onMounted(() => {
   portraitRoomQuery.addEventListener("change", syncPortraitRoom)
   roomMotion.enterRoom(roomShell.value)
   bushitsu.bushitsuId = bushitsuId
-  if (bushitsu.nickname) {
+  void seito.restore().then((account) => {
+    if (!account) {
+      void router.replace({ name: "home" })
+      return
+    }
+    bushitsu.setSenderId(account.id)
     startSession()
-  } else {
-    nameGate.value = true
-  }
+  })
 })
 
 onBeforeUnmount(() => {
@@ -668,7 +674,6 @@ onBeforeUnmount(() => {
                 <EnmokuComposer
                   v-if="bushitsu.canPlaylist"
                   :bushitsu-id="bushitsuId"
-                  :added-by="bushitsu.senderId"
                   @jouei="playBangumi"
                 />
                 <ul>

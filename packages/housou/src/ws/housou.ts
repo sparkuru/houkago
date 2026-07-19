@@ -59,6 +59,10 @@ export function shusseki(bushitsuId: string): number {
   return roster.get(bushitsuId)?.size ?? 0
 }
 
+export function isPresent(bushitsuId: string, seitoId: string): boolean {
+  return roster.get(bushitsuId)?.has(seitoId) ?? false
+}
+
 // 活動中の部室: rooms with at least one connected 部員, for the periodic heartbeat
 // to iterate (tenko). roster is pruned to non-empty rooms, so map keys suffice.
 export function activeRooms(): string[] {

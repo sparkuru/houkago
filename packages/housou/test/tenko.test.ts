@@ -2,6 +2,7 @@ import { afterAll, beforeAll, expect, test } from "bun:test"
 import type { KousokuMessage, Shinkou } from "houkago-kousoku"
 import { app } from "../src/index"
 import { startTenko } from "../src/ws/tenko"
+import { makeAuthenticatedRoom, openAuthenticatedSocket } from "./auth-fixture"
 
 // 点呼 heartbeat integration (design §5): once a 部長 has driven a room, the
 // server authority clock periodically broadcasts GENJOU to that room — without
@@ -28,20 +29,6 @@ afterAll(() => {
   app.server?.stop()
 })
 
-async function createRoom(buchouId: string): Promise<string> {
-  const room = await fetch(`${baseHttp}/bushitsu`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name: "tenko", buchouId }),
-  }).then((r) => r.json())
-  return room.id
-}
-
-function open(bushitsuId: string, senderId: string): Promise<WebSocket> {
-  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}&senderId=${senderId}`)
-  return new Promise((resolve) => ws.addEventListener("open", () => resolve(ws), { once: true }))
-}
-
 function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise<KousokuMessage> {
   return new Promise((resolve) => {
     const onMsg = (ev: MessageEvent) => {
@@ -59,13 +46,13 @@ const drive = (senderId: string, payload: Shinkou): string =>
   JSON.stringify({ type: "SHINKOU", ts: Date.now(), senderId, payload } satisfies KousokuMessage)
 
 test("部員 receives a periodic GENJOU heartbeat without sending OIKAKE", async () => {
-  const roomId = await createRoom("host")
-  const host = await open(roomId, "host")
+  const roomId = (await makeAuthenticatedRoom(baseHttp)).id
+  const host = await openAuthenticatedSocket(baseHttp, baseWs, roomId, "host")
   // 部長 records authority state so the room becomes heartbeat-eligible.
   host.send(drive("host", { isPlaying: true, currentTime: 10, playbackRate: 1 }))
   await new Promise((r) => setTimeout(r, 50))
 
-  const member = await open(roomId, "viewer")
+  const member = await openAuthenticatedSocket(baseHttp, baseWs, roomId, "viewer")
   // The member never sends OIKAKE; the heartbeat alone must deliver a GENJOU.
   const heartbeat = nextMatch(member, (m) => m.type === "GENJOU")
 
@@ -82,8 +69,8 @@ test("部員 receives a periodic GENJOU heartbeat without sending OIKAKE", async
 })
 
 test("a room never driven by a 部長 gets no heartbeat", async () => {
-  const roomId = await createRoom("host2")
-  const member = await open(roomId, "viewer2")
+  const roomId = (await makeAuthenticatedRoom(baseHttp, "host2")).id
+  const member = await openAuthenticatedSocket(baseHttp, baseWs, roomId, "viewer2")
 
   let sawGenjou = false
   member.addEventListener("message", (ev) => {

@@ -11,6 +11,8 @@ import {
   setNyuushitsuMode,
   takePendingNyuushitsu,
 } from "../lib/nyuushitsu"
+import { isTrustedOrigin } from "../lib/origin"
+import { seitoFromCookie } from "../lib/seitoshou"
 import { join, leave, members, roomTopic, serverMsg, shusseki } from "./housou"
 import { shinkouSeigyo } from "./shinkou"
 
@@ -24,8 +26,6 @@ import { shinkouSeigyo } from "./shinkou"
 
 const ConnectQuery = t.Object({
   bushitsuId: t.String(),
-  senderId: t.Optional(t.String()),
-  nickname: t.Optional(t.String()),
 })
 
 type Conn = {
@@ -113,9 +113,21 @@ export const wsRoutes = new Elysia().ws("/ws", {
     return serverMsg("KEIHOU", { message: "invalid envelope" })
   },
   open(ws) {
-    const { bushitsuId, senderId, nickname } = ws.data.query
-    const id = senderId ?? "anon"
-    const label = nickname || id
+    const { bushitsuId } = ws.data.query
+    const headers = ws.data.headers
+    if (!isTrustedOrigin(headers.origin)) {
+      ws.close(1008, "untrusted origin")
+      return
+    }
+    let seito: ReturnType<typeof seitoFromCookie>
+    try {
+      seito = seitoFromCookie(headers.cookie)
+    } catch {
+      ws.close(1008, "authentication required")
+      return
+    }
+    const id = seito.id
+    const label = seito.username
     conns.set(ws.id, {
       bushitsuId,
       senderId: id,
@@ -168,8 +180,9 @@ export const wsRoutes = new Elysia().ws("/ws", {
           if (!canDo(isHost, getKengen(conn.bushitsuId), "chat")) {
             throw new Forbidden("発言の権限がありません")
           }
-          ws.publish(topic, msg)
-          ws.send(msg)
+          const stamped = { ...msg, senderId: conn.senderId } as KousokuMessage
+          ws.publish(topic, stamped)
+          ws.send(stamped)
           break
         }
 
@@ -185,7 +198,7 @@ export const wsRoutes = new Elysia().ws("/ws", {
           // canDo already authorized this sender; pass senderId as buchouId so a
           // permitted guest is accepted by ShinkouSeigyo's own host gate too.
           shinkouSeigyo.shinkou(conn.bushitsuId, msg.payload, null, conn.senderId, conn.senderId)
-          ws.publish(topic, msg)
+          ws.publish(topic, { ...msg, senderId: conn.senderId } as KousokuMessage)
           break
         }
 

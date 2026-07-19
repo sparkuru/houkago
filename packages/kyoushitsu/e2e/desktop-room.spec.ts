@@ -1,8 +1,21 @@
 import { type Page, expect, test } from "@playwright/test"
 
-async function createRoom(page: Page, nickname: string): Promise<void> {
+async function createRoom(page: Page, accountSuffix: string): Promise<void> {
   await page.goto("/")
-  await page.getByLabel("昵称").fill(nickname)
+  const username = `pw_${Date.now()}_${accountSuffix}`
+    .replaceAll(/[^a-zA-Z0-9_]/g, "_")
+    .slice(0, 32)
+  const register = page.getByRole("button", { name: "没有账号？注册" })
+  await expect(register).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
+  await register.hover()
+  await expect(register).toHaveCSS("background-color", "rgb(238, 228, 211)")
+  await register.click()
+  await page.getByLabel("用户名").fill(username)
+  await page.getByRole("textbox", { name: "密码", exact: true }).fill("abcdefgh")
+  await page.getByRole("button", { name: "注册并继续" }).click()
+  await expect(page.getByText(`已登录为 ${username}`)).toBeVisible()
+  await page.reload()
+  await expect(page.getByText(`已登录为 ${username}`)).toBeVisible()
   await page.getByRole("button", { name: "创建并入部" }).click()
   await expect(page).toHaveURL(/\/bushitsu\//)
 }

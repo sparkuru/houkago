@@ -1,20 +1,25 @@
 <script setup lang="ts">
 import { housou } from "@/api"
 import { t } from "@/i18n"
-import { buinId } from "@/lib/identity"
 import { normalizeRoomId } from "@/lib/room-id"
 import { useBushitsuStore } from "@/stores/bushitsu"
-import { ref } from "vue"
+import { useSeitoStore } from "@/stores/seito"
+import { onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 
-// 進房 UI placeholder: nickname + room id → create or enter → 放映 page.
+// Account-gated room entry: the server-issued account owns room authority.
 const router = useRouter()
 const bushitsu = useBushitsuStore()
+const seito = useSeitoStore()
 
-const nickname = ref("")
 const roomId = ref("")
 const newRoomName = ref("")
 const error = ref("")
+const username = ref("")
+const password = ref("")
+const showPassword = ref(false)
+const registering = ref(false)
+const authenticating = ref(false)
 let roomViewPrefetched = false
 
 function prefetchRoomView(): void {
@@ -25,20 +30,39 @@ function prefetchRoomView(): void {
 
 function enter(bushitsuId: string) {
   prefetchRoomView()
-  bushitsu.setNickname(nickname.value) // persist so reload/direct-link keeps the name
   bushitsu.bushitsuId = bushitsuId
   router.push({ name: "bushitsu", params: { id: bushitsuId } })
 }
 
-// 部室を作る then enter as 部長. The room's buchouId must be this browser's stable
-// buinId (= the WS senderId), or host-authority never matches (design §5).
+async function authenticate(): Promise<void> {
+  error.value = ""
+  authenticating.value = true
+  try {
+    const ok = await seito.authenticate(
+      registering.value ? "register" : "sign-in",
+      username.value,
+      password.value,
+    )
+    if (!ok)
+      error.value = registering.value ? "注册失败，请检查用户名和密码。" : "用户名或密码不正确。"
+  } finally {
+    authenticating.value = false
+  }
+}
+
+async function signOut(): Promise<void> {
+  await seito.signOut()
+  roomId.value = ""
+  newRoomName.value = ""
+}
+
+// The authenticated server actor becomes 部長.
 async function create() {
   prefetchRoomView()
   error.value = ""
-  if (!nickname.value) return
+  if (!seito.seito) return
   const { data, error: err } = await housou.bushitsu.post({
     name: newRoomName.value || t("defaultBushitsuName"),
-    buchouId: buinId(),
   })
   if (err || !data) {
     error.value = t("createBushitsuFailed")
@@ -50,12 +74,16 @@ async function create() {
 // 入部：enter an existing room by id.
 function join() {
   error.value = ""
-  if (!nickname.value || !roomId.value) return
+  if (!seito.seito || !roomId.value) return
   // 净化: a pasted URL/path ("bushitsu/<uuid>") must not become the room id.
   const id = normalizeRoomId(roomId.value)
   if (!id) return
   enter(id)
 }
+
+onMounted(() => {
+  void seito.restore()
+})
 </script>
 
 <template>
@@ -64,38 +92,50 @@ function join() {
       <h1>{{ t("appTitle") }}</h1>
     </header>
 
-    <label class="nickname-field">
-      <span>{{ t("nicknameLabel") }}</span>
-      <input
-        v-model="nickname"
-        :aria-label="t('nicknameLabel')"
-        autocomplete="nickname"
-        @focus="prefetchRoomView"
-      />
-    </label>
-
-    <form class="entry-card entry-primary" @submit.prevent="join">
-      <h2>{{ t("joinBushitsuHeading") }}</h2>
-      <input
-        v-model="roomId"
-        :aria-label="t('bushitsuIdLabel')"
-        :placeholder="t('bushitsuIdPlaceholder')"
-        @focus="prefetchRoomView"
-      />
-      <button type="submit" :disabled="!nickname || !roomId">{{ t("joinBushitsu") }}</button>
+    <form v-if="!seito.seito" class="entry-card entry-primary" @submit.prevent="authenticate">
+      <h2>{{ registering ? "注册账号" : "登录" }}</h2>
+      <label class="nickname-field">
+        <span>用户名</span>
+        <input v-model="username" autocomplete="username" required minlength="3" maxlength="32" />
+      </label>
+      <div class="nickname-field">
+        <label for="seito-password">密码</label>
+        <div class="password-row">
+          <input id="seito-password" v-model="password" :type="showPassword ? 'text' : 'password'" :autocomplete="registering ? 'new-password' : 'current-password'" placeholder="至少 8 位" required minlength="8" maxlength="128" />
+          <button type="button" class="secondary-button" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword">{{ showPassword ? "隐藏" : "显示" }}</button>
+        </div>
+      </div>
+      <button type="submit" :disabled="authenticating">{{ authenticating ? "处理中…" : registering ? "注册并继续" : "登录并继续" }}</button>
+      <button type="button" class="secondary-button" @click="registering = !registering">{{ registering ? "已有账号？登录" : "没有账号？注册" }}</button>
     </form>
 
-    <form class="entry-card entry-secondary" @submit.prevent="create">
-      <h2>{{ t("createBushitsuHeading") }}</h2>
-      <input
-        v-model="newRoomName"
-        :aria-label="t('bushitsuNameLabel')"
-        :placeholder="t('bushitsuNamePlaceholder')"
-        @focus="prefetchRoomView"
-      />
-      <button type="submit" :disabled="!nickname">{{ t("createAndJoin") }}</button>
-    </form>
+    <template v-else>
+      <p class="account-name">已登录为 {{ seito.seito.username }}</p>
+      <button type="button" class="secondary-button" @click="signOut">退出登录</button>
 
+      <form class="entry-card entry-primary" @submit.prevent="join">
+        <h2>{{ t("joinBushitsuHeading") }}</h2>
+        <input
+          v-model="roomId"
+          :aria-label="t('bushitsuIdLabel')"
+          :placeholder="t('bushitsuIdPlaceholder')"
+          @focus="prefetchRoomView"
+        />
+        <button type="submit" :disabled="!roomId">{{ t("joinBushitsu") }}</button>
+      </form>
+
+      <form class="entry-card entry-secondary" @submit.prevent="create">
+        <h2>{{ t("createBushitsuHeading") }}</h2>
+        <input
+          v-model="newRoomName"
+          :aria-label="t('bushitsuNameLabel')"
+          :placeholder="t('bushitsuNamePlaceholder')"
+          @focus="prefetchRoomView"
+        />
+        <button type="submit">{{ t("createAndJoin") }}</button>
+      </form>
+
+    </template>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
   </main>
 </template>
@@ -188,6 +228,16 @@ button:disabled {
   background: transparent;
   border-color: var(--color-border-strong);
 }
+.password-row { display: flex; gap: var(--space-2); }
+.password-row input { min-width: 0; flex: 1; }
+.secondary-button { color: var(--color-accent-strong); background: transparent; border-color: var(--color-border-strong); }
+.secondary-button:not(:disabled):hover,
+.entry-secondary button:not(:disabled):hover {
+  color: var(--color-accent-strong);
+  background: var(--color-surface-muted);
+  border-color: var(--color-accent-strong);
+}
+.account-name { color: var(--color-text-muted); }
 .error {
   padding: var(--space-3);
   color: var(--color-danger);

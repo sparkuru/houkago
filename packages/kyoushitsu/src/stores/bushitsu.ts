@@ -1,4 +1,3 @@
-import { buinId } from "@/lib/identity"
 import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
 import type {
@@ -54,7 +53,7 @@ function uniqueEnmokuById(enmoku: readonly Enmoku[]): Enmoku[] {
 export const useBushitsuStore = defineStore("bushitsu", () => {
   const bushitsuId = ref<string | null>(null)
   const nickname = ref(loadNickname()) // persisted, so reload/direct-link keeps the name
-  const senderId = ref(buinId()) // stable identity = WS senderId (design §5)
+  const senderId = ref("") // server-issued account id, never browser-generated
   const buchouId = ref<string | null>(null) // 部長 id, from GET /bushitsu/:id
   const shusseki = ref(0) // 出席数 presence count
   const roster = ref<Record<string, string>>({}) // 名簿: senderId→nickname, accumulated from SHUSSEKI
@@ -198,6 +197,10 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     saveNickname(name)
   }
 
+  function setSenderId(id: string): void {
+    senderId.value = id
+  }
+
   function setBangumi(enmoku: readonly Enmoku[]): void {
     bangumi.value = uniqueEnmokuById(enmoku)
   }
@@ -242,6 +245,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     apply,
     setBangumi,
     setNickname,
+    setSenderId,
     nicknameOf,
     yakuwariOf,
   }

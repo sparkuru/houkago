@@ -26,6 +26,15 @@ export const BuinSchema = Type.Object({
 })
 export type Buin = Static<typeof BuinSchema>
 
+// 生徒：a durable Houkago account. Passwords and session tokens never enter the
+// shared contract; consumers receive only this public account summary.
+export const SeitoSchema = Type.Object({
+  id: Type.String(),
+  username: Type.String(),
+  createdAt: Type.Number(),
+})
+export type Seito = Static<typeof SeitoSchema>
+
 // 演目 source kind (design §6). Single source for both the REST create-input
 // schema (housou) and the player prop type (kyoushitsu).
 export const EnmokuTypeSchema = Type.Union([

@@ -8,7 +8,7 @@
 2. 边看边聊的聊天室（B 站直播风：侧栏 + 弹幕叠加）
 3. 弹幕三源：聊天弹幕 / 装载弹幕文件 / 第三方·平台抓取，优先级 本地文件 > 在线抓取 > 弹幕盒子
 4. 强播放器：字幕切换、音轨切换
-5. 多平台来源解析：可插拔解析器，一平台一解析器
+5. 用户提供的公开播放 URL 解析与代理；不提供平台内容发现能力
 6. 全开源、自有 license
 
 ### 2. 总体架构：5 个模块，控制面 / 媒体面分离
@@ -16,7 +16,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                  houkago-kyoushitsu (教室 · 前端)              │
-│  ArtPlayer + 弹幕 + 字幕/音轨切换 │ 聊天室 UI │ 部室/浏览 UI    │
+│  ArtPlayer + 弹幕 + 字幕/音轨切换 │ 聊天室 UI │ 部室/URL 入队 UI │
 └───┬─────────────────────────────┬──────────────────┬─────────┘
     │ WS(控制面)+REST              │ 媒体直连(媒体面)   │ REST
     ▼                              ▼                  ▼
@@ -55,7 +55,7 @@
 - 解析：平台链接 → `{ url, headers, subtitles[], sources[], danmakuRef, live }`
 - **稳定流代理端点**：处理过期/签名 URL、注入 header、m3u8 manifest 重写、range/seek。
   浏览器永远拿 `https://eisha/stream/<token>` 稳定地址，过期由 eisha 内部重解析。
-- 平台 浏览/搜索 API（喂前端浏览 UI）
+- 只解析用户主动提交的、已支持的公开 URL；不提供平台浏览、搜索或内容聚合 API。
 
 **houkago-kokuban（黒板 / 弹幕聚合，v1 可与 eisha 同进程部署）**
 - 抓取：按标题匹配从 B 站/第三方 API 取弹幕
@@ -68,7 +68,7 @@
 - 弹幕：P1 local-first 用 Vue/CSS overlay 验证本地文件机制；密集飞屏/正式统一引擎目标仍是 `weizhenye/Danmaku`（MIT, canvas）。
 - 聊天室 UI（B 站直播风：右侧栏 + 视频上弹幕叠加）
 - 部室 UI：建/进房、部员列表、番組表、房主控制条
-- 浏览/搜索 UI：调 eisha
+- 房间 URL 入队 UI：预览用户提交的 URL，再显式加入或切换放映
 - WS 客户端：讲 houkago-kousoku 协议
 
 **houkago-kousoku（校則 / 共享契约）**
@@ -213,53 +213,58 @@ houkago/
 
 - **P0 — MVP（证明同步）**：housou(部室+WS 房主权威同步+聊天) + kyoushitsu(ArtPlayer+进房+手填直链 m3u8/mp4+聊天侧栏+聊天弹幕)。跑通一条直链多人同步。
 - **P1 — 弹幕基础**：文件弹幕加载渲染；kokuban 骨架。
-- **P2 — 解析+代理**：第一个解析器（B站 或 通用）+ 过期 URL 流代理 + manifest 重写；浏览/搜索 UI。
-- **P3 — 扩展**：更多解析器；按标题抓取弹幕；番組表队列；部员角色。
+- **P2 — 解析+代理**：通用公开直链/HLS/DASH 与已支持 URL 的解析、过期 URL 流代理和 manifest 重写；以用户提交 URL 为唯一入口。
+- **P3 — 房间扩展**：番組表队列与部员角色/管理。新的第三方平台解析器、内容发现与按标题抓取不属于既定路线。
 - **P4 — 打磨**：漂移校正调参、断线重连、鉴权/OAuth、字幕/音轨 UI、自由控制权、WebRTC 语音（可选）。
 
 > **规划记录约定**：`design.md` 是项目主干 PRD / 产品蓝图，记录长期路线、
 > 当前实现状态和跨模块待办；Trellis task 的 `prd.md` 只承载一次具体执行项，
 > 完成后会归档。后续从本节挑选一个待办进入实现时，再创建对应 Trellis task。
 
-#### 10.1 当前实现状态（2026-06-20）
+#### 10.1 历史实现状态（2026-06-20）
 
 | 阶段 | 状态 | 已落地 | 主要缺口 |
 |------|------|--------|----------|
 | P0 MVP 同步 | 基本完成 | `kousoku`/`housou`/`kyoushitsu` 三包；部室创建/进入；ArtPlayer 直链播放；WS 聊天；`SHINKOU`/`OIKAKE`/`GENJOU`/`JOUEI` 同步；迟到追平；服务端权威心跳；客户端漂移三档校正；番組表基础队列 | 缺少完整浏览器 smoke/e2e；断线重连与重启恢复仍弱 |
 | P1 弹幕基础 | 部分完成 | `DANMAKU` 协议信封与服务端 echo/gate；前端独立实时弹幕队列；聊天面板可发送弹幕；`DanmakuOverlay` 渲染实时 `DANMAKU`；`houkago-kokuban` 本地 B 站 XML 子集解析；前端本地文件弹幕选择、默认关闭开关、按演目隔离和按播放时间 overlay 渲染；Bilibili `danmaku: fetch` 可经 eisha 拉取 XML 并转为统一 cue JSON | 未接 `weizhenye/Danmaku`；无 ASS 完整支持；无后端弹幕上传/存储/管理 API；无 danmubox/search |
-| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`provider`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；B 站公开视频 parser 可从分享文本提取 BV 链接，并从 view/playurl 产出标题、封面、UP 主、公开 stats、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 可生成 `/eisha/dash/:token` MPD 并用 `/eisha/proxy/:token` 代理音视频资源，Bilibili DASH `backup_url` 会作为代理 fallback CDN，封面图也走 eisha 代理避免浏览器热链拦截；base64url 稳定代理 token；housou 挂载 eisha routes；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata，并本地选择 `sources` 驱动播放器 URL；前端 ArtPlayer 已接入 hls.js/dashjs；番組表可展示 Bilibili 来源信息 | 无浏览/搜索 UI；真实 B 站公开视频播放仍需浏览器 smoke 验证 |
-| P3 扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础；`Enmoku` 扩展字段已持久化 | 无更多解析器；无按标题抓取弹幕；无独立部员列表/管理面板 |
+| P2 解析+代理 | 部分完成 | `Enmoku` 类型预留并持久化 `headers`/`subtitles`/`sources`/`danmaku`/`provider`/`live`；`houkago-eisha` 包已建立；通用直链/HLS/DASH resolver；Generic HLS manifest parser 可从 master/media playlist 产出 `sources`/`subtitles`/`live`；B 站公开视频 parser 可从分享文本提取 BV 链接，并从 view/playurl 产出标题、封面、UP 主、公开 stats、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 可生成 `/eisha/dash/:token` MPD 并用 `/eisha/proxy/:token` 代理音视频资源，Bilibili DASH `backup_url` 会作为代理 fallback CDN，封面图也走 eisha 代理避免浏览器热链拦截；base64url 稳定代理 token；housou 挂载 eisha routes；基础 Range/seek 代理测试；m3u8 manifest URI/segment 重写；HLS 子资源 token 携带 manifest 刷新上下文，遇到 401/403/404/410 可按原 manifest 懒重解析并重试一次；前端 dev 直链表单经 resolver 创建稳定代理演目；房间页可查看 parser metadata，并本地选择 `sources` 驱动播放器 URL；前端 ArtPlayer 已接入 hls.js/dashjs；番組表可展示 Bilibili 来源信息 | 已支持的公开 URL 仍需持续回归；不扩展为平台浏览/搜索或新增平台适配 |
+| P3 房间扩展 | 部分提前 | 番組表队列；来宾权限开关；入室开放/审核/关闭；角色显示基础；`Enmoku` 扩展字段已持久化 | 无独立部员列表/管理面板；第三方平台扩展和按标题抓取不在路线内 |
 | P4 打磨 | 部分提前 | 漂移校正已可用；授权来宾播放控制已落地 | 无断线重连策略；无鉴权/生徒証/OAuth；无字幕/音轨 UI；无自由控制权策略文档化；无 WebRTC 语音 |
 
-#### 10.2 下一批可执行 backlog
+#### 10.2 已废止 backlog（由 10.3 取代）
 
-**推荐下一项：P1 文件弹幕与 kokuban 骨架**
+本节曾记录早期的多平台浏览、搜索、更多解析器与按标题抓取设想。2026-07-18 的
+URL-first 产品决策已经否定这些方向；保留该标题只为解释历史文档，不把任何旧条目视为
+待办。唯一的当前路线见 10.3。
 
-- 新建 `houkago-kokuban` 包，先提供本地文件解析 API 的最小骨架。
-- Local-first：前端先支持为当前演目选择本地 B 站 XML 子集，转换为统一时间轴 JSON，并按播放时间渲染。
-- 文件弹幕前端默认关闭；用户开启后记忆偏好，切换不同视频流时只播放对应演目的本地弹幕源。
-- 后端上传/存储/管理弹幕文件是后续独立切片；本地机制验证阶段不实现 upload/list/delete/download API。
-- 明确长期优先级链：本地/用户选择文件 > meta 自动获取 > danmubox/搜索；实时弹幕永远叠加。
+#### 10.3 主线更新（2026-07-19）
 
-**P2：eisha 解析与代理骨架**
+7 月 18 日完成了三个相互衔接的切片：温暖的语义主题与响应式教室、竖屏优先的可访问
+聊天/房间交互，以及从公开 URL 预览到显式入队或切换放映的正式路径。后续补充的
+Playwright 工作流使桌面和竖屏回归可以自动化验证。前一节是当时的历史基线；本节才是
+当前主线。
 
-- 已完成：新建 `houkago-eisha` 包；通用直链 / m3u8 / mpd resolver；Generic HLS manifest parser 产出 `sources`/`subtitles`/`live` metadata；B 站公开视频 parser 支持分享文本提取，产出标题、封面、UP 主、公开 stats、DASH video/audio metadata、media headers 和 `danmaku` fetch ref；eisha 合成 `/eisha/dash/:token` MPD，MPD 内音视频资源继续走 `/eisha/proxy/:token`，并携带 Bilibili `backup_url` 作为 fallback；Bilibili 封面走 eisha 代理；eisha 可按 Bilibili cid 拉取 XML 弹幕并输出统一 cue JSON；稳定代理 token；housou co-deploy 挂载 eisha routes；range/seek 基础行为测试；m3u8 manifest segment/key/map/media URI 重写；HLS 子资源过期时可按 manifest 上下文懒重解析并重试一次；前端 dev 直链表单接入 resolver/create 流程；`Enmoku.headers/subtitles/sources/danmaku/provider/live` SQLite 持久化；房间页展示 parser metadata，并支持本地选择 `sources` 驱动播放器 URL；番組表展示 Bilibili 来源信息；前端播放器接入 hls.js/dashjs。
-- 下一刀：补平台浏览/搜索 API，或补真实播放 smoke 后暴露的 Bilibili 兼容性问题。
-- 后续再加入平台浏览/搜索 API。
+| 领域 | 当前状态 | 当前边界 |
+|------|----------|----------|
+| 房间体验 | 已完成一轮主题、桌面/竖屏布局和可访问性打磨 | 保持播放器、同步、聊天、弹幕的现有所有权边界；视觉新需求另立切片 |
+| 公开播放来源 | 已完成 URL-first 的预览、公开来源校验、入队与切换流程 | 只接受验证过的公开直链/HLS/DASH/已支持 Bilibili URL；私网、凭据和原始 session 不进入房间数据 |
+| 自动化验证 | 已有桌面、手机和 iPad Playwright 项目及持久化执行规范 | 真实公开媒体 smoke 可作为回归证据，但不再作为下一项产品里程碑 |
+| 身份与授权 | 尚未实现 | REST 仍信任调用者给出的 `addedBy`，并未服务器端执行 `canPlaylist`；WebSocket gate 不能替代 REST 授权 |
 
-**P3：房间与内容管理扩展**
+**当前主线：身份与部室授权基础。** 先给 REST 和 WebSocket 建立服务器可验证的成员身份，
+将入队、删除和切换等部室动作绑定到该身份并在服务端执行权限。它是把公开 URL 体验变为
+可信多人产品的必要收口；它本身不批准任何新的第三方平台或来源会话能力。
 
-- 为部室页增加独立部员列表/角色面板。
-- 支持更多解析器和按标题抓取弹幕。
-- 为番組表增加更完整的队列管理（重排、清空、当前项保护、远端同步）。
+推荐的交付顺序：
 
-**P4：稳定性与权限体系**
+1. **生徒証与部室授权**：定义身份、会话、入室成员关系与 REST/WS 的授权边界；迁移掉
+   客户端可伪造的 `addedBy`，并覆盖鉴权失败、过期和现有房间兼容性。
+2. **房间治理后续**：在不改变 URL-first 边界的前提下，按单独需求评估成员管理、队列
+   管理、字幕/音轨 UI 或控制权策略。
 
-- 实现 WS 断线重连、重连后恢复 room/admission/authority state。
-- 引入 `生徒証` token/JWT 鉴权；OAuth 后置。
-- 补字幕/音轨/多清晰度 UI。
-- 明确“自由控制权”策略：人人可控、授权可控、last-writer-wins 的边界与冲突处理。
-- 评估 WebRTC 语音是否仍符合产品方向。
+不进入当前主线：平台浏览/搜索、推荐、索引、爬虫、多平台聚合，以及基于这些能力的内容
+发现 UI；新增第三方平台解析器、按标题抓取/匹配、第三方账户或 source-session 绑定、可信
+共享 session 和发起者设备媒体代理。产品仍以用户主动提供的、已支持的公开 URL 为入口。
 
 ### 11. 风险与对策
 

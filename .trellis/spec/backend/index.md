@@ -20,6 +20,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [Public URL Preview Contract](./url-preview-contract.md) | Read-only source preview, error matrix, and queue handoff | Done |
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Done |
 | [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | Done |
+| [Seitoshou Authentication](./seitoshou-contract.md) | Account, session, REST, and WebSocket authority boundary | Done |
 
 ---
 

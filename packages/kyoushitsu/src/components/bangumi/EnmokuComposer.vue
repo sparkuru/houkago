@@ -3,12 +3,12 @@ import { useEnmokuPreview } from "@/composables/useEnmokuPreview"
 import { t } from "@/i18n"
 import { computed, ref } from "vue"
 
-const props = defineProps<{ bushitsuId: string; addedBy: string }>()
+const props = defineProps<{ bushitsuId: string }>()
 const emit = defineEmits<{ jouei: [enmokuId: string] }>()
 
 const open = ref(false)
 const { sourceUrl, title, preview, error, resolving, submitting, resolve, add, reset, edit } =
-  useEnmokuPreview(props.bushitsuId, props.addedBy)
+  useEnmokuPreview(props.bushitsuId)
 const errorMessage = computed(() => (error.value ? t(error.value) : ""))
 
 function close(): void {

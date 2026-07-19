@@ -65,6 +65,10 @@ export function addEnmoku(e: Enmoku): void {
 - No migration framework in v1. When schema evolves, add a numbered SQL file and
   apply in order; record applied version in a `schema_version` table. Defer the
   full tooling until the Postgres move.
+- The authenticated schema deliberately does **not** migrate UUID-owned rooms.
+  Bootstrap detects a `bushitsu.buchou_id` without a matching `seito` and stops
+  with a `HOUKAGO_DB` reset instruction. Do not silently claim, retain, or
+  delete that legacy development data.
 
 ---
 

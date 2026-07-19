@@ -14,7 +14,7 @@ type EnmokuPreview = {
 
 type EnmokuPreviewError = "" | "sourcePreviewFailed" | "sourceAddFailed"
 
-export function useEnmokuPreview(bushitsuId: string, addedBy: string) {
+export function useEnmokuPreview(bushitsuId: string) {
   const sourceUrl = ref("")
   const title = ref("")
   const preview = ref<EnmokuPreview | null>(null)
@@ -53,7 +53,6 @@ export function useEnmokuPreview(bushitsuId: string, addedBy: string) {
       const { data } = await housou.bushitsu({ id: bushitsuId }).enmoku.post({
         sourceUrl: sourceUrl.value.trim(),
         title: title.value.trim() || undefined,
-        addedBy,
       })
       if (!data) {
         error.value = "sourceAddFailed"

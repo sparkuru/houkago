@@ -17,6 +17,20 @@ db.exec("PRAGMA foreign_keys = ON;")
 const here = dirname(fileURLToPath(import.meta.url))
 db.exec(readFileSync(join(here, "schema.sql"), "utf8"))
 
+// Authenticated ownership cannot safely interpret UUID-owned legacy rooms.
+// Require the operator-approved database reset instead of silently retaining
+// records whose host ids are not Houkago accounts.
+const legacyRoom = db
+  .query<{ id: string }, []>(
+    "SELECT b.id FROM bushitsu b LEFT JOIN seito s ON s.id = b.buchou_id WHERE s.id IS NULL LIMIT 1",
+  )
+  .get()
+if (legacyRoom) {
+  throw new Error(
+    "legacy UUID room data detected; reset HOUKAGO_DB before starting authenticated Houkago",
+  )
+}
+
 const enmokuColumns = new Set(
   db
     .query<{ name: string }, []>("PRAGMA table_info(enmoku)")

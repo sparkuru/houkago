@@ -6,4 +6,6 @@ import type { App } from "houkago-housou"
 // end-to-end at compile time (type-safety spec). Components never bare-fetch;
 // they go through this client. A backend contract change becomes a compile
 // error here.
-export const housou = treaty<App>(housouUrl())
+export const housou = treaty<App>(housouUrl(), {
+  fetch: { credentials: "include" },
+})
