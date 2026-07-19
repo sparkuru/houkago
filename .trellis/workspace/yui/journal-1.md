@@ -1629,3 +1629,36 @@ Added durable automate-first Playwright validation rules to Trellis and the fron
 ### Next Steps
 
 - None - task complete
+
+
+## Session 50: Add authenticated room authority
+
+**Date**: 2026-07-19
+**Task**: Add authenticated room authority
+**Branch**: `k-on`
+
+### Summary
+
+Added self-hosted account sessions, server-derived REST/WebSocket room authority, legacy UUID reset protection, and development LAN CORS support. Verified full automated coverage and user-reviewed account, permission, desktop, and mobile flows.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `262ff2c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
