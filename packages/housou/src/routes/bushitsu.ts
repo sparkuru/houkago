@@ -7,12 +7,14 @@ import {
   createBushitsu,
   fetchBangumi,
   fetchBushitsu,
+  removeBuin,
   removeEnmoku,
 } from "../domain/bushitsu"
 import { Forbidden } from "../lib/errors"
 import { canDo, getKengen } from "../lib/kengen"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
+import { revokeBuin } from "../ws/handler"
 import { isPresent, roomTopic, serverMsg } from "../ws/housou"
 
 // 部室 REST: thin handlers — validate (TypeBox), delegate to domain. No SQL or
@@ -95,6 +97,13 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     authorizePlaylistMutation(request, params.id)
     const result = removeEnmoku(params.id, params.enmokuId)
     broadcastBangumi(params.id, server)
+    return result
+  })
+  .delete("/:id/meibo/:seitoId", ({ params, request }) => {
+    requireTrustedOrigin(request.headers.get("origin"))
+    const actor = seitoFromRequest(request)
+    const result = removeBuin(params.id, actor.id, params.seitoId)
+    revokeBuin(params.id, params.seitoId)
     return result
   })
 

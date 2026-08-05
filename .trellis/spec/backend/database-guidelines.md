@@ -67,7 +67,7 @@ export function addEnmoku(e: Enmoku): void {
   full tooling until the Postgres move.
 - The authenticated schema deliberately does **not** migrate UUID-owned rooms.
   Bootstrap detects a `bushitsu.buchou_id` without a matching `seito` and stops
-  with a `HOUKAGO_DB` reset instruction. Do not silently claim, retain, or
+  with a `HOUSOU_DB` reset instruction. Do not silently claim, retain, or
   delete that legacy development data.
 
 ---

@@ -3,7 +3,7 @@ import { t } from "@/i18n"
 import { formatLastSeen, formatOnlineDuration } from "@/lib/member-presence"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { KousokuConnectionStatus } from "@/ws/client"
-import type { Kengen, NyuushitsuMode, NyuushitsuStatus, Yakuwari } from "houkago-kousoku"
+import type { Kengen, MeiboBuin, NyuushitsuMode, NyuushitsuStatus, Yakuwari } from "houkago-kousoku"
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 
 // 房間情報 + host-only settings. All viewers need the connection/status block;
@@ -12,6 +12,7 @@ const props = defineProps<{
   roomName: string
   roomLink: string
   roomStatus: KousokuConnectionStatus
+  removeBuin: (seitoId: string) => Promise<boolean>
 }>()
 const emit = defineEmits<{
   settei: [kengen: Kengen]
@@ -25,6 +26,10 @@ const passwordPlaceholder = ref(t("nyuushitsuModePasswordHint"))
 const now = ref(Date.now())
 let passwordPromptTimer: ReturnType<typeof setTimeout> | null = null
 let clockTimer: ReturnType<typeof setInterval> | null = null
+const removeDialog = ref<HTMLDialogElement | null>(null)
+const selectedBuin = ref<MeiboBuin | null>(null)
+const removingBuin = ref(false)
+const removeError = ref("")
 const roomStatusLabel = computed(() => {
   switch (props.roomStatus) {
     case "connecting":
@@ -66,11 +71,13 @@ function nyuushitsuStatusLabel(status: NyuushitsuStatus | "idle") {
       return t("nyuushitsuStatusRejected")
     case "closed":
       return t("nyuushitsuStatusClosed")
+    case "revoked":
+      return t("nyuushitsuStatusRevoked")
   }
 }
 
 function roleLabel(yakuwari: Yakuwari) {
-  return yakuwari === "buchou" ? t("buchouRole") : t("guestRole")
+  return yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")
 }
 
 function onlineDurationLabel(startedAt: number) {
@@ -130,6 +137,30 @@ function showPasswordRequired() {
     passwordPlaceholder.value = t("nyuushitsuModePasswordHint")
     passwordPromptTimer = null
   }, 1800)
+}
+
+function requestRemove(member: MeiboBuin) {
+  selectedBuin.value = member
+  removeError.value = ""
+  removeDialog.value?.showModal()
+}
+
+async function confirmRemove() {
+  if (!selectedBuin.value || removingBuin.value) return
+  removingBuin.value = true
+  removeError.value = ""
+  try {
+    if (await props.removeBuin(selectedBuin.value.id)) {
+      removeDialog.value?.close()
+      selectedBuin.value = null
+      return
+    }
+    removeError.value = t("removeMemberFailed")
+  } catch {
+    removeError.value = t("removeMemberFailed")
+  } finally {
+    removingBuin.value = false
+  }
 }
 
 onMounted(() => {
@@ -262,6 +293,22 @@ onBeforeUnmount(() => {
               <span>{{ formatLastSeen(member.lastSeenAt) }}</span>
             </div>
           </template>
+        </div>
+        <div v-if="bushitsu.isBuchou" class="member-list-block">
+          <h4>{{ t("durableMembersHeading") }}</h4>
+          <div v-if="bushitsu.meibo.length === 0" class="member-empty">{{ t("noDurableMembers") }}</div>
+          <div v-for="member in bushitsu.meibo" :key="member.id" class="member-table member-table-action">
+            <span class="member-name">{{ member.username }}</span>
+            <span class="member-role" :class="member.yakuwari">{{ roleLabel(member.yakuwari) }}</span>
+            <button
+              v-if="member.yakuwari !== 'buchou'"
+              type="button"
+              class="remove-member"
+              :aria-label="`${t('removeMemberAria')} ${member.username}`"
+              :disabled="removingBuin"
+              @click="requestRemove(member)"
+            >{{ t("removeMember") }}</button>
+          </div>
         </div>
       </section>
     </div>
@@ -396,6 +443,15 @@ onBeforeUnmount(() => {
       </div>
     </div>
   </div>
+  <dialog ref="removeDialog" class="remove-dialog" :aria-label="t('removeMemberTitle')">
+    <p>{{ t("removeMemberTitle") }}</p>
+    <p>{{ selectedBuin?.username }}：{{ t("removeMemberNotice") }}</p>
+    <p v-if="removeError" class="remove-error" role="alert">{{ removeError }}</p>
+    <div class="remove-dialog-actions">
+      <button type="button" class="secondary-button" :disabled="removingBuin" @click="removeDialog?.close()">{{ t("cancel") }}</button>
+      <button type="button" class="remove-member" :disabled="removingBuin" @click="confirmRemove">{{ t("removeMemberConfirm") }}</button>
+    </div>
+  </dialog>
 </template>
 
 <style scoped>
@@ -611,6 +667,13 @@ onBeforeUnmount(() => {
   color: var(--kengen-muted);
   font-weight: 700;
 }
+.member-table-action { grid-template-columns: minmax(0, 1fr) 42px auto; }
+.remove-member { min-height: 44px; padding: 4px 8px; color: var(--color-on-accent); background: var(--color-danger); border: 0; border-radius: 6px; cursor: pointer; }
+.remove-member:disabled { cursor: wait; opacity: 0.7; }
+.remove-dialog { max-width: min(360px, calc(100vw - 32px)); color: var(--kengen-text); background: var(--color-surface); border: 1px solid var(--kengen-border); border-radius: 12px; }
+.remove-dialog::backdrop { background: rgb(0 0 0 / 45%); }
+.remove-dialog-actions { display: flex; justify-content: end; gap: 8px; }
+.remove-error { color: var(--color-danger); }
 .member-name {
   font-weight: 600;
 }

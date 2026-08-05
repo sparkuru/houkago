@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
-import { openAuthenticatedSocket } from "./auth-fixture"
+import { makeAuthenticatedRoom, openAuthenticatedSocket } from "./auth-fixture"
 
 // Integration test against a running Elysia instance, mirroring the spike
 // driver: malformed envelope → KEIHOU (not disconnect), and two clients in the
@@ -35,7 +35,8 @@ function nextMatch(ws: WebSocket, pred: (m: KousokuMessage) => boolean): Promise
 }
 
 test("malformed envelope yields KEIHOU error, connection stays open", async () => {
-  const ws = await openAuthenticatedSocket(base, baseWs, "rA", "u1")
+  const room = await makeAuthenticatedRoom(base, "u1")
+  const ws = await openAuthenticatedSocket(base, baseWs, room.id, "u1")
   const keihou = await new Promise<KousokuMessage>((resolve) => {
     ws.addEventListener("message", (ev) => {
       const m = JSON.parse(ev.data) as KousokuMessage
@@ -50,8 +51,9 @@ test("malformed envelope yields KEIHOU error, connection stays open", async () =
 })
 
 test("two clients in the same room exchange OSHABERI echo", async () => {
-  const a = await openAuthenticatedSocket(base, baseWs, "rB", "alice")
-  const b = await openAuthenticatedSocket(base, baseWs, "rB", "bob")
+  const room = await makeAuthenticatedRoom(base, "alice")
+  const a = await openAuthenticatedSocket(base, baseWs, room.id, "alice")
+  const b = await openAuthenticatedSocket(base, baseWs, room.id, "bob")
 
   const gotByB = nextMatch(b, (m) => m.type === "OSHABERI")
   const gotByA = nextMatch(a, (m) => m.type === "OSHABERI")
@@ -74,8 +76,9 @@ test("two clients in the same room exchange OSHABERI echo", async () => {
 })
 
 test("two clients in the same room exchange DANMAKU echo", async () => {
-  const a = await openAuthenticatedSocket(base, baseWs, "rDanmaku", "alice")
-  const b = await openAuthenticatedSocket(base, baseWs, "rDanmaku", "bob")
+  const room = await makeAuthenticatedRoom(base, "alice-danmaku")
+  const a = await openAuthenticatedSocket(base, baseWs, room.id, "alice-danmaku")
+  const b = await openAuthenticatedSocket(base, baseWs, room.id, "bob-danmaku")
 
   const gotByB = nextMatch(b, (m) => m.type === "DANMAKU")
   const gotByA = nextMatch(a, (m) => m.type === "DANMAKU")
@@ -101,8 +104,10 @@ test("two clients in the same room exchange DANMAKU echo", async () => {
 })
 
 test("room isolation: rC client does not receive rD chat", async () => {
-  const c = await openAuthenticatedSocket(base, baseWs, "rC", "carol")
-  const d = await openAuthenticatedSocket(base, baseWs, "rD", "dave")
+  const roomC = await makeAuthenticatedRoom(base, "carol")
+  const roomD = await makeAuthenticatedRoom(base, "dave")
+  const c = await openAuthenticatedSocket(base, baseWs, roomC.id, "carol")
+  const d = await openAuthenticatedSocket(base, baseWs, roomD.id, "dave")
 
   let leaked = false
   c.addEventListener("message", (ev) => {

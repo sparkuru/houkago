@@ -53,8 +53,8 @@ Anything that is purely one component's view concern stays a local `ref`.
 ## Server State
 
 - The **WS client (`src/ws/`) is the writer.** Incoming `houkago-kousoku`
-  envelopes (`GENJOU`, `SHINKOU`, `JOUEI`, `BANGUMI`, `SHUSSEKI`, `OSHABERI`,
-  `DANMAKU`) are decoded and committed to stores via store actions. UI never
+  envelopes (`GENJOU`, `SHINKOU`, `JOUEI`, `BANGUMI`, `SHUSSEKI`, `MEIBO`,
+  `OSHABERI`, `DANMAKU`) are decoded and committed to stores via store actions. UI never
   writes server-truth fields directly.
 - `BANGUMI` is a full queue snapshot, not a patch. Commit it into
   `useBushitsuStore.bangumi`; room views may optimistically set the same store
@@ -118,7 +118,11 @@ Anything that is purely one component's view concern stays a local `ref`.
 - Browser `offline` actively drops the current socket and reports closed; browser
   `online` reconnects immediately when the room view is still mounted.
 - A successful reconnect relies on the existing server `open`/`admit` snapshots:
-  `SHUSSEKI`, `KENGEN`, and `NYUUSHITSU`.
+  `SHUSSEKI`, `KENGEN`, `NYUUSHITSU`, plus private `MEIBO` only for the owner.
+- `NYUUSHITSU { status: "revoked" }` is deliberate access revocation, not a
+  transient close: call `client.close()` to cancel automatic reconnect, then
+  route home with an explanatory local notice. Do not retain or locally edit the
+  durable roster; wait for the server's next `MEIBO` snapshot.
 - Room information and connection status must be visible to all admitted
   viewers. Host-only settings such as admission mode, guest permissions, and
   pending approvals remain gated by `isBuchou`.

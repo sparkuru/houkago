@@ -353,6 +353,11 @@ function nyuushitsuHantei(senderId: string, approved: boolean) {
   })
 }
 
+async function removeBuin(seitoId: string) {
+  const { error } = await housou.bushitsu({ id: bushitsuId }).meibo({ seitoId }).delete()
+  return !error
+}
+
 function sendJouei(enmokuId: string | null) {
   if (!canPlayBangumiItem(bushitsu.canPlaylist)) return
   client?.send({
@@ -489,6 +494,10 @@ async function startSession() {
       bushitsu.apply(msg) // keep the store the single source of truth first
       if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
         void enterRoom()
+      }
+      if (msg.type === "NYUUSHITSU" && msg.payload.status === "revoked") {
+        client?.close()
+        void router.replace({ name: "home", query: { revoked: "1" } })
       }
       shinkou.handleRemote(msg) // then drive the player by message type
     },
@@ -655,6 +664,7 @@ onBeforeUnmount(() => {
                   :room-name="roomName || bushitsuId"
                   :room-link="roomLink"
                   :room-status="wsStatus"
+                  :remove-buin="removeBuin"
                   @settei="settei"
                   @nyuushitsu-settei="nyuushitsuSettei"
                   @nyuushitsu-hantei="nyuushitsuHantei"

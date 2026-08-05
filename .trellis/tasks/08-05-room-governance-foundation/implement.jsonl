@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Defines additive SQLite schema, transaction, and prepared-query rules for durable membership."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Defines authenticated REST/WebSocket identity and authority constraints that member admission/removal must preserve."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Requires WebSocket-led server-truth state and specifies reconnect behavior."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Defines the shared room-information panel boundary and accessible Vue component conventions."}
+{"file":".trellis/tasks/08-05-room-governance-foundation/research/ui-ux-pro-max.md","reason":"Task-local UI research used to define the destructive confirmation and responsive accessibility decisions."}

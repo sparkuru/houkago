@@ -1,5 +1,6 @@
 import type { Bushitsu } from "houkago-kousoku"
 import { db } from "../client"
+import { ensureBuin } from "./bushitsu-buin"
 
 // Raw row shape (snake_case). Mapped to the domain type at this boundary so the
 // rest of the app never sees column names (database-guidelines).
@@ -36,6 +37,13 @@ export function insertBushitsu(b: Bushitsu): void {
     $buchouId: b.buchouId,
     $createdAt: b.createdAt,
   })
+}
+
+export function insertBushitsuWithBuchou(b: Bushitsu): void {
+  db.transaction(() => {
+    insertBushitsu(b)
+    ensureBuin(b.id, b.buchouId, b.createdAt)
+  })()
 }
 
 // 部室を取る：read a room by id, or null if absent.

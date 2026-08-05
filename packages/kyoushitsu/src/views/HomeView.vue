@@ -5,10 +5,11 @@ import { normalizeRoomId } from "@/lib/room-id"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { useSeitoStore } from "@/stores/seito"
 import { onMounted, ref } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 // Account-gated room entry: the server-issued account owns room authority.
 const router = useRouter()
+const route = useRoute()
 const bushitsu = useBushitsuStore()
 const seito = useSeitoStore()
 
@@ -82,6 +83,7 @@ function join() {
 }
 
 onMounted(() => {
+  if (route.query.revoked === "1") error.value = t("membershipRevoked")
   void seito.restore()
 })
 </script>

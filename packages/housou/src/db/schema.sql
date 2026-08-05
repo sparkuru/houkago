@@ -27,6 +27,15 @@ CREATE TABLE IF NOT EXISTS bushitsu (
   FOREIGN KEY (buchou_id) REFERENCES seito(id)
 );
 
+CREATE TABLE IF NOT EXISTS bushitsu_buin (
+  bushitsu_id TEXT NOT NULL,
+  seito_id    TEXT NOT NULL,
+  joined_at   INTEGER NOT NULL,
+  PRIMARY KEY (bushitsu_id, seito_id),
+  FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id) ON DELETE CASCADE,
+  FOREIGN KEY (seito_id) REFERENCES seito(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS buin (
   id           TEXT PRIMARY KEY,
   bushitsu_id  TEXT NOT NULL,

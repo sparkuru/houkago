@@ -27,9 +27,15 @@ const legacyRoom = db
   .get()
 if (legacyRoom) {
   throw new Error(
-    "legacy UUID room data detected; reset HOUKAGO_DB before starting authenticated Houkago",
+    "legacy UUID room data detected; reset HOUSOU_DB before starting authenticated Houkago",
   )
 }
+
+db.exec(
+  `INSERT OR IGNORE INTO bushitsu_buin (bushitsu_id, seito_id, joined_at)
+   SELECT b.id, b.buchou_id, b.created_at
+   FROM bushitsu b JOIN seito s ON s.id = b.buchou_id`,
+)
 
 const enmokuColumns = new Set(
   db

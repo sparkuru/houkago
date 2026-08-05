@@ -4,6 +4,7 @@ import type {
   Enmoku,
   Kengen,
   KousokuMessage,
+  MeiboBuin,
   NyuushitsuMode,
   NyuushitsuRequest,
   NyuushitsuStatus,
@@ -71,6 +72,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const nyuushitsuMode = ref<NyuushitsuMode>(DEFAULT_NYUUSHITSU_MODE)
   const nyuushitsuStatus = ref<NyuushitsuStatus | "idle">("idle")
   const pendingNyuushitsu = ref<NyuushitsuRequest[]>([])
+  const meibo = ref<MeiboBuin[]>([])
 
   // 部長か：am I the host? Derived authority — only my player drives sync.
   const isBuchou = computed(() => buchouId.value !== null && senderId.value === buchouId.value)
@@ -169,6 +171,9 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
         nyuushitsuStatus.value = msg.payload.status
         pendingNyuushitsu.value = msg.payload.pending
         break
+      case "MEIBO":
+        meibo.value = msg.payload.members
+        break
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
         break
@@ -233,6 +238,7 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     nyuushitsuMode,
     nyuushitsuStatus,
     pendingNyuushitsu,
+    meibo,
     canControl,
     canChat,
     canPlaylist,

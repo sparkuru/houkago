@@ -162,7 +162,7 @@ const kengenMsg = (payload: {
 
 const nyuushitsuMsg = (payload: {
   mode: "open" | "approval" | "closed" | "password"
-  status: "entered" | "waiting" | "rejected" | "closed"
+  status: "entered" | "waiting" | "rejected" | "closed" | "revoked"
   pending: { senderId: string; nickname: string; requestedAt: number }[]
 }): KousokuMessage => ({ type: "NYUUSHITSU", ts: Date.now(), senderId: "server", payload })
 
@@ -235,6 +235,17 @@ test("apply NYUUSHITSU accepts password admission mode snapshot", () => {
   )
   expect(store.nyuushitsuMode).toBe("password")
   expect(store.nyuushitsuStatus).toBe("closed")
+})
+
+test("apply MEIBO stores only the server-targeted durable roster", () => {
+  const store = useBushitsuStore()
+  store.apply({
+    type: "MEIBO",
+    ts: 100,
+    senderId: "server",
+    payload: { members: [{ id: "u1", username: "Yui", joinedAt: 10, yakuwari: "buchou" }] },
+  })
+  expect(store.meibo).toEqual([{ id: "u1", username: "Yui", joinedAt: 10, yakuwari: "buchou" }])
 })
 
 test("apply BANGUMI updates the room queue snapshot", () => {

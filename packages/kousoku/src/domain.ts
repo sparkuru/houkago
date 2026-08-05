@@ -26,6 +26,14 @@ export const BuinSchema = Type.Object({
 })
 export type Buin = Static<typeof BuinSchema>
 
+export const MeiboBuinSchema = Type.Object({
+  id: Type.String(),
+  username: Type.String(),
+  joinedAt: Type.Number(),
+  yakuwari: YakuwariSchema,
+})
+export type MeiboBuin = Static<typeof MeiboBuinSchema>
+
 // 生徒：a durable Houkago account. Passwords and session tokens never enter the
 // shared contract; consumers receive only this public account summary.
 export const SeitoSchema = Type.Object({

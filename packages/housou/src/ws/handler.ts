@@ -1,6 +1,8 @@
 import { Elysia, t } from "elysia"
 import { type KousokuMessage, KousokuMessageSchema, type NyuushitsuStatus } from "houkago-kousoku"
+import { ensureBuin, hasBuin } from "../db/queries/bushitsu-buin"
 import { buchouIdOf } from "../domain/bushitsu"
+import { fetchMeibo } from "../domain/bushitsu"
 import { Forbidden, NotBuchou } from "../lib/errors"
 import { canDo, getKengen, setKengen } from "../lib/kengen"
 import {
@@ -39,6 +41,7 @@ type SocketOps = {
   send(message: KousokuMessage): void
   subscribe(topic: string): void
   publish(topic: string, message: KousokuMessage): void
+  close(code: number, reason: string): void
 }
 
 // Per-connection state keyed by the stable ws.id. Elysia hands a fresh ws
@@ -77,6 +80,17 @@ function notifyNyuushitsu(bushitsuId: string): void {
   }
 }
 
+function notifyMeibo(bushitsuId: string): void {
+  const buchouId = buchouIdOf(bushitsuId)
+  if (!buchouId) return
+  const message = serverMsg("MEIBO", { members: fetchMeibo(bushitsuId) })
+  for (const [connId, conn] of conns) {
+    if (conn.bushitsuId === bushitsuId && conn.senderId === buchouId && conn.admitted) {
+      sockets.get(connId)?.send(message)
+    }
+  }
+}
+
 function admit(connId: string): void {
   const conn = conns.get(connId)
   const socket = sockets.get(connId)
@@ -84,6 +98,7 @@ function admit(connId: string): void {
   const topic = roomTopic(conn.bushitsuId)
   conn.admitted = true
   conn.status = "entered"
+  ensureBuin(conn.bushitsuId, conn.senderId)
   socket.subscribe(topic)
   join(conn.bushitsuId, conn.senderId, conn.nickname)
 
@@ -92,6 +107,35 @@ function admit(connId: string): void {
   socket.send(snapshot)
   socket.send(serverMsg("KENGEN", getKengen(conn.bushitsuId)))
   sendNyuushitsu(connId, "entered")
+  notifyMeibo(conn.bushitsuId)
+}
+
+export function revokeBuin(bushitsuId: string, seitoId: string): void {
+  let presenceChanged = false
+  const revokedSockets: SocketOps[] = []
+  for (const [connId, conn] of conns) {
+    if (conn.bushitsuId !== bushitsuId || conn.senderId !== seitoId) continue
+    const socket = sockets.get(connId)
+    conns.delete(connId)
+    sockets.delete(connId)
+    if (conn.admitted) {
+      leave(bushitsuId, seitoId)
+      presenceChanged = true
+    }
+    socket?.send(
+      serverMsg("NYUUSHITSU", {
+        mode: getNyuushitsuMode(bushitsuId),
+        status: "revoked",
+        pending: [],
+      }),
+    )
+    if (socket) revokedSockets.push(socket)
+  }
+  if (presenceChanged) {
+    revokedSockets[0]?.publish(roomTopic(bushitsuId), shussekiSnapshot(bushitsuId))
+  }
+  for (const socket of revokedSockets) socket.close(1008, "membership revoked")
+  notifyMeibo(bushitsuId)
 }
 
 function rejectPending(
@@ -139,11 +183,16 @@ export const wsRoutes = new Elysia().ws("/ws", {
       send: (message) => ws.send(message),
       subscribe: (topic) => ws.subscribe(topic),
       publish: (topic, message) => ws.publish(topic, message),
+      close: (code, reason) => ws.close(code, reason),
     })
 
     const buchouId = buchouIdOf(bushitsuId)
     const mode = getNyuushitsuMode(bushitsuId)
-    if (id === buchouId || mode === "open") {
+    if (!buchouId) {
+      ws.close(1008, "room not found")
+      return
+    }
+    if (id === buchouId || hasBuin(bushitsuId, id) || mode === "open") {
       admit(ws.id)
       return
     }

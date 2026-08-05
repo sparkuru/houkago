@@ -1,5 +1,5 @@
 import { type Static, type TObject, Type } from "@sinclair/typebox"
-import { EnmokuSchema, ShinkouSchema, YakuwariSchema } from "./domain"
+import { EnmokuSchema, MeiboBuinSchema, ShinkouSchema, YakuwariSchema } from "./domain"
 
 // 権限（kengen）: room-level guest permission snapshot (prd role-permissions §1).
 // One switch per controllable action; the 部長 is always allowed regardless of
@@ -28,6 +28,7 @@ export const NyuushitsuStatusSchema = Type.Union([
   Type.Literal("waiting"),
   Type.Literal("rejected"),
   Type.Literal("closed"),
+  Type.Literal("revoked"),
 ])
 export type NyuushitsuStatus = Static<typeof NyuushitsuStatusSchema>
 
@@ -99,6 +100,7 @@ export const ShussekiSchema = envelope(
   }),
 )
 export const KeihouSchema = envelope("KEIHOU", Type.Object({ message: Type.String() }))
+export const MeiboSchema = envelope("MEIBO", Type.Object({ members: Type.Array(MeiboBuinSchema) }))
 
 // --- S→C: 権限 (current room permission snapshot) / C→S: 設定 (host sets it) ---
 // KENGEN broadcasts the room's guest-permission snapshot: sent to a new joiner on
@@ -142,6 +144,7 @@ export const KousokuMessageSchema = Type.Union([
   BangumiSchema,
   ShussekiSchema,
   KeihouSchema,
+  MeiboSchema,
   KengenMsgSchema,
   SetteiSchema,
   NyuushitsuSchema,
@@ -162,6 +165,7 @@ export type Jouei = Static<typeof JoueiSchema>
 export type Bangumi = Static<typeof BangumiSchema>
 export type Shusseki = Static<typeof ShussekiSchema>
 export type Keihou = Static<typeof KeihouSchema>
+export type Meibo = Static<typeof MeiboSchema>
 export type KengenMsg = Static<typeof KengenMsgSchema>
 export type Settei = Static<typeof SetteiSchema>
 export type Nyuushitsu = Static<typeof NyuushitsuSchema>

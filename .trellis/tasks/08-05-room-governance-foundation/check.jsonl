@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Covers REST error codes and WebSocket error/closure behavior for authorization and revocation checks."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Security regression checklist for authenticated room REST/WebSocket authority."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Frontend quality and test expectations for state and user-visible error paths."}
+{"file":".trellis/spec/frontend/index.md","reason":"Defines repository quality commands and Playwright evidence requirements."}
+{"file":".trellis/tasks/08-05-room-governance-foundation/design.md","reason":"Approved task-specific contracts, lifecycle, privacy, and UI decisions to verify."}

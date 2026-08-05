@@ -1,7 +1,9 @@
 import type { Bushitsu, Enmoku } from "houkago-kousoku"
-import { getBushitsu, insertBushitsu } from "../db/queries/bushitsu"
+import type { MeiboBuin } from "houkago-kousoku"
+import { getBushitsu, insertBushitsuWithBuchou } from "../db/queries/bushitsu"
+import { deleteBuin, listMeibo } from "../db/queries/bushitsu-buin"
 import { deleteEnmoku, insertEnmoku, listEnmoku } from "../db/queries/enmoku"
-import { BushitsuNotFound, EnmokuNotFound } from "../lib/errors"
+import { BuinNotFound, BushitsuNotFound, EnmokuNotFound, Forbidden } from "../lib/errors"
 import { newId } from "../lib/id"
 
 // BushitsuKanri（部室管理）: room lifecycle + enmoku metadata. Pure orchestration;
@@ -29,8 +31,21 @@ export function createBushitsu(name: string, buchouId: string): Bushitsu {
     buchouId,
     createdAt: Date.now(),
   }
-  insertBushitsu(bushitsu)
+  insertBushitsuWithBuchou(bushitsu)
   return bushitsu
+}
+
+export function fetchMeibo(bushitsuId: string): MeiboBuin[] {
+  fetchBushitsu(bushitsuId)
+  return listMeibo(bushitsuId)
+}
+
+export function removeBuin(bushitsuId: string, actorId: string, seitoId: string): { ok: true } {
+  const bushitsu = fetchBushitsu(bushitsuId)
+  if (bushitsu.buchouId !== actorId) throw new Forbidden("only room owner may remove members")
+  if (bushitsu.buchouId === seitoId) throw new Forbidden("room owner cannot be removed")
+  if (!deleteBuin(bushitsuId, seitoId)) throw new BuinNotFound(seitoId)
+  return { ok: true }
 }
 
 // 部室を取る：fetch a room or throw BushitsuNotFound.

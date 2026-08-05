@@ -120,3 +120,81 @@ cors({ origin: true, credentials: true }) // when NODE_ENV is production
 ./dev.sh # accepts all development origins
 HOUKAGO_CORS_ORIGIN=https://houkago.example.test bun run start
 ```
+
+## Scenario: durable room membership and owner roster
+
+### 1. Scope / Trigger
+
+- Trigger: changing room admission, membership, owner-only management, the
+  `MEIBO` protocol, or the membership SQLite schema.
+- Membership is durable authorization; presence, admission configuration, and
+  guest permission switches remain process-local realtime state.
+
+### 2. Signatures
+
+- SQLite: `bushitsu_buin(bushitsu_id, seito_id, joined_at)` with composite
+  primary key and foreign keys to `bushitsu` and `seito`.
+- `DELETE /bushitsu/:id/meibo/:seitoId -> { ok: true }`.
+- `MEIBO { members: Array<{ id, username, joinedAt, yakuwari }> }` is a
+  server-to-owner WebSocket envelope.
+- `NYUUSHITSU` may carry `status: "revoked"`; that literal belongs to the
+  status schema, never the admission-mode schema.
+
+### 3. Contracts
+
+- Creating a room inserts its owner and durable membership in one database
+  transaction. Successful admission `ensureBuin`s the authenticated account.
+- A durable owner/member reconnects regardless of the current first-entry
+  admission mode. An unknown account still follows open/approval/closed/password
+  admission; removal is not a ban, so open mode may admit that account again.
+- `MEIBO` is targeted only to admitted connections for the room owner, never
+  published on `room:<id>`. It refreshes after admission and removal.
+- An owner removal derives both actor and target from the authenticated REST
+  request/path, sends the target `NYUUSHITSU/revoked`, closes every matching
+  room socket with code `1008`, then refreshes `SHUSSEKI` and the owner roster.
+
+### 4. Validation & Error Matrix
+
+| Condition | Result |
+| --- | --- |
+| Missing session or untrusted mutation Origin | `UNAUTHORIZED` / 401 or `FORBIDDEN` / 403 |
+| Authenticated actor is not the room owner | `FORBIDDEN` / 403 |
+| Owner tries to remove self | `FORBIDDEN` / 403 |
+| Target is not a durable member | `BUIN_NOT_FOUND` / 404 |
+| Revoked online member | `NYUUSHITSU { status: "revoked" }`, then WS close 1008 |
+
+### 5. Good / Base / Bad Cases
+
+- Good: the owner removes a connected member; remaining viewers receive a fresh
+  `SHUSSEKI`, and only the owner receives the reduced `MEIBO` snapshot.
+- Base: an owner can reconnect and receive its current private roster; a member
+  reconnects directly because membership is durable.
+- Bad: broadcasting `MEIBO` to the room, trusting a client sender id, or deleting
+  the owner membership and leaving an orphaned room.
+
+### 6. Tests Required
+
+- Database/domain: owner creation is atomic, membership checks are scoped by
+  room, and deletion reports a missing target.
+- WS/REST E2E: prove owner-only roster privacy, non-owner rejection, owner-self
+  rejection, post-removal `MEIBO`/`SHUSSEKI` refresh, `revoked` before close, and
+  close code 1008. Include multi-connection and open-mode re-entry when those
+  paths change.
+- Frontend store: applying `MEIBO` records the typed durable roster; revoked
+  routing must deliberately close the reconnecting client.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+server.publish(roomTopic(roomId), serverMsg("MEIBO", { members }))
+```
+
+#### Correct
+
+```ts
+for (const ownerSocket of admittedOwnerSockets(roomId)) {
+  ownerSocket.send(serverMsg("MEIBO", { members: fetchMeibo(roomId) }))
+}
+```
