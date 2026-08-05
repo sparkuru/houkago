@@ -1662,3 +1662,24 @@ Added self-hosted account sessions, server-derived REST/WebSocket room authority
 ### Next Steps
 
 - None - task complete
+
+
+## Session 51: Complete room governance foundation
+
+**Date**: 2026-08-06
+**Task**: Complete room governance foundation
+**Branch**: `k-on`
+
+### Summary
+
+Implemented durable room membership, owner-only roster management, revocation handling, UI feedback, and cross-layer tests.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `de93b07` | (see git log) |
+
+### Status
+
+[OK] **Completed**
