@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 51
+- **Total Sessions**: 52
 - **Last Active**: 2026-08-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1685 | Active |
+| `journal-1.md` | ~1706 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 52 | 2026-08-06 | Harden room governance coverage | `7760e19` | `k-on` |
 | 51 | 2026-08-06 | Complete room governance foundation | `de93b07` | `k-on` |
 | 50 | 2026-07-19 | Add authenticated room authority | `262ff2c` | `k-on` |
 | 49 | 2026-07-19 | Add Playwright validation workflow | `be27769` | `k-on` |

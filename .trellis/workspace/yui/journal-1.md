@@ -1683,3 +1683,24 @@ Implemented durable room membership, owner-only roster management, revocation ha
 ### Status
 
 [OK] **Completed**
+
+
+## Session 52: Harden room governance coverage
+
+**Date**: 2026-08-06
+**Task**: Harden room governance coverage
+**Branch**: `k-on`
+
+### Summary
+
+Added reliable buffered WebSocket E2E peers, expanded durable-membership authorization, multi-tab revocation, re-entry, and transient-state recovery coverage, and added desktop/phone browser governance coverage. All quality checks passed.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7760e19` | (see git log) |
+
+### Status
+
+[OK] **Completed**
