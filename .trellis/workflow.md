@@ -177,10 +177,15 @@ Create new children with `task.py create "<title>" --slug <name> --parent <paren
 No active task. First classify the current turn and ask for task-creation consent before creating any Trellis task.
 Simple conversation / small task: ask only whether this turn should create a Trellis task. If the user says no, skip Trellis for this session.
 Complex task: ask the user if you can create a Trellis task and enter the planning phase. If the user says no, explain, clarify scope, or suggest a smaller split.
+
+Trellis Plus: Mainline Continuity
+For a project-relevant continuation, status, next-step, or implementation request, run a read-only Project Pulse before proposing work: read `.trellis/mainline.md` when present, active and archived task evidence, git state, and available validation evidence. Report the initiative and completed evidence, any blocker or dirty-state warning, one uniquely ready candidate when one exists, and the next permitted action. Do not run a Pulse for unrelated conversation.
+`guided` mode may recommend one uniquely ready item but preserves normal task-creation consent. `paused` mode reports the recorded state only. A `serial` exception may bypass repeated task-creation/start consent only when the record contains explicit user authorization, one ordered ready child, and no stop condition; it never bypasses the normal task artifacts, checks, review gates, commit decision, or archive evidence.
+If the record or declared objective is absent, candidates are multiple or unclear, the tree is dirty, verification or archive evidence is incomplete, or there is a dependency blocker, new risk, or scope change, stop and ask for direction.
 [/workflow-state:no_task]
 
 ### Phase 1: Plan
-- 1.0 Create task `[required · once]` (only after task-creation consent)
+- 1.0 Create task `[required · once]` (only after task-creation consent, except recorded serial authorization)
 - 1.1 Requirement exploration `[required · repeatable]` (`prd.md`; complex tasks also need `design.md` + `implement.md`)
 - 1.2 Research `[optional · repeatable]`
 - 1.3 Configure context `[required · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, ZCode, Reasonix (sub-agent-dispatch platforms only; inline platforms skip)
@@ -311,7 +316,7 @@ Goal: classify the request, get task-creation consent when a task is needed, and
 
 #### 1.0 Create task `[required · once]`
 
-Create the task directory only after task-creation consent. The command sets status to `planning`, writes `task.json`, creates a default `prd.md`, and auto-targets the new task when session identity is available:
+Create the task directory only after task-creation consent, unless a Project Pulse has confirmed an explicitly authorized, ordered, ready `serial` child with no stop condition. The command sets status to `planning`, writes `task.json`, creates a default `prd.md`, and auto-targets the new task when session identity is available:
 
 ```bash
 python3 ./.trellis/scripts/task.py create "<task title>" --slug <name>
@@ -713,6 +718,8 @@ The AI drives a batched commit of this task's code changes so `/finish-work` can
 - The batched plan is one prompt; do not prompt per commit.
 
 #### 3.5 Wrap-up reminder
+
+For an initiative tracked in `.trellis/mainline.md`, update its ordered work and completed evidence with the work commit and validation result before `/trellis:finish-work` (or immediately after an external archive). After archive, return through the no-task flow and run a read-only Project Pulse; do not rely on the unreachable `completed` workflow state.
 
 After the above, remind the user they can run `/finish-work` to wrap up (archive the task, record the session).
 
