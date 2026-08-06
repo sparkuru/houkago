@@ -83,6 +83,20 @@ Container services must listen on `0.0.0.0` to be reachable from the host
 - WS contract behavior (validation → error event, room isolation, presence) is
   covered by integration tests against a running Elysia instance, mirroring the
   spike driver.
+- **Buffered WebSocket E2E peers.** Install the `message` listener immediately
+  after `new WebSocket(...)`, before awaiting `open`, then buffer parsed
+  `KousokuMessage`s and expose a predicate-based `nextMatch`. Admission
+  snapshots can arrive directly after the handshake; a listener installed later
+  makes tests silently lose `MEIBO` / `NYUUSHITSU` messages and become flaky.
+  Use real session cookies for each peer and assert the close code when a
+  contract requires revocation.
+
+```ts
+const inbox: KousokuMessage[] = []
+ws.addEventListener("message", (event) => inbox.push(JSON.parse(event.data)))
+await opened(ws)
+// Match buffered messages first; only then await a future matching message.
+```
 
 ## Scenario: WebSocket Room Admission Gate
 

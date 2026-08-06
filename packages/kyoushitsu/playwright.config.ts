@@ -36,5 +36,20 @@ export default defineConfig({
       testMatch: /desktop-room\.spec\.ts/,
       use: { browserName: "chromium", viewport: { width: 1280, height: 1200 } },
     },
+    {
+      name: "governance-phone",
+      testMatch: /room-governance\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "governance-desktop",
+      testMatch: /room-governance\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
   ],
 })

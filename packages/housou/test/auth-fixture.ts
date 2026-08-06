@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import type { Enmoku } from "houkago-kousoku"
+import type { Enmoku, KousokuMessage } from "houkago-kousoku"
 
 const origin = "http://127.0.0.1:5173"
 const fixtureId = crypto.randomUUID().replaceAll("-", "").slice(0, 8)
@@ -65,6 +65,48 @@ export async function openAuthenticatedSocket(
   const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}`, { headers: { cookie, origin } })
   await new Promise<void>((resolve) => ws.addEventListener("open", () => resolve(), { once: true }))
   return ws
+}
+
+export type AuthenticatedPeer = {
+  ws: WebSocket
+  nextMatch(predicate: (message: KousokuMessage) => boolean): Promise<KousokuMessage>
+}
+
+// Attach the message listener before awaiting `open`: Elysia may send admission
+// snapshots immediately after the handshake, before a plain socket caller gets
+// a chance to install its own listener.
+export async function openAuthenticatedPeer(
+  base: string,
+  baseWs: string,
+  bushitsuId: string,
+  alias: string,
+): Promise<AuthenticatedPeer> {
+  const cookie = await sessionFor(base, alias)
+  const ws = new WebSocket(`${baseWs}?bushitsuId=${bushitsuId}`, { headers: { cookie, origin } })
+  const inbox: KousokuMessage[] = []
+  const waiters: Array<{
+    predicate: (message: KousokuMessage) => boolean
+    resolve: (message: KousokuMessage) => void
+  }> = []
+  ws.addEventListener("message", (event) => {
+    const message = JSON.parse(event.data) as KousokuMessage
+    const index = waiters.findIndex((waiter) => waiter.predicate(message))
+    if (index === -1) {
+      inbox.push(message)
+      return
+    }
+    const [waiter] = waiters.splice(index, 1)
+    waiter.resolve(message)
+  })
+  await new Promise<void>((resolve) => ws.addEventListener("open", () => resolve(), { once: true }))
+  return {
+    ws,
+    nextMatch(predicate) {
+      const index = inbox.findIndex(predicate)
+      if (index !== -1) return Promise.resolve(inbox.splice(index, 1)[0] as KousokuMessage)
+      return new Promise((resolve) => waiters.push({ predicate, resolve }))
+    },
+  }
 }
 
 export async function addAuthenticatedEnmoku(

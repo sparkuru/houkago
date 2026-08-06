@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Defines durable membership, owner-only roster, revocation order, and security regression requirements."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Defines owner-private MEIBO state and the revoked-client no-reconnect rule."}
+{"file":".trellis/tasks/archive/2026-08/08-05-room-governance-foundation/design.md","reason":"Previous approved membership and UI contract to harden without widening scope."}
+{"file":".trellis/tasks/08-06-room-governance-hardening/research/ui-ux-pro-max.md","reason":"Task-specific accessibility and destructive interaction decisions."}

@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify REST authorization failures and revoked WebSocket close behavior."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify browser-visible error, responsive, and no-reconnect behavior."}
+{"file":".trellis/tasks/08-06-room-governance-hardening/design.md","reason":"Task-specific backend lifecycle and browser acceptance contracts."}
+{"file":"packages/housou/test/meibo.e2e.test.ts","reason":"Backend hardening regression coverage passed: authorization negatives, multi-tab revocation, re-entry, and transient-state recovery."}
+{"file":"packages/kyoushitsu/e2e/room-governance.spec.ts","reason":"Desktop and phone browser governance coverage passed, including cancel, failure retry, pending state, revocation route, and no reconnect."}
