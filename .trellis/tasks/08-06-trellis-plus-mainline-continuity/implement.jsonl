@@ -1,0 +1,4 @@
+{"file":".agents/skills/trellis-meta/references/local-architecture/workflow.md","reason":"Trellis workflow-state and platform synchronization model."}
+{"file":".agents/skills/trellis-meta/references/local-architecture/task-system.md","reason":"Existing parent/child task and active-pointer contracts."}
+{"file":".agents/skills/trellis-meta/references/local-architecture/context-injection.md","reason":"Workflow-state injection and task-context boundaries."}
+{"file":"/home/wkyuu/cargo/repo/04-flyMe2theStar/03-genshin/tsuki/21-agent-skills/share/trellis-plus/SKILL.md","reason":"Target skill registry, injection targets, and update-resilience conventions."}

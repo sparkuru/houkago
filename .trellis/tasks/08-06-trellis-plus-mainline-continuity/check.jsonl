@@ -1,0 +1,3 @@
+{"file":".agents/skills/trellis-meta/references/customize-local/change-workflow.md","reason":"Validate that state and phase changes use the workflow source of truth."}
+{"file":".agents/skills/trellis-meta/references/customize-local/change-agents.md","reason":"Preserve main-session coordination and worker role boundaries."}
+{"file":"/home/wkyuu/cargo/repo/04-flyMe2theStar/03-genshin/tsuki/21-agent-skills/share/trellis-plus/SKILL.md","reason":"Check registry, reference linkage, and metadata consistency in the target skill."}
