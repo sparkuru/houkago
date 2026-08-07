@@ -4,9 +4,11 @@ import type { Enmoku } from "houkago-kousoku"
 import { EnmokuProviderSchema, EnmokuTypeSchema } from "houkago-kousoku"
 import {
   addEnmoku,
+  clearBangumiPending,
   createBushitsu,
   fetchBangumi,
   fetchBushitsu,
+  moveBangumi,
   removeBuin,
   removeEnmoku,
 } from "../domain/bushitsu"
@@ -14,8 +16,9 @@ import { Forbidden } from "../lib/errors"
 import { canDo, getKengen } from "../lib/kengen"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
-import { revokeBuin } from "../ws/handler"
-import { isPresent, roomTopic, serverMsg } from "../ws/housou"
+import { broadcastRoom, revokeBuin } from "../ws/handler"
+import { isPresent, serverMsg } from "../ws/housou"
+import { shinkouSeigyo } from "../ws/shinkou"
 
 // 部室 REST: thin handlers — validate (TypeBox), delegate to domain. No SQL or
 // business logic inline (directory-structure layer rule).
@@ -44,6 +47,10 @@ const ResolveEnmokuBody = t.Object({
 const PreviewEnmokuBody = t.Object({
   sourceUrl: t.String(),
   title: t.Optional(t.String()),
+})
+
+const MoveBangumiBody = t.Object({
+  direction: t.Union([t.Literal("up"), t.Literal("down")]),
 })
 
 type DirectEnmokuInput = Pick<
@@ -82,10 +89,10 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   // 演目を投稿する：add a legacy direct source or resolve a dev source URL.
   .post(
     "/:id/enmoku",
-    async ({ params, body, request, server }) => {
+    async ({ params, body, request }) => {
       const actor = authorizePlaylistMutation(request, params.id)
       const enmoku = await createEnmoku(params.id, body, new URL(request.url).origin, actor)
-      broadcastBangumi(params.id, server)
+      broadcastBangumi(params.id)
       return enmoku
     },
     {
@@ -93,10 +100,26 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     },
   )
   // 演目を消す：delete a queued enmoku from this room.
-  .delete("/:id/enmoku/:enmokuId", ({ params, request, server }) => {
+  .delete("/:id/enmoku/:enmokuId", ({ params, request }) => {
     authorizePlaylistMutation(request, params.id)
     const result = removeEnmoku(params.id, params.enmokuId)
-    broadcastBangumi(params.id, server)
+    broadcastBangumi(params.id)
+    return result
+  })
+  .post(
+    "/:id/bangumi/:enmokuId/move",
+    ({ params, body, request }) => {
+      authorizeBuchouMutation(request, params.id)
+      const result = moveBangumi(params.id, params.enmokuId, body.direction)
+      broadcastBangumi(params.id)
+      return result
+    },
+    { body: MoveBangumiBody },
+  )
+  .delete("/:id/bangumi/pending", ({ params, request }) => {
+    authorizeBuchouMutation(request, params.id)
+    const result = clearBangumiPending(params.id, shinkouSeigyo.genjou(params.id).enmokuId)
+    broadcastBangumi(params.id)
     return result
   })
   .delete("/:id/meibo/:seitoId", ({ params, request }) => {
@@ -147,6 +170,15 @@ function authorizePlaylistMutation(request: Request, bushitsuId: string): string
   return actor.id
 }
 
+function authorizeBuchouMutation(request: Request, bushitsuId: string): string {
+  requireTrustedOrigin(request.headers.get("origin"))
+  const actor = seitoFromRequest(request)
+  const room = fetchBushitsu(bushitsuId)
+  if (!isPresent(bushitsuId, actor.id)) throw new Forbidden("room admission is required")
+  if (room.buchouId !== actor.id) throw new Forbidden("only room owner may manage the queue")
+  return actor.id
+}
+
 async function previewEnmoku(
   bushitsuId: string,
   input: { sourceUrl: string; title?: string },
@@ -170,10 +202,7 @@ async function previewEnmoku(
   }
 }
 
-function broadcastBangumi(
-  bushitsuId: string,
-  server: { publish: (topic: string, message: string) => unknown } | null | undefined,
-): void {
+function broadcastBangumi(bushitsuId: string): void {
   const bangumi = serverMsg("BANGUMI", { enmoku: fetchBangumi(bushitsuId) })
-  server?.publish(roomTopic(bushitsuId), JSON.stringify(bangumi))
+  broadcastRoom(bushitsuId, bangumi)
 }

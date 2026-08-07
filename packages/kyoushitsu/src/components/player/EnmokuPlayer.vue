@@ -466,14 +466,17 @@ onMounted(() => {
   art = new Artplayer({
     container: container.value,
     url: props.url,
-    type: mediaType,
-    customType:
-      mediaType === undefined
-        ? undefined
-        : {
-            m3u8: (video, url, artInstance) => playM3u8(video, url, artInstance),
-            dash: (video, url, artInstance) => playDash(video, url, artInstance),
+    ...(mediaType
+      ? {
+          type: mediaType,
+          customType: {
+            m3u8: (video: HTMLVideoElement, url: string, artInstance: Artplayer) =>
+              playM3u8(video, url, artInstance),
+            dash: (video: HTMLVideoElement, url: string, artInstance: Artplayer) =>
+              playDash(video, url, artInstance),
           },
+        }
+      : {}),
     autoSize: false,
     fullscreenWeb: true,
     fullscreen: true,

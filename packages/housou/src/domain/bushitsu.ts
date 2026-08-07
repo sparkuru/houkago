@@ -2,7 +2,14 @@ import type { Bushitsu, Enmoku } from "houkago-kousoku"
 import type { MeiboBuin } from "houkago-kousoku"
 import { getBushitsu, insertBushitsuWithBuchou } from "../db/queries/bushitsu"
 import { deleteBuin, listMeibo } from "../db/queries/bushitsu-buin"
-import { deleteEnmoku, insertEnmoku, listEnmoku } from "../db/queries/enmoku"
+import {
+  type MoveDirection,
+  clearPendingEnmoku,
+  deleteEnmoku,
+  insertEnmoku,
+  listEnmoku,
+  moveEnmoku,
+} from "../db/queries/enmoku"
 import { BuinNotFound, BushitsuNotFound, EnmokuNotFound, Forbidden } from "../lib/errors"
 import { newId } from "../lib/id"
 
@@ -96,4 +103,22 @@ export function removeEnmoku(bushitsuId: string, enmokuId: string): { ok: true }
   fetchBushitsu(bushitsuId)
   if (!deleteEnmoku(bushitsuId, enmokuId)) throw new EnmokuNotFound(enmokuId)
   return { ok: true }
+}
+
+export function moveBangumi(
+  bushitsuId: string,
+  enmokuId: string,
+  direction: MoveDirection,
+): { ok: true } {
+  fetchBushitsu(bushitsuId)
+  if (!moveEnmoku(bushitsuId, enmokuId, direction)) throw new EnmokuNotFound(enmokuId)
+  return { ok: true }
+}
+
+export function clearBangumiPending(
+  bushitsuId: string,
+  currentEnmokuId: string | null,
+): { ok: true; removed: number } {
+  fetchBushitsu(bushitsuId)
+  return { ok: true, removed: clearPendingEnmoku(bushitsuId, currentEnmokuId) }
 }

@@ -12,7 +12,9 @@ import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
 import {
   canCancelBangumiItem,
+  canClearPendingBangumi,
   canDeleteBangumiItem,
+  canMoveBangumiItem,
   canPlayBangumiItem,
   isCurrentEnmoku,
 } from "@/lib/bangumi-actions"
@@ -52,6 +54,18 @@ const roomLink = computed(() => (typeof location === "undefined" ? bushitsuId : 
 
 const current = ref<Enmoku | null>(null)
 const currentEnmokuId = computed(() => current.value?.id ?? null)
+const pendingBangumiCount = computed(
+  () =>
+    bushitsu.bangumi.filter((enmoku) => !isCurrentEnmoku(enmoku.id, currentEnmokuId.value)).length,
+)
+const clearPendingEnabled = computed(() =>
+  canClearPendingBangumi(bushitsu.isBuchou, pendingBangumiCount.value),
+)
+const movePendingId = ref<string | null>(null)
+const clearPendingRequest = ref(false)
+const queueManagementError = ref("")
+const queueManagementSuccess = ref("")
+const clearPendingDialog = ref<HTMLDialogElement | null>(null)
 const selectedSourceIndex = ref<number | null>(null)
 const currentSourceChoices = computed(() =>
   current.value ? enmokuSourceChoices(current.value, t("sourcePrimary")) : [],
@@ -379,9 +393,50 @@ function cancelBangumi(enmokuId: string) {
 
 async function deleteBangumiEnmoku(enmokuId: string) {
   if (!canDeleteBangumiItem(bushitsu.canPlaylist, enmokuId, currentEnmokuId.value)) return
-  const { data } = await housou.bushitsu({ id: bushitsuId }).enmoku({ enmokuId }).delete()
-  if (!data) return
-  bushitsu.setBangumi(bushitsu.bangumi.filter((e) => e.id !== enmokuId))
+  await housou.bushitsu({ id: bushitsuId }).enmoku({ enmokuId }).delete()
+}
+
+function openClearPendingDialog() {
+  queueManagementError.value = ""
+  queueManagementSuccess.value = ""
+  clearPendingDialog.value?.showModal()
+}
+
+function closeClearPendingDialog() {
+  if (clearPendingRequest.value) return
+  clearPendingDialog.value?.close()
+}
+
+async function moveBangumi(enmokuId: string, direction: "up" | "down", index: number) {
+  if (!canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, direction)) return
+  movePendingId.value = enmokuId
+  queueManagementError.value = ""
+  queueManagementSuccess.value = ""
+  const { error } = await housou
+    .bushitsu({ id: bushitsuId })
+    .bangumi({ enmokuId })
+    .move.post({ direction })
+  movePendingId.value = null
+  if (error) {
+    queueManagementError.value = t("queueManageFailed")
+    return
+  }
+  queueManagementSuccess.value = t("queueManageSucceeded")
+}
+
+async function clearPendingBangumi() {
+  if (!clearPendingEnabled.value || clearPendingRequest.value) return
+  clearPendingRequest.value = true
+  queueManagementError.value = ""
+  queueManagementSuccess.value = ""
+  const { error } = await housou.bushitsu({ id: bushitsuId }).bangumi.pending.delete()
+  clearPendingRequest.value = false
+  if (error) {
+    queueManagementError.value = t("queueManageFailed")
+    return
+  }
+  clearPendingDialog.value?.close()
+  queueManagementSuccess.value = t("queueManageSucceeded")
 }
 
 function sourceBadge(enmoku: Enmoku): string {
@@ -456,6 +511,9 @@ async function enterRoom() {
   if (bootstrapped.value) return
   bootstrapped.value = true
   const roomRequest = housou.bushitsu({ id: bushitsuId }).get()
+  // A BANGUMI frame can arrive while this initial fetch is in flight. Keep that
+  // newer room snapshot instead of letting the older HTTP response overwrite it.
+  const bangumiAtRequest = bushitsu.bangumi
   const bangumiRequest = housou.bushitsu({ id: bushitsuId }).bangumi.get()
 
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
@@ -472,7 +530,7 @@ async function enterRoom() {
   }
 
   const { data } = await bangumiRequest
-  if (data) bushitsu.setBangumi(data)
+  if (data && bushitsu.bangumi === bangumiAtRequest) bushitsu.setBangumi(data)
 
   // store.enmokuId is the single source of truth for 上映中, written by the WS
   // client from JOUEI (host pick / echo) and GENJOU (late-joiner catch-up).
@@ -686,9 +744,25 @@ onBeforeUnmount(() => {
                   :bushitsu-id="bushitsuId"
                   @jouei="playBangumi"
                 />
+                <div v-if="bushitsu.isBuchou" class="bangumi-management">
+                  <button
+                    type="button"
+                    class="bangumi-action danger"
+                    :disabled="!clearPendingEnabled || clearPendingRequest"
+                    @click="openClearPendingDialog"
+                  >
+                    {{ t("clearPending") }}
+                  </button>
+                </div>
+                <p v-if="queueManagementError" class="bangumi-feedback error" role="alert">
+                  {{ queueManagementError }}
+                </p>
+                <p v-else-if="queueManagementSuccess" class="bangumi-feedback" role="status">
+                  {{ queueManagementSuccess }}
+                </p>
                 <ul>
               <li
-                v-for="e in bushitsu.bangumi"
+                v-for="(e, index) in bushitsu.bangumi"
                 :key="e.id"
                 class="bangumi-row"
                 :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
@@ -740,6 +814,30 @@ onBeforeUnmount(() => {
                   >
                     {{ t("delete") }}
                   </button>
+                  <button
+                    v-if="bushitsu.isBuchou"
+                    type="button"
+                    class="bangumi-action"
+                    :disabled="
+                      movePendingId !== null ||
+                      !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'up')
+                    "
+                    @click="moveBangumi(e.id, 'up', index)"
+                  >
+                    {{ t("moveUp") }}
+                  </button>
+                  <button
+                    v-if="bushitsu.isBuchou"
+                    type="button"
+                    class="bangumi-action"
+                    :disabled="
+                      movePendingId !== null ||
+                      !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'down')
+                    "
+                    @click="moveBangumi(e.id, 'down', index)"
+                  >
+                    {{ t("moveDown") }}
+                  </button>
                 </span>
               </li>
                 </ul>
@@ -748,6 +846,28 @@ onBeforeUnmount(() => {
           </section>
         </div>
       </main>
+      <dialog
+        ref="clearPendingDialog"
+        class="queue-confirm-dialog"
+        aria-labelledby="clear-pending-title"
+        @cancel.prevent="closeClearPendingDialog"
+      >
+        <form method="dialog" @submit.prevent="clearPendingBangumi">
+          <h2 id="clear-pending-title">{{ t("clearPendingTitle") }}</h2>
+          <p>{{ t("clearPendingNotice") }}</p>
+          <p v-if="queueManagementError" class="bangumi-feedback error" role="alert">
+            {{ queueManagementError }}
+          </p>
+          <div class="queue-confirm-actions">
+            <button type="button" :disabled="clearPendingRequest" @click="closeClearPendingDialog">
+              {{ t("cancel") }}
+            </button>
+            <button type="submit" class="danger" :disabled="!clearPendingEnabled || clearPendingRequest">
+              {{ t("clearPendingConfirm") }}
+            </button>
+          </div>
+        </form>
+      </dialog>
       <div
         v-if="providerInfoEnmoku && providerInfo"
         class="provider-dialog-backdrop"
@@ -1021,15 +1141,26 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   list-style: none;
 }
+.bangumi-management {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 8px 0;
+}
+.bangumi-feedback {
+  margin: 8px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.bangumi-feedback.error {
+  color: var(--danger-text);
+}
 .bangumi-row {
   display: flex;
   gap: 6px;
   align-items: center;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
+  min-height: 44px;
   padding: 4px 6px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--row-border);
   border-radius: 6px;
   background: var(--row-surface);
@@ -1096,8 +1227,8 @@ onBeforeUnmount(() => {
 }
 .bangumi-action {
   flex: 0 0 auto;
-  min-width: 48px;
-  min-height: 24px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 2px 7px;
   border: 1px solid var(--row-border);
   border-radius: 4px;
@@ -1108,6 +1239,46 @@ onBeforeUnmount(() => {
   border-color: var(--panel-accent);
 }
 .bangumi-action.danger:not(:disabled) {
+  color: var(--danger-text);
+}
+.queue-confirm-dialog {
+  width: min(420px, calc(100% - 32px));
+  padding: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
+}
+.queue-confirm-dialog::backdrop {
+  background: var(--color-overlay);
+}
+.queue-confirm-dialog form {
+  padding: var(--space-4);
+}
+.queue-confirm-dialog h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.queue-confirm-dialog p {
+  line-height: 1.5;
+}
+.queue-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.queue-confirm-actions button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.queue-confirm-actions .danger:not(:disabled) {
   color: var(--danger-text);
 }
 .provider-dialog-backdrop {
@@ -1353,6 +1524,14 @@ onBeforeUnmount(() => {
   .room-control-content h3,
   .bangumi-content h3 {
     display: none;
+  }
+  .bangumi-row {
+    flex-wrap: wrap;
+  }
+  .bangumi-meta {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
   .room-control-content :deep(.kengen-panel) {
     max-height: min(58dvh, 520px);

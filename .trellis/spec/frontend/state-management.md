@@ -57,9 +57,8 @@ Anything that is purely one component's view concern stays a local `ref`.
   `OSHABERI`, `DANMAKU`) are decoded and committed to stores via store actions. UI never
   writes server-truth fields directly.
 - `BANGUMI` is a full queue snapshot, not a patch. Commit it into
-  `useBushitsuStore.bangumi`; room views may optimistically set the same store
-  after their own REST write, but must still accept the socket snapshot so host
-  and guest stay in sync without refresh.
+  `useBushitsuStore.bangumi`; room views keep it authoritative rather than
+  finalizing a local reorder, so host and guest converge without refresh.
 - `BANGUMI` / `setBangumi` must normalize by `Enmoku.id` at the store boundary.
   REST create/delete can race with WS snapshots, and dev/manual source flows may
   be tempted to append locally after a POST. Deduping by id in the store prevents
@@ -83,6 +82,10 @@ Anything that is purely one component's view concern stays a local `ref`.
   have to keep updating every frame.
 - REST-fetched data (room metadata, enmoku details) flows through the Eden client
   into stores; realtime updates then mutate the same store.
+- When an initial REST queue read races a later `BANGUMI` frame, do not let the
+  older HTTP result overwrite the received snapshot. Capture the current queue
+  array before starting the read and commit its response only if that reference
+  has not changed while awaiting it.
 - Parser-produced `Enmoku.provider` is server state and arrives through the same
   `BANGUMI` snapshots as playback metadata. UI-specific provider popover/dialog
   open state stays local to the route component.
@@ -242,6 +245,10 @@ and a `chat` line marked `kind: "danmaku"`. Backend WS tests should cover
   resolves, a later local append can duplicate the same id in the visible queue.
   Prefer letting the WS snapshot write the queue; keep store-level id
   normalization as a defense.
+- Letting an in-flight initial `GET /bangumi` overwrite a `BANGUMI` received
+  after that request started. The queue can appear to roll back even though the
+  server and socket are correct; guard the REST commit against a changed store
+  snapshot.
 - Forgetting `tsuijuuChuu` echo suppression → applying a remote `SHINKOU` fires a
   local seek/play event that gets broadcast back, causing oscillation.
 - Storing a continuously-incremented `currentTime` in a store instead of deriving

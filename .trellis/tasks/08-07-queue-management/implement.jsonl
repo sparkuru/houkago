@@ -1,0 +1,7 @@
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Place queue REST/domain/SQLite work within the project's thin transport, domain, and query boundaries."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Implement additive schema/backfill and atomic queue mutations with the shared database handle."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Preserve typed REST authorization and not-found failures for management mutations."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Keep management authority derived from session, admission, and room ownership."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Add accessible queue controls while preserving the established room-panel boundaries."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Keep BANGUMI snapshots as the sole queue authority and UI request state local."}
+{"file":".trellis/tasks/08-07-queue-management/research/ui-ux-pro-max.md","reason":"Apply task-specific responsive, focus, destructive-action, and state-feedback guidance."}

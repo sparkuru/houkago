@@ -61,3 +61,17 @@ CREATE TABLE IF NOT EXISTS enmoku (
   FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id),
   FOREIGN KEY (added_by) REFERENCES seito(id)
 );
+
+-- Queue placement is intentionally separate from playable-source metadata.
+-- One entry per source today leaves the ordered mutation boundary extensible
+-- for a later collaboration policy without changing Enmoku or BANGUMI.
+CREATE TABLE IF NOT EXISTS bangumi_entry (
+  enmoku_id   TEXT PRIMARY KEY,
+  bushitsu_id TEXT NOT NULL,
+  sort_key    INTEGER NOT NULL,
+  FOREIGN KEY (enmoku_id) REFERENCES enmoku(id) ON DELETE CASCADE,
+  FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS bangumi_entry_room_order
+  ON bangumi_entry(bushitsu_id, sort_key, enmoku_id);

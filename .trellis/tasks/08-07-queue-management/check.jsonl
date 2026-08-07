@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Review atomic persistence, deterministic backfill, and rollback compatibility."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Review session/owner/admission rejection paths and error mapping."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Review accessible, responsive, and regression-safe room controls."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Verify snapshot-first queue convergence with no local authority drift."}
+{"file":".trellis/tasks/08-07-queue-management/design.md","reason":"Check the agreed placement boundary, authorization model, and clear-current invariant."}

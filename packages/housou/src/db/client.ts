@@ -53,3 +53,12 @@ for (const [name, type] of [
 ] as const) {
   if (!enmokuColumns.has(name)) db.exec(`ALTER TABLE enmoku ADD COLUMN ${name} ${type}`)
 }
+
+// Additive queue-placement upgrade. Existing rooms used Enmoku creation order;
+// preserve that deterministic order while making future moves durable.
+db.exec(
+  `INSERT OR IGNORE INTO bangumi_entry (enmoku_id, bushitsu_id, sort_key)
+   SELECT id, bushitsu_id,
+     ROW_NUMBER() OVER (PARTITION BY bushitsu_id ORDER BY created_at ASC, id ASC) - 1
+   FROM enmoku`,
+)

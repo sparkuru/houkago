@@ -138,6 +138,21 @@ export function revokeBuin(bushitsuId: string, seitoId: string): void {
   notifyMeibo(bushitsuId)
 }
 
+// REST mutations do not have a source websocket to publish from. Deliver one
+// server-authored room snapshot through an admitted socket's room topic. Bun's
+// topic publish reaches peer subscribers; explicitly echo the publishing socket
+// because topic publish deliberately excludes its source connection.
+export function broadcastRoom(bushitsuId: string, message: KousokuMessage): void {
+  for (const [connId, conn] of conns) {
+    if (conn.bushitsuId !== bushitsuId || !conn.admitted) continue
+    const socket = sockets.get(connId)
+    if (!socket) continue
+    socket.publish(roomTopic(bushitsuId), message)
+    socket.send(message)
+    return
+  }
+}
+
 function rejectPending(
   connId: string,
   status: Extract<NyuushitsuStatus, "rejected" | "closed">,

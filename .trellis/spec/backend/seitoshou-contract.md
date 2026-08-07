@@ -36,9 +36,10 @@
   this mode by default. Setting `HOUKAGO_CORS_ORIGIN` always restores a single
   exact credentialed origin; non-development startup defaults to
   `http://127.0.0.1:5173`. WebSocket and state-changing REST use the same rule.
-- Queue REST mutations require a resolved session, a currently admitted socket
-  for that account, and host or `canPlaylist` authority. `addedBy` and source
-  headers are not client mutation inputs.
+- Source creation/deletion require a resolved session, a currently admitted
+  socket for that account, and host or `canPlaylist` authority. Queue placement
+  mutations (move and clear) are owner-only. `addedBy` and source headers are
+  not client mutation inputs.
 - WebSocket presence names, role checks, and client-originated envelope sender
   ids are derived/restamped from the authenticated account.
 
@@ -197,4 +198,81 @@ server.publish(roomTopic(roomId), serverMsg("MEIBO", { members }))
 for (const ownerSocket of admittedOwnerSockets(roomId)) {
   ownerSocket.send(serverMsg("MEIBO", { members: fetchMeibo(roomId) }))
 }
+```
+
+## Scenario: owner-managed queue placement
+
+### 1. Scope / Trigger
+
+- Trigger: changing queue order, clearing, `BANGUMI`, or queue-placement
+  persistence.
+- `Enmoku` remains the reusable playable-source record; its placement belongs to
+  `bangumi_entry` so a later member-collaboration policy can govern placement
+  without changing the shared `Enmoku`/`BANGUMI` shape.
+
+### 2. Signatures
+
+- SQLite: `bangumi_entry(enmoku_id PRIMARY KEY, bushitsu_id, sort_key)` and
+  `bangumi_entry_room_order(bushitsu_id, sort_key, enmoku_id)`.
+- `POST /bushitsu/:id/bangumi/:enmokuId/move { direction: "up" | "down" } -> { ok: true }`.
+- `DELETE /bushitsu/:id/bangumi/pending -> { ok: true, removed: number }`.
+- Successful mutation publishes `BANGUMI { enmoku: Enmoku[] }` to every admitted
+  room socket; it is a full ordered snapshot, not a queue patch.
+
+### 3. Contracts
+
+- Bootstrap backfills one placement per legacy `enmoku` using
+  `(created_at ASC, id ASC)`. Every new source write inserts its source and
+  placement in one transaction.
+- Move swaps the target with its immediate ordered neighbour. Moving past either
+  boundary is a successful no-op that still publishes the authoritative snapshot.
+- Clear deletes every non-current source. Current means
+  `shinkouSeigyo.genjou(roomId).enmokuId`; it may be moved but is never removed
+  by this endpoint, so playback continues uninterrupted.
+- REST has no source WebSocket: publish through one admitted room socket and
+  explicitly echo that publisher once. Do not keep a second ad-hoc fan-out list.
+
+### 4. Validation & Error Matrix
+
+| Condition | Result |
+| --- | --- |
+| Missing session | `UNAUTHORIZED` / 401 |
+| Untrusted Origin or admitted non-owner | `FORBIDDEN` / 403 |
+| Target room or enmoku does not exist | `BUSHITSU_NOT_FOUND` or `ENMOKU_NOT_FOUND` / 404 |
+| Move at first/last position | `200 { ok: true }` plus unchanged `BANGUMI` snapshot |
+| Clear with no current source | All entries removed; `removed` equals prior queue length |
+
+### 5. Good / Base / Bad Cases
+
+- Good: the owner moves a source; both owner and admitted member render the same
+  snapshot immediately, while only the owner sees management controls.
+- Base: clearing a queue with no selected current source removes all entries.
+- Bad: storing order on `enmoku`, deleting the current source on clear, trusting
+  a client role flag, or applying an optimistic client reorder as final truth.
+
+### 6. Tests Required
+
+- DB bootstrap: a pre-placement database backfills deterministic source order.
+- REST/WS E2E: unauthenticated, unadmitted, and non-owner mutations reject;
+  owner move/clear send one full snapshot to owner and member; boundary moves
+  remain no-ops; clear preserves `GENJOU.enmokuId` and playback state.
+- Playwright at phone and desktop breakpoints: owner controls reorder and clear;
+  members never receive those controls; both views converge after each snapshot.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+enmoku.sortKey = index
+await moveRequest()
+store.bangumi = locallyReorderedQueue
+```
+
+#### Correct
+
+```ts
+moveEnmoku(roomId, enmokuId, direction) // swaps bangumi_entry.sort_key atomically
+broadcastRoom(roomId, serverMsg("BANGUMI", { enmoku: fetchBangumi(roomId) }))
+// clients accept the full BANGUMI snapshot as final truth
 ```

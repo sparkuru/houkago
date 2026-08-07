@@ -53,30 +53,90 @@ const insertStmt = db.query(
 
 const listStmt = db.query<EnmokuRow, { $bushitsuId: string }>(
   `SELECT
-     id, bushitsu_id, title, type, url, headers_json, subtitles_json,
-     sources_json, danmaku_json, provider_json, live, added_by, created_at
-   FROM enmoku WHERE bushitsu_id = $bushitsuId ORDER BY created_at ASC`,
+     e.id, e.bushitsu_id, e.title, e.type, e.url, e.headers_json, e.subtitles_json,
+     e.sources_json, e.danmaku_json, e.provider_json, e.live, e.added_by, e.created_at
+   FROM bangumi_entry be
+   JOIN enmoku e ON e.id = be.enmoku_id
+   WHERE be.bushitsu_id = $bushitsuId
+   ORDER BY be.sort_key ASC, be.enmoku_id ASC`,
 )
 
 const deleteStmt = db.query("DELETE FROM enmoku WHERE id = $id AND bushitsu_id = $bushitsuId")
 
+const insertEntryStmt = db.query(
+  `INSERT INTO bangumi_entry (enmoku_id, bushitsu_id, sort_key)
+   VALUES ($enmokuId, $bushitsuId, $sortKey)`,
+)
+
+const nextSortKeyStmt = db.query<{ sort_key: number }, { $bushitsuId: string }>(
+  `SELECT COALESCE(MAX(sort_key), -1) + 1 AS sort_key
+   FROM bangumi_entry WHERE bushitsu_id = $bushitsuId`,
+)
+
+type BangumiEntryRow = { enmoku_id: string; sort_key: number }
+
+const entryStmt = db.query<BangumiEntryRow, { $bushitsuId: string; $enmokuId: string }>(
+  `SELECT enmoku_id, sort_key FROM bangumi_entry
+   WHERE bushitsu_id = $bushitsuId AND enmoku_id = $enmokuId`,
+)
+
+const neighbourStmt = db.query<BangumiEntryRow, { $bushitsuId: string; $sortKey: number }>(
+  `SELECT enmoku_id, sort_key FROM bangumi_entry
+   WHERE bushitsu_id = $bushitsuId AND sort_key < $sortKey
+   ORDER BY sort_key DESC, enmoku_id DESC LIMIT 1`,
+)
+
+const neighbourDownStmt = db.query<BangumiEntryRow, { $bushitsuId: string; $sortKey: number }>(
+  `SELECT enmoku_id, sort_key FROM bangumi_entry
+   WHERE bushitsu_id = $bushitsuId AND sort_key > $sortKey
+   ORDER BY sort_key ASC, enmoku_id ASC LIMIT 1`,
+)
+
+const updateSortKeyStmt = db.query(
+  `UPDATE bangumi_entry SET sort_key = $sortKey
+   WHERE bushitsu_id = $bushitsuId AND enmoku_id = $enmokuId`,
+)
+
+const clearPendingStmt = db.query(
+  `DELETE FROM enmoku
+   WHERE bushitsu_id = $bushitsuId
+     AND ($currentEnmokuId IS NULL OR id != $currentEnmokuId)`,
+)
+
+const pendingCountStmt = db.query<
+  { count: number },
+  { $bushitsuId: string; $currentEnmokuId: string | null }
+>(
+  `SELECT COUNT(*) AS count FROM enmoku
+   WHERE bushitsu_id = $bushitsuId
+     AND ($currentEnmokuId IS NULL OR id != $currentEnmokuId)`,
+)
+
 // 演目を投稿する：add an Enmoku to a 部室.
 export function insertEnmoku(e: Enmoku, createdAt: number): void {
-  insertStmt.run({
-    $id: e.id,
-    $bushitsuId: e.bushitsuId,
-    $title: e.title,
-    $type: e.type,
-    $url: e.url,
-    $headersJson: toJson(e.headers),
-    $subtitlesJson: toJson(e.subtitles),
-    $sourcesJson: toJson(e.sources),
-    $danmakuJson: toJson(e.danmaku),
-    $providerJson: toJson(e.provider),
-    $live: e.live === undefined ? null : e.live ? 1 : 0,
-    $addedBy: e.addedBy,
-    $createdAt: createdAt,
-  })
+  db.transaction(() => {
+    insertStmt.run({
+      $id: e.id,
+      $bushitsuId: e.bushitsuId,
+      $title: e.title,
+      $type: e.type,
+      $url: e.url,
+      $headersJson: toJson(e.headers),
+      $subtitlesJson: toJson(e.subtitles),
+      $sourcesJson: toJson(e.sources),
+      $danmakuJson: toJson(e.danmaku),
+      $providerJson: toJson(e.provider),
+      $live: e.live === undefined ? null : e.live ? 1 : 0,
+      $addedBy: e.addedBy,
+      $createdAt: createdAt,
+    })
+    const next = nextSortKeyStmt.get({ $bushitsuId: e.bushitsuId })
+    insertEntryStmt.run({
+      $enmokuId: e.id,
+      $bushitsuId: e.bushitsuId,
+      $sortKey: next?.sort_key ?? 0,
+    })
+  })()
 }
 
 // 番組表：list a room's enmoku in submission order.
@@ -88,6 +148,44 @@ export function listEnmoku(bushitsuId: string): Enmoku[] {
 export function deleteEnmoku(bushitsuId: string, id: string): boolean {
   const result = deleteStmt.run({ $id: id, $bushitsuId: bushitsuId })
   return result.changes > 0
+}
+
+export type MoveDirection = "up" | "down"
+
+// Swap a source with its immediate visible neighbour. The whole read/swap runs
+// in one SQLite transaction, so concurrent moves serialize to a durable order.
+export function moveEnmoku(bushitsuId: string, id: string, direction: MoveDirection): boolean {
+  return db.transaction(() => {
+    const entry = entryStmt.get({ $bushitsuId: bushitsuId, $enmokuId: id })
+    if (!entry) return false
+    const neighbour = (direction === "up" ? neighbourStmt : neighbourDownStmt).get({
+      $bushitsuId: bushitsuId,
+      $sortKey: entry.sort_key,
+    })
+    if (!neighbour) return true
+    updateSortKeyStmt.run({
+      $bushitsuId: bushitsuId,
+      $enmokuId: entry.enmoku_id,
+      $sortKey: neighbour.sort_key,
+    })
+    updateSortKeyStmt.run({
+      $bushitsuId: bushitsuId,
+      $enmokuId: neighbour.enmoku_id,
+      $sortKey: entry.sort_key,
+    })
+    return true
+  })()
+}
+
+// Clear every queue source except the server-authoritative current item. When
+// no item is selected, all entries are pending and are removed.
+export function clearPendingEnmoku(bushitsuId: string, currentEnmokuId: string | null): number {
+  return db.transaction(() => {
+    const params = { $bushitsuId: bushitsuId, $currentEnmokuId: currentEnmokuId }
+    const count = pendingCountStmt.get(params)?.count ?? 0
+    clearPendingStmt.run(params)
+    return count
+  })()
 }
 
 function toJson(value: unknown): string | null {
