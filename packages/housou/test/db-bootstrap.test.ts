@@ -45,16 +45,21 @@ test("bootstrap backfills legacy queues in created_at then id order", async () =
   const output = await runBun(
     `
       const { db } = await import(${JSON.stringify(clientUrl)})
-      console.log(JSON.stringify(db.query(
-        "SELECT enmoku_id, sort_key FROM bangumi_entry ORDER BY sort_key ASC, enmoku_id ASC",
-      ).all()))
+      console.log(JSON.stringify({
+        entries: db.query(
+          "SELECT enmoku_id, sort_key FROM bangumi_entry ORDER BY sort_key ASC, enmoku_id ASC",
+        ).all(),
+        bushitsuColumns: db.query("PRAGMA table_info(bushitsu)").all().map((column) => column.name),
+      }))
     `,
     { HOUSOU_DB: dbPath },
   )
 
-  expect(JSON.parse(output)).toEqual([
+  const bootstrap = JSON.parse(output) as { entries: unknown; bushitsuColumns: string[] }
+  expect(bootstrap.entries).toEqual([
     { enmoku_id: "a", sort_key: 0 },
     { enmoku_id: "b", sort_key: 1 },
     { enmoku_id: "c", sort_key: 2 },
   ])
+  expect(bootstrap.bushitsuColumns).toContain("kengen_json")
 })

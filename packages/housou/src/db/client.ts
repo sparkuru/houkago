@@ -37,6 +37,16 @@ db.exec(
    FROM bushitsu b JOIN seito s ON s.id = b.buchou_id`,
 )
 
+const bushitsuColumns = new Set(
+  db
+    .query<{ name: string }, []>("PRAGMA table_info(bushitsu)")
+    .all()
+    .map((column) => column.name),
+)
+if (!bushitsuColumns.has("kengen_json")) {
+  db.exec("ALTER TABLE bushitsu ADD COLUMN kengen_json TEXT")
+}
+
 const enmokuColumns = new Set(
   db
     .query<{ name: string }, []>("PRAGMA table_info(enmoku)")

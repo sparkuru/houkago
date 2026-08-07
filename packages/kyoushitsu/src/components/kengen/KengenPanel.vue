@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { t } from "@/i18n"
+import { KENGEN_PRESETS, kengenPresetId } from "@/lib/kengen-policy"
 import { formatLastSeen, formatOnlineDuration } from "@/lib/member-presence"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { KousokuConnectionStatus } from "@/ws/client"
@@ -12,6 +13,8 @@ const props = defineProps<{
   roomName: string
   roomLink: string
   roomStatus: KousokuConnectionStatus
+  kengenPending: boolean
+  kengenError: string
   removeBuin: (seitoId: string) => Promise<boolean>
 }>()
 const emit = defineEmits<{
@@ -89,7 +92,57 @@ function onlineDurationLabel(startedAt: number) {
 }
 
 function toggle(action: keyof Kengen) {
+  if (props.kengenPending) return
   emit("settei", { ...bushitsu.kengen, [action]: !bushitsu.kengen[action] })
+}
+
+const selectedKengenPreset = computed(() => kengenPresetId(bushitsu.kengen))
+const policySummaryLabel = computed(() => {
+  switch (selectedKengenPreset.value) {
+    case "chat":
+      return t("kengenPresetChat")
+    case "playback":
+      return t("kengenPresetPlayback")
+    case "playlist":
+      return t("kengenPresetPlaylist")
+    default:
+      return t("kengenPresetCustom")
+  }
+})
+const policySummaryDetail = computed(() =>
+  [
+    `${t("chatPermission")}：${bushitsu.kengen.chat ? t("allowed") : t("blocked")}`,
+    `${t("playbackControl")}：${bushitsu.kengen.playback ? t("allowed") : t("blocked")}`,
+    `${t("playlistPermission")}：${bushitsu.kengen.playlist ? t("allowed") : t("blocked")}`,
+  ].join(" · "),
+)
+
+function selectKengenPreset(id: (typeof KENGEN_PRESETS)[number]["id"]) {
+  if (props.kengenPending || selectedKengenPreset.value === id) return
+  const preset = KENGEN_PRESETS.find((item) => item.id === id)
+  if (preset) emit("settei", { ...preset.kengen })
+}
+
+function presetLabel(id: (typeof KENGEN_PRESETS)[number]["id"]) {
+  switch (id) {
+    case "chat":
+      return t("kengenPresetChat")
+    case "playback":
+      return t("kengenPresetPlayback")
+    case "playlist":
+      return t("kengenPresetPlaylist")
+  }
+}
+
+function presetDescription(id: (typeof KENGEN_PRESETS)[number]["id"]) {
+  switch (id) {
+    case "chat":
+      return t("kengenPresetChatHint")
+    case "playback":
+      return t("kengenPresetPlaybackHint")
+    case "playlist":
+      return t("kengenPresetPlaylistHint")
+  }
 }
 
 function setNyuushitsu(mode: NyuushitsuMode, password?: string) {
@@ -387,52 +440,99 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </div>
-    <div v-if="bushitsu.isBuchou" class="kengen-control-block">
+    <div class="kengen-control-block policy">
       <div id="guest-kengen-heading" class="kengen-block-label vertical">
         <span v-for="(char, index) in t('guestKengenGroupAria')" :key="`${char}-${index}`">
           {{ char }}
         </span>
       </div>
       <section class="kengen-box" :aria-labelledby="'guest-kengen-heading'">
-        <button
-          type="button"
-          class="kengen-switch-row"
-          role="switch"
-          :aria-checked="bushitsu.kengen.playback"
-          @click="toggle('playback')"
-        >
-          <span class="kengen-label">{{ t("playbackControl") }}</span>
-          <span class="kengen-state-text">{{ bushitsu.kengen.playback ? t("allowed") : t("blocked") }}</span>
-          <span class="kengen-switch" :class="{ checked: bushitsu.kengen.playback }" aria-hidden="true">
-            <span class="kengen-switch-knob" />
-          </span>
-        </button>
-        <button
-          type="button"
-          class="kengen-switch-row"
-          role="switch"
-          :aria-checked="bushitsu.kengen.chat"
-          @click="toggle('chat')"
-        >
-          <span class="kengen-label">{{ t("chatPermission") }}</span>
-          <span class="kengen-state-text">{{ bushitsu.kengen.chat ? t("allowed") : t("blocked") }}</span>
-          <span class="kengen-switch" :class="{ checked: bushitsu.kengen.chat }" aria-hidden="true">
-            <span class="kengen-switch-knob" />
-          </span>
-        </button>
-        <button
-          type="button"
-          class="kengen-switch-row"
-          role="switch"
-          :aria-checked="bushitsu.kengen.playlist"
-          @click="toggle('playlist')"
-        >
-          <span class="kengen-label">{{ t("playlistPermission") }}</span>
-          <span class="kengen-state-text">{{ bushitsu.kengen.playlist ? t("allowed") : t("blocked") }}</span>
-          <span class="kengen-switch" :class="{ checked: bushitsu.kengen.playlist }" aria-hidden="true">
-            <span class="kengen-switch-knob" />
-          </span>
-        </button>
+        <div class="kengen-policy-summary" aria-live="polite">
+          <span class="kengen-policy-summary-label">{{ t("kengenPolicyCurrent") }}</span>
+          <strong>{{ policySummaryLabel }}</strong>
+          <span>{{ policySummaryDetail }}</span>
+        </div>
+        <template v-if="bushitsu.isBuchou">
+          <p v-if="props.kengenPending" class="kengen-policy-notice" role="status">
+            {{ t("kengenSaving") }}
+          </p>
+          <p v-if="props.kengenError" class="kengen-policy-error" role="alert">{{ props.kengenError }}</p>
+          <div
+            class="kengen-preset-options"
+            role="radiogroup"
+            :aria-label="t('kengenPresetGroupAria')"
+            :aria-describedby="selectedKengenPreset === null ? 'kengen-policy-feedback' : undefined"
+          >
+            <button
+              v-for="preset in KENGEN_PRESETS"
+              :key="preset.id"
+              type="button"
+              class="kengen-preset-option"
+              :class="{ selected: selectedKengenPreset === preset.id }"
+              role="radio"
+              :aria-checked="selectedKengenPreset === preset.id"
+              :disabled="props.kengenPending"
+              @click="selectKengenPreset(preset.id)"
+            >
+              <span class="kengen-preset-title">{{ presetLabel(preset.id) }}</span>
+              <span class="kengen-preset-description">{{ presetDescription(preset.id) }}</span>
+            </button>
+          </div>
+          <p
+            v-if="selectedKengenPreset === null"
+            class="kengen-policy-custom"
+            id="kengen-policy-feedback"
+          >
+            {{ t("kengenPolicyCustomNotice") }}
+          </p>
+          <details class="kengen-advanced">
+            <summary>{{ t("kengenAdvancedSettings") }}</summary>
+            <div class="kengen-advanced-controls">
+              <button
+                type="button"
+                class="kengen-switch-row"
+                role="switch"
+                :aria-checked="bushitsu.kengen.playback"
+                :disabled="props.kengenPending"
+                @click="toggle('playback')"
+              >
+                <span class="kengen-label">{{ t("playbackControl") }}</span>
+                <span class="kengen-state-text">{{ bushitsu.kengen.playback ? t("allowed") : t("blocked") }}</span>
+                <span class="kengen-switch" :class="{ checked: bushitsu.kengen.playback }" aria-hidden="true">
+                  <span class="kengen-switch-knob" />
+                </span>
+              </button>
+              <button
+                type="button"
+                class="kengen-switch-row"
+                role="switch"
+                :aria-checked="bushitsu.kengen.chat"
+                :disabled="props.kengenPending"
+                @click="toggle('chat')"
+              >
+                <span class="kengen-label">{{ t("chatPermission") }}</span>
+                <span class="kengen-state-text">{{ bushitsu.kengen.chat ? t("allowed") : t("blocked") }}</span>
+                <span class="kengen-switch" :class="{ checked: bushitsu.kengen.chat }" aria-hidden="true">
+                  <span class="kengen-switch-knob" />
+                </span>
+              </button>
+              <button
+                type="button"
+                class="kengen-switch-row"
+                role="switch"
+                :aria-checked="bushitsu.kengen.playlist"
+                :disabled="props.kengenPending"
+                @click="toggle('playlist')"
+              >
+                <span class="kengen-label">{{ t("playlistPermission") }}</span>
+                <span class="kengen-state-text">{{ bushitsu.kengen.playlist ? t("allowed") : t("blocked") }}</span>
+                <span class="kengen-switch" :class="{ checked: bushitsu.kengen.playlist }" aria-hidden="true">
+                  <span class="kengen-switch-knob" />
+                </span>
+              </button>
+            </div>
+          </details>
+        </template>
       </section>
     </div>
     <div v-if="bushitsu.isBuchou && bushitsu.pendingNyuushitsu.length > 0" class="pending-list">
@@ -694,7 +794,7 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(72px, 1fr) 34px 38px;
   gap: 8px;
   align-items: center;
-  min-height: 28px;
+  min-height: 44px;
   width: 100%;
   padding: 0;
   color: inherit;
@@ -742,6 +842,91 @@ onBeforeUnmount(() => {
 }
 .kengen-switch.checked .kengen-switch-knob {
   transform: translateX(16px);
+}
+.kengen-policy-summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px;
+  color: var(--kengen-muted);
+  font-size: 13px;
+  background: var(--color-surface-muted);
+  border-radius: 8px;
+}
+.kengen-policy-summary-label {
+  font-size: 12px;
+}
+.kengen-policy-summary strong {
+  color: var(--kengen-text);
+  font-size: 15px;
+}
+.kengen-policy-notice,
+.kengen-policy-error,
+.kengen-policy-custom {
+  margin: 0;
+  font-size: 13px;
+}
+.kengen-policy-notice,
+.kengen-policy-custom {
+  color: var(--kengen-muted);
+}
+.kengen-policy-error {
+  color: var(--kengen-danger);
+}
+.kengen-preset-options {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.kengen-preset-option {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--kengen-text);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--kengen-separator);
+  border-radius: 8px;
+}
+.kengen-preset-option.selected {
+  border-color: var(--kengen-accent);
+  box-shadow: inset 3px 0 0 var(--kengen-accent);
+}
+.kengen-preset-option:disabled,
+.kengen-switch-row:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.kengen-preset-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.kengen-preset-description {
+  overflow: hidden;
+  color: var(--kengen-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kengen-advanced {
+  min-width: 0;
+  padding-top: 2px;
+}
+.kengen-advanced summary {
+  min-height: 44px;
+  color: var(--kengen-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 44px;
+}
+.kengen-advanced-controls {
+  display: grid;
+  gap: 4px;
+  padding-top: 4px;
 }
 .nyuushitsu-options {
   display: grid;
@@ -822,7 +1007,9 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 .nyuushitsu-option:focus-visible,
-.kengen-switch-row:focus-visible {
+.kengen-switch-row:focus-visible,
+.kengen-preset-option:focus-visible,
+.kengen-advanced summary:focus-visible {
   outline: 2px solid var(--kengen-accent);
   outline-offset: 3px;
 }
@@ -838,5 +1025,15 @@ onBeforeUnmount(() => {
   padding-left: 6px;
   border-left: 1px solid var(--kengen-separator);
   font-size: 12px;
+}
+@media (max-width: 800px) and (orientation: portrait) {
+  .kengen-policy-summary {
+    overflow-wrap: anywhere;
+  }
+  .kengen-preset-description {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
 </style>

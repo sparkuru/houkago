@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Add the durable room-policy column and guarded legacy migration through the shared database boundary."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Preserve session-derived owner authority and document the persistent policy contract."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Preserve structured persistence, authorization, and malformed-legacy fallback failures."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Implement the shared policy summary and accessible host-only progressive controls inside the room panel."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Keep KENGEN as the server-authoritative store writer and avoid optimistic policy changes."}
+{"file":".trellis/tasks/08-07-control-policy/design.md","reason":"Follow the agreed persistence, preset, and owner-only queue boundary."}

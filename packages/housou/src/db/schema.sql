@@ -20,10 +20,11 @@ CREATE TABLE IF NOT EXISTS seitoshou (
 CREATE INDEX IF NOT EXISTS seitoshou_expires_at ON seitoshou(expires_at);
 
 CREATE TABLE IF NOT EXISTS bushitsu (
-  id         TEXT PRIMARY KEY,
-  name       TEXT NOT NULL,
-  buchou_id  TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL,
+  buchou_id   TEXT NOT NULL,
+  created_at  INTEGER NOT NULL,
+  kengen_json TEXT,
   FOREIGN KEY (buchou_id) REFERENCES seito(id)
 );
 

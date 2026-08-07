@@ -1,7 +1,12 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import type { KousokuMessage } from "houkago-kousoku"
 import { app } from "../src/index"
-import { makeAuthenticatedRoom, openAuthenticatedSocket } from "./auth-fixture"
+import { clearKengen } from "../src/lib/kengen"
+import {
+  makeAuthenticatedRoom,
+  openAuthenticatedPeer,
+  openAuthenticatedSocket,
+} from "./auth-fixture"
 
 // 権限 enforcement over the real WS surface (prd role-permissions §2):
 // - a new joiner receives a KENGEN snapshot on open
@@ -78,6 +83,43 @@ test("non-部長 SETTEI is rejected with KEIHOU; host SETTEI broadcasts KENGEN",
 
   host.close()
   guest.close()
+})
+
+test("owner policy survives an empty room and a cleared process cache", async () => {
+  const room = await makeAuthenticatedRoom(base, "persistent-owner")
+  const host = await openAuthenticatedPeer(base, baseWs, room.id, "persistent-owner")
+  await host.nextMatch((message) => message.type === "KENGEN")
+
+  const saved = host.nextMatch(
+    (message) =>
+      message.type === "KENGEN" &&
+      message.payload.playback &&
+      message.payload.chat &&
+      message.payload.playlist,
+  )
+  host.ws.send(
+    JSON.stringify({
+      type: "SETTEI",
+      ts: Date.now(),
+      senderId: "persistent-owner",
+      payload: { playback: true, chat: true, playlist: true },
+    } satisfies KousokuMessage),
+  )
+  await saved
+
+  const closed = new Promise<void>((resolve) => {
+    host.ws.addEventListener("close", () => resolve(), { once: true })
+  })
+  host.ws.close()
+  await closed
+  clearKengen(room.id)
+
+  const reconnected = await openAuthenticatedPeer(base, baseWs, room.id, "persistent-owner")
+  const restored = await reconnected.nextMatch((message) => message.type === "KENGEN")
+  if (restored.type === "KENGEN") {
+    expect(restored.payload).toEqual({ playback: true, chat: true, playlist: true })
+  }
+  reconnected.ws.close()
 })
 
 test("guest without chat permission: OSHABERI and DANMAKU are rejected and not broadcast", async () => {

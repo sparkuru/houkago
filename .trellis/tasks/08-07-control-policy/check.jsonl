@@ -1,0 +1,5 @@
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Verify additive migration, safe legacy fallback, and durable read/write behaviour."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Verify owner, admission, and member-rejection boundaries for policy changes."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Verify shared read-only policy visibility and host-only accessible controls."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify desktop and portrait interaction, focus, feedback, and no-overflow behaviour."}
+{"file":".trellis/tasks/08-07-control-policy/design.md","reason":"Review preset mapping, persistence/restart contract, and retained queue-management restriction."}

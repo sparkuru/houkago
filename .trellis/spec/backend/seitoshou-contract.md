@@ -128,8 +128,8 @@ HOUKAGO_CORS_ORIGIN=https://houkago.example.test bun run start
 
 - Trigger: changing room admission, membership, owner-only management, the
   `MEIBO` protocol, or the membership SQLite schema.
-- Membership is durable authorization; presence, admission configuration, and
-  guest permission switches remain process-local realtime state.
+- Membership and the room guest-control policy are durable authorization data;
+  presence and admission configuration remain process-local realtime state.
 
 ### 2. Signatures
 
@@ -198,6 +198,88 @@ server.publish(roomTopic(roomId), serverMsg("MEIBO", { members }))
 for (const ownerSocket of admittedOwnerSockets(roomId)) {
   ownerSocket.send(serverMsg("MEIBO", { members: fetchMeibo(roomId) }))
 }
+```
+
+## Scenario: durable room control policy
+
+### 1. Scope / Trigger
+
+- Trigger: changing `Kengen`, `SETTEI` / `KENGEN`, guest action gates, or the
+  room policy SQLite storage.
+- The policy is a room-wide, owner-selected snapshot. It is intentionally
+  durable so an empty room, reconnect, or service restart does not silently
+  change what members may do.
+
+### 2. Signatures
+
+- SQLite: nullable `bushitsu.kengen_json TEXT`.
+- `getKengen(bushitsuId: string): Kengen` reads the process cache, then the
+  stored JSON, and otherwise returns `{ playback: false, chat: true, playlist: false }`.
+- `setKengen(bushitsuId: string, kengen: Kengen): void` persists before it
+  updates the cache or allows the caller to broadcast.
+- `SETTEI { playback: boolean, chat: boolean, playlist: boolean }` remains the
+  host-to-server request; `KENGEN` remains the server snapshot for every
+  admitted room socket. No client-provided role or queue privilege is added.
+
+### 3. Contracts
+
+- New and legacy rows with `NULL` policy resolve to the chat-only default.
+  Startup adds the nullable column only if an existing v1 database lacks it.
+- Malformed JSON or a JSON value without exactly the three boolean permission
+  fields is treated as absent and resolves to the same safe default.
+- Only the authenticated room owner may send `SETTEI`. The existing WS handler
+  persists successfully, then publishes one authoritative `KENGEN` snapshot;
+  clients do not treat their submitted value as final before that frame.
+- `clearKengen(bushitsuId)` drops only an in-process cache entry for restart
+  simulation. It must never erase `bushitsu.kengen_json` when a room empties.
+- `playlist` controls source creation/deletion for admitted members only.
+  Queue placement (`POST .../move`, `DELETE .../pending`) remains exact-owner
+  authority even when `playlist` is enabled.
+
+### 4. Validation & Error Matrix
+
+| Condition | Result |
+| --- | --- |
+| Missing/legacy/null/malformed `kengen_json` | chat-only default snapshot |
+| Existing database lacks `kengen_json` | guarded additive `ALTER TABLE` at bootstrap |
+| `SETTEI` from a member | `KEIHOU`; no DB write or `KENGEN` broadcast |
+| Persistence update finds no room or fails | fail the command; keep cache and broadcast unchanged |
+| Member requests queue move or clear with any policy | REST `FORBIDDEN` / 403 |
+
+### 5. Good / Base / Bad Cases
+
+- Good: the owner selects `{ playback: true, chat: true, playlist: false }`;
+  a member reconnects after a process restart and receives that exact `KENGEN`.
+- Base: an unchanged room has no JSON value and admits members with chat only.
+- Bad: clearing a room's cache as if it were a policy reset, broadcasting before
+  the database update succeeds, or treating enabled `playlist` as permission to
+  reorder or clear the queue.
+
+### 6. Tests Required
+
+- DB bootstrap: legacy databases gain `kengen_json` without losing room data.
+- Unit: default, malformed JSON fallback, immutable returned snapshots, and
+  cached policy recovery after `clearKengen`.
+- WS E2E: owner-only `SETTEI`, admitted member receipt of a full snapshot, and
+  an empty-room/cache-clear reconnect receiving the saved policy.
+- REST/WS E2E: verify queue move and clear still reject a member when all three
+  guest permissions are enabled.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+rooms.delete(roomId) // room empties, so all next visitors get a new default
+publishRoom(roomId, kengen)
+```
+
+#### Correct
+
+```ts
+setKengen(roomId, kengen) // durable write, then cache update
+broadcastRoom(roomId, serverMsg("KENGEN", getKengen(roomId)))
+// cache eviction never removes bushitsu.kengen_json
 ```
 
 ## Scenario: owner-managed queue placement

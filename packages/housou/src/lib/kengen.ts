@@ -1,9 +1,8 @@
 import type { Kengen } from "houkago-kousoku"
+import { getStoredKengen, setStoredKengen } from "../db/queries/kengen"
 
-// 権限（kengen）: room-level guest-permission state + the pure gate (prd
-// role-permissions §2/§4). The 部長 default keeps playback and source control for
-// the host; guests may chat. Per-room, in-memory, same lifecycle as the roster
-// (cleared when the room empties).
+// 権限（kengen）: room-level guest-permission state + the pure gate. The 部長
+// default keeps playback and source control for the host; guests may chat.
 
 export const DEFAULT_KENGEN: Kengen = { playback: false, chat: true, playlist: false }
 
@@ -19,15 +18,22 @@ export function canDo(isHost: boolean, kengen: Kengen, action: KengenAction): bo
 const rooms = new Map<string, Kengen>()
 
 export function getKengen(bushitsuId: string): Kengen {
-  return rooms.get(bushitsuId) ?? { ...DEFAULT_KENGEN }
+  const cached = rooms.get(bushitsuId)
+  if (cached) return { ...cached }
+  const stored = getStoredKengen(bushitsuId) ?? DEFAULT_KENGEN
+  rooms.set(bushitsuId, { ...stored })
+  return { ...stored }
 }
 
 export function setKengen(bushitsuId: string, kengen: Kengen): void {
-  rooms.set(bushitsuId, kengen)
+  if (!setStoredKengen(bushitsuId, kengen)) {
+    throw new Error(`cannot persist Kengen for missing room ${bushitsuId}`)
+  }
+  rooms.set(bushitsuId, { ...kengen })
 }
 
-// Drop a room's permission state when it empties, matching roster lifecycle so a
-// stale switch does not leak into a later, reused room id.
+// Drop only the process cache. The durable room policy intentionally survives
+// empty rooms and gives a restarted service the same authoritative snapshot.
 export function clearKengen(bushitsuId: string): void {
   rooms.delete(bushitsuId)
 }

@@ -99,6 +99,8 @@ const chatSheetExpanded = ref(false)
 let portraitRoomQuery: MediaQueryList | null = null
 let chatLauncherFocus: HTMLElement | null = null
 const wsStatus = ref<KousokuConnectionStatus>("closed")
+const kengenPending = ref(false)
+const kengenError = ref("")
 const wsStatusLabel = computed(() => {
   switch (wsStatus.value) {
     case "connecting":
@@ -346,7 +348,14 @@ function providerStatLabel(key: ProviderStatKey): string {
 // stores it and broadcasts KENGEN back, which the store applies — so the host's
 // own UI also follows the round-trip, not a local optimistic write.
 function settei(kengen: Kengen) {
-  client?.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
+  if (kengenPending.value) return
+  if (!client || wsStatus.value !== "open") {
+    kengenError.value = t("kengenSaveFailed")
+    return
+  }
+  kengenPending.value = true
+  kengenError.value = ""
+  client.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
 }
 
 function nyuushitsuSettei(mode: NyuushitsuMode, password?: string) {
@@ -550,6 +559,14 @@ async function startSession() {
     base,
     (msg) => {
       bushitsu.apply(msg) // keep the store the single source of truth first
+      if (msg.type === "KENGEN") {
+        kengenPending.value = false
+        kengenError.value = ""
+      }
+      if (msg.type === "KEIHOU" && kengenPending.value) {
+        kengenPending.value = false
+        kengenError.value = t("kengenSaveFailed")
+      }
       if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
         void enterRoom()
       }
@@ -561,6 +578,10 @@ async function startSession() {
     },
     (status) => {
       wsStatus.value = status
+      if ((status === "closed" || status === "error") && kengenPending.value) {
+        kengenPending.value = false
+        kengenError.value = t("kengenSaveFailed")
+      }
       if (status === "connecting") {
         bootstrapped.value = false
       }
@@ -722,6 +743,8 @@ onBeforeUnmount(() => {
                   :room-name="roomName || bushitsuId"
                   :room-link="roomLink"
                   :room-status="wsStatus"
+                  :kengen-pending="kengenPending"
+                  :kengen-error="kengenError"
                   :remove-buin="removeBuin"
                   @settei="settei"
                   @nyuushitsu-settei="nyuushitsuSettei"

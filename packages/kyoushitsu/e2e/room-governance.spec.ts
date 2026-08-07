@@ -28,7 +28,7 @@ async function joinRoom(page: Page, roomUrl: string): Promise<void> {
 async function openRoomControls(page: Page): Promise<void> {
   const disclosure = page.locator(".room-disclosure")
   const open = await disclosure.evaluate((element) => element.hasAttribute("open"))
-  if (!open) await disclosure.locator("summary").click()
+  if (!open) await disclosure.locator(":scope > summary").click()
   await expect(page.getByRole("heading", { name: "成员名册" })).toBeVisible()
 }
 
@@ -98,6 +98,17 @@ function latestBangumiTitles(frames: readonly string[]): string[] | null {
     }
     if (message.type === "BANGUMI")
       return message.payload?.enmoku?.map((enmoku) => enmoku.title) ?? []
+  }
+  return null
+}
+
+function latestKengen(frames: readonly string[]) {
+  for (const frame of [...frames].reverse()) {
+    const message = JSON.parse(frame) as {
+      type?: string
+      payload?: { playback?: boolean; chat?: boolean; playlist?: boolean }
+    }
+    if (message.type === "KENGEN") return message.payload ?? null
   }
   return null
 }
@@ -253,6 +264,77 @@ test("owner reorders and clears pending sources while members never receive queu
     await expect(ownerRows.nth(0)).toContainText("上映中")
     await expect(memberPage.locator(".bangumi-row")).toHaveCount(1)
     await expect(memberPage.locator(".bangumi-row").nth(0)).toContainText("第二部")
+  } finally {
+    await ownerContext.close()
+    await memberContext.close()
+  }
+})
+
+test("control policy presets converge for members and retain owner-only queue management", async ({
+  browser,
+}, testInfo) => {
+  const { ownerContext, memberContext, ownerPage, memberPage, ownerFrames, memberFrames } =
+    await createMemberContexts(browser)
+  try {
+    await register(ownerPage, `${testInfo.project.name}_policy_owner`)
+    const roomUrl = await createRoom(ownerPage)
+    await register(memberPage, `${testInfo.project.name}_policy_member`)
+    await joinRoom(memberPage, roomUrl)
+    await openRoomControls(ownerPage)
+
+    const ownerPolicy = ownerPage.getByRole("radiogroup", { name: "来宾权限方案" })
+    await expect(ownerPolicy.getByRole("radio", { name: "仅聊天" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    )
+    await expect(ownerPage.locator(".kengen-advanced")).not.toHaveAttribute("open", "")
+
+    const memberDisclosure = memberPage.locator(".room-disclosure")
+    if (!(await memberDisclosure.evaluate((element) => element.hasAttribute("open")))) {
+      await memberDisclosure.locator(":scope > summary").click()
+    }
+    await expect(memberPage.getByText("当前来宾权限")).toBeVisible()
+    await expect(memberPage.getByText("仅聊天", { exact: true })).toBeVisible()
+    await expect(memberPage.getByRole("radiogroup", { name: "来宾权限方案" })).toHaveCount(0)
+
+    const sharedPlayback = ownerPolicy.getByRole("radio", { name: "共同播放" })
+    await sharedPlayback.focus()
+    await sharedPlayback.press("Space")
+    await expect(ownerPolicy.getByRole("radio", { name: "共同播放" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    )
+    await expect(memberPage.getByText("共同播放", { exact: true })).toBeVisible()
+    await expect
+      .poll(() => latestKengen(ownerFrames))
+      .toEqual({ playback: true, chat: true, playlist: false })
+    await expect
+      .poll(() => latestKengen(memberFrames))
+      .toEqual({ playback: true, chat: true, playlist: false })
+
+    await ownerPage.locator(".kengen-advanced summary").click()
+    await expect(ownerPage.getByRole("switch", { name: "发言" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    )
+    await ownerPage.getByRole("switch", { name: "发言" }).click()
+    await expect(ownerPage.getByText("自定义权限", { exact: true })).toBeVisible()
+    await expect(memberPage.getByText("自定义权限", { exact: true })).toBeVisible()
+    await expect(memberPage.getByRole("button", { name: "清空待播" })).toHaveCount(0)
+    await expect(memberPage.getByRole("button", { name: "上移" })).toHaveCount(0)
+    await expect
+      .poll(() =>
+        memberPage.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      )
+      .toBe(true)
+
+    await ownerPage.reload()
+    await openRoomControls(ownerPage)
+    await expect(ownerPage.getByText("自定义权限", { exact: true })).toBeVisible()
+    await expect(ownerPage.getByRole("radio", { name: "仅聊天" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    )
   } finally {
     await ownerContext.close()
     await memberContext.close()

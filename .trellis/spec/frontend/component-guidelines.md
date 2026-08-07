@@ -155,6 +155,12 @@ non-hosts). Keep these concerns together in the room panel:
   mode/status, and member presence are visible to host and non-host viewers.
 - Host-only actions such as admission mode changes, approval decisions, and
   guest permission switches stay gated by `bushitsu.isBuchou`.
+- The current guest-control policy is shared room awareness: every admitted
+  viewer gets its read-only preset/custom summary, while only the host gets the
+  three preset radio buttons and the collapsed three-switch advanced controls.
+  A host action emits the complete existing `SETTEI` snapshot and waits for the
+  server `KENGEN` frame before the store changes; keep its pending/error message
+  local to `BushitsuView`, not as optimistic policy state.
 - Member presence must reuse `useBushitsuStore.onlineBuinInfo` and
   `historyBuinInfo`; do not add a second roster source in chat or the panel.
 - Manual reconnect UI must emit a parent-handled event and call the existing
