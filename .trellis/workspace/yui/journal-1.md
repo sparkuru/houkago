@@ -1768,3 +1768,25 @@ Delivered durable owner-only queue reordering and pending-only clear with full B
 ### Status
 
 [OK] **Completed**
+
+
+## Session 56: Persist room control policy
+
+**Date**: 2026-08-07
+**Task**: Persist room control policy
+**Branch**: `k-on`
+
+### Summary
+
+Delivered durable owner-managed room control presets and advanced switches, retained owner-only queue placement, documented the cross-layer contract, and passed full package plus responsive browser validation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `04509ce` | (see git log) |
+| `ea7ae01` | (see git log) |
+
+### Status
+
+[OK] **Completed**
