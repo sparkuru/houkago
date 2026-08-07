@@ -154,25 +154,42 @@ function playM3u8(video: HTMLVideoElement, url: string, _artInstance: Artplayer)
   hlsManifestReady = false
   nativeSubtitleReady = false
   if (Hls.isSupported()) {
-    const hlsInstance = new Hls()
+    const subtitleChoice = selectedSubtitleChoice()
+    const hlsInstance = new Hls(
+      subtitleChoice && subtitleChoice.value !== SUBTITLE_OFF_VALUE
+        ? { subtitlePreference: { name: subtitleChoice.label } }
+        : undefined,
+    )
     hls = hlsInstance
-    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+    hlsInstance.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
       if (hls !== hlsInstance) return
       hlsManifestReady = true
       applySubtitleSelection()
     })
     hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
-      if (hls !== hlsInstance || !data.details.toLowerCase().includes("subtitle")) return
+      const failedTrack =
+        typeof data.context?.id === "number"
+          ? hlsInstance.subtitleTracks[data.context.id]
+          : undefined
+      if (
+        hls !== hlsInstance ||
+        !data.details.toLowerCase().includes("subtitle") ||
+        !failedTrack ||
+        data.context?.id !== hlsInstance.subtitleTrack ||
+        !subtitleTrackMatches(failedTrack, selectedSubtitleLabel())
+      ) {
+        return
+      }
       handleSubtitleFailure()
     })
     hlsInstance.loadSource(url)
     hlsInstance.attachMedia(video)
     cleanupMediaEngine = () => {
-      hlsInstance.destroy()
       if (hls === hlsInstance) {
         hls = null
         hlsManifestReady = false
       }
+      hlsInstance.destroy()
     }
   } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src = url
