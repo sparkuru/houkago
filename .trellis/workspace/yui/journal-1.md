@@ -1746,3 +1746,25 @@ Applied the default Trellis Plus mainline-continuity enhancement to Houkago: add
 ### Status
 
 [OK] **Completed**
+
+
+## Session 55: Owner queue management
+
+**Date**: 2026-08-07
+**Task**: Owner queue management
+**Branch**: `k-on`
+
+### Summary
+
+Delivered durable owner-only queue reordering and pending-only clear with full BANGUMI snapshots, responsive browser coverage, and queue contract documentation.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `261c30e` | (see git log) |
+| `873644b` | (see git log) |
+
+### Status
+
+[OK] **Completed**

@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 54
+- **Total Sessions**: 55
 - **Last Active**: 2026-08-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1748 | Active |
+| `journal-1.md` | ~1770 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 55 | 2026-08-07 | Owner queue management | `261c30e`, `873644b` | `k-on` |
 | 54 | 2026-08-07 | Apply Trellis Plus mainline continuity | `5464d06` | `k-on` |
 | 53 | 2026-08-06 | Add Trellis mainline continuity | `f8af362` | `k-on` |
 | 52 | 2026-08-06 | Harden room governance coverage | `7760e19` | `k-on` |
