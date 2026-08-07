@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 56
+- **Total Sessions**: 57
 - **Last Active**: 2026-08-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1792 | Active |
+| `journal-1.md` | ~1814 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 57 | 2026-08-07 | Add viewer-local subtitle controls | `8d2c9f7`, `bfcce40` | `k-on` |
 | 56 | 2026-08-07 | Persist room control policy | `04509ce`, `ea7ae01` | `k-on` |
 | 55 | 2026-08-07 | Owner queue management | `261c30e`, `873644b` | `k-on` |
 | 54 | 2026-08-07 | Apply Trellis Plus mainline continuity | `5464d06` | `k-on` |

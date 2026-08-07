@@ -1790,3 +1790,25 @@ Delivered durable owner-managed room control presets and advanced switches, reta
 ### Status
 
 [OK] **Completed**
+
+
+## Session 57: Add viewer-local subtitle controls
+
+**Date**: 2026-08-07
+**Task**: Add viewer-local subtitle controls
+**Branch**: `k-on`
+
+### Summary
+
+Delivered local HLS subtitle controls, controlled browser coverage, and the player ownership contract.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8d2c9f7` | (see git log) |
+| `bfcce40` | (see git log) |
+
+### Status
+
+[OK] **Completed**
