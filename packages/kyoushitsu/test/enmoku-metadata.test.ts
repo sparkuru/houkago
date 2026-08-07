@@ -1,13 +1,16 @@
 import { expect, test } from "bun:test"
 import type { Enmoku } from "houkago-kousoku"
 import {
+  SUBTITLE_OFF_VALUE,
   bilibiliProvider,
   enmokuMetadataSummary,
   enmokuPlayableUrl,
   enmokuSourceChoices,
+  enmokuSubtitleChoices,
   providerStatItems,
   sourceIndexFromValue,
   sourceValue,
+  subtitleValue,
 } from "../src/lib/enmoku-metadata"
 
 const enmoku: Enmoku = {
@@ -99,6 +102,36 @@ test("round-trips source select values", () => {
   expect(sourceIndexFromValue("source:2")).toBe(2)
   expect(sourceIndexFromValue("source:-1")).toBeNull()
   expect(sourceIndexFromValue("source:nope")).toBeNull()
+})
+
+test("builds stable HLS subtitle choices with an explicit off default", () => {
+  expect(enmokuSubtitleChoices(enmoku, "关闭")).toEqual([
+    { value: SUBTITLE_OFF_VALUE, label: "关闭" },
+    { value: subtitleValue("English"), label: "English" },
+    { value: subtitleValue("Japanese"), label: "Japanese" },
+  ])
+  expect(subtitleValue("English (CC)")).toBe("subtitle:English%20(CC)")
+})
+
+test("omits unsupported or unnamed subtitle metadata while retaining off", () => {
+  expect(
+    enmokuSubtitleChoices(
+      {
+        ...enmoku,
+        subtitles: {
+          "": { type: "hls", url: "https://housou.test/eisha/proxy/empty" },
+          WebVTT: { type: "vtt", url: "https://housou.test/eisha/proxy/vtt" },
+        },
+      },
+      "关闭",
+    ),
+  ).toEqual([{ value: SUBTITLE_OFF_VALUE, label: "关闭" }])
+  expect(enmokuSubtitleChoices({ ...enmoku, subtitles: undefined }, "关闭")).toEqual([
+    { value: SUBTITLE_OFF_VALUE, label: "关闭" },
+  ])
+  expect(enmokuSubtitleChoices({ ...enmoku, type: "direct" }, "关闭")).toEqual([
+    { value: SUBTITLE_OFF_VALUE, label: "关闭" },
+  ])
 })
 
 test("extracts provider metadata view models", () => {

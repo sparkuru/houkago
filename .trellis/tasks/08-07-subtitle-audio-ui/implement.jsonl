@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Player ownership, fullscreen-safe controls, source-quality independence, and room-view state boundary."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Type safety, responsive layout, and validation requirements for frontend implementation."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Keep viewer-local subtitle selection outside server-authoritative Pinia state."}
+{"file":".trellis/tasks/08-07-subtitle-audio-ui/research/ui-ux-pro-max.md","reason":"Approved accessibility and responsive interaction notes for the selector."}

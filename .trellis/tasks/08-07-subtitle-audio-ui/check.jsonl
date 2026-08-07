@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Verify imperative engine access remains inside EnmokuPlayer and controls work in fullscreen."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify types, responsive player layout, and quality gate commands."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Verify subtitle state never becomes room-authoritative or travels over WS."}
+{"file":".trellis/tasks/08-07-subtitle-audio-ui/prd.md","reason":"Verify all observable acceptance criteria and scope exclusions."}

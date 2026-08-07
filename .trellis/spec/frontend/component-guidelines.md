@@ -183,6 +183,81 @@ non-hosts). Keep these concerns together in the room panel:
 />
 ```
 
+## Scenario: viewer-local HLS subtitle selector
+
+### 1. Scope / Trigger
+
+- Trigger: changing `Enmoku.subtitles`, HLS/native text tracks, or the player
+  subtitle control.
+- Subtitle selection is presentation state for one viewer. It is not room
+  authority and must not change playback for any other viewer.
+
+### 2. Signatures
+
+- `enmokuSubtitleChoices(enmoku, offLabel) -> Array<{ value, label }>` returns
+  an explicit `SUBTITLE_OFF_VALUE` plus valid named HLS subtitle choices.
+- `BushitsuView` owns `selectedSubtitleValue: Ref<string>` and passes
+  `subtitleChoices` / `selectedSubtitleValue` to `EnmokuPlayer`.
+- `EnmokuPlayer` emits `subtitle(value: string)` and alone touches
+  `Hls.subtitleTrack`, `Hls.subtitleDisplay`, or `HTMLVideoElement.textTracks`.
+
+### 3. Contracts
+
+- Render the selector only when there is at least one selectable HLS subtitle;
+  direct/DASH/unsupported metadata shows no subtitle control.
+- Start Off, reset when `currentEnmokuId` changes or the page reloads, and do
+  not persist it. Source-quality changes for the same item retain selection.
+- The menu contains an explicit Off item, has keyboard-operable control/menu
+  roles, visible focus, and 44px targets. It must remain usable after ArtPlayer
+  moves its DOM into web/native fullscreen.
+- Subtitle selection never writes Pinia room truth, calls REST, or sends a WS
+  envelope. It must not emit `SHINKOU`.
+
+### 4. Validation & Error Matrix
+
+| Condition | Result |
+| --- | --- |
+| No supported choices | no control is registered |
+| HLS track name cannot match selected metadata | hide tracks, emit Off, local status notice |
+| hls.js subtitle load error (any detail casing) | hide tracks, emit Off, local status notice |
+| Native HLS text tracks appear after metadata | apply the current local choice via `mode` |
+| Explicit Off | hide all subtitle tracks without changing playback/source |
+
+### 5. Good / Base / Bad Cases
+
+- Good: a viewer selects English, changes quality, and still sees English while
+  another viewer remains Off.
+- Base: a room item has no HLS subtitles and the existing player controls stay
+  unchanged.
+- Bad: storing the choice in `useBushitsuStore`, broadcasting it, or manipulating
+  hls.js/text tracks from `BushitsuView`.
+
+### 6. Tests Required
+
+- Unit: choice helper returns Off plus valid named HLS tracks and filters absent,
+  unnamed, or unsupported metadata.
+- Playwright: use controlled master/subtitle playlists rather than an external
+  media domain; verify keyboard Off→track→Off, quality retention, reload reset,
+  and phone overflow.
+- Regression: existing sync, quality, danmaku, and fullscreen flows remain
+  covered by their focused tests.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+bushitsu.selectedSubtitle = choice
+client.send({ type: "SETTEI", payload: { subtitle: choice } })
+```
+
+#### Correct
+
+```ts
+const selectedSubtitleValue = ref(SUBTITLE_OFF_VALUE)
+// EnmokuPlayer maps this local prop to hls.js or native text-track state.
+```
+
 ### Architecture Boundary: Player, Room View, Danmaku, Parser
 
 **Current assessment**: the existing split is acceptable for the P1

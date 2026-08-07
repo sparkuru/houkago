@@ -20,10 +20,12 @@ import {
 } from "@/lib/bangumi-actions"
 import {
   type ProviderStatKey,
+  SUBTITLE_OFF_VALUE,
   bilibiliProvider,
   enmokuMetadataSummary,
   enmokuPlayableUrl,
   enmokuSourceChoices,
+  enmokuSubtitleChoices,
   providerStatItems,
   sourceIndexFromValue,
   sourceValue,
@@ -69,6 +71,10 @@ const clearPendingDialog = ref<HTMLDialogElement | null>(null)
 const selectedSourceIndex = ref<number | null>(null)
 const currentSourceChoices = computed(() =>
   current.value ? enmokuSourceChoices(current.value, t("sourcePrimary")) : [],
+)
+const selectedSubtitleValue = ref(SUBTITLE_OFF_VALUE)
+const currentSubtitleChoices = computed(() =>
+  current.value ? enmokuSubtitleChoices(current.value, t("subtitleOff")) : [],
 )
 const currentMetadata = computed(() =>
   current.value ? enmokuMetadataSummary(current.value) : null,
@@ -201,6 +207,10 @@ watch(current, () => {
   controlsShown.value = true
   playbackTime.value = 0
   selectedSourceIndex.value = null
+})
+
+watch(currentEnmokuId, (id, previousId) => {
+  if (id !== previousId) selectedSubtitleValue.value = SUBTITLE_OFF_VALUE
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -659,6 +669,8 @@ onBeforeUnmount(() => {
               :cinema-mode="cinemaMode"
               :source-choices="currentSourceChoices"
               :selected-source-value="selectedSourceValue"
+              :subtitle-choices="currentSubtitleChoices"
+              :selected-subtitle-value="selectedSubtitleValue"
               :file-danmaku-enabled="fileDanmakuEnabled"
               :file-danmaku-name="currentTimelineDanmakuName || t('danmakuNone')"
               :danmaku-size="danmakuSize"
@@ -672,6 +684,7 @@ onBeforeUnmount(() => {
               @time="playbackTime = $event"
               @cinema="setCinemaMode"
               @source="selectedSourceValue = $event"
+              @subtitle="selectedSubtitleValue = $event"
               @toggle-file-danmaku="toggleFileDanmaku"
               @choose-file-danmaku="chooseFileDanmaku"
               @danmaku-size="danmakuSize = $event"

@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test"
+import { registerAndCreateRoom, startSubtitleFixture } from "./subtitle-fixture"
+
+test("subtitle selector is keyboard-operable and stays local to the player", async ({ page }) => {
+  await registerAndCreateRoom(page, "desktop")
+  await startSubtitleFixture(page)
+
+  const control = page.locator(".art-control-houkagoSubtitle")
+  await expect(control).toHaveAttribute("role", "button")
+  await expect(control).toHaveAttribute("aria-label", "字幕: 关闭")
+  await control.focus()
+  await expect(control).toBeFocused()
+  await page.keyboard.press("Enter")
+  const english = page.getByRole("menuitem", { name: "English", exact: true })
+  await expect(page.getByRole("menuitem", { name: "关闭", exact: true })).toBeFocused()
+  await page.keyboard.press("ArrowDown")
+  await expect(english).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(control).toHaveAttribute("aria-label", "字幕: English")
+  await page.locator(".art-control-houkagoSource").click()
+  await page.getByText("720p", { exact: true }).click()
+  await expect(control).toHaveAttribute("aria-label", "字幕: English")
+  await control.click()
+  await page.getByRole("menuitem", { name: "关闭", exact: true }).click()
+  await expect(control).toHaveAttribute("aria-label", "字幕: 关闭")
+  await control.click()
+  await english.click()
+  await expect(control).toHaveAttribute("aria-label", "字幕: English")
+  await page.reload()
+  await expect(control).toBeVisible()
+  await expect(control).toHaveAttribute("aria-label", "字幕: 关闭")
+})

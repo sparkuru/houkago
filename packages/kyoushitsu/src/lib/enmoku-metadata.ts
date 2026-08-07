@@ -2,12 +2,19 @@ import type { Enmoku } from "houkago-kousoku"
 
 const PRIMARY_SOURCE_VALUE = "primary"
 const SOURCE_VALUE_PREFIX = "source:"
+export const SUBTITLE_OFF_VALUE = "off"
+const SUBTITLE_VALUE_PREFIX = "subtitle:"
 
 export type EnmokuSourceChoice = {
   value: string
   label: string
   url: string
   sourceIndex: number | null
+}
+
+export type EnmokuSubtitleChoice = {
+  value: string
+  label: string
 }
 
 export type EnmokuMetadataSummary = {
@@ -66,6 +73,20 @@ export function enmokuPlayableUrl(enmoku: Enmoku, selectedSourceIndex: number | 
   return enmoku.sources?.[selectedSourceIndex]?.url ?? enmoku.url
 }
 
+export function enmokuSubtitleChoices(enmoku: Enmoku, offLabel: string): EnmokuSubtitleChoice[] {
+  if (enmoku.type !== "hls" && enmoku.type !== "live" && !enmoku.url.endsWith(".m3u8")) {
+    return [{ value: SUBTITLE_OFF_VALUE, label: offLabel }]
+  }
+  return [
+    { value: SUBTITLE_OFF_VALUE, label: offLabel },
+    ...Object.entries(enmoku.subtitles ?? {}).flatMap(([name, subtitle]) => {
+      const label = name.trim()
+      if (!label || subtitle.type !== "hls" || !subtitle.url) return []
+      return [{ value: subtitleValue(name), label }]
+    }),
+  ]
+}
+
 export function enmokuMetadataSummary(enmoku: Enmoku): EnmokuMetadataSummary {
   const sourceCount = enmoku.sources?.length ?? 0
   const subtitleNames = Object.keys(enmoku.subtitles ?? {})
@@ -101,6 +122,10 @@ export function sourceIndexFromValue(value: string): number | null {
 
   const index = Number(value.slice(SOURCE_VALUE_PREFIX.length))
   return Number.isInteger(index) && index >= 0 ? index : null
+}
+
+export function subtitleValue(name: string): string {
+  return `${SUBTITLE_VALUE_PREFIX}${encodeURIComponent(name)}`
 }
 
 function sourceChoiceKey(label: string): string {

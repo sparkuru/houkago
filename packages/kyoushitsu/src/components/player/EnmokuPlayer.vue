@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { t } from "@/i18n"
+import { type EnmokuSubtitleChoice, SUBTITLE_OFF_VALUE } from "@/lib/enmoku-metadata"
 import { canSeekTo } from "@/lib/seekable"
 import Artplayer from "artplayer"
 import * as dashjs from "dashjs"
@@ -42,6 +43,8 @@ const props = withDefaults(
     cinemaMode?: boolean
     sourceChoices?: PlayerSourceChoice[]
     selectedSourceValue?: string
+    subtitleChoices?: EnmokuSubtitleChoice[]
+    selectedSubtitleValue?: string
     fileDanmakuEnabled?: boolean
     fileDanmakuName?: string
     danmakuSize?: number
@@ -52,6 +55,8 @@ const props = withDefaults(
   {
     sourceChoices: () => [],
     selectedSourceValue: "primary",
+    subtitleChoices: () => [],
+    selectedSubtitleValue: SUBTITLE_OFF_VALUE,
     fileDanmakuEnabled: false,
     fileDanmakuName: "",
     danmakuSize: 1,
@@ -79,6 +84,7 @@ const emit = defineEmits<{
   time: [number]
   cinema: [enabled: boolean]
   source: [value: string]
+  subtitle: [value: string]
   toggleFileDanmaku: []
   chooseFileDanmaku: []
   danmakuSize: [value: number]
@@ -105,6 +111,11 @@ let art: Artplayer | null = null
 let stopFullscreenClickPatch: (() => void) | null = null
 let cleanupMediaEngine: (() => void) | null = null
 let timeRaf: number | null = null
+let hls: Hls | null = null
+let hlsManifestReady = false
+let nativeSubtitleReady = false
+let cleanupNativeSubtitleEvents: (() => void) | null = null
+const subtitleFailureNotice = ref(false)
 
 // 中途加入の追平 seek が早すぎて落ちる問題への対策（prd Bug2）: hls.js がまだ
 // メディアを読み込み切っておらず seek 不可（readyState 低 / video.seekable 空）の
@@ -137,18 +148,45 @@ function seekTo(target: number): void {
 function playM3u8(video: HTMLVideoElement, url: string, _artInstance: Artplayer) {
   cleanupMediaEngine?.()
   cleanupMediaEngine = null
+  cleanupNativeSubtitleEvents?.()
+  cleanupNativeSubtitleEvents = null
+  hls = null
+  hlsManifestReady = false
+  nativeSubtitleReady = false
   if (Hls.isSupported()) {
-    const hls = new Hls()
-    hls.loadSource(url)
-    hls.attachMedia(video)
-    cleanupMediaEngine = () => hls.destroy()
+    const hlsInstance = new Hls()
+    hls = hlsInstance
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+      if (hls !== hlsInstance) return
+      hlsManifestReady = true
+      applySubtitleSelection()
+    })
+    hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+      if (hls !== hlsInstance || !data.details.toLowerCase().includes("subtitle")) return
+      handleSubtitleFailure()
+    })
+    hlsInstance.loadSource(url)
+    hlsInstance.attachMedia(video)
+    cleanupMediaEngine = () => {
+      hlsInstance.destroy()
+      if (hls === hlsInstance) {
+        hls = null
+        hlsManifestReady = false
+      }
+    }
   } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
     video.src = url
+    setupNativeSubtitleEvents(video)
   }
 }
 
 function playDash(video: HTMLVideoElement, url: string, _artInstance: Artplayer) {
   cleanupMediaEngine?.()
+  cleanupNativeSubtitleEvents?.()
+  cleanupNativeSubtitleEvents = null
+  hls = null
+  hlsManifestReady = false
+  nativeSubtitleReady = false
   const player: dashjs.MediaPlayerClass = dashjs.MediaPlayer().create()
   player.initialize(video, url, false)
   cleanupMediaEngine = () => player.reset()
@@ -291,6 +329,102 @@ function selectedSourceLabel(): string {
   )
 }
 
+function selectedSubtitleChoice(): EnmokuSubtitleChoice | undefined {
+  return props.subtitleChoices.find((choice) => choice.value === props.selectedSubtitleValue)
+}
+
+function selectedSubtitleLabel(): string {
+  return selectedSubtitleChoice()?.label ?? t("subtitleOff")
+}
+
+function subtitleControl() {
+  if (props.subtitleChoices.length <= 1) return null
+  return {
+    name: "houkagoSubtitle",
+    position: "right",
+    index: 37,
+    html: subtitleControlHtml(),
+    tooltip: `${t("subtitleSelectLabel")}: ${selectedSubtitleLabel()}`,
+    selector: props.subtitleChoices.map((choice) => ({
+      html: escapeHtml(choice.label),
+      value: choice.value,
+      default: choice.value === props.selectedSubtitleValue,
+    })),
+    mounted: subtitleControlMounted,
+    onSelect: (item: { value?: string | number; html?: string | HTMLElement }) => {
+      if (typeof item.value === "string") {
+        subtitleFailureNotice.value = false
+        emit("subtitle", item.value)
+        return typeof item.html === "string" ? item.html : subtitleControlHtml()
+      }
+      return subtitleControlHtml()
+    },
+  }
+}
+
+function subtitleControlHtml(): string {
+  return `<span class="houkago-subtitle-control" style="display:block;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:currentColor;font-size:12px;font-weight:600;line-height:24px;" aria-hidden="true">${escapeHtml(t("subtitleSelectLabel"))}: ${escapeHtml(selectedSubtitleLabel())}</span>`
+}
+
+function subtitleControlMounted(control: HTMLElement): void {
+  control.tabIndex = 0
+  control.setAttribute("role", "button")
+  control.setAttribute("aria-haspopup", "menu")
+  control.setAttribute("aria-label", `${t("subtitleSelectLabel")}: ${selectedSubtitleLabel()}`)
+  const options = Array.from(control.querySelectorAll<HTMLElement>(".art-selector-item"))
+  const list = control.querySelector<HTMLElement>(".art-selector-list")
+  list?.setAttribute("role", "menu")
+  const close = () => {
+    control.classList.remove("subtitle-selector-open")
+    if (!list) return
+    list.style.opacity = ""
+    list.style.pointerEvents = ""
+    list.style.transform = ""
+  }
+  const open = () => {
+    control.classList.add("subtitle-selector-open")
+    if (!list) return
+    list.style.opacity = "1"
+    list.style.pointerEvents = "auto"
+    list.style.transform = "translateY(0)"
+  }
+  for (const option of options) {
+    option.tabIndex = -1
+    option.setAttribute("role", "menuitem")
+    option.addEventListener("keydown", (event) => {
+      const index = options.indexOf(option)
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault()
+        event.stopPropagation()
+        options[
+          (index + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length
+        ]?.focus()
+        return
+      }
+      if (event.key === "Escape") {
+        event.preventDefault()
+        event.stopPropagation()
+        close()
+        control.focus()
+        return
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault()
+        event.stopPropagation()
+        close()
+        option.click()
+        control.focus()
+      }
+    })
+  }
+  control.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    open()
+    options.find((option) => option.classList.contains("art-current"))?.focus()
+  })
+}
+
 function sourceControl() {
   if (props.sourceChoices.length > 1) {
     return {
@@ -318,6 +452,86 @@ function sourceControl() {
 
 function sourceControlHtml(): string {
   return `<span class="houkago-source-control" aria-hidden="true">${escapeHtml(selectedSourceLabel())}</span>`
+}
+
+function applySubtitleSelection(): void {
+  const choice = selectedSubtitleChoice()
+  if (!choice || choice.value === SUBTITLE_OFF_VALUE) {
+    hideSubtitleTracks()
+    return
+  }
+
+  if (hls) {
+    if (!hlsManifestReady) return
+    const trackIndex = hls.subtitleTracks.findIndex((track) =>
+      subtitleTrackMatches(track, choice.label),
+    )
+    if (trackIndex < 0) {
+      handleSubtitleFailure()
+      return
+    }
+    hls.subtitleTrack = trackIndex
+    hls.subtitleDisplay = true
+    subtitleFailureNotice.value = false
+    return
+  }
+
+  const video = videoEl()
+  if (video && nativeSubtitleReady) applyNativeSubtitleSelection(video, choice.label)
+}
+
+function hideSubtitleTracks(): void {
+  if (hls) {
+    hls.subtitleTrack = -1
+    hls.subtitleDisplay = false
+  }
+  const video = videoEl()
+  if (!video) return
+  for (const track of Array.from(video.textTracks)) track.mode = "hidden"
+}
+
+function applyNativeSubtitleSelection(video: HTMLVideoElement, label: string): void {
+  const tracks = Array.from(video.textTracks)
+  for (const track of tracks) track.mode = "hidden"
+  const track = tracks.find((item) => subtitleTrackMatches(item, label))
+  if (!track) {
+    handleSubtitleFailure()
+    return
+  }
+  track.mode = "showing"
+  subtitleFailureNotice.value = false
+}
+
+function subtitleTrackMatches(
+  track: { name?: string; label?: string; lang?: string; language?: string },
+  label: string,
+): boolean {
+  const normalizedLabel = label.trim().toLocaleLowerCase()
+  return [track.name, track.label, track.lang, track.language].some(
+    (value) => value?.trim().toLocaleLowerCase() === normalizedLabel,
+  )
+}
+
+function setupNativeSubtitleEvents(video: HTMLVideoElement): void {
+  const apply = () => {
+    nativeSubtitleReady = true
+    applySubtitleSelection()
+  }
+  video.addEventListener("loadedmetadata", apply)
+  video.addEventListener("canplay", apply)
+  video.textTracks.addEventListener("addtrack", apply)
+  cleanupNativeSubtitleEvents = () => {
+    video.removeEventListener("loadedmetadata", apply)
+    video.removeEventListener("canplay", apply)
+    video.textTracks.removeEventListener("addtrack", apply)
+  }
+}
+
+function handleSubtitleFailure(): void {
+  if (props.selectedSubtitleValue === SUBTITLE_OFF_VALUE) return
+  hideSubtitleTracks()
+  subtitleFailureNotice.value = true
+  emit("subtitle", SUBTITLE_OFF_VALUE)
 }
 
 function escapeHtml(value: string): string {
@@ -429,6 +643,7 @@ function cinemaControl() {
 function artControls() {
   return [
     sourceControl(),
+    subtitleControl(),
     danmakuToggleControl(),
     danmakuSettingsControl(),
     cinemaControl(),
@@ -437,6 +652,11 @@ function artControls() {
 
 function refreshSourceControl(): void {
   const control = sourceControl()
+  if (control) art?.controls.update(control)
+}
+
+function refreshSubtitleControl(): void {
+  const control = subtitleControl()
   if (control) art?.controls.update(control)
 }
 
@@ -545,6 +765,14 @@ watch(
 )
 
 watch(
+  () => [props.selectedSubtitleValue, props.subtitleChoices.length, selectedSubtitleLabel()],
+  () => {
+    refreshSubtitleControl()
+    applySubtitleSelection()
+  },
+)
+
+watch(
   () => props.url,
   (url, previous) => {
     if (!art || url === previous) return
@@ -563,8 +791,13 @@ onBeforeUnmount(() => {
   stopTimeTicker()
   stopFullscreenClickPatch?.()
   stopFullscreenClickPatch = null
+  cleanupNativeSubtitleEvents?.()
+  cleanupNativeSubtitleEvents = null
   cleanupMediaEngine?.()
   cleanupMediaEngine = null
+  hls = null
+  hlsManifestReady = false
+  nativeSubtitleReady = false
   art?.destroy()
   art = null
   playerEl.value = null
@@ -688,6 +921,11 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </Teleport>
+    <Teleport v-if="subtitleFailureNotice && playerEl" :to="playerEl">
+      <p class="subtitle-failure-notice" role="status">
+        {{ t("subtitleUnavailable") }}
+      </p>
+    </Teleport>
     <!-- 再生制御提示：guest に 再生制御 権限がない間だけ表示。遮断は CSS で
          .art-bottom/.art-mask を display:none + .art-video を pointer-events:none に
          して行い、この帯は純視覚 (pointer-events:none)。状態は文字併記で色だけに
@@ -737,6 +975,7 @@ onBeforeUnmount(() => {
   object-fit: contain;
 }
 .enmoku-player :deep(.art-control-houkagoSource),
+.enmoku-player :deep(.art-control-houkagoSubtitle),
 .enmoku-player :deep(.art-control-houkagoDanmakuToggle),
 .enmoku-player :deep(.art-control-houkagoDanmakuSettings),
 .enmoku-player :deep(.art-control-houkagoCinema) {
@@ -753,6 +992,51 @@ onBeforeUnmount(() => {
   line-height: 24px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.enmoku-player :deep(.art-control-houkagoSubtitle) {
+  min-width: 44px;
+  min-height: 44px;
+}
+.enmoku-player :deep(.houkago-subtitle-control) {
+  display: block;
+  max-width: 82px;
+  padding: 0 4px;
+  overflow: hidden;
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.enmoku-player :deep(.art-control-houkagoSubtitle:focus-visible) {
+  outline: 2px solid var(--art-theme, #f00);
+  outline-offset: -2px;
+}
+.enmoku-player :deep(.art-control-houkagoSubtitle .art-selector-item) {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.enmoku-player :deep(.art-control-houkagoSubtitle.subtitle-selector-open .art-selector-list) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.subtitle-failure-notice {
+  position: absolute;
+  right: 12px;
+  bottom: 54px;
+  z-index: 81;
+  max-width: min(320px, calc(100% - 24px));
+  margin: 0;
+  padding: 7px 10px;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  background: rgba(20, 20, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
 }
 .enmoku-player.file-danmaku-enabled :deep(.art-control-houkagoDanmakuToggle),
 .enmoku-player.cinema-mode :deep(.art-control-houkagoCinema) {

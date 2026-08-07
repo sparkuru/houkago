@@ -37,6 +37,21 @@ export default defineConfig({
       use: { browserName: "chromium", viewport: { width: 1280, height: 1200 } },
     },
     {
+      name: "subtitle-phone",
+      testMatch: /subtitle-phone\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "subtitle-desktop",
+      testMatch: /subtitle-desktop\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
       name: "governance-phone",
       testMatch: /room-governance\.spec\.ts/,
       use: {
