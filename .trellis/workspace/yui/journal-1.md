@@ -1812,3 +1812,25 @@ Delivered local HLS subtitle controls, controlled browser coverage, and the play
 ### Status
 
 [OK] **Completed**
+
+
+## Session 58: Baidu Netdisk direct adaptor
+
+**Date**: 2026-08-08
+**Task**: Baidu Netdisk direct adaptor
+**Branch**: `k-on`
+
+### Summary
+
+Delivered the Firefox-reference Baidu Netdisk adaptor with official OAuth, server-saved and user-held credentials, direct multi-viewer playback, lifecycle revocation, extension request hardening, and full automated/real-account validation. Installed Chromium smoke and hardening moves to the next task.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `114b69b` | (see git log) |
+| `8a825c2` | (see git log) |
+
+### Status
+
+[OK] **Completed**
