@@ -53,23 +53,44 @@ export const EnmokuTypeSchema = Type.Union([
 ])
 export type EnmokuType = Static<typeof EnmokuTypeSchema>
 
-export const EnmokuProviderSchema = Type.Object({
-  kind: Type.Literal("bilibili"),
-  url: Type.String(),
-  coverUrl: Type.Optional(Type.String()),
-  ownerName: Type.Optional(Type.String()),
-  stats: Type.Optional(
-    Type.Object({
-      view: Type.Optional(Type.Number()),
-      danmaku: Type.Optional(Type.Number()),
-      reply: Type.Optional(Type.Number()),
-      favorite: Type.Optional(Type.Number()),
-      coin: Type.Optional(Type.Number()),
-      share: Type.Optional(Type.Number()),
-      like: Type.Optional(Type.Number()),
-    }),
-  ),
-})
+export const BilibiliProviderSchema = Type.Object(
+  {
+    kind: Type.Literal("bilibili"),
+    url: Type.String(),
+    coverUrl: Type.Optional(Type.String()),
+    ownerName: Type.Optional(Type.String()),
+    stats: Type.Optional(
+      Type.Object(
+        {
+          view: Type.Optional(Type.Number()),
+          danmaku: Type.Optional(Type.Number()),
+          reply: Type.Optional(Type.Number()),
+          favorite: Type.Optional(Type.Number()),
+          coin: Type.Optional(Type.Number()),
+          share: Type.Optional(Type.Number()),
+          like: Type.Optional(Type.Number()),
+        },
+        { additionalProperties: false },
+      ),
+    ),
+  },
+  { additionalProperties: false },
+)
+export type BilibiliProvider = Static<typeof BilibiliProviderSchema>
+
+export const BaiduProviderSchema = Type.Object(
+  {
+    kind: Type.Literal("baidu"),
+    sourceId: Type.String({ minLength: 1 }),
+    ownerName: Type.Optional(Type.String()),
+    fileName: Type.String({ minLength: 1 }),
+    size: Type.Optional(Type.Number({ minimum: 0 })),
+  },
+  { additionalProperties: false },
+)
+export type BaiduProvider = Static<typeof BaiduProviderSchema>
+
+export const EnmokuProviderSchema = Type.Union([BilibiliProviderSchema, BaiduProviderSchema])
 export type EnmokuProvider = Static<typeof EnmokuProviderSchema>
 
 // 演目：a playable item (design §6)

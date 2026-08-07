@@ -3,6 +3,7 @@ import { type KousokuMessage, KousokuMessageSchema, type NyuushitsuStatus } from
 import { ensureBuin, hasBuin } from "../db/queries/bushitsu-buin"
 import { buchouIdOf } from "../domain/bushitsu"
 import { fetchMeibo } from "../domain/bushitsu"
+import { cancelBaiduForRoomSeito } from "../lib/baidu"
 import { Forbidden, NotBuchou } from "../lib/errors"
 import { canDo, getKengen, setKengen } from "../lib/kengen"
 import {
@@ -120,6 +121,7 @@ export function revokeBuin(bushitsuId: string, seitoId: string): void {
     sockets.delete(connId)
     if (conn.admitted) {
       leave(bushitsuId, seitoId)
+      cancelBaiduForRoomSeito(bushitsuId, seitoId)
       presenceChanged = true
     }
     socket?.send(
@@ -370,8 +372,17 @@ export const wsRoutes = new Elysia().ws("/ws", {
     conns.delete(ws.id)
     sockets.delete(ws.id)
     if (conn.admitted) {
-      leave(conn.bushitsuId, conn.senderId)
-      ws.publish(roomTopic(conn.bushitsuId), shussekiSnapshot(conn.bushitsuId))
+      const remainsPresent = [...conns.values()].some(
+        (candidate) =>
+          candidate.admitted &&
+          candidate.bushitsuId === conn.bushitsuId &&
+          candidate.senderId === conn.senderId,
+      )
+      if (!remainsPresent) {
+        leave(conn.bushitsuId, conn.senderId)
+        cancelBaiduForRoomSeito(conn.bushitsuId, conn.senderId)
+        ws.publish(roomTopic(conn.bushitsuId), shussekiSnapshot(conn.bushitsuId))
+      }
     } else {
       removePendingNyuushitsuConnection(conn.bushitsuId, conn.senderId, ws.id)
       notifyNyuushitsu(conn.bushitsuId)

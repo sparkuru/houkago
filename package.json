@@ -4,10 +4,12 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "typecheck": "bun run --filter '*' typecheck",
+    "test": "HOUSOU_DB=:memory: bun test packages/kokuban/test packages/eisha/test packages/houkago-adapter/test packages/housou/test packages/kousoku/test packages/kyoushitsu/test",
     "lint": "biome check .",
     "format": "biome format --write .",
     "dev:housou": "bun run --filter houkago-housou dev",
-    "dev:kyoushitsu": "bun run --filter houkago-kyoushitsu dev"
+    "dev:kyoushitsu": "bun run --filter houkago-kyoushitsu dev",
+    "start:housou": "bun run --filter houkago-housou start"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

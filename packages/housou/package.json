@@ -8,12 +8,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "dev": "NODE_ENV=development bun --watch src/index.ts",
-    "start": "bun src/index.ts",
+    "dev": "NODE_ENV=development bun --env-file=../../.env --watch src/index.ts",
+    "start": "bun --env-file=../../.env src/index.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sinclair/typebox": "^0.34.0",
     "@elysiajs/cors": "^1.4.0",
     "elysia": "^1.4.0",
     "houkago-eisha": "workspace:*",

@@ -37,6 +37,10 @@ export function useEnmokuPreview(bushitsuId: string) {
         error.value = "sourcePreviewFailed"
         return
       }
+      if (data.provider && data.provider.kind !== "bilibili") {
+        error.value = "sourcePreviewFailed"
+        return
+      }
       preview.value = data
     } catch {
       error.value = "sourcePreviewFailed"

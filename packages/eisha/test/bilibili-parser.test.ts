@@ -147,7 +147,8 @@ test("resolves Bilibili view and playurl metadata into proxied sources", async (
       like: 80,
     },
   })
-  expect(decodeProxyRef(resolved?.provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "")).toEqual({
+  const provider = resolved?.provider?.kind === "bilibili" ? resolved.provider : undefined
+  expect(decodeProxyRef(provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://i0.hdslb.com/bfs/archive/cover.jpg",
     headers: {
       referer: "https://www.bilibili.com/",

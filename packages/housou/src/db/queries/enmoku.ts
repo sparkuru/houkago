@@ -1,4 +1,5 @@
-import type { Enmoku } from "houkago-kousoku"
+import { Value } from "@sinclair/typebox/value"
+import { type Enmoku, EnmokuProviderSchema } from "houkago-kousoku"
 import { db } from "../client"
 
 type EnmokuRow = {
@@ -242,27 +243,10 @@ function isDanmakuRef(value: unknown): value is NonNullable<Enmoku["danmaku"]> {
 }
 
 function isProvider(value: unknown): value is NonNullable<Enmoku["provider"]> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false
-  const provider = value as {
-    kind?: unknown
-    url?: unknown
-    coverUrl?: unknown
-    ownerName?: unknown
-    stats?: unknown
-  }
-  if (provider.kind !== "bilibili" || typeof provider.url !== "string") return false
-  if (provider.coverUrl !== undefined && typeof provider.coverUrl !== "string") return false
-  if (provider.ownerName !== undefined && typeof provider.ownerName !== "string") return false
-  if (provider.stats !== undefined && !isNumberRecord(provider.stats)) return false
-  return true
+  return Value.Check(EnmokuProviderSchema, value)
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
   return Object.values(value).every((item) => typeof item === "string")
-}
-
-function isNumberRecord(value: unknown): value is Record<string, number> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false
-  return Object.values(value).every((item) => typeof item === "number")
 }

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Houkago Adapter",
+  "version": "0.1.0",
+  "description": "Versioned desktop capabilities for Houkago",
+  "permissions": ["storage", "declarativeNetRequest", "webRequest", "alarms"],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "https://pan.baidu.com/*",
+    "https://d.pcs.baidu.com/*",
+    "https://pcs.baidu.com/*",
+    "https://*.baidupcs.com/*"
+  ],
+  "optional_host_permissions": [],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"The adaptor spans shared contracts, backend policy, page UI, extension transport, and room lifecycle."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Provider and browser seams must avoid duplicated Baidu-specific branches."}
+{"file":".trellis/spec/backend/index.md","reason":"Backend package ownership and required server conventions."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Additive connection, source, and adaptor-session persistence."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Stable OAuth, upstream, pairing, and grant failures without secret leakage."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Tokens, authorization codes, dlinks, and encryption metadata require redaction."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Baidu authorization and adaptor sessions bind to authenticated Houkago users."}
+{"file":".trellis/spec/backend/url-preview-contract.md","reason":"Selected Baidu files join the existing Enmoku preview/add flow."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Backend test and verification expectations."}
+{"file":".trellis/spec/frontend/index.md","reason":"Frontend package ownership and required client conventions."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Connection and directory dialogs must fit existing component patterns."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Connection, availability, browsing, and playback grant state cross boundaries."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Page-extension and provider messages need strict discriminated schemas."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Frontend and browser interaction verification expectations."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/baidu-oauth-and-download.md","reason":"Official OAuth, token refresh, file listing, dlink, and UA evidence."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/ui-ux-pro-max.md","reason":"Approved progressive connection and read-only browser interaction guidance."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/userscript-capability-boundary.md","reason":"Preserve the evidence for the rejected userscript transport so implementation does not reopen it as a product path."}

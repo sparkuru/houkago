@@ -76,3 +76,60 @@ CREATE TABLE IF NOT EXISTS bangumi_entry (
 
 CREATE INDEX IF NOT EXISTS bangumi_entry_room_order
   ON bangumi_entry(bushitsu_id, sort_key, enmoku_id);
+
+CREATE TABLE IF NOT EXISTS baidu_connection (
+  seito_id               TEXT PRIMARY KEY,
+  authorization_id       TEXT NOT NULL,
+  retention_mode         TEXT NOT NULL CHECK (retention_mode IN ('server-saved', 'user-held')),
+  account_name           TEXT NOT NULL,
+  adaptor_device_id      TEXT,
+  encrypted_token_bundle TEXT,
+  key_version            INTEGER,
+  token_expires_at       INTEGER,
+  needs_reconnect        INTEGER NOT NULL DEFAULT 0,
+  created_at             INTEGER NOT NULL,
+  updated_at             INTEGER NOT NULL,
+  FOREIGN KEY (seito_id) REFERENCES seito(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS baidu_source (
+  id                    TEXT PRIMARY KEY,
+  owner_seito_id        TEXT NOT NULL,
+  authorization_id      TEXT NOT NULL,
+  bushitsu_id           TEXT NOT NULL,
+  enmoku_id             TEXT NOT NULL UNIQUE,
+  file_name             TEXT NOT NULL,
+  size                  INTEGER,
+  retention_mode        TEXT NOT NULL CHECK (retention_mode IN ('server-saved', 'user-held')),
+  adaptor_device_id     TEXT,
+  encrypted_fsid        TEXT,
+  upstream_handle       TEXT,
+  created_at            INTEGER NOT NULL,
+  FOREIGN KEY (owner_seito_id) REFERENCES seito(id) ON DELETE CASCADE,
+  FOREIGN KEY (bushitsu_id) REFERENCES bushitsu(id) ON DELETE CASCADE,
+  FOREIGN KEY (enmoku_id) REFERENCES enmoku(id) ON DELETE CASCADE,
+  CHECK (
+    (retention_mode = 'server-saved' AND encrypted_fsid IS NOT NULL
+      AND upstream_handle IS NULL AND adaptor_device_id IS NULL)
+    OR
+    (retention_mode = 'user-held' AND encrypted_fsid IS NULL
+      AND upstream_handle IS NOT NULL AND adaptor_device_id IS NOT NULL)
+  )
+);
+
+CREATE INDEX IF NOT EXISTS baidu_source_room ON baidu_source(bushitsu_id, id);
+CREATE INDEX IF NOT EXISTS baidu_source_owner ON baidu_source(owner_seito_id, id);
+
+CREATE TABLE IF NOT EXISTS baidu_adaptor_session (
+  token_digest TEXT PRIMARY KEY,
+  seito_id     TEXT NOT NULL,
+  device_id    TEXT NOT NULL,
+  created_at   INTEGER NOT NULL,
+  expires_at   INTEGER NOT NULL,
+  last_seen_at INTEGER NOT NULL,
+  revoked_at   INTEGER,
+  FOREIGN KEY (seito_id) REFERENCES seito(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS baidu_adaptor_session_owner
+  ON baidu_adaptor_session(seito_id, device_id, expires_at);

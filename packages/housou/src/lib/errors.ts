@@ -31,6 +31,30 @@ export class Unauthorized extends Error {
   code = "UNAUTHORIZED" as const
 }
 
+export class BaiduUnavailable extends Error {
+  code = "BAIDU_UNAVAILABLE" as const
+}
+
+export class BaiduConnectionRequired extends Error {
+  code = "BAIDU_CONNECTION_REQUIRED" as const
+}
+
+export class BaiduStateInvalid extends Error {
+  code = "BAIDU_STATE_INVALID" as const
+}
+
+export class BaiduAdaptorRequired extends Error {
+  code = "BAIDU_ADAPTOR_REQUIRED" as const
+}
+
+export class BaiduSourceNotFound extends Error {
+  code = "BAIDU_SOURCE_NOT_FOUND" as const
+}
+
+export class BaiduGrantInvalid extends Error {
+  code = "BAIDU_GRANT_INVALID" as const
+}
+
 const STATUS: Record<string, number> = {
   BUSHITSU_NOT_FOUND: 404,
   ENMOKU_NOT_FOUND: 404,
@@ -44,6 +68,12 @@ const STATUS: Record<string, number> = {
   EISHA_PRIVATE_UPSTREAM: 400,
   EISHA_UNSUPPORTED_SOURCE: 422,
   EISHA_UPSTREAM_ERROR: 502,
+  BAIDU_UNAVAILABLE: 503,
+  BAIDU_CONNECTION_REQUIRED: 409,
+  BAIDU_STATE_INVALID: 400,
+  BAIDU_ADAPTOR_REQUIRED: 428,
+  BAIDU_SOURCE_NOT_FOUND: 404,
+  BAIDU_GRANT_INVALID: 403,
 }
 
 export function statusFor(code: string): number {

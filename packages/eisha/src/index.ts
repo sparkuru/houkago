@@ -1,4 +1,5 @@
 export * from "./errors"
+export * from "./baidu"
 export * from "./dash"
 export * from "./danmaku"
 export * from "./parsers/bilibili"

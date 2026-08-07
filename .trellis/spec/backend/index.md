@@ -21,6 +21,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Done |
 | [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | Done |
 | [Seitoshou Authentication](./seitoshou-contract.md) | Account, session, REST, and WebSocket authority boundary | Done |
+| [Baidu Provider Contract](./baidu-provider-contract.md) | OAuth retention, source binding, private dlink exchange, and direct-playback grants | Done |
 
 ---
 
@@ -48,7 +49,7 @@ Before backend work is submit-ready, run the repository checks through `./dx`:
 - `./dx bun run format`
 - `./dx bun run lint`
 - `./dx bun run typecheck`
-- `./dx bun test`
+- `./dx bun run test` (all Bun suites; Playwright remains a separate runner)
 
 Use focused package tests while iterating, then the full suite before commit.
 Apply the Trellis Submit-Ready Human Review Gate from `.trellis/workflow.md`

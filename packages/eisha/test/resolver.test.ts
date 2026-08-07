@@ -172,7 +172,8 @@ test("dispatches Bilibili URLs to the platform parser", async () => {
     ownerName: "Bili UP",
     stats: { view: 1, danmaku: 2, reply: 3 },
   })
-  expect(decodeProxyRef(resolved.provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "").url).toBe(
+  const provider = resolved.provider?.kind === "bilibili" ? resolved.provider : undefined
+  expect(decodeProxyRef(provider?.coverUrl?.split("/eisha/proxy/")[1] ?? "").url).toBe(
     "https://i0.hdslb.com/bfs/archive/cover.jpg",
   )
   const dashRef = decodeDashManifestRef(resolved.url.split("/eisha/dash/")[1] ?? "")

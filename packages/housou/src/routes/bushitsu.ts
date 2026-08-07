@@ -12,7 +12,8 @@ import {
   removeBuin,
   removeEnmoku,
 } from "../domain/bushitsu"
-import { Forbidden } from "../lib/errors"
+import { cancelBaiduForEnmoku } from "../lib/baidu"
+import { BaiduStateInvalid, Forbidden } from "../lib/errors"
 import { canDo, getKengen } from "../lib/kengen"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
@@ -102,6 +103,7 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   // 演目を消す：delete a queued enmoku from this room.
   .delete("/:id/enmoku/:enmokuId", ({ params, request }) => {
     authorizePlaylistMutation(request, params.id)
+    cancelBaiduForEnmoku(params.enmokuId, params.id)
     const result = removeEnmoku(params.id, params.enmokuId)
     broadcastBangumi(params.id)
     return result
@@ -118,7 +120,11 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
   )
   .delete("/:id/bangumi/pending", ({ params, request }) => {
     authorizeBuchouMutation(request, params.id)
-    const result = clearBangumiPending(params.id, shinkouSeigyo.genjou(params.id).enmokuId)
+    const currentEnmokuId = shinkouSeigyo.genjou(params.id).enmokuId
+    for (const enmoku of fetchBangumi(params.id)) {
+      if (enmoku.id !== currentEnmokuId) cancelBaiduForEnmoku(enmoku.id, params.id)
+    }
+    const result = clearBangumiPending(params.id, currentEnmokuId)
     broadcastBangumi(params.id)
     return result
   })
@@ -154,10 +160,13 @@ async function createEnmoku(
       addedBy,
     })
   }
+  if (input.provider?.kind === "baidu") {
+    throw new BaiduStateInvalid("Baidu sources must be created through the Baidu source endpoint")
+  }
   return addEnmoku(bushitsuId, { ...input, addedBy })
 }
 
-function authorizePlaylistMutation(request: Request, bushitsuId: string): string {
+export function authorizePlaylistMutation(request: Request, bushitsuId: string): string {
   requireTrustedOrigin(request.headers.get("origin"))
   const actor = seitoFromRequest(request)
   const room = fetchBushitsu(bushitsuId)
@@ -193,16 +202,17 @@ async function previewEnmoku(
     state: "ready" as const,
     title: source.title,
     type: source.type,
-    provider: source.provider
-      ? { kind: source.provider.kind, ownerName: source.provider.ownerName }
-      : undefined,
+    provider:
+      source.provider?.kind === "bilibili"
+        ? { kind: source.provider.kind, ownerName: source.provider.ownerName }
+        : undefined,
     sourceCount: source.sources?.length,
     subtitleCount: source.subtitles ? Object.keys(source.subtitles).length : undefined,
     live: source.live,
   }
 }
 
-function broadcastBangumi(bushitsuId: string): void {
+export function broadcastBangumi(bushitsuId: string): void {
   const bangumi = serverMsg("BANGUMI", { enmoku: fetchBangumi(bushitsuId) })
   broadcastRoom(bushitsuId, bangumi)
 }

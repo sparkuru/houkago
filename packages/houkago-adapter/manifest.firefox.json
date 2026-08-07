@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Houkago Adapter",
+  "version": "0.1.0",
+  "description": "Versioned desktop capabilities for Houkago",
+  "permissions": [
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "http://*/*",
+    "https://*/*",
+    "https://pan.baidu.com/*",
+    "https://d.pcs.baidu.com/*",
+    "https://pcs.baidu.com/*",
+    "https://*.baidupcs.com/*"
+  ],
+  "optional_permissions": [],
+  "background": { "scripts": ["background.js"] },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": { "id": "houkago-adapter@houkago.local", "strict_min_version": "128.0" }
+  }
+}

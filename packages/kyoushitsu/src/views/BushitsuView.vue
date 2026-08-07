@@ -8,8 +8,10 @@ import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useRoomMotion } from "@/composables/use-room-motion"
+import { useBaiduPlayback } from "@/composables/useBaiduPlayback"
 import { useShinkou } from "@/composables/useShinkou"
 import { t } from "@/i18n"
+import { baiduPlaybackAvailability, baiduProvider } from "@/lib/baidu-provider"
 import {
   canCancelBangumiItem,
   canClearPendingBangumi,
@@ -84,8 +86,13 @@ const hasInlineMetadata = computed(() => {
   return metadata ? metadata.subtitleNames.length > 0 || metadata.live !== undefined : false
 })
 const currentPlayableUrl = computed(() =>
-  current.value ? enmokuPlayableUrl(current.value, selectedSourceIndex.value) : "",
+  current.value
+    ? baiduProvider(current.value)
+      ? baiduPlayback.preparedGrantUrl.value
+      : enmokuPlayableUrl(current.value, selectedSourceIndex.value)
+    : "",
 )
+const currentBaiduProvider = computed(() => (current.value ? baiduProvider(current.value) : null))
 const selectedSourceValue = computed({
   get: () => sourceValue(selectedSourceIndex.value),
   set: (value: string) => {
@@ -130,6 +137,7 @@ let client: KousokuClient | null = null
 // player (部員). The controller gates by role + 追従中; this view just connects.
 const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
 const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
+const baiduPlayback = useBaiduPlayback(bushitsuId)
 const bootstrapped = ref(false)
 let stopEnmokuWatch: ReturnType<typeof watch> | null = null
 
@@ -201,6 +209,8 @@ const playerEl = computed<HTMLElement | null>(() => playerRef.value?.playerEl ??
 const controlsShown = ref(true)
 const playbackTime = ref(0)
 const DANMAKU_BASE_SIZE = 22
+const BAIDU_AVAILABILITY_REFRESH_MS = 15_000
+let baiduAvailabilityTimer: ReturnType<typeof setInterval> | null = null
 // 演目切替（current 変更）で player が再 mount され control 発火前は条あり扱いに
 // 復位させる。EnmokuPlayer 卸載は control を停発するので親側で戻す。
 watch(current, () => {
@@ -212,6 +222,28 @@ watch(current, () => {
 watch(currentEnmokuId, (id, previousId) => {
   if (id !== previousId) selectedSubtitleValue.value = SUBTITLE_OFF_VALUE
 })
+
+watch(
+  () => bushitsu.bangumi,
+  (enmoku) => {
+    if (bushitsu.nyuushitsuStatus === "entered") void baiduPlayback.refreshAvailabilities(enmoku)
+  },
+)
+
+watch(
+  () => bushitsu.shusseki,
+  () => refreshBaiduAvailabilities(),
+)
+
+function refreshBaiduAvailabilities(): void {
+  if (
+    bushitsu.nyuushitsuStatus !== "entered" ||
+    !bushitsu.bangumi.some((enmoku) => baiduProvider(enmoku))
+  ) {
+    return
+  }
+  void baiduPlayback.refreshAvailabilities(bushitsu.bangumi)
+}
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
@@ -402,6 +434,8 @@ function sendJouei(enmokuId: string | null) {
 }
 
 function playBangumi(enmokuId: string) {
+  const enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
+  if (enmoku && !canPlayEnmoku(enmoku)) return
   sendJouei(enmokuId)
 }
 
@@ -459,6 +493,7 @@ async function clearPendingBangumi() {
 }
 
 function sourceBadge(enmoku: Enmoku): string {
+  if (baiduProvider(enmoku)) return "百"
   if (bilibiliProvider(enmoku)) return "哔"
   switch (enmoku.type) {
     case "direct":
@@ -473,8 +508,68 @@ function sourceBadge(enmoku: Enmoku): string {
 }
 
 function sourceBadgeTitle(enmoku: Enmoku): string {
+  if (baiduProvider(enmoku)) return t("baiduProvider")
   return bilibiliProvider(enmoku) ? t("providerBilibili") : enmoku.type.toUpperCase()
 }
+
+function canPlayEnmoku(enmoku: Enmoku): boolean {
+  if (!canPlayBangumiItem(bushitsu.canPlaylist)) return false
+  const provider = baiduProvider(enmoku)
+  if (!provider) return true
+  return baiduPlaybackAvailability(
+    enmoku,
+    baiduPlayback.clientState.value,
+    baiduPlayback.availabilityBySourceId.value[provider.sourceId],
+  ).ready
+}
+
+function baiduQueueStatus(enmoku: Enmoku): string {
+  const provider = baiduProvider(enmoku)
+  const availability = baiduPlaybackAvailability(
+    enmoku,
+    baiduPlayback.clientState.value,
+    provider ? baiduPlayback.availabilityBySourceId.value[provider.sourceId] : undefined,
+  )
+  if (availability.ready || availability.reason === "not-baidu") return ""
+  switch (availability.reason) {
+    case "mobile":
+      return t("baiduSourceDesktopOnly")
+    case "adaptor-incompatible":
+      return t("baiduSourceAdapterIncompatible")
+    case "owner-offline":
+      return t("baiduSourceOwnerOffline")
+    case "availability-unknown":
+      return t("baiduSourceChecking")
+    case "reconnect-required":
+    case "integration-unavailable":
+      return t("baiduReconnectRequiredTitle")
+    default:
+      return t("baiduSourceAdapterRequired")
+  }
+}
+
+const baiduPlaybackMessage = computed(() => {
+  switch (baiduPlayback.state.value) {
+    case "preparing":
+      return t("baiduSourcePreparing")
+    case "waiting-owner":
+      return t("baiduSourceWaitingOwnerDevice")
+    case "mobile":
+      return t("baiduDesktopRequired")
+    case "adaptor-missing":
+      return t("baiduAdapterMissing")
+    case "adaptor-incompatible":
+      return t("baiduAdapterIncompatible")
+    case "owner-offline":
+      return t("baiduOwnerOffline")
+    case "connection-revoked":
+      return t("baiduReconnectRequired")
+    case "unavailable":
+      return t("baiduSourcePrepareFailed")
+    default:
+      return ""
+  }
+})
 
 // 上映中の解決：apply the authoritative enmokuId by resolving it to the room's
 // Enmoku and setting `current`. If the local 番組表 lacks it (late joiner, or a
@@ -491,6 +586,7 @@ async function applyEnmokuId(enmokuId: string | null) {
     enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
   }
   current.value = enmoku
+  void baiduPlayback.prepare(enmoku)
   void loadFetchedDanmaku(enmoku)
 }
 
@@ -534,6 +630,7 @@ async function enterRoom() {
   // newer room snapshot instead of letting the older HTTP response overwrite it.
   const bangumiAtRequest = bushitsu.bangumi
   const bangumiRequest = housou.bushitsu({ id: bushitsuId }).bangumi.get()
+  void baiduPlayback.checkAdapter()
 
   // Learn who the 部長 is so isBuchou is known before we decide to follow.
   const { data: room } = await roomRequest
@@ -606,6 +703,7 @@ onMounted(() => {
   syncPortraitRoom()
   portraitRoomQuery.addEventListener("change", syncPortraitRoom)
   roomMotion.enterRoom(roomShell.value)
+  baiduAvailabilityTimer = setInterval(refreshBaiduAvailabilities, BAIDU_AVAILABILITY_REFRESH_MS)
   bushitsu.bushitsuId = bushitsuId
   void seito.restore().then((account) => {
     if (!account) {
@@ -621,6 +719,7 @@ onBeforeUnmount(() => {
   portraitRoomQuery?.removeEventListener("change", syncPortraitRoom)
   closeChatSheet(false)
   stopEnmokuWatch?.()
+  if (baiduAvailabilityTimer !== null) clearInterval(baiduAvailabilityTimer)
   client?.close()
 })
 </script>
@@ -658,7 +757,10 @@ onBeforeUnmount(() => {
     <template v-else>
       <main class="stage">
         <template v-if="current">
-          <div class="player-wrap">
+          <div
+            v-if="!currentBaiduProvider || baiduPlayback.state.value === 'ready'"
+            class="player-wrap"
+          >
             <EnmokuPlayer
               ref="playerRef"
               :key="current.id"
@@ -712,6 +814,17 @@ onBeforeUnmount(() => {
               :aria-label="t('danmakuSourceFile')"
               @change="onFileDanmakuSelected"
             />
+          </div>
+          <div v-else class="player-wrap baidu-playback-state" role="status">
+            <strong>{{ t("baiduProvider") }}</strong>
+            <p>{{ baiduPlaybackMessage }}</p>
+            <button
+              v-if="baiduPlayback.state.value !== 'preparing' && baiduPlayback.state.value !== 'mobile'"
+              type="button"
+              @click="baiduPlayback.prepare(current)"
+            >
+              {{ t("retry") }}
+            </button>
           </div>
         </template>
         <div v-else class="placeholder">
@@ -776,8 +889,8 @@ onBeforeUnmount(() => {
               <div class="bangumi-content">
                 <h3>{{ t("bangumiHeading") }}</h3>
                 <EnmokuComposer
-                  v-if="bushitsu.canPlaylist"
                   :bushitsu-id="bushitsuId"
+                  :can-playlist="bushitsu.canPlaylist"
                   @jouei="playBangumi"
                 />
                 <div v-if="bushitsu.isBuchou" class="bangumi-management">
@@ -808,7 +921,8 @@ onBeforeUnmount(() => {
                   {{ sourceBadge(e) }}
                 </span>
                 <span class="bangumi-title">
-                  {{ e.title || t("manualEnmokuTitle") }}
+                  <span>{{ e.title || t("manualEnmokuTitle") }}</span>
+                  <small v-if="baiduQueueStatus(e)">{{ baiduQueueStatus(e) }}</small>
                 </span>
                 <span class="bangumi-meta">
                   <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
@@ -827,7 +941,7 @@ onBeforeUnmount(() => {
                     v-if="bushitsu.canPlaylist"
                     type="button"
                     class="bangumi-action"
-                    :disabled="!canPlayBangumiItem(bushitsu.canPlaylist)"
+                    :disabled="!canPlayEnmoku(e)"
                     @click="playBangumi(e.id)"
                   >
                     {{ t("play") }}
@@ -1020,6 +1134,29 @@ onBeforeUnmount(() => {
 .player-wrap :deep(.enmoku-player) {
   height: 100%;
 }
+.baidu-playback-state {
+  display: grid;
+  gap: var(--space-3);
+  place-items: center;
+  align-content: center;
+  padding: var(--space-5);
+  color: var(--color-on-media);
+  text-align: center;
+  background: var(--color-media-surface);
+}
+.baidu-playback-state p {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--color-overlay-muted);
+}
+.baidu-playback-state button {
+  min-height: 44px;
+  padding: 8px 14px;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+}
 .media-toolbar {
   flex: none;
   display: flex;
@@ -1210,8 +1347,19 @@ onBeforeUnmount(() => {
 }
 .bangumi-title {
   flex: 1 1 auto;
+  display: grid;
   min-width: 0;
   overflow: hidden;
+}
+.bangumi-title > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bangumi-title small {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

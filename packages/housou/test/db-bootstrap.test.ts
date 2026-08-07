@@ -50,16 +50,28 @@ test("bootstrap backfills legacy queues in created_at then id order", async () =
           "SELECT enmoku_id, sort_key FROM bangumi_entry ORDER BY sort_key ASC, enmoku_id ASC",
         ).all(),
         bushitsuColumns: db.query("PRAGMA table_info(bushitsu)").all().map((column) => column.name),
+        baiduTables: db.query(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'baidu_%' ORDER BY name",
+        ).all().map((row) => row.name),
       }))
     `,
     { HOUSOU_DB: dbPath },
   )
 
-  const bootstrap = JSON.parse(output) as { entries: unknown; bushitsuColumns: string[] }
+  const bootstrap = JSON.parse(output) as {
+    entries: unknown
+    bushitsuColumns: string[]
+    baiduTables: string[]
+  }
   expect(bootstrap.entries).toEqual([
     { enmoku_id: "a", sort_key: 0 },
     { enmoku_id: "b", sort_key: 1 },
     { enmoku_id: "c", sort_key: 2 },
   ])
   expect(bootstrap.bushitsuColumns).toContain("kengen_json")
+  expect(bootstrap.baiduTables).toEqual([
+    "baidu_adaptor_session",
+    "baidu_connection",
+    "baidu_source",
+  ])
 })

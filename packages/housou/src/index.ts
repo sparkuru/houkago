@@ -4,6 +4,7 @@ import { eishaRoutes } from "houkago-eisha"
 import "./db/client" // applies idempotent schema on module load
 import { statusFor } from "./lib/errors"
 import { corsOrigin } from "./lib/origin"
+import { baiduRoutes } from "./routes/baidu"
 import { bushitsuRoutes } from "./routes/bushitsu"
 import { seitoshouRoutes } from "./routes/seitoshou"
 import { wsRoutes } from "./ws/handler"
@@ -21,7 +22,7 @@ export const app = new Elysia()
     }
     if (code === "VALIDATION") {
       set.status = 422
-      return { error: { code: "VALIDATION", message: (error as Error).message } }
+      return { error: { code: "VALIDATION", message: "invalid request" } }
     }
     if (code === "NOT_FOUND") {
       set.status = 404
@@ -33,6 +34,7 @@ export const app = new Elysia()
   .get("/health", () => ({ ok: true }))
   .use(eishaRoutes)
   .use(seitoshouRoutes)
+  .use(baiduRoutes)
   .use(bushitsuRoutes)
   .use(wsRoutes)
 

@@ -2,7 +2,7 @@ import { type Page, expect, test } from "@playwright/test"
 
 async function createRoom(page: Page, accountSuffix: string): Promise<void> {
   await page.goto("/")
-  const username = `pw_${Date.now()}_${accountSuffix}`
+  const username = `pw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${accountSuffix}`
     .replaceAll(/[^a-zA-Z0-9_]/g, "_")
     .slice(0, 32)
   await page.getByRole("button", { name: "没有账号？注册" }).click()
@@ -66,4 +66,52 @@ test("portrait room exposes an inline URL composer from the queue", async ({ pag
 
   await page.getByLabel("关闭添加链接").click()
   await expect(launcher).toBeVisible()
+})
+
+test("mobile keeps ordinary sources available while explaining desktop-only Baidu", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148",
+    })
+  })
+  await page.route("**/baidu/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        enabled: true,
+        serverSavedEnabled: true,
+        connected: false,
+        adaptorOnline: false,
+      }),
+    }),
+  )
+  await createRoom(page, "baidu_mobile")
+  await page.locator(".bangumi-disclosure > summary").click()
+
+  const connectionManager = page.getByRole("button", { name: "管理百度连接" })
+  await expect(connectionManager).toHaveCSS("min-height", "44px")
+  const managerBox = await connectionManager.boundingBox()
+  const viewportWidth = page.viewportSize()?.width ?? 375
+  expect(managerBox).not.toBeNull()
+  expect((managerBox?.x ?? 0) + (managerBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth)
+  await connectionManager.click()
+  const managementDialog = page.getByRole("dialog", { name: "连接百度网盘" })
+  await expect(managementDialog).toBeVisible()
+  const dialogBox = await managementDialog.boundingBox()
+  expect(dialogBox).not.toBeNull()
+  expect((dialogBox?.x ?? 0) + (dialogBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth)
+  await page.keyboard.press("Escape")
+  await expect(connectionManager).toBeFocused()
+
+  await page.getByRole("button", { name: "从百度网盘选择" }).click()
+  const dialog = page.getByRole("dialog", { name: "连接百度网盘" })
+  await expect(dialog).toContainText("百度网盘播放目前仅支持安装 houkago-adapter 的桌面浏览器")
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
+
+  await page.getByRole("button", { name: "添加链接" }).click()
+  await expect(page.getByLabel("视频链接")).toBeVisible()
 })

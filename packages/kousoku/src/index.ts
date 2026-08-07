@@ -2,3 +2,4 @@
 // kyoushitsu import domain + WS protocol types from here — never redefine.
 export * from "./domain"
 export * from "./messages"
+export * from "./adapter"

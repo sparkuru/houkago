@@ -1,14 +1,21 @@
 <script setup lang="ts">
+import BaiduConnectionDialog from "@/components/baidu/BaiduConnectionDialog.vue"
+import BaiduFileDialog from "@/components/baidu/BaiduFileDialog.vue"
+import { useBaiduSource } from "@/composables/useBaiduSource"
 import { useEnmokuPreview } from "@/composables/useEnmokuPreview"
 import { t } from "@/i18n"
-import { computed, ref } from "vue"
+import type { BaiduRetentionMode } from "houkago-kousoku"
+import { computed, nextTick, ref, watch } from "vue"
 
-const props = defineProps<{ bushitsuId: string }>()
+const props = defineProps<{ bushitsuId: string; canPlaylist: boolean }>()
 const emit = defineEmits<{ jouei: [enmokuId: string] }>()
 
 const open = ref(false)
+const baiduConnectionDialog = ref<{ open: () => void; close: () => void } | null>(null)
+const baiduFileDialog = ref<{ open: () => void; close: () => void } | null>(null)
 const { sourceUrl, title, preview, error, resolving, submitting, resolve, add, reset, edit } =
   useEnmokuPreview(props.bushitsuId)
+const baidu = useBaiduSource(props.bushitsuId)
 const errorMessage = computed(() => (error.value ? t(error.value) : ""))
 
 function close(): void {
@@ -21,29 +28,89 @@ function collapse(): void {
 }
 
 async function queue(): Promise<void> {
+  if (!props.canPlaylist) return
   const enmoku = await add()
   if (enmoku) close()
 }
 
 async function queueAndJouei(): Promise<void> {
+  if (!props.canPlaylist) return
   const enmoku = await add()
   if (!enmoku) return
   emit("jouei", enmoku.id)
   close()
 }
+
+async function openBaiduSource(): Promise<void> {
+  if (!props.canPlaylist) return
+  await baidu.refresh()
+  if (baidu.status.value?.connected && baidu.clientState.value === "ready") {
+    baiduFileDialog.value?.open()
+    await baidu.loadDirectory("/")
+    return
+  }
+  baiduConnectionDialog.value?.open()
+}
+
+async function authorizeBaidu(mode: BaiduRetentionMode): Promise<void> {
+  await baidu.authorize(mode)
+}
+
+async function refreshBaiduConnection(): Promise<void> {
+  await baidu.refresh()
+}
+
+async function revokeBaidu(): Promise<void> {
+  await baidu.revoke()
+}
+
+async function reconnectBaidu(): Promise<void> {
+  baiduFileDialog.value?.close()
+  await baidu.refresh()
+  baiduConnectionDialog.value?.open()
+}
+
+async function manageBaiduConnection(): Promise<void> {
+  baiduFileDialog.value?.close()
+  await nextTick()
+  await baidu.refresh()
+  baiduConnectionDialog.value?.open()
+}
+
+watch(
+  () => props.canPlaylist,
+  (allowed) => {
+    if (allowed) return
+    open.value = false
+    baiduFileDialog.value?.close()
+  },
+)
 </script>
 
 <template>
   <section class="enmoku-composer" :class="{ open }">
-    <button
-      v-if="!open"
-      type="button"
-      class="composer-launch"
-      :aria-expanded="open"
-      @click="open = true"
-    >
-      {{ t("sourceAddLink") }}
-    </button>
+    <div v-if="!open" class="composer-launchers">
+      <button
+        v-if="canPlaylist"
+        type="button"
+        class="composer-launch"
+        :aria-expanded="open"
+        @click="open = true"
+      >
+        {{ t("sourceAddLink") }}
+      </button>
+      <button
+        v-if="canPlaylist"
+        type="button"
+        class="composer-launch secondary"
+        @click="openBaiduSource"
+      >
+        {{ t("baiduBrowse") }}
+      </button>
+      <button type="button" class="composer-launch secondary" @click="manageBaiduConnection">
+        {{ t("baiduConnectionManager") }}
+      </button>
+    </div>
     <form v-else @submit.prevent="resolve" @keydown.esc.prevent="collapse">
       <div class="composer-head">
         <h4>{{ t("sourceAddHeading") }}</h4>
@@ -98,6 +165,32 @@ async function queueAndJouei(): Promise<void> {
         </template>
       </div>
     </form>
+    <BaiduConnectionDialog
+      ref="baiduConnectionDialog"
+      :client-state="baidu.clientState.value"
+      :status="baidu.status.value"
+      :loading="baidu.connectionLoading.value"
+      :error="baidu.connectionError.value"
+      @detect="baidu.detectAdapter"
+      @authorize="authorizeBaidu"
+      @revoke="revokeBaidu"
+      @refresh="refreshBaiduConnection"
+    />
+    <BaiduFileDialog
+      ref="baiduFileDialog"
+      :state="baidu.browserState.value"
+      :page="baidu.directoryPage.value"
+      :path="baidu.directoryPath.value"
+      :selected="baidu.selectedFile.value"
+      :adding="baidu.adding.value"
+      :error="baidu.browserError.value"
+      @navigate="baidu.loadDirectory"
+      @select="baidu.selectFile"
+      @add="baidu.addSelected"
+      @retry="baidu.loadDirectory()"
+      @reconnect="reconnectBaidu"
+      @manage="manageBaiduConnection"
+    />
   </section>
 </template>
 
@@ -116,9 +209,19 @@ async function queueAndJouei(): Promise<void> {
   background: var(--color-surface-muted);
 }
 .composer-launch {
-  width: 100%;
+  flex: 1 1 180px;
   color: var(--color-on-accent);
   background: var(--color-accent);
+}
+.composer-launchers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+.composer-launch.secondary {
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 form {
   display: grid;

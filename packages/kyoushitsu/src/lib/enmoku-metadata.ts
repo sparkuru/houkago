@@ -104,7 +104,7 @@ export function bilibiliProvider(enmoku: Enmoku): NonNullable<Enmoku["provider"]
 }
 
 export function providerStatItems(provider: Enmoku["provider"] | undefined): ProviderStatItem[] {
-  const stats = provider?.stats
+  const stats = provider?.kind === "bilibili" ? provider.stats : undefined
   if (!stats) return []
   return PROVIDER_STAT_ORDER.flatMap((key) => {
     const value = stats[key]

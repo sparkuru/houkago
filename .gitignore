@@ -11,6 +11,12 @@ dist/
 test-results/
 playwright-report/
 
+# local credentials
+.env
+.env.local
+.env.*.local
+!.env.example
+
 # data
 *.sqlite
 *.db

@@ -20,6 +20,7 @@ This directory contains guidelines for frontend development. Fill in each file w
 | [State Management](./state-management.md) | Local state, global state, server state | Done |
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Done |
 | [Type Safety](./type-safety.md) | Type patterns, validation | Done |
+| [Baidu Adapter Contract](./baidu-adapter-contract.md) | Page/extension protocol, exact origins, UI gating, and browser transport | Done |
 
 ---
 
@@ -47,7 +48,7 @@ Before frontend work is submit-ready, run the repository checks through `./dx`:
 - `./dx bun run format`
 - `./dx bun run lint`
 - `./dx bun run typecheck`
-- `./dx bun test`
+- `./dx bun run test` (all Bun suites; Playwright remains a separate runner)
 
 Browser-visible changes require the Trellis Submit-Ready Human Review Gate from
 `.trellis/workflow.md`. Ask for manual feedback for player controls, room

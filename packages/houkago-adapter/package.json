@@ -1,0 +1,21 @@
+{
+  "name": "houkago-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:firefox": "bun scripts/build.ts firefox",
+    "build:chromium": "bun scripts/build.ts chromium",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.0",
+    "houkago-eisha": "workspace:*",
+    "houkago-kousoku": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}

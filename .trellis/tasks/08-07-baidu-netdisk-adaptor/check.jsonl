@@ -1,0 +1,13 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify the end-to-end OAuth, source, grant, extension, and player data flow."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check that shared provider and transport seams prevent divergent implementations."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Review persistence, encryption metadata, ownership, and additive migration behavior."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Review safe failures and revocation behavior across trust boundaries."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Verify all sensitive Baidu and adaptor material is redacted."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Verify user ownership and session boundaries."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Apply backend quality gates and test expectations."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Review accessible dialog, source composer, and unavailable-state behavior."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Review typed provider and page-extension protocol boundaries."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Apply frontend, browser, and Playwright quality gates."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/baidu-oauth-and-download.md","reason":"Check implementation claims against the researched official Baidu contract."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/ui-ux-pro-max.md","reason":"Check the implemented dialogs and states against the agreed UX direction."}
+{"file":".trellis/tasks/08-07-baidu-netdisk-adaptor/research/userscript-capability-boundary.md","reason":"Confirm no unsupported userscript transport or installation path was introduced."}

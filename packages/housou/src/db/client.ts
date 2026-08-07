@@ -64,6 +64,32 @@ for (const [name, type] of [
   if (!enmokuColumns.has(name)) db.exec(`ALTER TABLE enmoku ADD COLUMN ${name} ${type}`)
 }
 
+const baiduConnectionColumns = new Set(
+  db
+    .query<{ name: string }, []>("PRAGMA table_info(baidu_connection)")
+    .all()
+    .map((column) => column.name),
+)
+if (!baiduConnectionColumns.has("adaptor_device_id")) {
+  db.exec("ALTER TABLE baidu_connection ADD COLUMN adaptor_device_id TEXT")
+}
+if (!baiduConnectionColumns.has("authorization_id")) {
+  db.exec("ALTER TABLE baidu_connection ADD COLUMN authorization_id TEXT")
+}
+
+const baiduSourceColumns = new Set(
+  db
+    .query<{ name: string }, []>("PRAGMA table_info(baidu_source)")
+    .all()
+    .map((column) => column.name),
+)
+if (!baiduSourceColumns.has("adaptor_device_id")) {
+  db.exec("ALTER TABLE baidu_source ADD COLUMN adaptor_device_id TEXT")
+}
+if (!baiduSourceColumns.has("authorization_id")) {
+  db.exec("ALTER TABLE baidu_source ADD COLUMN authorization_id TEXT")
+}
+
 // Additive queue-placement upgrade. Existing rooms used Enmoku creation order;
 // preserve that deterministic order while making future moves durable.
 db.exec(
