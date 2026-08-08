@@ -1834,3 +1834,24 @@ Delivered the Firefox-reference Baidu Netdisk adaptor with official OAuth, serve
 ### Status
 
 [OK] **Completed**
+
+
+## Session 59: Chromium Baidu adaptor production gate
+
+**Date**: 2026-08-08
+**Task**: Chromium Baidu adaptor production gate
+**Branch**: `k-on`
+
+### Summary
+
+Hardened Chromium MV3 grant/DNR lifecycle and cache enforcement, added an installed-extension browser harness, fixed cancellable OAuth handoff timing, documented callback and media compatibility boundaries, and passed real Chrome/Edge server-saved and user-held validation with 302 repository tests.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e211897` | (see git log) |
+
+### Status
+
+[OK] **Completed**
