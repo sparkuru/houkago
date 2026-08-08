@@ -8,9 +8,13 @@ export function installChromiumPolling(
   alarms: ChromiumAlarms,
   runtime: Pick<AdapterRuntime, "poll">,
   warn: (message: string) => void = console.warn,
+  reconcile: () => Promise<void> = async () => {},
 ): void {
   const poll = () => {
-    void runtime.poll().catch(() => warn("houkago-adapter: pending request poll failed"))
+    void reconcile()
+      .catch(() => warn("houkago-adapter: Chromium rule reconciliation failed"))
+      .then(() => runtime.poll())
+      .catch(() => warn("houkago-adapter: pending request poll failed"))
   }
   alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === BAIDU_POLL_ALARM) poll()

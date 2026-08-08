@@ -7,10 +7,12 @@ import type {
   ChromiumAlarms,
   ChromiumBrowser,
   ChromiumDlinkBrowser,
+  ChromiumGrantBrowser,
 } from "../types"
 
 declare const chrome: ChromiumBrowser &
   ChromiumDlinkBrowser & {
+    declarativeNetRequest: ChromiumGrantBrowser["declarativeNetRequest"]
     runtime: {
       onMessage: {
         addListener(
@@ -28,6 +30,7 @@ declare const chrome: ChromiumBrowser &
         set(values: Record<string, unknown>): Promise<void>
         remove(key: string): Promise<void>
       }
+      session: ChromiumGrantBrowser["storage"]["session"]
     }
     permissions: {
       contains(permissions: { origins: string[] }): Promise<boolean>
@@ -70,4 +73,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true
 })
 
-installChromiumPolling(chrome.alarms, runtime)
+installChromiumPolling(chrome.alarms, runtime, console.warn, () => grants.reconcile())

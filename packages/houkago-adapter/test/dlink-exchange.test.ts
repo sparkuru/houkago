@@ -135,6 +135,12 @@ test("Chromium wraps the private HEAD in one exact temporary DNR rule", async ()
       type: "modifyHeaders",
       requestHeaders: [{ header: "user-agent", operation: "set", value: "pan.baidu.com" }],
     },
+    condition: {
+      regexFilter: "^https://d\\.pcs\\.baidu\\.com/private\\?cap=1&access_token=access-secret$",
+      isUrlFilterCaseSensitive: true,
+      tabIds: [-1],
+      resourceTypes: ["xmlhttprequest"],
+    },
   })
   expect(JSON.stringify(updates[0])).not.toContain('"header":"referer"')
   expect(JSON.stringify(updates[0])).not.toContain('"header":"range"')

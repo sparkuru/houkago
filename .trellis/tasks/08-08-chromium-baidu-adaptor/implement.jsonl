@@ -1,0 +1,12 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Chromium hardening spans page messaging, extension lifecycle, provider grants, browser requests, and human validation."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Keep browser-specific recovery behind the transport port and avoid a second provider implementation or Edge fork."}
+{"file":".trellis/spec/frontend/index.md","reason":"Frontend and extension-adjacent package ownership and required conventions."}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Preserve the existing token, dlink, direct-byte, lifecycle, and page-extension security contract."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Chromium API ports, session registry, diagnostics, and page messages require strict typed boundaries."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Any installed-browser diagnostic adjustment must reuse accessible project component patterns."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Apply frontend, extension, browser, build, and Playwright verification expectations."}
+{"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Chromium fixes must not weaken server authorization, pending-grant, or no-media-proxy guarantees."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Installed diagnostics and evidence must redact tokens, dlinks, cookies, ids, and pairing material."}
+{"file":".trellis/tasks/08-08-chromium-baidu-adaptor/research/chromium-mv3-lifecycle.md","reason":"Primary Chrome and Edge lifecycle/API evidence driving session-rule reconciliation and the browser matrix."}
+{"file":".trellis/tasks/08-08-chromium-baidu-adaptor/research/ui-ux-pro-max.md","reason":"Approved diagnostic-state accessibility and recovery guidance; generated visual redesign recommendations are explicitly rejected."}
+{"file":".trellis/tasks/archive/2026-08/08-07-baidu-netdisk-adaptor/research/baidu-oauth-and-download.md","reason":"Preserve the official Baidu UA/dlink/host boundary while hardening Chromium transport."}

@@ -20,6 +20,7 @@ test("development builds allow HTTP and HTTPS pages and servers", async () => {
     expect(permissions).toContain("https://pan.baidu.com/*")
     expect(permissions).toContain("https://*.baidupcs.com/*")
     if (browser === "chromium") {
+      expect(manifest.minimum_chrome_version).toBe("120")
       expect(manifest.permissions).toContain("webRequest")
       expect(manifest.permissions).toContain("alarms")
       expect(manifest.permissions).not.toContain("webRequestBlocking")
@@ -51,6 +52,7 @@ test("production build binds separate exact page and server origins", async () =
     expect(permissions).toContain("https://pan.baidu.com/*")
     expect(permissions).toContain("https://*.baidupcs.com/*")
     if (browser === "chromium") {
+      expect(manifest.minimum_chrome_version).toBe("120")
       expect(manifest.permissions).toContain("webRequest")
       expect(manifest.permissions).toContain("alarms")
       expect(manifest.permissions).not.toContain("webRequestBlocking")

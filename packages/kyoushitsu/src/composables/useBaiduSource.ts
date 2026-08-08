@@ -8,8 +8,10 @@ import {
 } from "@/api/baidu"
 import { detectAndPairBaiduAdapter } from "@/composables/baidu-adapter"
 import { t } from "@/i18n"
+import { redeemBaiduOauthHandoffWithRetry } from "@/lib/baidu-oauth-handoff"
 import {
   type BaiduOauthWindow,
+  baiduOauthWindowClosed,
   navigateBaiduOauthWindow,
   openBaiduOauthWindow,
 } from "@/lib/baidu-oauth-window"
@@ -49,6 +51,9 @@ export function useBaiduSource(bushitsuId: string) {
   let oauthWindow: BaiduOauthWindow | null = null
   let pendingOauthMode: BaiduRetentionMode | null = null
   let waitingForOauthReturn = false
+  let oauthFlowId = 0
+  let oauthAbortController: AbortController | null = null
+  let finishingAuthorization: { flowId: number; task: Promise<void> } | null = null
 
   async function detectAdapterInternal(): Promise<void> {
     if (clientState.value === "mobile") return
@@ -85,16 +90,24 @@ export function useBaiduSource(bushitsuId: string) {
   }
 
   async function authorize(mode: BaiduRetentionMode): Promise<void> {
-    oauthWindow?.close()
+    const previousTask = cancelAuthorizationFlow()
+    const flowId = oauthFlowId
     const popup = openBaiduOauthWindow(window)
     if (!popup) {
       connectionError.value = t("baiduPopupBlocked")
+      await previousTask
+      if (oauthFlowId === flowId) connectionLoading.value = false
       return
     }
     oauthWindow = popup
     connectionLoading.value = true
     connectionError.value = ""
     try {
+      await previousTask
+      if (oauthFlowId !== flowId) {
+        popup.close()
+        return
+      }
       const deviceId = mode === "user-held" ? adapterHello.value?.deviceId : undefined
       if (mode === "user-held" && !userHeldCapabilitiesReady(adapterHello.value)) {
         connectionError.value = t("baiduAdapterIncompatible")
@@ -103,6 +116,10 @@ export function useBaiduSource(bushitsuId: string) {
         return
       }
       const { data } = await startBaiduOauth(mode, deviceId)
+      if (oauthFlowId !== flowId) {
+        popup.close()
+        return
+      }
       if (!data) {
         connectionError.value = t("baiduDirectoryError")
         popup.close()
@@ -112,30 +129,69 @@ export function useBaiduSource(bushitsuId: string) {
       pendingOauthMode = mode
       navigateBaiduOauthWindow(popup, data.authorizationUrl)
       waitingForOauthReturn = true
+      oauthAbortController = new AbortController()
       window.removeEventListener("focus", finishAuthorization)
       window.addEventListener("focus", finishAuthorization)
     } catch {
-      connectionError.value = t("baiduDirectoryError")
       popup.close()
-      oauthWindow = null
+      if (oauthFlowId !== flowId) return
+      connectionError.value = t("baiduDirectoryError")
+      if (oauthWindow === popup) oauthWindow = null
     } finally {
-      connectionLoading.value = false
+      if (oauthFlowId === flowId) connectionLoading.value = false
     }
   }
 
   async function finishAuthorization(): Promise<void> {
-    if (!waitingForOauthReturn) return
+    const flowId = oauthFlowId
+    if (
+      !waitingForOauthReturn ||
+      !baiduOauthWindowClosed(oauthWindow) ||
+      finishingAuthorization?.flowId === flowId
+    ) {
+      return
+    }
+    const mode = pendingOauthMode
+    const signal = oauthAbortController?.signal
+    connectionLoading.value = true
+    connectionError.value = ""
+    const task = completeAuthorization(flowId, mode, signal)
+    finishingAuthorization = { flowId, task }
+    try {
+      await task
+    } finally {
+      if (finishingAuthorization?.task === task) finishingAuthorization = null
+      if (oauthFlowId === flowId) connectionLoading.value = false
+    }
+  }
+
+  async function completeAuthorization(
+    flowId: number,
+    mode: BaiduRetentionMode | null,
+    signal: AbortSignal | undefined,
+  ): Promise<void> {
+    const redeemed =
+      mode !== "user-held" ||
+      (await redeemBaiduOauthHandoffWithRetry(
+        () => houkagoAdapter.redeemOauthHandoff(housouUrl()),
+        {
+          active: () => waitingForOauthReturn && oauthFlowId === flowId,
+          signal,
+          retryable: (error) =>
+            error instanceof AdapterBridgeError && error.code === "ADAPTER_ERROR",
+        },
+      ))
+    if (!waitingForOauthReturn || oauthFlowId !== flowId) return
+    if (!redeemed) {
+      connectionError.value = t("baiduDirectoryError")
+      return
+    }
+
     waitingForOauthReturn = false
     window.removeEventListener("focus", finishAuthorization)
     oauthWindow = null
-    if (pendingOauthMode === "user-held") {
-      try {
-        await houkagoAdapter.redeemOauthHandoff(housouUrl())
-      } catch {
-        connectionError.value = t("baiduDirectoryError")
-      }
-    }
     pendingOauthMode = null
+    oauthAbortController = null
     await refreshStatus()
   }
 
@@ -143,6 +199,7 @@ export function useBaiduSource(bushitsuId: string) {
     connectionLoading.value = true
     connectionError.value = ""
     try {
+      await cancelAuthorizationFlow()
       const { error } = await revokeBaiduConnection()
       if (error) {
         connectionError.value = t("baiduRevokeFailed")
@@ -260,10 +317,20 @@ export function useBaiduSource(bushitsuId: string) {
   }
 
   onBeforeUnmount(() => {
-    waitingForOauthReturn = false
-    window.removeEventListener("focus", finishAuthorization)
-    oauthWindow?.close()
+    void cancelAuthorizationFlow()
   })
+
+  function cancelAuthorizationFlow(): Promise<void> {
+    oauthFlowId += 1
+    waitingForOauthReturn = false
+    pendingOauthMode = null
+    window.removeEventListener("focus", finishAuthorization)
+    oauthAbortController?.abort()
+    oauthAbortController = null
+    oauthWindow?.close()
+    oauthWindow = null
+    return finishingAuthorization?.task ?? Promise.resolve()
+  }
 
   return {
     status,

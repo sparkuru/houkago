@@ -19,6 +19,8 @@ import { BaiduSelectionRegistry } from "../src/selections"
 import type {
   AdapterStorage,
   ChromiumBrowser,
+  ChromiumGrantBrowser,
+  ChromiumSessionRule,
   FirefoxBrowser,
   WebRequestDetails,
   WebRequestHeadersReceivedDetails,
@@ -318,7 +320,9 @@ test("Chromium session rules bind redirect and headers to one tab and exact URLs
       requestHeaders: [
         { header: "user-agent", operation: "set", value: "pan.baidu.com" },
         { header: "referer", operation: "remove" },
+        { header: "cache-control", operation: "set", value: "no-cache" },
       ],
+      responseHeaders: [{ header: "cache-control", operation: "set", value: "no-store" }],
     },
     condition: {
       regexFilter: "^https://d\\.pcs\\.baidu\\.com/file\\?cap=1$",
@@ -382,13 +386,7 @@ test("Chromium runtime port removes each session grant at its expiry", async () 
   }> = []
   const cleanups: Array<() => void> = []
   let delay = 0
-  const browserApi: ChromiumBrowser = {
-    declarativeNetRequest: {
-      async updateSessionRules(value) {
-        updates.push(value)
-      },
-    },
-  }
+  const browserApi = chromiumGrantBrowser((value) => updates.push(value))
   const port = new ChromiumGrantPort(browserApi, (handler, timeout) => {
     cleanups.push(handler)
     delay = timeout
@@ -407,7 +405,7 @@ test("Chromium runtime port removes each session grant at its expiry", async () 
     },
   })
   cleanups[0]?.()
-  await Promise.resolve()
+  await new Promise((resolve) => setTimeout(resolve, 0))
   expect(updates[1]).toEqual({ removeRuleIds: ids })
 })
 
@@ -418,13 +416,7 @@ test("Chromium runtime port cancels timers and removes every rule on account cle
   }> = []
   const timerHandle = { id: 1 }
   const cleared: unknown[] = []
-  const browserApi: ChromiumBrowser = {
-    declarativeNetRequest: {
-      async updateSessionRules(value) {
-        updates.push(value)
-      },
-    },
-  }
+  const browserApi = chromiumGrantBrowser((value) => updates.push(value))
   const port = new ChromiumGrantPort(
     browserApi,
     () => timerHandle,
@@ -435,6 +427,44 @@ test("Chromium runtime port cancels timers and removes every rule on account cle
   expect(cleared).toEqual([timerHandle])
   expect(updates[1]).toEqual({ removeRuleIds: ids })
 })
+
+function chromiumGrantBrowser(
+  onUpdate: (value: {
+    removeRuleIds: number[]
+    addRules?: Array<Record<string, unknown>>
+  }) => void,
+): ChromiumGrantBrowser {
+  const rules = new Map<number, ChromiumSessionRule>()
+  const values = new Map<string, unknown>()
+  return {
+    declarativeNetRequest: {
+      async getSessionRules() {
+        return [...rules.values()]
+      },
+      async updateSessionRules(value) {
+        onUpdate(value)
+        for (const id of value.removeRuleIds) rules.delete(id)
+        for (const rule of value.addRules ?? []) {
+          if (typeof rule.id !== "number") throw new Error("test rule id missing")
+          rules.set(rule.id, { ...rule, id: rule.id })
+        }
+      },
+    },
+    storage: {
+      session: {
+        async get(key) {
+          return values.has(key) ? { [key]: values.get(key) } : {}
+        },
+        async set(next) {
+          for (const [key, value] of Object.entries(next)) values.set(key, value)
+        },
+        async remove(key) {
+          values.delete(key)
+        },
+      },
+    },
+  }
+}
 
 test("persisted permit data is validated before it can authorize a dlink request", async () => {
   const values = new Map<string, unknown>()

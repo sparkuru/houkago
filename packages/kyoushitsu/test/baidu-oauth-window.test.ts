@@ -1,10 +1,15 @@
 import { expect, test } from "bun:test"
-import { navigateBaiduOauthWindow, openBaiduOauthWindow } from "../src/lib/baidu-oauth-window"
+import {
+  baiduOauthWindowClosed,
+  navigateBaiduOauthWindow,
+  openBaiduOauthWindow,
+} from "../src/lib/baidu-oauth-window"
 
 test("OAuth popup opens synchronously, drops opener, then navigates", () => {
   const navigations: string[] = []
   const popup = {
     opener: { unsafe: true },
+    closed: false,
     location: { replace: (url: string) => navigations.push(url) },
     close: () => {},
   }
@@ -17,6 +22,9 @@ test("OAuth popup opens synchronously, drops opener, then navigates", () => {
   })
   expect(opened).toBe(popup)
   expect(popup.opener).toBeNull()
+  expect(baiduOauthWindowClosed(opened)).toBe(false)
+  popup.closed = true
+  expect(baiduOauthWindowClosed(opened)).toBe(true)
   if (opened) navigateBaiduOauthWindow(opened, "https://openapi.baidu.test/oauth")
   expect(navigations).toEqual(["https://openapi.baidu.test/oauth"])
 })

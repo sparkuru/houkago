@@ -1,0 +1,12 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify installed-browser evidence traces across page, extension worker, DNR/WebRequest, server grants, and Baidu traffic."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check that Chrome/Edge share one artifact and Chromium changes do not duplicate shared provider behavior."}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Audit token secrecy, exact rule scoping, cleanup, lifecycle revocation, and ordinary-source non-interference."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Review typed Chrome API/session-state/message boundaries and fail-closed parsing."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Review any diagnostics for focus, semantic status, recovery actions, and existing visual consistency."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Apply complete unit, browser, build, accessibility, and artifact quality gates."}
+{"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Confirm Chromium hardening preserves server-side authorization and the non-proxy data plane."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check stable secret-free terminal/retry behavior for DNR, worker, pairing, and upstream failures."}
+{"file":".trellis/spec/backend/logging-guidelines.md","reason":"Scan code, logs, evidence, and artifacts for sensitive Baidu and adaptor material."}
+{"file":".trellis/tasks/08-08-chromium-baidu-adaptor/research/chromium-mv3-lifecycle.md","reason":"Check lifecycle and compatibility claims against primary Chrome and Microsoft documentation."}
+{"file":".trellis/tasks/08-08-chromium-baidu-adaptor/research/ui-ux-pro-max.md","reason":"Check only the approved accessible diagnostic rules and prevent task-scope visual redesign."}
+{"file":".trellis/tasks/archive/2026-08/08-07-baidu-netdisk-adaptor/research/baidu-oauth-and-download.md","reason":"Verify UA/dlink and allowed-host behavior remains consistent with researched Baidu requirements."}

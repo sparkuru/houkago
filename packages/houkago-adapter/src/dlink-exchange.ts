@@ -1,4 +1,9 @@
 import { type BaiduDlink, type BaiduFetcher, fetchBaiduDlink } from "houkago-eisha/baidu"
+import {
+  exactChromiumUrlRegex,
+  releaseChromiumPrivateRuleId,
+  reserveChromiumPrivateRuleId,
+} from "./chromium-rules"
 import { withBaiduUserAgent } from "./grants"
 import type {
   ChromiumDlinkBrowser,
@@ -56,14 +61,13 @@ export function chromiumDlinkResolver(
   browserApi: ChromiumDlinkBrowser,
   baseFetcher: BaiduFetcher = fetch,
 ): BaiduDlinkResolver {
-  let nextRuleId = 40_000
   const runExclusive = exclusiveByKey()
   return (accessToken, fsid) =>
     fetchBaiduDlink(accessToken, fsid, async (input, init) => {
       if (init?.method !== "HEAD") return baseFetcher(input, init)
       const rawUrl = String(input)
       return runExclusive(rawUrl, async () => {
-        const ruleId = nextRuleId++
+        const ruleId = reserveChromiumPrivateRuleId()
         let requestId: string | null = null
         let redirect: ObservedRedirect | null = null
         const beforeHeaders = (details: WebRequestDetails) => {
@@ -80,7 +84,8 @@ export function chromiumDlinkResolver(
         }
         let beforeHeadersInstalled = false
         let headersReceivedInstalled = false
-        let ruleInstalled = false
+        let ruleAttempted = false
+        let outcome: { ok: true; response: Response } | { ok: false; error: unknown }
         try {
           browserApi.webRequest.onBeforeSendHeaders.addListener(beforeHeaders, {
             urls: [requestPattern(rawUrl)],
@@ -93,6 +98,7 @@ export function chromiumDlinkResolver(
             ["responseHeaders"],
           )
           headersReceivedInstalled = true
+          ruleAttempted = true
           await browserApi.declarativeNetRequest.updateSessionRules({
             removeRuleIds: [ruleId],
             addRules: [
@@ -106,26 +112,39 @@ export function chromiumDlinkResolver(
                   ],
                 },
                 condition: {
-                  urlFilter: `|${rawUrl}|`,
+                  regexFilter: exactChromiumUrlRegex(rawUrl),
+                  isUrlFilterCaseSensitive: true,
                   tabIds: [-1],
                   resourceTypes: ["xmlhttprequest"],
                 },
               },
             ],
           })
-          ruleInstalled = true
-          return adaptOpaqueRedirect(await baseFetcher(input, init), redirect)
-        } finally {
-          if (beforeHeadersInstalled) {
-            browserApi.webRequest.onBeforeSendHeaders.removeListener(beforeHeaders)
+          outcome = {
+            ok: true,
+            response: adaptOpaqueRedirect(await baseFetcher(input, init), redirect),
           }
-          if (headersReceivedInstalled) {
-            browserApi.webRequest.onHeadersReceived.removeListener(headersReceived)
-          }
-          if (ruleInstalled) {
+        } catch (error) {
+          outcome = { ok: false, error }
+        }
+        if (beforeHeadersInstalled) {
+          browserApi.webRequest.onBeforeSendHeaders.removeListener(beforeHeaders)
+        }
+        if (headersReceivedInstalled) {
+          browserApi.webRequest.onHeadersReceived.removeListener(headersReceived)
+        }
+        let cleanupError: unknown
+        if (ruleAttempted) {
+          try {
             await browserApi.declarativeNetRequest.updateSessionRules({ removeRuleIds: [ruleId] })
+          } catch (error) {
+            cleanupError = error
           }
         }
+        releaseChromiumPrivateRuleId(ruleId)
+        if (!outcome.ok) throw outcome.error
+        if (cleanupError !== undefined) throw cleanupError
+        return outcome.response
       })
     })
 }

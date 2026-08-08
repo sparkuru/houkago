@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "minimum_chrome_version": "120",
   "name": "Houkago Adapter",
   "version": "0.1.0",
   "description": "Versioned desktop capabilities for Houkago",

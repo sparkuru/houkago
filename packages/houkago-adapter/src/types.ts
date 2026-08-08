@@ -74,6 +74,21 @@ export type ChromiumBrowser = {
   }
 }
 
+export type ChromiumSessionRule = Record<string, unknown> & { id: number }
+
+export type ChromiumGrantBrowser = ChromiumBrowser & {
+  declarativeNetRequest: ChromiumBrowser["declarativeNetRequest"] & {
+    getSessionRules(): Promise<ChromiumSessionRule[]>
+  }
+  storage: {
+    session: {
+      get(key: string): Promise<Record<string, unknown>>
+      set(values: Record<string, unknown>): Promise<void>
+      remove(key: string): Promise<void>
+    }
+  }
+}
+
 export type ChromiumDlinkBrowser = ChromiumBrowser & {
   webRequest: {
     onBeforeSendHeaders: WebRequestEvent<WebRequestDetails, undefined>

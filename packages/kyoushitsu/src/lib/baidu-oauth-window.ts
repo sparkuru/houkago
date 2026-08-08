@@ -1,5 +1,6 @@
 export type BaiduOauthWindow = {
   opener: unknown
+  readonly closed: boolean
   location: { replace: (url: string) => void }
   close: () => void
 }
@@ -17,4 +18,8 @@ export function openBaiduOauthWindow(host: BaiduOauthWindowHost): BaiduOauthWind
 
 export function navigateBaiduOauthWindow(popup: BaiduOauthWindow, authorizationUrl: string): void {
   popup.location.replace(authorizationUrl)
+}
+
+export function baiduOauthWindowClosed(popup: BaiduOauthWindow | null): boolean {
+  return popup?.closed === true
 }
