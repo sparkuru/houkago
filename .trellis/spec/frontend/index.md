@@ -95,6 +95,20 @@ A passing focused browser check replaces a generic browser smoke-test request,
 not targeted review of residual visual, real-device, private-environment,
 assistive-technology, security-sensitive, or subjective product risk.
 
+### Trellis Plus: Playwright Validation Profile
+
+- execution mode: project-local
+- setup/install: `./dx bun install`; run with host Node and `/usr/bin/google-chrome`
+- app readiness: start with `./dev.sh`; frontend/base URL `http://127.0.0.1:5173`; backend `http://127.0.0.1:3000`
+- focused test command: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome node_modules/.bin/playwright test --config packages/kyoushitsu/playwright.config.ts --project=phone-375 --grep "portrait chat opens, expands, and closes as a modal sheet"`
+- full/CI browser command: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome node_modules/.bin/playwright test --config packages/kyoushitsu/playwright.config.ts`
+- test location and config: tests in `packages/kyoushitsu/e2e/`; config at `packages/kyoushitsu/playwright.config.ts`
+- browser projects and supported viewports: `phone-375` (375x812), `ipad-mini` (768x1024), `desktop-short` (1280x640), `desktop-tall` (1280x1200), `subtitle-phone` (375x812), `subtitle-desktop` (1280x900), `governance-phone` (375x812), and `governance-desktop` (1280x900)
+- fixtures and test-data boundary: controlled fixtures/mocks only; no production credentials
+- accessibility policy: no global axe scan; use task-specific semantic assertions
+- visual baseline policy: no approved screenshot baselines; screenshots are diagnostic-only
+- failure artifacts: traces and attachments under `packages/kyoushitsu/test-results`; terminal reporter output is retained; automatic screenshots and network capture are not globally configured
+
 ## UI/UX Pro Max Workflow
 
 For a user-visible frontend task, use the project-local Codex UUPM skill at
