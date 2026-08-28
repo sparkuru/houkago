@@ -3,3 +3,4 @@
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify frontend regression, state, and browser-facing quality."}
 {"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Verify Baidu privacy, capability, and no-media-proxy invariants."}
 {"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Verify adapter capability and browser data boundaries."}
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Verify protected Trellis files, task continuity, UI validation profile, and submit-ready boundaries."}

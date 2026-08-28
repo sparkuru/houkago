@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 61
+- **Total Sessions**: 62
 - **Last Active**: 2026-08-28
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1899 | Active |
+| `journal-1.md` | ~1921 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 62 | 2026-08-28 | Bilibili 与本地弹幕源迁移 | `9d3a38a` | `k-on` |
 | 61 | 2026-08-28 | Deliver hybrid danmaku source selection | `ac291c9` | `k-on` |
 | 60 | 2026-08-28 | Implement danmaku identity pool foundation | `eec4c82` | `k-on` |
 | 59 | 2026-08-08 | Chromium Baidu adaptor production gate | `e211897` | `k-on` |

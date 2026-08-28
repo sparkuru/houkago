@@ -1897,3 +1897,25 @@ Implemented deployment policy ordering, owner-only Enmoku danmaku defaults with 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 62: Bilibili 与本地弹幕源迁移
+
+**Date**: 2026-08-28
+**Task**: Bilibili 与本地弹幕源迁移
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+完成 Bilibili 服务端弹幕抓取、规范化、版本刷新与失败回退；接入本地 XML viewer-personal candidate；补齐 Komon revision disable/rollback/pin REST API、禁用内容保护、并发关联保护与前端候选刷新缓存策略。Housou 隔离库 106 项、Kyoushitsu 139 项、Eisha 35 项、Kokuban 3 项、lint/typecheck、手机/桌面 Playwright 全部通过。归档 danmaku-source-migration。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9d3a38a` | (see git log) |
+
+### Status
+
+[OK] **Completed**

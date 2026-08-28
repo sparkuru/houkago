@@ -4,3 +4,4 @@
 {"file":".trellis/spec/frontend/state-management.md","reason":"Server truth, viewer-local state, and realtime-versus-timeline danmaku separation."}
 {"file":".trellis/spec/frontend/component-guidelines.md","reason":"Player, room, provider, timeline orchestration, accessibility, and responsive UI boundaries."}
 {"file":".trellis/tasks/08-27-universal-danmaku-resolution/research/dandanplay-matching.md","reason":"Primary-source matching/fingerprint reference and approved reference-only scope."}
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Shared Trellis Plus recovery boundary, mainline, UI validation, and commit review policy."}
