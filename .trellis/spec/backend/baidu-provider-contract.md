@@ -33,6 +33,14 @@
   `grants/:grantId`.
 - `GET /baidu/media/:grantId` is a sentinel and always returns
   `428 Adaptor Required`; it never returns or proxies media.
+- Danmaku matching reads a room-bound source through
+  `ensureBaiduDanmakuSource(actorSeitoId, bushitsuId, enmokuId, { duration? })`;
+  candidate reads expose `/danmaku/bushitsu/:bushitsuId/enmoku/:enmokuId` and
+  `/danmaku/candidates/:bushitsuId/:enmokuId` with optional `duration`.
+- A Baidu release is identified by the safe source id plus filename, size, and
+  observed duration. The response may contain ranked
+  `DanmakuEpisodeMatchCandidate` rows, each with contributions, mismatches,
+  warnings, and `requiresConfirmation: true`.
 
 ### 3. Contracts
 
@@ -80,6 +88,17 @@
   rechecks viewer admission and the source connection before issuing a grant;
   expiry, removal, departure, revoke, or admission loss deletes both pending
   and completed state. One failed request never blocks another pending request.
+- Matching persists only bounded, provider-neutral evidence. A client-side
+  fingerprint is accepted as `{ algorithm, scope, bytes, value }`, but media
+  bytes are read and hashed only by an authorized adaptor Range request;
+  `housou` never downloads the source to hash it. Filename, size, duration,
+  provider reference, and fingerprint remain separate evidence kinds.
+- An active Komon global release-to-episode match is the only automatic exact
+  reuse path. Weighted filename/size/duration results are suggestions even at
+  high confidence; personal confirmation, room confirmation, and global
+  promotion remain separate records and scopes. A shared episode track may be
+  reused by multiple releases while `danmaku_alignment` keeps each release's
+  offset/cut calibration independent.
 
 ### 4. Validation & Error Matrix
 
@@ -95,6 +114,11 @@
 | Adaptor reports `upstream-resolution-failed` for an active request | return the fixed secret-free terminal state once; issue no media grant |
 | Raw/final dlink has wrong fsid, host, credentials, or redirect behavior | upstream/grant failure; do not broaden the host policy |
 | Sentinel reached without interception | HTTP 428 with no media body |
+| Baidu source has a path, control character, oversized filename/id, or invalid size | return no matcher release/candidates; leave the Enmoku playback URL unchanged |
+| Weighted matcher has no exact Komon mapping | return explainable candidates; never create a global match |
+| Personal/room confirmation | persist only the acting account or room scope; do not promote globally |
+| Fingerprint/read/matcher failure | omit the optional evidence or timeline candidate; do not block Baidu playback |
+| Proposal submitted from a Baidu match | persist sanitized pending proposal only; global matching changes only after Komon approval |
 
 ### 5. Good/Base/Bad Cases
 
@@ -104,8 +128,14 @@
 - Good: Alice chooses user-held mode; Bob can request the exact permitted source
   only while Alice and her bound device are present.
 - Base: a Bilibili or ordinary URL never enters any Baidu route or adaptor path.
+- Good: two differently encoded Baidu releases confirm the same canonical
+  episode and reuse its common track while storing distinct release alignments.
+- Base: a high filename score shows a confirmation candidate but no global
+  mapping until a Komon reviewer promotes it.
 - Bad: append `access_token` to a URL returned to Bob, reuse a source after
   Alice reauthorizes another account, or add a media-proxy fallback.
+- Bad: let `housou` fetch media bytes for a fingerprint, treat filename score
+  as an exact episode identity, or include a provider path in evidence.
 
 ### 6. Tests Required
 
@@ -119,6 +149,9 @@
 - Secret scans/assertions must cover page REST, Enmoku, BANGUMI, WebSocket, and
   callback HTML for authorization codes, client secret, OAuth tokens, raw
   dlinks, extension handles, and encryption envelopes.
+- Danmaku matching tests must assert exact Komon reuse, high-score confirmation,
+  shared episode track with per-release alignment, bounded fingerprint
+  handoff, safe proposal output, and unchanged playback on matcher failure.
 - Fixture tests are not installed-browser evidence. Installed Firefox is the
   real-account reference gate for this delivery. Chromium's shared contracts,
   manifest checks, and builds do not establish installed production support;

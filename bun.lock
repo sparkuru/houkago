@@ -45,6 +45,7 @@
         "@sinclair/typebox": "^0.34.0",
         "elysia": "^1.4.0",
         "houkago-eisha": "workspace:*",
+        "houkago-kokuban": "workspace:*",
         "houkago-kousoku": "workspace:*",
       },
       "devDependencies": {

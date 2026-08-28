@@ -103,12 +103,14 @@ async function resolveCandidates(
   bushitsuId: string,
   enmokuId: string,
   releaseId?: string,
+  duration?: number,
 ) {
   return resolveDanmakuCandidatesWithRefresh(
     seitoFromRequest(request).id,
     bushitsuId,
     enmokuId,
     releaseId,
+    { duration },
   )
 }
 
@@ -178,14 +180,36 @@ export const danmakuRoutes = new Elysia({ prefix: "/danmaku" })
   .get(
     "/bushitsu/:bushitsuId/enmoku/:enmokuId",
     ({ request, params, query }) =>
-      resolveCandidates(request, params.bushitsuId, params.enmokuId, query.releaseId),
-    { query: t.Object({ releaseId: t.Optional(t.String({ minLength: 1 })) }) },
+      resolveCandidates(
+        request,
+        params.bushitsuId,
+        params.enmokuId,
+        query.releaseId,
+        query.duration,
+      ),
+    {
+      query: t.Object({
+        releaseId: t.Optional(t.String({ minLength: 1 })),
+        duration: t.Optional(t.Number({ minimum: 0 })),
+      }),
+    },
   )
   .get(
     "/candidates/:bushitsuId/:enmokuId",
     ({ request, params, query }) =>
-      resolveCandidates(request, params.bushitsuId, params.enmokuId, query.releaseId),
-    { query: t.Object({ releaseId: t.Optional(t.String({ minLength: 1 })) }) },
+      resolveCandidates(
+        request,
+        params.bushitsuId,
+        params.enmokuId,
+        query.releaseId,
+        query.duration,
+      ),
+    {
+      query: t.Object({
+        releaseId: t.Optional(t.String({ minLength: 1 })),
+        duration: t.Optional(t.Number({ minimum: 0 })),
+      }),
+    },
   )
   // Owner default writes are REST mutations; the resulting full snapshot is
   // sent over the admitted room topic after the DB transaction succeeds.

@@ -1,8 +1,23 @@
 import { type FetchLike, fetchDanmakuCues } from "houkago-eisha"
-import type { DanmakuRevision, DanmakuTrack, Enmoku, MediaRelease } from "houkago-kousoku"
+import {
+  type MediaEpisodeMatchCandidate,
+  type MediaReleaseMatchInput,
+  extractFilenameEvidence,
+  rankMediaReleaseCandidates,
+} from "houkago-kokuban"
+import type {
+  DanmakuEpisodeMatchCandidate,
+  DanmakuEvidence,
+  DanmakuRevision,
+  DanmakuTrack,
+  Enmoku,
+  MediaRelease,
+} from "houkago-kousoku"
+import { type BaiduSourceRecord, getBaiduSource } from "../db/queries/baidu"
 import {
   findDanmakuTrack,
   findDanmakuTrackByReleaseAndEpisode,
+  findGlobalReleaseEpisodeMatch,
   findMediaRelease,
   findMediaReleaseByProvider,
   listDanmakuRevisions,
@@ -20,6 +35,7 @@ import {
   registerDanmakuTrack,
   registerMediaRelease,
   resolveDanmakuCandidates,
+  searchDanmakuEpisodes,
 } from "./danmaku"
 
 // A candidate read is a use-triggered refresh boundary. Keeping this window
@@ -32,6 +48,7 @@ export type BilibiliDanmakuRefreshOptions = {
   now?: number
   freshnessMs?: number
   fetcher?: FetchLike
+  duration?: number
 }
 
 export type BilibiliDanmakuTrackRefresh = {
@@ -46,6 +63,11 @@ export type BilibiliDanmakuSourceResult = {
   tracks: DanmakuTrack[]
   refreshedTrackIds: string[]
   failedTrackIds: string[]
+}
+
+export type BaiduDanmakuSourceResult = {
+  release: MediaRelease | null
+  matchCandidates: DanmakuEpisodeMatchCandidate[]
 }
 
 const refreshesInFlight = new Map<string, Promise<BilibiliDanmakuTrackRefresh>>()
@@ -113,10 +135,100 @@ export async function resolveDanmakuCandidatesWithRefresh(
   options: BilibiliDanmakuRefreshOptions = {},
 ) {
   await ensureBilibiliDanmakuSource(actorSeitoId, bushitsuId, enmokuId, options)
-  return resolveDanmakuCandidates(actorSeitoId, bushitsuId, enmokuId, releaseId)
+  const baidu = ensureBaiduDanmakuSource(actorSeitoId, bushitsuId, enmokuId, options)
+  const resolution = resolveDanmakuCandidates(actorSeitoId, bushitsuId, enmokuId, releaseId)
+  return baidu.matchCandidates.length === 0
+    ? resolution
+    : { ...resolution, matchCandidates: baidu.matchCandidates }
 }
 
 export const refreshBilibiliDanmaku = ensureBilibiliDanmakuSource
+
+/**
+ * Derive safe Baidu release evidence and rank existing canonical episodes. The
+ * source record is room-bound, while the resulting match candidates remain
+ * suggestions until an authenticated user confirms one through the common
+ * match route.
+ */
+export function ensureBaiduDanmakuSource(
+  actorSeitoId: string,
+  bushitsuId: string,
+  enmokuId: string,
+  options: BilibiliDanmakuRefreshOptions = {},
+): BaiduDanmakuSourceResult {
+  const room = fetchBushitsu(bushitsuId)
+  if (!isPresent(bushitsuId, actorSeitoId)) {
+    throw new Forbidden("room admission is required")
+  }
+  const enmoku = fetchBangumi(bushitsuId).find((item) => item.id === enmokuId)
+  if (!enmoku) throw new DanmakuMatchInvalid("Enmoku does not belong to the room")
+  const provider = enmoku.provider
+  if (provider?.kind !== "baidu") return { release: null, matchCandidates: [] }
+
+  const source = getBaiduSource(provider.sourceId)
+  if (
+    !source ||
+    source.bushitsuId !== room.id ||
+    source.enmokuId !== enmoku.id ||
+    !safeBaiduSource(source)
+  ) {
+    return { release: null, matchCandidates: [] }
+  }
+
+  const normalizedOptions = normalizeOptions(options)
+  const { release, evidence } = ensureBaiduMediaRelease(
+    source,
+    normalizedOptions.duration,
+    normalizedOptions.now,
+  )
+  if (findGlobalReleaseEpisodeMatch(release.id)) {
+    return { release, matchCandidates: [] }
+  }
+
+  const parsed = extractFilenameEvidence(source.fileName)
+  const observed: MediaReleaseMatchInput = {
+    fileName: source.fileName,
+    ...(source.size === undefined ? {} : { size: source.size }),
+    ...(normalizedOptions.duration === undefined ? {} : { duration: normalizedOptions.duration }),
+  }
+  const candidates = searchDanmakuEpisodes(parsed.work ?? "")
+  const ranked = rankMediaReleaseCandidates(
+    observed,
+    candidates.map(
+      (candidate): MediaEpisodeMatchCandidate => ({
+        id: candidate.id,
+        title: candidate.title,
+        ...(candidate.season === undefined ? {} : { season: candidate.season }),
+        ...(candidate.episode === undefined ? {} : { episode: candidate.episode }),
+      }),
+    ),
+  )
+  const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]))
+  return {
+    release,
+    matchCandidates: ranked.flatMap((match) => {
+      const episode = byId.get(match.candidateId)
+      return episode
+        ? [
+            {
+              releaseId: release.id,
+              episodeId: episode.id,
+              title: episode.title,
+              ...(episode.season === undefined ? {} : { season: episode.season }),
+              ...(episode.episode === undefined ? {} : { episode: episode.episode }),
+              score: match.score,
+              confidence: match.confidence,
+              requiresConfirmation: true,
+              evidence,
+              contributions: match.contributions,
+              mismatches: match.mismatches,
+              warnings: match.warnings,
+            },
+          ]
+        : []
+    }),
+  }
+}
 
 /**
  * Refresh one already-associated official track. Calls for the same logical
@@ -204,6 +316,7 @@ function normalizeOptions(options: BilibiliDanmakuRefreshOptions): {
   now: number
   freshnessMs: number
   fetcher: FetchLike
+  duration?: number
 } {
   const now = options.now ?? Date.now()
   const freshnessMs = options.freshnessMs ?? BILIBILI_DANMAKU_FRESHNESS_MS
@@ -211,7 +324,97 @@ function normalizeOptions(options: BilibiliDanmakuRefreshOptions): {
   if (!Number.isFinite(freshnessMs) || freshnessMs < 0) {
     throw new DanmakuMatchInvalid("refresh freshness is invalid")
   }
-  return { now, freshnessMs, fetcher: options.fetcher ?? fetch }
+  return {
+    now,
+    freshnessMs,
+    fetcher: options.fetcher ?? fetch,
+    ...(isValidNonNegativeNumber(options.duration) ? { duration: options.duration } : {}),
+  }
+}
+
+function ensureBaiduMediaRelease(
+  source: BaiduSourceRecord,
+  duration: number | undefined,
+  now: number,
+): { release: MediaRelease; evidence: DanmakuEvidence[] } {
+  const existing = findMediaReleaseByProvider("baidu", source.id)
+  const release =
+    existing ??
+    (() => {
+      const deterministicId = `baidu-release-${source.id}`
+      const occupied = findMediaRelease(deterministicId)
+      const next: MediaRelease = {
+        id: occupied ? newId() : deterministicId,
+        provider: "baidu",
+        providerReference: source.id,
+        fileName: source.fileName,
+        ...(isValidNonNegativeInteger(source.size) ? { size: source.size } : {}),
+        ...(isValidNonNegativeNumber(duration) ? { duration } : {}),
+        createdAt: now,
+      }
+      try {
+        registerMediaRelease(next)
+        return next
+      } catch (error) {
+        const concurrent = findMediaReleaseByProvider("baidu", source.id)
+        if (concurrent) return concurrent
+        throw error
+      }
+    })()
+
+  const desiredEvidence: DanmakuEvidence[] = [
+    { kind: "provider", provider: "baidu", reference: source.id },
+    extractFilenameEvidence(source.fileName),
+    ...(isValidNonNegativeInteger(source.size)
+      ? [{ kind: "size" as const, bytes: source.size }]
+      : []),
+    ...(isValidNonNegativeNumber(duration)
+      ? [{ kind: "duration" as const, seconds: duration }]
+      : []),
+  ]
+  const storedEvidence = listMediaReleaseEvidence(release.id)
+  for (const evidence of desiredEvidence) {
+    if (!storedEvidence.some((item) => sameEvidence(item, evidence))) {
+      recordMediaReleaseEvidence(release.id, evidence, now)
+      storedEvidence.push(evidence)
+    }
+  }
+  return { release, evidence: storedEvidence }
+}
+
+function safeBaiduSource(source: BaiduSourceRecord): boolean {
+  return (
+    safeSourceText(source.id, 512) &&
+    safeSourceText(source.bushitsuId, 512) &&
+    safeSourceText(source.enmokuId, 512) &&
+    safeSourceText(source.fileName, 1024) &&
+    source.fileName.trim().length > 0 &&
+    !/[\\/]/.test(source.fileName) &&
+    (source.size === undefined || isValidNonNegativeInteger(source.size))
+  )
+}
+
+function safeSourceText(value: string, maxLength: number): boolean {
+  return value.length > 0 && value.length <= maxLength && !hasControlCharacter(value)
+}
+
+function hasControlCharacter(value: string): boolean {
+  return [...value].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0
+    return codePoint <= 0x1f || codePoint === 0x7f
+  })
+}
+
+function sameEvidence(left: DanmakuEvidence, right: DanmakuEvidence): boolean {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
+
+function isValidNonNegativeInteger(value: number | undefined): value is number {
+  return value !== undefined && Number.isInteger(value) && value >= 0
+}
+
+function isValidNonNegativeNumber(value: number | undefined): value is number {
+  return value !== undefined && Number.isFinite(value) && value >= 0
 }
 
 function bilibiliSource(enmoku: Enmoku): { reference: string; cid: string } | null {

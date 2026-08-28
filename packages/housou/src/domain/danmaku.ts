@@ -150,7 +150,7 @@ export function resolveDanmakuCandidates(
   const candidates = new Map<string, DanmakuCandidate>()
   for (const match of matches) {
     for (const track of listDanmakuTracks(match.episodeId)) {
-      const candidate = candidateFromTrack(track, policy, match.evidence)
+      const candidate = candidateFromTrack(track, policy, match.evidence, release?.id)
       candidates.set(candidate.id, candidate)
     }
   }
@@ -1214,9 +1214,11 @@ function candidateFromTrack(
   track: DanmakuTrack,
   policy: DanmakuSourcePolicy,
   evidence: DanmakuEvidence[] | undefined,
+  releaseIdForAlignment?: string,
 ): DanmakuCandidate {
   const activeRevision = track.status === "active" ? findActiveDanmakuRevision(track.id) : null
   const latestRevision = listDanmakuRevisions(track.id)[0]
+  const alignmentReleaseId = track.releaseId ?? releaseIdForAlignment
   const allowed = policy.allowedClasses.includes(track.sourceClass)
   let availability: DanmakuCandidateAvailability
   let reason: string | undefined
@@ -1244,9 +1246,9 @@ function candidateFromTrack(
     ...(track.episodeId === undefined ? {} : { episodeId: track.episodeId }),
     trackId: track.id,
     ...(activeRevision === null ? {} : { revisionId: activeRevision.id }),
-    ...(activeRevision && track.releaseId
+    ...(activeRevision && alignmentReleaseId
       ? (() => {
-          const alignment = findDanmakuAlignment(track.releaseId, track.id)
+          const alignment = findDanmakuAlignment(alignmentReleaseId, track.id)
           return alignment === null ? {} : { alignment }
         })()
       : {}),

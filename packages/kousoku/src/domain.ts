@@ -566,6 +566,64 @@ export const DanmakuCandidateSchema = Type.Object(
 )
 export type DanmakuCandidate = Static<typeof DanmakuCandidateSchema>
 
+export const DanmakuMatchConfidenceSchema = Type.Union([
+  Type.Literal("suggested"),
+  Type.Literal("ambiguous"),
+  Type.Literal("none"),
+])
+export type DanmakuMatchConfidence = Static<typeof DanmakuMatchConfidenceSchema>
+
+export const DanmakuMatchFieldSchema = Type.Union([
+  Type.Literal("work"),
+  Type.Literal("season"),
+  Type.Literal("episode"),
+  Type.Literal("size"),
+  Type.Literal("duration"),
+])
+export type DanmakuMatchField = Static<typeof DanmakuMatchFieldSchema>
+
+export const DanmakuMatchEvidenceStatusSchema = Type.Union([
+  Type.Literal("matched"),
+  Type.Literal("mismatched"),
+  Type.Literal("missing"),
+  Type.Literal("unavailable"),
+])
+export type DanmakuMatchEvidenceStatus = Static<typeof DanmakuMatchEvidenceStatusSchema>
+
+export const DanmakuMatchContributionSchema = Type.Object(
+  {
+    field: DanmakuMatchFieldSchema,
+    status: DanmakuMatchEvidenceStatusSchema,
+    weight: Type.Number({ minimum: 0 }),
+    points: Type.Number({ minimum: 0 }),
+    detail: Type.String({ maxLength: 512 }),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuMatchContribution = Static<typeof DanmakuMatchContributionSchema>
+
+// Algorithmic episode candidates are deliberately separate from playable
+// DanmakuCandidate tracks. They expose explainable evidence but can never be
+// treated as a confirmed association by a client or route.
+export const DanmakuEpisodeMatchCandidateSchema = Type.Object(
+  {
+    releaseId: Type.String({ minLength: 1 }),
+    episodeId: Type.String({ minLength: 1 }),
+    title: Type.String({ minLength: 1, maxLength: 512 }),
+    season: Type.Optional(Type.Integer({ minimum: 0 })),
+    episode: Type.Optional(Type.Integer({ minimum: 0 })),
+    score: Type.Number({ minimum: 0, maximum: 100 }),
+    confidence: DanmakuMatchConfidenceSchema,
+    requiresConfirmation: Type.Literal(true),
+    evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+    contributions: Type.Array(DanmakuMatchContributionSchema, { minItems: 1, maxItems: 16 }),
+    mismatches: Type.Array(Type.String({ maxLength: 512 }), { maxItems: 16 }),
+    warnings: Type.Array(Type.String({ maxLength: 128 }), { maxItems: 16 }),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuEpisodeMatchCandidate = Static<typeof DanmakuEpisodeMatchCandidateSchema>
+
 // One selected track is a viewer-local presentation decision. A room default
 // uses the same candidate identity but is broadcast separately as a snapshot.
 export const DanmakuSelectionSchema = Type.Object(
@@ -617,6 +675,7 @@ export const DanmakuCandidateResolutionSchema = Type.Object(
     enmokuId: Type.String({ minLength: 1 }),
     policy: DanmakuSourcePolicySchema,
     candidates: Type.Array(DanmakuCandidateSchema),
+    matchCandidates: Type.Optional(Type.Array(DanmakuEpisodeMatchCandidateSchema)),
     roomDefault: Type.Union([DanmakuDefaultSchema, Type.Null()]),
   },
   { additionalProperties: false },

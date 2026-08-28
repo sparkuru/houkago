@@ -13,7 +13,10 @@
   HLS-only, and resets to Off for each new Enmoku; audio controls remain
   deferred until named audio metadata is available. 2026-08-07 — Baidu Netdisk
   uses a desktop client adaptor with server-saved and user-held credential
-  modes; mobile Baidu playback and filename-based danmaku matching are deferred.
+  modes; mobile Baidu playback remains deferred. 2026-08-28 — after the
+  provider-neutral danmaku pool, hybrid selection, and Bilibili/local source
+  migration slices completed, the user approved Baidu release danmaku matching
+  as the next bounded mainline slice.
 
 ## Continuation
 
@@ -32,7 +35,7 @@
 | 5 | `.trellis/tasks/archive/2026-08/08-07-subtitle-audio-ui` | complete | Viewer-local HLS subtitle selection, controlled desktop/phone browser coverage, and player ownership contract delivered in `8d2c9f7`; task archival and journal follow the final workflow steps. |
 | 6 | `.trellis/tasks/archive/2026-08/08-07-baidu-netdisk-adaptor` | complete | Direct official OAuth, both retention modes, read-only browsing, token-free grants, Firefox real-account/reference evidence, and shared Firefox/Chromium automated builds are complete and archived. |
 | 7 | `.trellis/tasks/archive/2026-08/08-08-chromium-baidu-adaptor` | complete | Chromium MV3 session-registry/DNR hardening delivered in `e211897`; final archived evidence records the 302-test full suite, installed Google Chrome and Microsoft Edge gates, and the controlled Playwright pass. |
-| 8 | Baidu filename-based danmaku matching | blocked | Deferred placeholder awaiting the user's scope and priority decision; no ordering or task start is authorized. |
+| 8 | `.trellis/tasks/08-28-baidu-danmaku-matching` | active | User-approved next slice; identity/storage, hybrid-selection, and Bilibili/local source-migration dependencies are archived and validated. |
 | 9 | Houkago mobile provider companion | blocked | Deferred placeholder awaiting the user's scope and priority decision; no ordering or task start is authorized. |
 | 10 | Choose the next bounded provider-adaptor slice | blocked | No provider is ranked or proposed; awaiting the user's next-scope decision. |
 
@@ -49,7 +52,6 @@
   Chromium artifact. Browser-compatible sources pass both retention modes;
   source/container/codec-dependent failures are recorded as the native media
   compatibility boundary.
-- next task/decision: no uniquely ready candidate. Filename-based danmaku,
-  mobile provider playback, and any next provider-adaptor slice remain
-  unranked deferred choices awaiting the user's explicit scope and priority;
-  the guided Pulse must request that decision before work continues.
+- next task/decision: complete the active Baidu release danmaku matching child;
+  stop at its normal validation, human-review, commit, and archive gates. Mobile
+  provider playback and any further provider-adaptor slice remain deferred.
