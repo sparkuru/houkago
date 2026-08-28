@@ -1,8 +1,13 @@
 import { Value } from "@sinclair/typebox/value"
 import type {
   DanmakuAlignment,
+  DanmakuCandidate,
+  DanmakuCandidateAvailability,
+  DanmakuCandidateResolution,
   DanmakuContent,
   DanmakuCue,
+  DanmakuDefault,
+  DanmakuDefaultSnapshot,
   DanmakuEpisode,
   DanmakuEvidence,
   DanmakuProposal,
@@ -10,12 +15,17 @@ import type {
   DanmakuRevision,
   DanmakuSourcePolicy,
   DanmakuTrack,
+  Enmoku,
   MediaRelease,
   ReleaseEpisodeMatch,
   ReleaseEpisodeMatchInput,
 } from "houkago-kousoku"
 import {
   DanmakuAlignmentSchema,
+  DanmakuCandidateResolutionSchema,
+  DanmakuCueSchema,
+  DanmakuDefaultSchema,
+  DanmakuDefaultSnapshotSchema,
   DanmakuEpisodeSchema,
   DanmakuEvidenceSchema,
   DanmakuProposalDecisionSchema,
@@ -29,6 +39,7 @@ import {
 import { db } from "../db/client"
 import {
   blockDanmakuRevision,
+  clearEnmokuDanmakuDefault as clearEnmokuDanmakuDefaultRow,
   decideDanmakuProposal as decideDanmakuProposalRow,
   deleteDanmakuContent,
   findActiveDanmakuRevision,
@@ -40,7 +51,9 @@ import {
   findGlobalReleaseEpisodeMatch,
   findLatestValidDanmakuRevision,
   findMediaRelease,
+  findMediaReleaseByProvider,
   getDanmakuSourcePolicy as getDanmakuSourcePolicyRow,
+  getEnmokuDanmakuDefault,
   insertDanmakuContent,
   insertDanmakuEpisode,
   insertDanmakuProposal,
@@ -52,6 +65,9 @@ import {
   isDanmakuRevisionBlocked,
   listCollectableDanmakuContent,
   listDanmakuProposals as listDanmakuProposalsRows,
+  listDanmakuRevisions,
+  listDanmakuTracks,
+  listEnmokuDanmakuDefaults,
   listReleaseEpisodeMatches,
   requireProposal,
   requireRevision,
@@ -60,6 +76,7 @@ import {
   setDanmakuRevisionPinned,
   setDanmakuSourcePolicy,
   setDanmakuTrackActiveRevision,
+  setEnmokuDanmakuDefault as setEnmokuDanmakuDefaultRow,
   upsertDanmakuAlignment,
 } from "../db/queries/danmaku"
 import { insertDanmakuAudit } from "../db/queries/danmaku-audit"
@@ -73,6 +90,7 @@ import {
 } from "../lib/errors"
 import { newId } from "../lib/id"
 import { isKomon, requireKomon } from "../lib/komon"
+import { isPresent } from "../ws/housou"
 import { fetchBangumi, fetchBushitsu } from "./bushitsu"
 
 type EpisodeDraft = Pick<DanmakuEpisode, "title"> &
@@ -99,6 +117,176 @@ export function listDanmakuProposals(status?: DanmakuProposal["status"]): Danmak
 
 export function getDanmakuSourcePolicy(): DanmakuSourcePolicy {
   return getDanmakuSourcePolicyRow()
+}
+
+// Resolve server-addressable candidates for one admitted viewer. The resolver
+// only reads the identity pool and legacy safe reference; provider fetching and
+// parsing remain behind eisha/kokuban boundaries.
+export function resolveDanmakuCandidates(
+  actorSeitoId: string,
+  bushitsuId: string,
+  enmokuId: string,
+  releaseId?: string,
+): DanmakuCandidateResolution {
+  const room = fetchBushitsu(bushitsuId)
+  if (!isPresent(bushitsuId, actorSeitoId)) {
+    throw new Forbidden("room admission is required")
+  }
+  const enmoku = fetchBangumi(bushitsuId).find((item) => item.id === enmokuId)
+  if (!enmoku) throw new DanmakuMatchInvalid("Enmoku does not belong to the room")
+
+  const policy = getDanmakuSourcePolicy()
+  const enmokuRelease = mediaReleaseForEnmoku(enmoku)
+  if (releaseId !== undefined && enmokuRelease && releaseId !== enmokuRelease.id) {
+    throw new DanmakuMatchInvalid("media release does not match the Enmoku")
+  }
+  const release = releaseId !== undefined ? findMediaRelease(releaseId) : enmokuRelease
+  if (releaseId !== undefined && !release) {
+    throw new DanmakuMatchInvalid("media release does not exist")
+  }
+  const matches = release
+    ? visibleReleaseMatches(release.id, bushitsuId, enmokuId, actorSeitoId)
+    : []
+  const candidates = new Map<string, DanmakuCandidate>()
+  for (const match of matches) {
+    for (const track of listDanmakuTracks(match.episodeId)) {
+      const candidate = candidateFromTrack(track, policy, match.evidence)
+      candidates.set(candidate.id, candidate)
+    }
+  }
+
+  const storedDefault = getEnmokuDanmakuDefault(enmokuId)
+  if (storedDefault && storedDefault.bushitsuId === bushitsuId) {
+    const defaultTrack = findDanmakuTrack(storedDefault.trackId)
+    if (defaultTrack && !candidates.has(defaultTrack.id)) {
+      candidates.set(defaultTrack.id, candidateFromTrack(defaultTrack, policy, undefined))
+    }
+  }
+
+  const legacyRef = safeLegacyDanmakuRef(enmoku.danmaku)
+  if (legacyRef) {
+    const legacyCandidate: DanmakuCandidate = {
+      id: `legacy:${enmoku.id}`,
+      sourceClass: "provider-official",
+      name: "Online danmaku",
+      provenance: { reference: legacyRef },
+      ...(release === null || release === undefined ? {} : { releaseId: release.id }),
+      legacyRef,
+      availability: policy.allowedClasses.includes("provider-official") ? "available" : "disabled",
+      ...(policy.allowedClasses.includes("provider-official")
+        ? {}
+        : { reason: "source class is disabled by deployment policy" }),
+    }
+    candidates.set(legacyCandidate.id, legacyCandidate)
+  }
+
+  const orderedCandidates = [...candidates.values()].sort((left, right) =>
+    compareCandidates(left, right, policy),
+  )
+  const roomDefault =
+    storedDefault && storedDefault.bushitsuId === bushitsuId
+      ? defaultEntry(storedDefault, policy)
+      : null
+  const result: DanmakuCandidateResolution = {
+    bushitsuId: room.id,
+    enmokuId,
+    policy,
+    candidates: orderedCandidates,
+    roomDefault,
+  }
+  if (!Value.Check(DanmakuCandidateResolutionSchema, result)) {
+    throw new DanmakuMatchInvalid("invalid danmaku candidate resolution")
+  }
+  return result
+}
+
+// The room snapshot is intentionally complete. A reconnecting viewer can
+// replace its local map atomically instead of guessing which defaults changed.
+export function getDanmakuDefaultSnapshot(bushitsuId: string): DanmakuDefaultSnapshot {
+  fetchBushitsu(bushitsuId)
+  const policy = getDanmakuSourcePolicy()
+  const enmokuIds = new Set(fetchBangumi(bushitsuId).map((enmoku) => enmoku.id))
+  const snapshot: DanmakuDefaultSnapshot = {
+    bushitsuId,
+    defaults: listEnmokuDanmakuDefaults(bushitsuId)
+      .filter((record) => enmokuIds.has(record.enmokuId))
+      .map((record) => defaultEntry(record, policy)),
+  }
+  if (!Value.Check(DanmakuDefaultSnapshotSchema, snapshot)) {
+    throw new DanmakuMatchInvalid("invalid danmaku default snapshot")
+  }
+  return snapshot
+}
+
+export function setEnmokuDanmakuDefault(
+  actorSeitoId: string,
+  bushitsuId: string,
+  enmokuId: string,
+  trackId: string,
+  now = Date.now(),
+): DanmakuDefaultSnapshot {
+  authorizeRoomOwner(actorSeitoId, bushitsuId)
+  const resolution = resolveDanmakuCandidates(actorSeitoId, bushitsuId, enmokuId)
+  const candidate = resolution.candidates.find(
+    (item) => item.trackId === trackId && item.id === trackId,
+  )
+  if (
+    !candidate ||
+    candidate.sourceClass === "local" ||
+    candidate.releaseId === undefined ||
+    candidate.availability !== "available"
+  ) {
+    throw new DanmakuMatchInvalid("track is not an eligible server default")
+  }
+  const track = findDanmakuTrack(trackId)
+  if (!track || track.sourceClass === "local" || track.releaseId === undefined) {
+    throw new DanmakuMatchInvalid("track is not server-addressable")
+  }
+
+  db.transaction(() => {
+    setEnmokuDanmakuDefaultRow(enmokuId, bushitsuId, trackId, now)
+    insertDanmakuAudit({
+      id: newId(),
+      action: "enmoku_default_updated",
+      actorSeitoId,
+      subjectType: "enmoku_danmaku_default",
+      subjectId: enmokuId,
+      details: { bushitsuId, enmokuId, trackId },
+      createdAt: now,
+    })
+  })()
+  return getDanmakuDefaultSnapshot(bushitsuId)
+}
+
+export function clearEnmokuDanmakuDefault(
+  actorSeitoId: string,
+  bushitsuId: string,
+  enmokuId: string,
+  now = Date.now(),
+): DanmakuDefaultSnapshot {
+  authorizeRoomOwner(actorSeitoId, bushitsuId)
+  const existing = getEnmokuDanmakuDefault(enmokuId)
+  if (!fetchBangumi(bushitsuId).some((enmoku) => enmoku.id === enmokuId)) {
+    throw new DanmakuMatchInvalid("Enmoku does not belong to the room")
+  }
+  if (existing && existing.bushitsuId !== bushitsuId) {
+    throw new DanmakuMatchInvalid("danmaku default belongs to a different room")
+  }
+  db.transaction(() => {
+    const changed = clearEnmokuDanmakuDefaultRow(enmokuId)
+    if (changed) {
+      insertDanmakuAudit({
+        id: newId(),
+        action: "enmoku_default_cleared",
+        actorSeitoId,
+        subjectType: "enmoku_danmaku_default",
+        subjectId: enmokuId,
+        details: { bushitsuId, enmokuId },
+        createdAt: now,
+      })
+    }
+  })()
+  return getDanmakuDefaultSnapshot(bushitsuId)
 }
 
 export type DanmakuRevisionIngestResult = {
@@ -958,5 +1146,176 @@ function assertSafeRelease(release: MediaRelease): void {
   assertSafeMetadata(release)
   if (release.fileName && /[\\/]/.test(release.fileName)) {
     throw new DanmakuMatchInvalid("media release file name must not contain a path")
+  }
+}
+
+function mediaReleaseForEnmoku(enmoku: Enmoku): MediaRelease | null {
+  const legacyRef = safeLegacyDanmakuRef(enmoku.danmaku)
+  if (legacyRef) {
+    const separator = legacyRef.indexOf(":")
+    const provider = legacyRef.slice(0, separator)
+    const reference = legacyRef.slice(separator + 1)
+    return (
+      findMediaReleaseByProvider(provider, legacyRef) ??
+      findMediaReleaseByProvider(provider, reference)
+    )
+  }
+  const provider = enmoku.provider
+  if (!provider) return null
+  const reference = provider.kind === "baidu" ? provider.sourceId : provider.url
+  return findMediaReleaseByProvider(provider.kind, reference)
+}
+
+function visibleReleaseMatches(
+  releaseId: string,
+  bushitsuId: string,
+  enmokuId: string,
+  actorSeitoId: string,
+): ReleaseEpisodeMatch[] {
+  return listReleaseEpisodeMatches(releaseId).filter((match) => {
+    if (match.trustScope === "global") return true
+    if (match.trustScope === "personal") return match.seitoId === actorSeitoId
+    return (
+      match.bushitsuId === bushitsuId &&
+      (match.enmokuId === undefined || match.enmokuId === enmokuId)
+    )
+  })
+}
+
+function candidateFromTrack(
+  track: DanmakuTrack,
+  policy: DanmakuSourcePolicy,
+  evidence: DanmakuEvidence[] | undefined,
+): DanmakuCandidate {
+  const activeRevision = track.status === "active" ? findActiveDanmakuRevision(track.id) : null
+  const latestRevision = listDanmakuRevisions(track.id)[0]
+  const allowed = policy.allowedClasses.includes(track.sourceClass)
+  let availability: DanmakuCandidateAvailability
+  let reason: string | undefined
+  if (!allowed) {
+    availability = "disabled"
+    reason = "source class is disabled by deployment policy"
+  } else if (track.status === "disabled") {
+    availability = "disabled"
+    reason = "track is disabled"
+  } else if (!activeRevision) {
+    availability = latestRevision?.status === "failed" ? "failed" : "unavailable"
+    reason = latestRevision?.status === "failed" ? "latest revision failed" : "no valid revision"
+  } else {
+    availability = "available"
+  }
+
+  const candidate: DanmakuCandidate = {
+    id: track.id,
+    sourceClass: track.sourceClass,
+    name: track.name,
+    ...(track.provenance === undefined ? {} : { provenance: track.provenance }),
+    ...(evidence === undefined ? {} : { evidence }),
+    ...(evidence === undefined ? {} : { confidence: "confirmed" as const }),
+    ...(track.releaseId === undefined ? {} : { releaseId: track.releaseId }),
+    ...(track.episodeId === undefined ? {} : { episodeId: track.episodeId }),
+    trackId: track.id,
+    ...(activeRevision === null ? {} : { revisionId: activeRevision.id }),
+    ...(activeRevision && track.releaseId
+      ? (() => {
+          const alignment = findDanmakuAlignment(track.releaseId, track.id)
+          return alignment === null ? {} : { alignment }
+        })()
+      : {}),
+    availability,
+    ...(reason === undefined ? {} : { reason }),
+  }
+
+  if (
+    availability === "available" &&
+    activeRevision?.status === "valid" &&
+    activeRevision.contentHash
+  ) {
+    const content = findDanmakuContent(activeRevision.contentHash)
+    const cues = content ? parseStoredCues(content.canonicalJson) : undefined
+    if (cues) {
+      candidate.cues = cues
+    } else {
+      candidate.availability = "unavailable"
+      candidate.reason = "stored cue content is invalid"
+      candidate.revisionId = undefined
+    }
+  }
+
+  return candidate
+}
+
+function parseStoredCues(value: string): DanmakuCue[] | undefined {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return Array.isArray(parsed) && parsed.every((cue) => Value.Check(DanmakuCueSchema, cue))
+      ? parsed
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function compareCandidates(
+  left: DanmakuCandidate,
+  right: DanmakuCandidate,
+  policy: DanmakuSourcePolicy,
+): number {
+  const leftRank = policy.order.indexOf(left.sourceClass)
+  const rightRank = policy.order.indexOf(right.sourceClass)
+  const normalizedLeftRank = leftRank === -1 ? policy.order.length : leftRank
+  const normalizedRightRank = rightRank === -1 ? policy.order.length : rightRank
+  return (
+    normalizedLeftRank - normalizedRightRank ||
+    left.sourceClass.localeCompare(right.sourceClass) ||
+    left.name.localeCompare(right.name) ||
+    left.id.localeCompare(right.id)
+  )
+}
+
+function defaultEntry(
+  record: {
+    enmokuId: string
+    trackId: string
+    updatedAt: number
+  },
+  policy: DanmakuSourcePolicy,
+): DanmakuDefault {
+  const track = findDanmakuTrack(record.trackId)
+  const candidate = track ? candidateFromTrack(track, policy, undefined) : null
+  const result: DanmakuDefault = {
+    enmokuId: record.enmokuId,
+    trackId: record.trackId,
+    revisionId: candidate?.revisionId ?? null,
+    ...(candidate?.sourceClass === undefined ? {} : { sourceClass: candidate.sourceClass }),
+    ...(candidate?.name === undefined ? {} : { name: candidate.name }),
+    availability: candidate?.availability ?? "unavailable",
+    updatedAt: record.updatedAt,
+  }
+  if (!Value.Check(DanmakuDefaultSchema, result)) {
+    throw new DanmakuMatchInvalid("invalid stored danmaku default")
+  }
+  return result
+}
+
+function safeLegacyDanmakuRef(danmaku: Enmoku["danmaku"] | undefined): string | undefined {
+  if (!danmaku || danmaku.type !== "fetch") return undefined
+  const ref = danmaku.ref.trim()
+  if (
+    !/^[a-z][a-z0-9+.-]{0,63}:[^\s]{1,512}$/i.test(ref) ||
+    /(?:file:\/\/|(?:^|[/:])(?:home|root|tmp|mnt|users)(?:[/:]|$))/i.test(ref)
+  ) {
+    return undefined
+  }
+  return ref
+}
+
+function authorizeRoomOwner(actorSeitoId: string, bushitsuId: string): void {
+  const room = fetchBushitsu(bushitsuId)
+  if (!isPresent(bushitsuId, actorSeitoId)) {
+    throw new Forbidden("room admission is required")
+  }
+  if (room.buchouId !== actorSeitoId) {
+    throw new Forbidden("only the room owner may set the danmaku default")
   }
 }

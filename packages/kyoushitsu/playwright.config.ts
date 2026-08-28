@@ -66,5 +66,20 @@ export default defineConfig({
       testMatch: /room-governance\.spec\.ts/,
       use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
     },
+    {
+      name: "danmaku-phone",
+      testMatch: /danmaku-source\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "danmaku-desktop",
+      testMatch: /danmaku-source\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
   ],
 })

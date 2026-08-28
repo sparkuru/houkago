@@ -23,6 +23,7 @@ import { findKomonBySeitoId, insertKomonGrant } from "../src/db/queries/komon"
 import { insertSeito } from "../src/db/queries/seito"
 import { addEnmoku } from "../src/domain/bushitsu"
 import {
+  clearEnmokuDanmakuDefault,
   collectDanmakuContent,
   confirmReleaseEpisodeMatch,
   curateDanmakuEpisode,
@@ -34,8 +35,10 @@ import {
   recordMediaReleaseEvidence,
   registerDanmakuTrack,
   registerMediaRelease,
+  resolveDanmakuCandidates,
   rollbackDanmakuRevision,
   saveDanmakuAlignment,
+  setEnmokuDanmakuDefault,
   submitDanmakuProposal,
   updateDanmakuSourcePolicy,
 } from "../src/domain/danmaku"
@@ -55,6 +58,7 @@ import {
 } from "../src/lib/errors"
 import { grantKomon, isKomon, revokeKomon } from "../src/lib/komon"
 import { issueSeitoshou } from "../src/lib/seitoshou"
+import { join, leave } from "../src/ws/housou"
 
 function id(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`
@@ -661,4 +665,111 @@ test("track registration rejects references outside the identity pool", () => {
       releaseId: id("missing-release"),
     }),
   ).toThrow(DanmakuMatchInvalid)
+})
+
+test("candidate visibility and room defaults keep personal and owner choices separate", () => {
+  const komon = account("hybrid-komon")
+  const owner = account("hybrid-owner")
+  const viewer = account("hybrid-viewer")
+  seedKomon(komon)
+  updateDanmakuSourcePolicy(
+    komon,
+    {
+      allowedClasses: ["server-stored", "provider-official", "local", "third-party"],
+      order: ["server-stored", "provider-official", "local", "third-party"],
+    },
+    800,
+  )
+
+  const canonicalEpisode = episode()
+  const mediaRelease = release()
+  const officialTrack = track(canonicalEpisode.id, mediaRelease.id)
+  ingestDanmakuRevision(
+    officialTrack.id,
+    [{ time: 1, text: "official", mode: "scroll" }],
+    { provider: "fixture", reference: "official" },
+    801,
+  )
+  const localTrack = registerDanmakuTrack({
+    id: id("local-track"),
+    episodeId: canonicalEpisode.id,
+    sourceClass: "local",
+    name: "Local candidate",
+    status: "active",
+    createdAt: 1,
+    updatedAt: 1,
+  })
+  ingestDanmakuRevision(
+    localTrack.id,
+    [{ time: 2, text: "local", mode: "scroll" }],
+    { provider: "fixture", reference: "local" },
+    802,
+  )
+
+  const roomId = id("hybrid-room")
+  insertBushitsuWithBuchou({ id: roomId, name: "Hybrid room", buchouId: owner, createdAt: 1 })
+  const enmoku = addEnmoku(roomId, {
+    title: "Hybrid source",
+    type: "direct",
+    url: "https://fixture.test/hybrid.mp4",
+    danmaku: { type: "fetch", ref: `fixture:${mediaRelease.id}` },
+    addedBy: owner,
+  })
+
+  join(roomId, owner, "owner")
+  join(roomId, viewer, "viewer")
+  try {
+    confirmReleaseEpisodeMatch(viewer, {
+      releaseId: mediaRelease.id,
+      episodeId: canonicalEpisode.id,
+      trustScope: "personal",
+      evidence,
+    })
+
+    const viewerPersonal = resolveDanmakuCandidates(viewer, roomId, enmoku.id)
+    expect(viewerPersonal.candidates.some((candidate) => candidate.id === officialTrack.id)).toBe(
+      true,
+    )
+    expect(resolveDanmakuCandidates(owner, roomId, enmoku.id).candidates).not.toContainEqual(
+      expect.objectContaining({ id: officialTrack.id }),
+    )
+
+    confirmReleaseEpisodeMatch(owner, {
+      releaseId: mediaRelease.id,
+      episodeId: canonicalEpisode.id,
+      trustScope: "room",
+      bushitsuId: roomId,
+      enmokuId: enmoku.id,
+      evidence,
+    })
+    const ownerCandidates = resolveDanmakuCandidates(owner, roomId, enmoku.id).candidates
+    expect(
+      ownerCandidates.find((candidate) => candidate.id === officialTrack.id)?.availability,
+    ).toBe("available")
+
+    const saved = setEnmokuDanmakuDefault(owner, roomId, enmoku.id, officialTrack.id, 803)
+    expect(saved.defaults).toEqual([
+      expect.objectContaining({
+        enmokuId: enmoku.id,
+        trackId: officialTrack.id,
+        revisionId: expect.any(String),
+        availability: "available",
+      }),
+    ])
+    expect(resolveDanmakuCandidates(viewer, roomId, enmoku.id).roomDefault?.trackId).toBe(
+      officialTrack.id,
+    )
+    expect(() => setEnmokuDanmakuDefault(viewer, roomId, enmoku.id, officialTrack.id)).toThrow(
+      Forbidden,
+    )
+    expect(() => setEnmokuDanmakuDefault(owner, roomId, enmoku.id, localTrack.id)).toThrow(
+      DanmakuMatchInvalid,
+    )
+
+    const cleared = clearEnmokuDanmakuDefault(owner, roomId, enmoku.id, 804)
+    expect(cleared.defaults).toEqual([])
+  } finally {
+    leave(roomId, owner)
+    leave(roomId, viewer)
+  }
 })

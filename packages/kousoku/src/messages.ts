@@ -1,5 +1,11 @@
 import { type Static, type TObject, Type } from "@sinclair/typebox"
-import { EnmokuSchema, MeiboBuinSchema, ShinkouSchema, YakuwariSchema } from "./domain"
+import {
+  DanmakuDefaultSnapshotSchema,
+  EnmokuSchema,
+  MeiboBuinSchema,
+  ShinkouSchema,
+  YakuwariSchema,
+} from "./domain"
 
 // 権限（kengen）: room-level guest permission snapshot (prd role-permissions §1).
 // One switch per controllable action; the 部長 is always allowed regardless of
@@ -102,6 +108,12 @@ export const ShussekiSchema = envelope(
 export const KeihouSchema = envelope("KEIHOU", Type.Object({ message: Type.String() }))
 export const MeiboSchema = envelope("MEIBO", Type.Object({ members: Type.Array(MeiboBuinSchema) }))
 
+// DANMAKU_DEFAULT is a server-authored full room snapshot. It is separate from
+// realtime DANMAKU lines so changing a timeline source never changes chat or
+// the live overlay stream.
+export const DanmakuDefaultMsgSchema = envelope("DANMAKU_DEFAULT", DanmakuDefaultSnapshotSchema)
+export const DanmakuDefaultSnapshotMsgSchema = DanmakuDefaultMsgSchema
+
 // --- S→C: 権限 (current room permission snapshot) / C→S: 設定 (host sets it) ---
 // KENGEN broadcasts the room's guest-permission snapshot: sent to a new joiner on
 // open and re-broadcast to the whole room when the host changes it. SETTEI is the
@@ -145,6 +157,7 @@ export const KousokuMessageSchema = Type.Union([
   ShussekiSchema,
   KeihouSchema,
   MeiboSchema,
+  DanmakuDefaultMsgSchema,
   KengenMsgSchema,
   SetteiSchema,
   NyuushitsuSchema,
@@ -166,6 +179,8 @@ export type Bangumi = Static<typeof BangumiSchema>
 export type Shusseki = Static<typeof ShussekiSchema>
 export type Keihou = Static<typeof KeihouSchema>
 export type Meibo = Static<typeof MeiboSchema>
+export type DanmakuDefaultMsg = Static<typeof DanmakuDefaultMsgSchema>
+export type DanmakuDefaultSnapshotMsg = DanmakuDefaultMsg
 export type KengenMsg = Static<typeof KengenMsgSchema>
 export type Settei = Static<typeof SetteiSchema>
 export type Nyuushitsu = Static<typeof NyuushitsuSchema>

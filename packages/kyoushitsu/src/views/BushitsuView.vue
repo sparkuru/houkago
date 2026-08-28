@@ -4,12 +4,14 @@ import EnmokuComposer from "@/components/bangumi/EnmokuComposer.vue"
 import ChatPanel from "@/components/chat/ChatPanel.vue"
 import DanmakuOverlay from "@/components/danmaku/DanmakuOverlay.vue"
 import FileDanmakuOverlay from "@/components/danmaku/FileDanmakuOverlay.vue"
+import TimelineDanmakuSourcePanel from "@/components/danmaku/TimelineDanmakuSourcePanel.vue"
 import KengenPanel from "@/components/kengen/KengenPanel.vue"
 // biome-ignore lint/style/useImportType: used as a <template> component; biome only sees the script's `typeof EnmokuPlayer` and misses the value usage.
 import EnmokuPlayer from "@/components/player/EnmokuPlayer.vue"
 import { useRoomMotion } from "@/composables/use-room-motion"
 import { useBaiduPlayback } from "@/composables/useBaiduPlayback"
 import { useShinkou } from "@/composables/useShinkou"
+import { useTimelineDanmaku } from "@/composables/useTimelineDanmaku"
 import { t } from "@/i18n"
 import { baiduPlaybackAvailability, baiduProvider } from "@/lib/baidu-provider"
 import {
@@ -33,13 +35,11 @@ import {
   sourceValue,
 } from "@/lib/enmoku-metadata"
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
-import { loadFileDanmakuEnabled, saveFileDanmakuEnabled } from "@/lib/file-danmaku-pref"
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { useSeitoStore } from "@/stores/seito"
 import { KousokuClient, type KousokuConnectionStatus } from "@/ws/client"
-import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
 import type { Enmoku, Kengen, NyuushitsuMode } from "houkago-kousoku"
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
@@ -245,119 +245,56 @@ function refreshBaiduAvailabilities(): void {
   void baiduPlayback.refreshAvailabilities(bushitsu.bangumi)
 }
 
-const fileInput = ref<HTMLInputElement | null>(null)
-const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
-const fileDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
-const fileDanmakuNameByEnmoku = ref<Record<string, string>>({})
-const fetchedDanmakuByEnmoku = ref<Record<string, DanmakuCue[]>>({})
-const fetchedDanmakuNameByEnmoku = ref<Record<string, string>>({})
-const fileDanmakuTrackVersion = ref(0)
-const fetchedDanmakuTrackVersion = ref(0)
 const danmakuSize = ref(1)
 const danmakuOpacity = ref(1)
 const danmakuSpeed = ref(1)
 const danmakuTimeOffset = ref(0)
 const providerInfoEnmoku = ref<Enmoku | null>(null)
 const providerDialog = ref<HTMLElement | null>(null)
-let fetchedDanmakuRequest = 0
+
+const timelineDanmaku = useTimelineDanmaku(bushitsuId, current)
+const {
+  candidates: danmakuCandidates,
+  chooseFileDanmaku,
+  clearRoomDefault,
+  clearViewerOverride,
+  currentOverride: danmakuOverride,
+  currentRoomDefault: danmakuRoomDefault,
+  currentTimelineDanmaku,
+  currentTimelineDanmakuName,
+  fileDanmakuEnabled,
+  fileInput,
+  onFileDanmakuSelected,
+  proposalAction: danmakuProposalAction,
+  proposalMessage: danmakuProposalMessage,
+  retry: retryTimelineDanmaku,
+  roomAction: danmakuRoomAction,
+  roomActionMessage: danmakuRoomActionMessage,
+  selectCandidate: selectDanmakuCandidate,
+  selectedCandidate: selectedDanmakuCandidate,
+  selectionOrigin: danmakuSelectionOrigin,
+  setRoomDefault,
+  sourceError: danmakuSourceError,
+  sourceState: danmakuSourceState,
+  submitPublicProposal,
+  timelineDanmakuTrackVersion,
+  toggleFileDanmaku,
+} = timelineDanmaku
 
 watch(providerInfoEnmoku, (provider) => {
   if (!provider) return
   void nextTick(() => roomMotion.enterPanel(providerDialog.value))
 })
 
-const currentFileDanmaku = computed(() => {
-  const id = currentEnmokuId.value
-  return id ? (fileDanmakuByEnmoku.value[id] ?? []) : []
-})
-const currentFileDanmakuName = computed(() => {
-  const id = currentEnmokuId.value
-  return id ? (fileDanmakuNameByEnmoku.value[id] ?? "") : ""
-})
-const currentFetchedDanmaku = computed(() => {
-  const id = currentEnmokuId.value
-  return id ? (fetchedDanmakuByEnmoku.value[id] ?? []) : []
-})
-const currentFetchedDanmakuName = computed(() => {
-  const id = currentEnmokuId.value
-  return id ? (fetchedDanmakuNameByEnmoku.value[id] ?? "") : ""
-})
-const currentTimelineDanmaku = computed(() =>
-  currentFileDanmakuName.value ? currentFileDanmaku.value : currentFetchedDanmaku.value,
-)
-const currentTimelineDanmakuName = computed(
-  () => currentFileDanmakuName.value || currentFetchedDanmakuName.value,
-)
-const timelineDanmakuTrackVersion = computed(
-  () => fileDanmakuTrackVersion.value + fetchedDanmakuTrackVersion.value,
-)
 const providerInfo = computed(() =>
   providerInfoEnmoku.value ? bilibiliProvider(providerInfoEnmoku.value) : null,
 )
 const providerInfoStats = computed(() => providerStatItems(providerInfo.value ?? undefined))
 
-function toggleFileDanmaku() {
-  fileDanmakuEnabled.value = !fileDanmakuEnabled.value
-  saveFileDanmakuEnabled(fileDanmakuEnabled.value)
-}
-
-function chooseFileDanmaku() {
-  fileInput.value?.click()
-}
-
-async function onFileDanmakuSelected(event: Event) {
-  const target = event.target
-  if (!(target instanceof HTMLInputElement)) return
-  const file = target.files?.[0]
-  target.value = ""
-  const enmokuId = currentEnmokuId.value
-  if (!file || !enmokuId) return
-
-  const cues = parseBilibiliXml(await file.text())
-  fileDanmakuByEnmoku.value = { ...fileDanmakuByEnmoku.value, [enmokuId]: cues }
-  fileDanmakuNameByEnmoku.value = {
-    ...fileDanmakuNameByEnmoku.value,
-    [enmokuId]: cues.length > 0 ? file.name : t("fileDanmakuEmpty"),
-  }
-  fileDanmakuTrackVersion.value += 1
+watch(timelineDanmakuTrackVersion, () => {
   const snapshot = playerRef.value?.snapshot()
-  if (snapshot) {
-    playbackTime.value = snapshot.currentTime
-  }
-}
-
-async function loadFetchedDanmaku(enmoku: Enmoku | null) {
-  const requestId = ++fetchedDanmakuRequest
-  if (!enmoku || enmoku.danmaku?.type !== "fetch") return
-  if (!enmoku.danmaku.ref.startsWith("bilibili:")) return
-  if (fetchedDanmakuByEnmoku.value[enmoku.id]) return
-
-  let data: DanmakuCue[] | null = null
-  try {
-    const response = await housou.eisha.danmaku({ ref: enmoku.danmaku.ref }).get()
-    data = response.data ?? null
-  } catch {
-    if (requestId === fetchedDanmakuRequest && currentEnmokuId.value === enmoku.id) {
-      fetchedDanmakuNameByEnmoku.value = {
-        ...fetchedDanmakuNameByEnmoku.value,
-        [enmoku.id]: t("fileDanmakuEmpty"),
-      }
-    }
-    return
-  }
-  if (requestId !== fetchedDanmakuRequest || currentEnmokuId.value !== enmoku.id || !data) return
-
-  fetchedDanmakuByEnmoku.value = { ...fetchedDanmakuByEnmoku.value, [enmoku.id]: data }
-  fetchedDanmakuNameByEnmoku.value = {
-    ...fetchedDanmakuNameByEnmoku.value,
-    [enmoku.id]: data.length > 0 ? t("danmakuSourceRemote") : t("fileDanmakuEmpty"),
-  }
-  fetchedDanmakuTrackVersion.value += 1
-  const snapshot = playerRef.value?.snapshot()
-  if (snapshot) {
-    playbackTime.value = snapshot.currentTime
-  }
-}
+  if (snapshot) playbackTime.value = snapshot.currentTime
+})
 
 function closeProviderInfo() {
   providerInfoEnmoku.value = null
@@ -587,7 +524,6 @@ async function applyEnmokuId(enmokuId: string | null) {
   }
   current.value = enmoku
   void baiduPlayback.prepare(enmoku)
-  void loadFetchedDanmaku(enmoku)
 }
 
 function oshaberi(content: string) {
@@ -806,14 +742,6 @@ onBeforeUnmount(() => {
               :track-version="timelineDanmakuTrackVersion"
             />
             <DanmakuOverlay :target="playerEl" :controls-shown="controlsShown" :show-toggle="false" />
-            <input
-              ref="fileInput"
-              class="file-danmaku-input"
-              type="file"
-              accept=".xml,text/xml,application/xml"
-              :aria-label="t('danmakuSourceFile')"
-              @change="onFileDanmakuSelected"
-            />
           </div>
           <div v-else class="player-wrap baidu-playback-state" role="status">
             <strong>{{ t("baiduProvider") }}</strong>
@@ -826,6 +754,35 @@ onBeforeUnmount(() => {
               {{ t("retry") }}
             </button>
           </div>
+          <input
+            ref="fileInput"
+            class="file-danmaku-input"
+            type="file"
+            accept=".xml,text/xml,application/xml"
+            :aria-label="t('danmakuSourceFile')"
+            @change="onFileDanmakuSelected"
+          />
+          <TimelineDanmakuSourcePanel
+            :candidates="danmakuCandidates"
+            :selected-candidate="selectedDanmakuCandidate"
+            :selection-origin="danmakuSelectionOrigin"
+            :current-room-default="danmakuRoomDefault"
+            :has-viewer-override="Boolean(danmakuOverride)"
+            :source-state="danmakuSourceState"
+            :source-error="danmakuSourceError"
+            :is-buchou="bushitsu.isBuchou"
+            :room-action="danmakuRoomAction"
+            :room-action-message="danmakuRoomActionMessage"
+            :proposal-action="danmakuProposalAction"
+            :proposal-message="danmakuProposalMessage"
+            @select="selectDanmakuCandidate"
+            @clear-viewer="clearViewerOverride"
+            @choose-file="chooseFileDanmaku"
+            @set-room-default="setRoomDefault"
+            @clear-room-default="clearRoomDefault"
+            @submit-proposal="submitPublicProposal"
+            @retry="retryTimelineDanmaku"
+          />
         </template>
         <div v-else class="placeholder">
           <span>{{ t("waitingBuchouJouei") }}</span>

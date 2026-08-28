@@ -1,1 +1,6 @@
-export { getDanmakuSourcePolicy, setDanmakuSourcePolicy } from "./danmaku"
+export {
+  getDanmakuSourcePolicy,
+  getEnmokuDanmakuDefault,
+  listEnmokuDanmakuDefaults,
+  setDanmakuSourcePolicy,
+} from "./danmaku"

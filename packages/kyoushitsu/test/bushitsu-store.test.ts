@@ -269,3 +269,41 @@ test("setBangumi and BANGUMI dedupe by enmoku id", () => {
   })
   expect(store.bangumi.map((e) => e.id)).toEqual(["e3"])
 })
+
+test("apply DANMAKU_DEFAULT replaces only the matching room snapshot", () => {
+  const store = useBushitsuStore()
+  store.bushitsuId = "room-a"
+  const defaultEntry = {
+    enmokuId: "e1",
+    trackId: "track-1",
+    revisionId: "revision-1",
+    sourceClass: "server-stored" as const,
+    name: "Stored track",
+    availability: "available" as const,
+    updatedAt: 100,
+  }
+  store.apply({
+    type: "DANMAKU_DEFAULT",
+    ts: 100,
+    senderId: "server",
+    payload: { bushitsuId: "room-a", defaults: [defaultEntry] },
+  })
+  expect(store.danmakuDefaults).toEqual({ e1: defaultEntry })
+  expect(store.danmakuDefaultsSnapshotRoomId).toBe("room-a")
+
+  store.apply({
+    type: "DANMAKU_DEFAULT",
+    ts: 200,
+    senderId: "server",
+    payload: { bushitsuId: "room-b", defaults: [] },
+  })
+  expect(store.danmakuDefaults).toEqual({ e1: defaultEntry })
+
+  store.apply({
+    type: "DANMAKU_DEFAULT",
+    ts: 300,
+    senderId: "server",
+    payload: { bushitsuId: "room-a", defaults: [] },
+  })
+  expect(store.danmakuDefaults).toEqual({})
+})

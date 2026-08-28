@@ -797,6 +797,17 @@ export function getEnmokuDanmakuDefault(enmokuId: string): DanmakuDefaultRecord 
   return row ? defaultDomain(row) : null
 }
 
+const defaultsByBushitsuStmt = db.query<DefaultRow, { $bushitsuId: string }>(
+  `SELECT enmoku_id, bushitsu_id, track_id, created_at, updated_at
+   FROM enmoku_danmaku_default
+   WHERE bushitsu_id = $bushitsuId
+   ORDER BY enmoku_id ASC`,
+)
+
+export function listEnmokuDanmakuDefaults(bushitsuId: string): DanmakuDefaultRecord[] {
+  return defaultsByBushitsuStmt.all({ $bushitsuId: bushitsuId }).map(defaultDomain)
+}
+
 export function setEnmokuDanmakuDefault(
   enmokuId: string,
   bushitsuId: string,

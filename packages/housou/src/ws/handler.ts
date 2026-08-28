@@ -3,6 +3,7 @@ import { type KousokuMessage, KousokuMessageSchema, type NyuushitsuStatus } from
 import { ensureBuin, hasBuin } from "../db/queries/bushitsu-buin"
 import { buchouIdOf } from "../domain/bushitsu"
 import { fetchMeibo } from "../domain/bushitsu"
+import { getDanmakuDefaultSnapshot } from "../domain/danmaku"
 import { cancelBaiduForRoomSeito } from "../lib/baidu"
 import { Forbidden, NotBuchou } from "../lib/errors"
 import { canDo, getKengen, setKengen } from "../lib/kengen"
@@ -107,6 +108,7 @@ function admit(connId: string): void {
   socket.publish(topic, snapshot)
   socket.send(snapshot)
   socket.send(serverMsg("KENGEN", getKengen(conn.bushitsuId)))
+  socket.send(serverMsg("DANMAKU_DEFAULT", getDanmakuDefaultSnapshot(conn.bushitsuId)))
   sendNyuushitsu(connId, "entered")
   notifyMeibo(conn.bushitsuId)
 }

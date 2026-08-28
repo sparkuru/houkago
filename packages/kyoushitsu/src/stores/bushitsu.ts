@@ -1,6 +1,7 @@
 import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
 import type {
+  DanmakuDefault,
   Enmoku,
   Kengen,
   KousokuMessage,
@@ -73,6 +74,10 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
   const nyuushitsuStatus = ref<NyuushitsuStatus | "idle">("idle")
   const pendingNyuushitsu = ref<NyuushitsuRequest[]>([])
   const meibo = ref<MeiboBuin[]>([])
+  // Room-scoped historical danmaku defaults. This is written only by the
+  // server-authored full snapshot, never by a local viewer selection.
+  const danmakuDefaults = ref<Record<string, DanmakuDefault>>({})
+  const danmakuDefaultsSnapshotRoomId = ref<string | null>(null)
 
   // 部長か：am I the host? Derived authority — only my player drives sync.
   const isBuchou = computed(() => buchouId.value !== null && senderId.value === buchouId.value)
@@ -174,6 +179,13 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
       case "MEIBO":
         meibo.value = msg.payload.members
         break
+      case "DANMAKU_DEFAULT":
+        if (bushitsuId.value !== null && bushitsuId.value !== msg.payload.bushitsuId) break
+        danmakuDefaultsSnapshotRoomId.value = msg.payload.bushitsuId
+        danmakuDefaults.value = Object.fromEntries(
+          msg.payload.defaults.map((item) => [item.enmokuId, item]),
+        )
+        break
       case "JOUEI":
         enmokuId.value = msg.payload.enmokuId
         break
@@ -239,6 +251,8 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     nyuushitsuStatus,
     pendingNyuushitsu,
     meibo,
+    danmakuDefaults,
+    danmakuDefaultsSnapshotRoomId,
     canControl,
     canChat,
     canPlaylist,

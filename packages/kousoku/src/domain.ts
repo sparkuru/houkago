@@ -527,6 +527,104 @@ export const DanmakuSourcePolicySchema = Type.Object(
 )
 export type DanmakuSourcePolicy = Static<typeof DanmakuSourcePolicySchema>
 
+// Candidate availability is deliberately separate from source class. A track
+// can remain visible for inspection while its current revision is unavailable,
+// disabled, or failed; callers must fall through without rewriting a stored
+// preference.
+export const DanmakuCandidateAvailabilitySchema = Type.Union([
+  Type.Literal("available"),
+  Type.Literal("unavailable"),
+  Type.Literal("disabled"),
+  Type.Literal("failed"),
+])
+export type DanmakuCandidateAvailability = Static<typeof DanmakuCandidateAvailabilitySchema>
+export const DanmakuCandidateStatusSchema = DanmakuCandidateAvailabilitySchema
+export type DanmakuCandidateStatus = DanmakuCandidateAvailability
+
+// A safe candidate summary. `cues` is optional because compatibility/provider
+// candidates may still be loaded through an existing server-side endpoint; it
+// never carries media bytes, credentials, or private provider material.
+export const DanmakuCandidateSchema = Type.Object(
+  {
+    id: Type.String({ minLength: 1 }),
+    sourceClass: DanmakuSourceClassSchema,
+    name: Type.String({ minLength: 1, maxLength: 256 }),
+    provenance: Type.Optional(DanmakuProvenanceSchema),
+    evidence: Type.Optional(Type.Array(DanmakuEvidenceSchema, { maxItems: 32 })),
+    confidence: Type.Optional(DanmakuConfidenceTierSchema),
+    releaseId: Type.Optional(Type.String({ minLength: 1 })),
+    episodeId: Type.Optional(Type.String({ minLength: 1 })),
+    trackId: Type.Optional(Type.String({ minLength: 1 })),
+    revisionId: Type.Optional(Type.String({ minLength: 1 })),
+    alignment: Type.Optional(DanmakuAlignmentSchema),
+    availability: DanmakuCandidateAvailabilitySchema,
+    reason: Type.Optional(Type.String({ maxLength: 512 })),
+    legacyRef: Type.Optional(Type.String({ minLength: 1, maxLength: 512 })),
+    cues: Type.Optional(Type.Array(DanmakuCueSchema)),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuCandidate = Static<typeof DanmakuCandidateSchema>
+
+// One selected track is a viewer-local presentation decision. A room default
+// uses the same candidate identity but is broadcast separately as a snapshot.
+export const DanmakuSelectionSchema = Type.Object(
+  {
+    enmokuId: Type.String({ minLength: 1 }),
+    candidateId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+    trackId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+    revisionId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+    sourceClass: Type.Optional(DanmakuSourceClassSchema),
+    updatedAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuSelection = Static<typeof DanmakuSelectionSchema>
+
+// A default entry is intentionally small and safe to broadcast. The room
+// snapshot carries all Enmoku defaults so a late joiner never needs to infer
+// state from the order of incremental updates.
+export const DanmakuDefaultSchema = Type.Object(
+  {
+    enmokuId: Type.String({ minLength: 1 }),
+    trackId: Type.String({ minLength: 1 }),
+    revisionId: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+    sourceClass: Type.Optional(DanmakuSourceClassSchema),
+    name: Type.Optional(Type.String({ minLength: 1, maxLength: 256 })),
+    availability: DanmakuCandidateAvailabilitySchema,
+    updatedAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuDefault = Static<typeof DanmakuDefaultSchema>
+
+export const DanmakuDefaultSnapshotSchema = Type.Object(
+  {
+    bushitsuId: Type.String({ minLength: 1 }),
+    defaults: Type.Array(DanmakuDefaultSchema),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuDefaultSnapshot = Static<typeof DanmakuDefaultSnapshotSchema>
+export const DanmakuSelectionSnapshotSchema = DanmakuDefaultSnapshotSchema
+export type DanmakuSelectionSnapshot = DanmakuDefaultSnapshot
+
+// Candidate REST reads return policy and the current room default together so
+// browser precedence is explainable even when a socket update races the read.
+export const DanmakuCandidateResolutionSchema = Type.Object(
+  {
+    bushitsuId: Type.String({ minLength: 1 }),
+    enmokuId: Type.String({ minLength: 1 }),
+    policy: DanmakuSourcePolicySchema,
+    candidates: Type.Array(DanmakuCandidateSchema),
+    roomDefault: Type.Union([DanmakuDefaultSchema, Type.Null()]),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuCandidateResolution = Static<typeof DanmakuCandidateResolutionSchema>
+export const DanmakuResolutionSchema = DanmakuCandidateResolutionSchema
+export type DanmakuResolution = DanmakuCandidateResolution
+
 export const KomonGrantSchema = Type.Object(
   {
     id: Type.String(),
