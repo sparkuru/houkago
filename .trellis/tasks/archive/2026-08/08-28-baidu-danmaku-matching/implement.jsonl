@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Baidu source identity, credential, capability, and media-plane constraints."}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Versioned capability, exact binding, Range, and browser security contracts."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Typed fingerprint and release-versus-episode evidence semantics."}
+{"file":".trellis/tasks/08-27-universal-danmaku-resolution/research/dandanplay-matching.md","reason":"Reference-only first-16-MiB MD5 and manual candidate flow."}

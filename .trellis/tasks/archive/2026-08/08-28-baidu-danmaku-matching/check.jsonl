@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Check no credential/private-id/media leakage and playback independence."}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Check strict optional hash capability and source/device/origin binding."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check matcher authority and stable error mapping."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check manual correction and failure UI regression coverage."}
