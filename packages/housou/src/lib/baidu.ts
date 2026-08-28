@@ -543,7 +543,14 @@ export function claimBaiduMediaGrant(
   grantId: string,
   baseUrl: string,
   now = Date.now(),
-): { id: string; sentinelUrl: string; dlink: string; expiresAt: number } {
+): {
+  id: string
+  sourceId: string
+  bushitsuId: string
+  sentinelUrl: string
+  dlink: string
+  expiresAt: number
+} {
   purge(now)
   const grant = mediaGrants.get(grantId)
   if (
@@ -557,7 +564,14 @@ export function claimBaiduMediaGrant(
   requireSourceConnection(requireSource(grant.sourceId, grant.bushitsuId))
   mediaGrants.delete(grantId)
   const sentinelUrl = new URL(`/baidu/media/${grant.id}`, baseUrl).toString()
-  return { id: grant.id, sentinelUrl, dlink: grant.dlink, expiresAt: grant.expiresAt }
+  return {
+    id: grant.id,
+    sourceId: grant.sourceId,
+    bushitsuId: grant.bushitsuId,
+    sentinelUrl,
+    dlink: grant.dlink,
+    expiresAt: grant.expiresAt,
+  }
 }
 
 export function cancelBaiduForEnmoku(enmokuId: string, bushitsuId: string): void {

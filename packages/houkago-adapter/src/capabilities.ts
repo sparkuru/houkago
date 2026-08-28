@@ -2,6 +2,7 @@ import type { AdapterCapability, AdapterHello } from "houkago-kousoku"
 import {
   BAIDU_ACCOUNT_USER_HELD_CAPABILITY,
   BAIDU_FILES_READ_CAPABILITY,
+  BAIDU_MEDIA_FINGERPRINT_CAPABILITY,
   BAIDU_MEDIA_HEADERS_CAPABILITY,
   HOUKAGO_ADAPTER_PROTOCOL_VERSION,
 } from "houkago-kousoku"
@@ -17,6 +18,7 @@ export function adapterHello(
   const capabilities: AdapterCapability[] = [
     capability(BAIDU_ACCOUNT_USER_HELD_CAPABILITY, paired),
     capability(BAIDU_FILES_READ_CAPABILITY, paired),
+    capability(BAIDU_MEDIA_FINGERPRINT_CAPABILITY, paired),
     capability(BAIDU_MEDIA_HEADERS_CAPABILITY, paired),
   ]
   return {

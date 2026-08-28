@@ -179,6 +179,33 @@ export function createAdapterRuntime(options: AdapterRuntimeOptions): AdapterRun
         })
         return okResponse(request.nonce)
       }
+      case "BAIDU_MEDIA_FINGERPRINT": {
+        if (tabId === undefined || tabId < 0) throw new Error("browser tab unavailable")
+        const pairing = await requirePairing()
+        const grantId = grantIdFromUrl(request.grantUrl, pairing.serverBase)
+        if (!grantId) throw new Error("grant sentinel mismatch")
+        const response = await adaptorFetch(
+          pairing,
+          `/baidu/adaptor/grants/${encodeURIComponent(grantId)}`,
+        )
+        const body = await responseJson(response)
+        const sentinelUrl = requiredString(body, "sentinelUrl")
+        if (
+          sentinelUrl !== request.grantUrl ||
+          requiredString(body, "sourceId") !== request.sourceId ||
+          requiredString(body, "bushitsuId") !== request.bushitsuId
+        ) {
+          throw new Error("grant binding mismatch")
+        }
+        await options.installGrant({
+          id: requiredString(body, "id"),
+          tabId,
+          sentinelUrl,
+          dlink: requiredString(body, "dlink"),
+          expiresAt: requiredNumber(body, "expiresAt"),
+        })
+        return okResponse(request.nonce)
+      }
       case "BAIDU_REVOKE": {
         const pairing = await readPairing()
         if (pairing) {
@@ -415,6 +442,7 @@ function publicError(error: unknown): string {
     "grant expired",
     "file selection is not permitted",
     "grant sentinel mismatch",
+    "grant binding mismatch",
   ])
   return allowed.has(error.message) ? error.message : "Adapter request failed"
 }

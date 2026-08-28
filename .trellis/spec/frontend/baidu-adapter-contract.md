@@ -16,11 +16,17 @@
 - Shared protocol version: `HOUKAGO_ADAPTER_PROTOCOL_VERSION`.
 - Handshake: `HELLO -> { protocolVersion, clientVersion, browser, deviceId,
   capabilities[] }`.
-- Capabilities: `baidu.account.user-held`, `baidu.files.read`, and
-  `baidu.media.request-headers`, each with its own `schemaVersion` and readiness.
+- Capabilities: `baidu.account.user-held`, `baidu.files.read`,
+  `baidu.media.request-headers`, and optional `baidu.media.fingerprint`, each
+  with its own `schemaVersion` and readiness.
 - Page requests: `PAIR`, `OAUTH_HANDOFF`, `BAIDU_LIST`, `BAIDU_PERMIT`,
-  `BAIDU_MEDIA_PREPARE`, and `BAIDU_REVOKE`; every envelope has exact `source`,
-  protocol version, nonce, and no extra properties.
+  `BAIDU_MEDIA_PREPARE`, optional `BAIDU_MEDIA_FINGERPRINT`, and
+  `BAIDU_REVOKE`; every envelope has exact `source`, protocol version, nonce,
+  and no extra properties. The fingerprint request carries `sourceId`,
+  `bushitsuId`, `grantUrl`, `expiresAt`, and `bytes <= 16777216`.
+- The optional fingerprint result is
+  `BAIDU_MEDIA_FINGERPRINT_RESULT` with `{ algorithm: "md5", scope: "prefix",
+  bytes, value }`; the page never receives the private dlink or media bytes.
 - Production build requires both exact origins:
   `HOUKAGO_ADAPTER_ORIGIN` (page) and `HOUKAGO_ADAPTER_SERVER_ORIGIN` (API).
   Development without these values deliberately injects into every HTTP/HTTPS
@@ -151,6 +157,12 @@
   requests prompt removal; alarms/startup reconciliation provide durable
   cleanup after worker suspension. This does not claim recall of an already
   delivered dlink or media bytes.
+- The fingerprint path first claims and validates the one-use server grant by
+  exact sentinel URL, source id, room id, paired adaptor, page origin, and
+  nonce. The content script then requests only `Range: bytes=0-(N-1)` from the
+  sentinel, hashes the bounded response locally, and returns lowercase MD5
+  metadata. A failed or unavailable fingerprint is an optional matcher
+  degradation, not a playback failure.
 
 ### 4. Validation & Error Matrix
 
@@ -179,6 +191,8 @@
 | Chromium native timer is invoked through an object receiver | never store it directly; call through an arrow wrapper so successful grant preparation is not reported as a generic adapter failure |
 | A granted Chromium target already has a reusable cached 206 | set request `Cache-Control: no-cache` on the exact dlink/tab rule so Chrome returns through DNR/network; retain response `no-store` as defense-in-depth |
 | Provider marks a file as video, but native playback repeatedly restarts the same initial Range after a valid 206 | treat as a media compatibility/pipeline failure until browser diagnostics prove a transport defect; do not blame retention mode or weaken grant rules |
+| Fingerprint request has wrong source/room, sentinel, origin, or bound grant | reject with a stable adapter error and install no additional grant |
+| Fingerprint response is too large, empty, non-web, or request fails | return `Media fingerprint unavailable`; expose no bytes or private URL |
 
 ### 5. Good/Base/Bad Cases
 
@@ -194,9 +208,14 @@
 - Good: after an unadapted request has populated Chrome's cache, the first and
   repeated same-tab granted requests for the exact dlink both reach the
   provider with request `no-cache` plus UA/Referer/Range enforcement.
+- Good: a paired desktop adaptor hashes only the bounded sentinel prefix and
+  returns typed MD5 scope metadata; the server can use it as release evidence
+  without ever receiving media bytes.
 - Base: an empty Chromium registry is removed and no rules are installed.
 - Bad: trust a manifest match as an origin check, expose a dlink to Vue state,
   apply UA to every Baidu request, or mount the player before preparation.
+- Bad: make fingerprint capability mandatory, send the raw dlink to Vue, or
+  treat a fingerprint as proof of canonical episode identity.
 - Bad: rely on an in-memory map/timer after MV3 suspension, delete registry
   state before confirming DNR removal, or use a case-insensitive private-HEAD
   filter.
@@ -254,6 +273,10 @@
   categories. A source-specific decode/demux failure is not an adapter transport
   regression when both retention modes and an independent direct-link client
   reproduce it under the same browser media pipeline.
+
+- Fingerprint tests must assert the exact Range bound, lowercase MD5, explicit
+  algorithm/scope/byte count, source/room/grant binding, schema rejection of
+  oversized or secret-bearing payloads, and playback-safe failure fallback.
 
 ### 7. Wrong vs Correct
 

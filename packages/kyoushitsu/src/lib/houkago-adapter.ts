@@ -5,7 +5,9 @@ import {
   AdapterPageRequestSchema,
   type AdapterPageResponse,
   AdapterPageResponseSchema,
+  BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
   type BaiduDirectoryPage,
+  type BaiduMediaFingerprint,
   HOUKAGO_ADAPTER_PAGE_SOURCE,
   HOUKAGO_ADAPTER_PROTOCOL_VERSION,
 } from "houkago-kousoku"
@@ -138,6 +140,31 @@ class HoukagoAdapterBridge {
       expiresAt,
     }
     await this.result(request)
+  }
+
+  async fingerprintBaiduMedia(
+    sourceId: string,
+    bushitsuId: string,
+    grantUrl: string,
+    expiresAt: number,
+    bytes = BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
+  ): Promise<BaiduMediaFingerprint> {
+    const request: AdapterPageRequest = {
+      source: HOUKAGO_ADAPTER_PAGE_SOURCE,
+      protocolVersion: HOUKAGO_ADAPTER_PROTOCOL_VERSION,
+      nonce: createNonce(),
+      type: "BAIDU_MEDIA_FINGERPRINT",
+      sourceId,
+      bushitsuId,
+      grantUrl,
+      expiresAt,
+      bytes,
+    }
+    const response = await this.send(request, "BAIDU_MEDIA_FINGERPRINT_RESULT")
+    if (response.type !== "BAIDU_MEDIA_FINGERPRINT_RESULT") {
+      throw new AdapterBridgeError("INVALID_RESPONSE", "Invalid media fingerprint response")
+    }
+    return response.data
   }
 
   async revokeBaidu(): Promise<void> {

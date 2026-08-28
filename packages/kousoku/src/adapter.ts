@@ -6,6 +6,8 @@ export const HOUKAGO_ADAPTER_CLIENT_SOURCE = "houkago-adapter" as const
 export const BAIDU_ACCOUNT_USER_HELD_CAPABILITY = "baidu.account.user-held" as const
 export const BAIDU_FILES_READ_CAPABILITY = "baidu.files.read" as const
 export const BAIDU_MEDIA_HEADERS_CAPABILITY = "baidu.media.request-headers" as const
+export const BAIDU_MEDIA_FINGERPRINT_CAPABILITY = "baidu.media.fingerprint" as const
+export const BAIDU_MEDIA_FINGERPRINT_MAX_BYTES = 16 * 1024 * 1024
 
 export const BaiduRetentionModeSchema = Type.Union([
   Type.Literal("server-saved"),
@@ -60,6 +62,17 @@ export const AdapterHelloSchema = Type.Object(
   { additionalProperties: false },
 )
 export type AdapterHello = Static<typeof AdapterHelloSchema>
+
+export const BaiduMediaFingerprintSchema = Type.Object(
+  {
+    algorithm: Type.Literal("md5"),
+    scope: Type.Literal("prefix"),
+    bytes: Type.Integer({ minimum: 1, maximum: BAIDU_MEDIA_FINGERPRINT_MAX_BYTES }),
+    value: Type.String({ pattern: "^[0-9a-f]{32}$" }),
+  },
+  { additionalProperties: false },
+)
+export type BaiduMediaFingerprint = Static<typeof BaiduMediaFingerprintSchema>
 
 export const BaiduFileEntrySchema = Type.Object(
   {
@@ -178,6 +191,18 @@ export const AdapterPageRequestSchema = Type.Union([
     { additionalProperties: false },
   ),
   Type.Object(
+    {
+      ...PageEnvelope,
+      type: Type.Literal("BAIDU_MEDIA_FINGERPRINT"),
+      sourceId: Type.String({ minLength: 1 }),
+      bushitsuId: Type.String({ minLength: 1 }),
+      grantUrl: Type.String({ minLength: 1 }),
+      expiresAt: Type.Number({ minimum: 0 }),
+      bytes: Type.Integer({ minimum: 1, maximum: BAIDU_MEDIA_FINGERPRINT_MAX_BYTES }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
     { ...PageEnvelope, type: Type.Literal("BAIDU_REVOKE") },
     { additionalProperties: false },
   ),
@@ -210,6 +235,15 @@ export const AdapterPageResponseSchema = Type.Union([
       type: Type.Literal("BAIDU_LIST_RESULT"),
       ok: Type.Literal(true),
       data: BaiduDirectoryPageSchema,
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...ClientEnvelope,
+      type: Type.Literal("BAIDU_MEDIA_FINGERPRINT_RESULT"),
+      ok: Type.Literal(true),
+      data: BaiduMediaFingerprintSchema,
     },
     { additionalProperties: false },
   ),

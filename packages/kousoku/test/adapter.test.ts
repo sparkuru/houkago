@@ -4,6 +4,8 @@ import {
   AdapterCapabilitySchema,
   AdapterPageRequestSchema,
   AdapterPageResponseSchema,
+  BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
+  BaiduMediaFingerprintSchema,
   BaiduPlaybackGrantSchema,
   BaiduProviderSchema,
   BaiduSourceAvailabilitySchema,
@@ -132,6 +134,47 @@ test("Baidu playback terminal failure is a fixed secret-free state", () => {
       reason: "authorization-revoked",
     }),
   ).toBe(false)
+})
+
+test("Baidu fingerprint contract records a bounded prefix without secrets", () => {
+  const fingerprint = {
+    algorithm: "md5",
+    scope: "prefix",
+    bytes: BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
+    value: "0123456789abcdef0123456789abcdef",
+  }
+  expect(Value.Check(BaiduMediaFingerprintSchema, fingerprint)).toBe(true)
+  expect(Value.Check(BaiduMediaFingerprintSchema, { ...fingerprint, bytes: 0 })).toBe(false)
+  expect(
+    Value.Check(BaiduMediaFingerprintSchema, {
+      ...fingerprint,
+      bytes: 1,
+      value: fingerprint.value.toUpperCase(),
+    }),
+  ).toBe(false)
+  expect(
+    Value.Check(AdapterPageRequestSchema, {
+      source: "houkago-page",
+      protocolVersion: HOUKAGO_ADAPTER_PROTOCOL_VERSION,
+      nonce: "0123456789abcdef",
+      type: "BAIDU_MEDIA_FINGERPRINT",
+      sourceId: "source-1",
+      bushitsuId: "room-1",
+      grantUrl: "https://houkago.example/baidu/media/grant-1",
+      expiresAt: Date.now() + 60_000,
+      bytes: 1024,
+    }),
+  ).toBe(true)
+  expect(
+    Value.Check(AdapterPageResponseSchema, {
+      source: "houkago-adapter",
+      protocolVersion: HOUKAGO_ADAPTER_PROTOCOL_VERSION,
+      nonce: "0123456789abcdef",
+      type: "BAIDU_MEDIA_FINGERPRINT_RESULT",
+      ok: true,
+      data: fingerprint,
+    }),
+  ).toBe(true)
 })
 
 test("adapter envelopes reject missing nonces, version drift, and secret fields", () => {

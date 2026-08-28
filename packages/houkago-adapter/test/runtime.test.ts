@@ -286,6 +286,76 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
   }
 })
 
+test("fingerprint preparation binds the claimed grant to the requested source and room", async () => {
+  const values = new Map<string, unknown>([
+    ["adapter.pairing", { serverBase: "https://houkago.example", adaptorToken: "pair-token" }],
+  ])
+  const installed: RuntimeMediaGrant[] = []
+  const originalFetch = globalThis.fetch
+  const fetcher: BaiduFetcher = async (input) => {
+    expect(String(input)).toBe("https://houkago.example/baidu/adaptor/grants/g1")
+    return Response.json({
+      id: "g1",
+      sourceId: "source-1",
+      bushitsuId: "room-1",
+      sentinelUrl: "https://houkago.example/baidu/media/g1",
+      dlink: "https://cdn.baidupcs.com/file/opaque",
+      expiresAt: Date.now() + 60_000,
+    })
+  }
+  globalThis.fetch = Object.assign(fetcher, { preconnect() {} })
+  const runtime = createAdapterRuntime({
+    browser: "firefox",
+    storage: memoryStorage(values),
+    expectedPageOrigin: "https://houkago.example",
+    expectedServerOrigin: "https://houkago.example",
+    async requestServerOrigin() {
+      return true
+    },
+    onPaired() {},
+    installGrant(grant) {
+      installed.push(grant)
+    },
+    revokeGrants() {},
+    async resolveDlink() {
+      throw new Error("unexpected dlink resolution")
+    },
+  })
+
+  try {
+    const prepared = await runtime.handle(
+      request("BAIDU_MEDIA_FINGERPRINT", {
+        sourceId: "source-1",
+        bushitsuId: "room-1",
+        grantUrl: "https://houkago.example/baidu/media/g1",
+        expiresAt: Date.now() + 60_000,
+        bytes: 1024,
+      }),
+      pageUrl,
+      7,
+    )
+    expect(prepared).toMatchObject({ type: "RESULT", ok: true, nonce })
+    expect(installed).toHaveLength(1)
+    expect(JSON.stringify(prepared)).not.toContain("baidupcs")
+
+    const mismatched = await runtime.handle(
+      request("BAIDU_MEDIA_FINGERPRINT", {
+        sourceId: "source-2",
+        bushitsuId: "room-1",
+        grantUrl: "https://houkago.example/baidu/media/g1",
+        expiresAt: Date.now() + 60_000,
+        bytes: 1024,
+      }),
+      pageUrl,
+      7,
+    )
+    expect(JSON.stringify(mismatched)).toContain("grant binding mismatch")
+    expect(installed).toHaveLength(1)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 function request(type: string, payload: Record<string, unknown>): Record<string, unknown> {
   return {
     source: HOUKAGO_ADAPTER_PAGE_SOURCE,
