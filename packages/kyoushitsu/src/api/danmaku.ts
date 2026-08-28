@@ -24,4 +24,17 @@ export function submitDanmakuPublicProposal(
   return housou.danmaku.proposals.post({ releaseId, evidence: [...evidence] })
 }
 
+export function confirmDanmakuPersonalMatch(
+  releaseId: string,
+  episodeId: string,
+  evidence: readonly DanmakuEvidence[],
+) {
+  return housou.danmaku.matches.post({
+    releaseId,
+    episodeId,
+    trustScope: "personal",
+    evidence: [...evidence],
+  })
+}
+
 export type { DanmakuCandidateResolution, DanmakuDefaultSnapshot }

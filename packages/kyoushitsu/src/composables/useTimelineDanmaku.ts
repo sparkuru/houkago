@@ -1,6 +1,7 @@
 import { housou } from "@/api"
 import {
   clearDanmakuRoomDefault,
+  confirmDanmakuPersonalMatch,
   fetchDanmakuCandidates,
   setDanmakuRoomDefault,
   submitDanmakuPublicProposal,
@@ -26,6 +27,7 @@ import type {
   DanmakuCandidate,
   DanmakuCandidateResolution,
   DanmakuDefault,
+  DanmakuEpisodeMatchCandidate,
   DanmakuSourcePolicy,
   Enmoku,
 } from "houkago-kousoku"
@@ -59,6 +61,8 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
   const roomActionMessage = ref("")
   const proposalAction = ref<RoomAction>("idle")
   const proposalMessage = ref("")
+  const matchAction = ref<RoomAction>("idle")
+  const matchMessage = ref("")
   const cueVersion = ref(0)
   const trackVersion = ref(0)
   let resolutionRequest = 0
@@ -70,6 +74,9 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     return id ? (overrides.value[id] ?? null) : null
   })
   const currentPolicy = computed(() => resolution.value?.policy ?? DEFAULT_DANMAKU_POLICY)
+  const matchCandidates = computed<DanmakuEpisodeMatchCandidate[]>(
+    () => resolution.value?.matchCandidates ?? [],
+  )
   const hasAuthoritativeRoomDefaults = computed(
     () => bushitsu.danmakuDefaultsSnapshotRoomId === bushitsuId,
   )
@@ -340,6 +347,34 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     return true
   }
 
+  async function confirmMatch(candidateId: string): Promise<boolean> {
+    const enmoku = current.value
+    const candidate = matchCandidates.value.find((item) => item.episodeId === candidateId)
+    if (!enmoku || !candidate || !candidate.requiresConfirmation) return false
+    matchAction.value = "pending"
+    matchMessage.value = ""
+    try {
+      const response = await confirmDanmakuPersonalMatch(
+        candidate.releaseId,
+        candidate.episodeId,
+        candidate.evidence,
+      )
+      if (response.error) {
+        matchAction.value = "error"
+        matchMessage.value = t("danmakuMatchFailed")
+        return false
+      }
+    } catch {
+      matchAction.value = "error"
+      matchMessage.value = t("danmakuMatchFailed")
+      return false
+    }
+    matchAction.value = "success"
+    matchMessage.value = t("danmakuMatchConfirmed")
+    await loadResolution(enmoku)
+    return true
+  }
+
   function retry(): void {
     const enmoku = current.value
     if (!enmoku) return
@@ -357,6 +392,8 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
       resolutionError.value = ""
       cueError.value = ""
       cueLoading.value = false
+      matchAction.value = "idle"
+      matchMessage.value = ""
       failedCandidates.value = {}
       const enmoku = current.value
       if (!id || !enmoku) return
@@ -415,6 +452,9 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     roomActionMessage,
     proposalAction,
     proposalMessage,
+    matchCandidates,
+    matchAction,
+    matchMessage,
     toggleFileDanmaku,
     chooseFileDanmaku,
     onFileDanmakuSelected,
@@ -423,6 +463,7 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     setRoomDefault,
     clearRoomDefault,
     submitPublicProposal,
+    confirmMatch,
     retry,
     releaseIdentity: computed(() => (current.value ? stableReleaseIdentity(current.value) : "")),
     overrideVersion: DANMAKU_OVERRIDE_VERSION,

@@ -323,6 +323,14 @@ export const messages = {
     danmakuSourceProviderOfficial: "官方来源",
     danmakuSourceLocal: "本地文件",
     danmakuSourceThirdParty: "第三方来源",
+    danmakuMatchHeading: "识别到的剧集",
+    danmakuMatchHint: "这是基于文件名的建议，请确认后仅为自己启用。",
+    danmakuMatchSuggested: "较高匹配",
+    danmakuMatchAmbiguous: "需要核对",
+    danmakuMatchWeak: "较弱匹配",
+    danmakuMatchConfirm: "确认并使用",
+    danmakuMatchConfirmed: "已确认，正在加载该剧集的弹幕。",
+    danmakuMatchFailed: "确认失败，播放不受影响，请稍后重试。",
   },
 } as const
 

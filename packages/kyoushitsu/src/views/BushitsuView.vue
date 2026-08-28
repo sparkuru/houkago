@@ -267,6 +267,10 @@ const {
   onFileDanmakuSelected,
   proposalAction: danmakuProposalAction,
   proposalMessage: danmakuProposalMessage,
+  matchAction: danmakuMatchAction,
+  matchCandidates: danmakuMatchCandidates,
+  matchMessage: danmakuMatchMessage,
+  confirmMatch: confirmDanmakuMatch,
   retry: retryTimelineDanmaku,
   roomAction: danmakuRoomAction,
   roomActionMessage: danmakuRoomActionMessage,
@@ -764,6 +768,9 @@ onBeforeUnmount(() => {
           />
           <TimelineDanmakuSourcePanel
             :candidates="danmakuCandidates"
+            :match-candidates="danmakuMatchCandidates"
+            :match-action="danmakuMatchAction"
+            :match-message="danmakuMatchMessage"
             :selected-candidate="selectedDanmakuCandidate"
             :selection-origin="danmakuSelectionOrigin"
             :current-room-default="danmakuRoomDefault"
@@ -781,6 +788,7 @@ onBeforeUnmount(() => {
             @set-room-default="setRoomDefault"
             @clear-room-default="clearRoomDefault"
             @submit-proposal="submitPublicProposal"
+            @confirm-match="confirmDanmakuMatch"
             @retry="retryTimelineDanmaku"
           />
         </template>

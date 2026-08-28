@@ -2,7 +2,12 @@
 import type { RoomAction, TimelineDanmakuState } from "@/composables/useTimelineDanmaku"
 import { t } from "@/i18n"
 import type { DanmakuSelectionOrigin } from "@/lib/danmaku-selection"
-import type { DanmakuCandidate, DanmakuDefault, DanmakuSourceClass } from "houkago-kousoku"
+import type {
+  DanmakuCandidate,
+  DanmakuDefault,
+  DanmakuEpisodeMatchCandidate,
+  DanmakuSourceClass,
+} from "houkago-kousoku"
 
 defineProps<{
   candidates: readonly DanmakuCandidate[]
@@ -13,6 +18,9 @@ defineProps<{
   sourceState: TimelineDanmakuState
   sourceError: string
   isBuchou: boolean
+  matchCandidates: readonly DanmakuEpisodeMatchCandidate[]
+  matchAction: RoomAction
+  matchMessage: string
   roomAction: RoomAction
   roomActionMessage: string
   proposalAction: RoomAction
@@ -26,8 +34,11 @@ const emit = defineEmits<{
   setRoomDefault: [candidateId: string]
   clearRoomDefault: []
   submitProposal: [candidateId: string]
+  confirmMatch: [episodeId: string]
   retry: []
 }>()
+
+const MATCH_HEADING_ID = "timeline-danmaku-match-heading"
 
 function sourceClassLabel(sourceClass: DanmakuSourceClass): string {
   switch (sourceClass) {
@@ -92,6 +103,17 @@ function stateLabel(state: TimelineDanmakuState, sourceError: string): string {
       return ""
   }
 }
+
+function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"]): string {
+  switch (confidence) {
+    case "suggested":
+      return t("danmakuMatchSuggested")
+    case "ambiguous":
+      return t("danmakuMatchAmbiguous")
+    case "none":
+      return t("danmakuMatchWeak")
+  }
+}
 </script>
 
 <template>
@@ -145,6 +167,44 @@ function stateLabel(state: TimelineDanmakuState, sourceError: string): string {
         </li>
       </ul>
       <p v-else class="timeline-danmaku-empty">{{ t("danmakuSourceEmpty") }}</p>
+      <section
+        v-if="matchCandidates.length > 0"
+        class="timeline-danmaku-matches"
+        :aria-labelledby="MATCH_HEADING_ID"
+      >
+        <div class="timeline-danmaku-match-heading">
+          <h3 :id="MATCH_HEADING_ID">{{ t("danmakuMatchHeading") }}</h3>
+          <span>{{ t("danmakuMatchHint") }}</span>
+        </div>
+        <ul class="timeline-danmaku-match-list">
+          <li v-for="candidate in matchCandidates" :key="candidate.episodeId">
+            <div class="timeline-danmaku-match-copy">
+              <strong>{{ candidate.title }}</strong>
+              <span>
+                <template v-if="candidate.season !== undefined">S{{ candidate.season }} · </template>
+                <template v-if="candidate.episode !== undefined">E{{ candidate.episode }} · </template>
+                {{ candidate.score.toFixed(0) }}/100 · {{ confidenceLabel(candidate.confidence) }}
+              </span>
+            </div>
+            <button
+              type="button"
+              class="secondary"
+              :disabled="matchAction === 'pending'"
+              @click="emit('confirmMatch', candidate.episodeId)"
+            >
+              {{ t("danmakuMatchConfirm") }}
+            </button>
+          </li>
+        </ul>
+        <p
+          v-if="matchMessage"
+          class="timeline-danmaku-feedback"
+          role="status"
+          aria-live="polite"
+        >
+          {{ matchMessage }}
+        </p>
+      </section>
       <div class="timeline-danmaku-actions">
         <button type="button" class="secondary" @click="emit('chooseFile')">
           {{ t("danmakuSourceChooseFile") }}
@@ -314,6 +374,84 @@ function stateLabel(state: TimelineDanmakuState, sourceError: string): string {
   gap: var(--space-2);
 }
 
+.timeline-danmaku-matches {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.timeline-danmaku-match-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.timeline-danmaku-match-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.timeline-danmaku-match-heading span,
+.timeline-danmaku-match-copy span {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.timeline-danmaku-match-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline-danmaku-match-list li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.timeline-danmaku-match-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.timeline-danmaku-match-copy strong {
+  overflow-wrap: anywhere;
+}
+
+.timeline-danmaku-match-list button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
+.timeline-danmaku-match-list button.secondary {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.timeline-danmaku-match-list button.secondary:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface-raised));
+}
+
+.timeline-danmaku-match-list button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .timeline-danmaku-actions button {
   min-height: 44px;
   padding: 8px 12px;
@@ -343,6 +481,11 @@ function stateLabel(state: TimelineDanmakuState, sourceError: string): string {
 
   .timeline-danmaku-actions button {
     min-width: 0;
+  }
+
+  .timeline-danmaku-match-list li {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 
