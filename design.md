@@ -308,6 +308,7 @@ Playwright 工作流使桌面和竖屏回归可以自动化验证。前一节是
 | 房间 | `Bushitsu` | 部室 |
 | 成员 | `Buin` | 部員 |
 | 房主 | `Buchou` | 部長 |
+| 站点管理员 | `Komon` | 顧問 |
 | 游客/旁观 | `Kengaku` | 見学 |
 | 连接/会话 | `Shusseki` | 出席 |
 | 播放列表 | `Bangumi` | 番組表 |

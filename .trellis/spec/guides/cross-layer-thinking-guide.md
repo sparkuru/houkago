@@ -107,6 +107,31 @@ Before implementation:
 - [ ] If `BushitsuView` would gain another provider rule, danmaku source, source
   priority rule, or fetch cache, consider extracting a composable before adding
   more route-level state.
+- [ ] Separate a concrete media release/file fingerprint from the canonical
+  work/season/episode identity and from the danmaku-track identity. A hash is
+  evidence about bytes, not proof that two different encodes are the same
+  episode.
+- [ ] Record every fingerprint's algorithm and byte scope. For example,
+  Dandanplay documents MD5 over the first 16 MiB; a whole-file digest or a
+  provider-native digest is not interchangeable with that value.
+- [ ] Check where bytes are read. A provider client/adaptor may compute a
+  bounded fingerprint from an authorized Range request, but `housou` must not
+  pull media bytes merely to fingerprint a source.
+- [ ] Treat filename, size, duration, provider reference, fingerprint, and
+  third-party results as separately explainable evidence. Filename-only or
+  weighted matches must yield candidates rather than silently claiming an
+  exact episode.
+- [ ] Provide manual search/correction and retain the resulting association's
+  trust scope. Personal and room confirmations must not become server-wide
+  matcher knowledge without the approved promotion path.
+
+Reference model: the
+[Dandanplay open danmaku network guide](https://doc.dandanplay.com/open/)
+documents a useful candidate-matching flow: send filename, first-16-MiB MD5,
+duration, and size; let the user choose an `episodeId`; persist the
+file-to-episode association; and fall back to manual search. Use this as a
+reference for evidence and correction flow, not as proof that different
+encodes share a fingerprint or as authorization to bulk-copy its database.
 
 After implementation:
 - [ ] Verify local file timeline cues still override fetched timeline cues for
