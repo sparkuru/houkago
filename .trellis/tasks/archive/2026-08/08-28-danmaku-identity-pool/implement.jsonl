@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Additive SQLite schema, prepared queries, row mapping, and transactions."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Session authority and separation of Komon from room roles."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Episode/release/track/evidence boundary and hash semantics."}
+{"file":".trellis/tasks/08-27-universal-danmaku-resolution/research/dandanplay-matching.md","reason":"Reference-only fingerprint, candidate, manual correction, and caching evidence."}
