@@ -1,0 +1,4 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Provider fetch, parser, storage, orchestration, and overlay ownership."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Existing Bilibili/local timeline and player lifecycle contracts."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Legacy cache/priority behavior and realtime/timeline separation."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"Pool persistence and media-byte boundary."}

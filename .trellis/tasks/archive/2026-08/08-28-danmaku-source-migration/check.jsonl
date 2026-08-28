@@ -1,0 +1,4 @@
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check bounded upstream failure and stable degradation errors."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check local/fetched migration and browser regression coverage."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Check overlay/player/fullscreen behavior remains intact."}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Verify revision control API, disabled-content refresh protection, and pool persistence contracts."}
