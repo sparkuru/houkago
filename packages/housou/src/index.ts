@@ -6,6 +6,7 @@ import { statusFor } from "./lib/errors"
 import { corsOrigin } from "./lib/origin"
 import { baiduRoutes } from "./routes/baidu"
 import { bushitsuRoutes } from "./routes/bushitsu"
+import { danmakuRoutes } from "./routes/danmaku"
 import { seitoshouRoutes } from "./routes/seitoshou"
 import { wsRoutes } from "./ws/handler"
 import { startTenko } from "./ws/tenko"
@@ -36,6 +37,7 @@ export const app = new Elysia()
   .use(seitoshouRoutes)
   .use(baiduRoutes)
   .use(bushitsuRoutes)
+  .use(danmakuRoutes)
   .use(wsRoutes)
 
 // Eden contract: the frontend consumes this type via treaty<App>().

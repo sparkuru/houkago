@@ -53,6 +53,10 @@ test("bootstrap backfills legacy queues in created_at then id order", async () =
         baiduTables: db.query(
           "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'baidu_%' ORDER BY name",
         ).all().map((row) => row.name),
+        danmakuTables: db.query(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND (name LIKE 'danmaku_%' OR name IN ('enmoku_danmaku_default', 'komon', 'media_release', 'media_release_evidence', 'release_episode_match')) ORDER BY name",
+        ).all().map((row) => row.name),
+        enmokuColumns: db.query("PRAGMA table_info(enmoku)").all().map((column) => column.name),
       }))
     `,
     { HOUSOU_DB: dbPath },
@@ -62,6 +66,8 @@ test("bootstrap backfills legacy queues in created_at then id order", async () =
     entries: unknown
     bushitsuColumns: string[]
     baiduTables: string[]
+    danmakuTables: string[]
+    enmokuColumns: string[]
   }
   expect(bootstrap.entries).toEqual([
     { enmoku_id: "a", sort_key: 0 },
@@ -74,4 +80,21 @@ test("bootstrap backfills legacy queues in created_at then id order", async () =
     "baidu_connection",
     "baidu_source",
   ])
+  expect(bootstrap.danmakuTables).toEqual([
+    "danmaku_alignment",
+    "danmaku_audit",
+    "danmaku_content",
+    "danmaku_episode",
+    "danmaku_proposal",
+    "danmaku_revision",
+    "danmaku_revision_block",
+    "danmaku_source_policy",
+    "danmaku_track",
+    "enmoku_danmaku_default",
+    "komon",
+    "media_release",
+    "media_release_evidence",
+    "release_episode_match",
+  ])
+  expect(bootstrap.enmokuColumns).toContain("danmaku_json")
 })

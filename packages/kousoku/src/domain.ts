@@ -124,3 +124,417 @@ export const ShinkouSchema = Type.Object({
   playbackRate: Type.Number(),
 })
 export type Shinkou = Static<typeof ShinkouSchema>
+
+// Timeline danmaku is intentionally separate from realtime room DANMAKU. The
+// normalized cue contract is shared so storage and later provider adapters do
+// not need to depend on the kokuban parser package.
+export const DanmakuModeSchema = Type.Union([
+  Type.Literal("scroll"),
+  Type.Literal("top"),
+  Type.Literal("bottom"),
+  Type.Literal("reverse"),
+  Type.Literal("special"),
+])
+export type DanmakuMode = Static<typeof DanmakuModeSchema>
+
+export const DanmakuCueSchema = Type.Object(
+  {
+    time: Type.Number({ minimum: 0 }),
+    text: Type.String({ minLength: 1 }),
+    color: Type.Optional(Type.String()),
+    mode: DanmakuModeSchema,
+  },
+  { additionalProperties: false },
+)
+export type DanmakuCue = Static<typeof DanmakuCueSchema>
+
+// A digest describes evidence about one concrete release. Algorithm and scope
+// are part of its identity: equal hex text alone never makes two fingerprints
+// comparable.
+export const DigestSchema = Type.Object(
+  {
+    algorithm: Type.String({ minLength: 1, maxLength: 64 }),
+    scope: Type.String({ minLength: 1, maxLength: 128 }),
+    value: Type.String({ minLength: 1, maxLength: 512 }),
+    bytes: Type.Optional(Type.Integer({ minimum: 0 })),
+  },
+  { additionalProperties: false },
+)
+export type Digest = Static<typeof DigestSchema>
+
+export const DanmakuSourceClassSchema = Type.Union([
+  Type.Literal("server-stored"),
+  Type.Literal("provider-official"),
+  Type.Literal("local"),
+  Type.Literal("third-party"),
+])
+export type DanmakuSourceClass = Static<typeof DanmakuSourceClassSchema>
+export type SourceClass = DanmakuSourceClass
+
+export const DanmakuTrustScopeSchema = Type.Union([
+  Type.Literal("personal"),
+  Type.Literal("room"),
+  Type.Literal("global"),
+])
+export type DanmakuTrustScope = Static<typeof DanmakuTrustScopeSchema>
+export type TrustScope = DanmakuTrustScope
+
+export const DanmakuConfidenceTierSchema = Type.Union([
+  Type.Literal("confirmed"),
+  Type.Literal("suggested"),
+  Type.Literal("ambiguous"),
+  Type.Literal("none"),
+])
+export type DanmakuConfidenceTier = Static<typeof DanmakuConfidenceTierSchema>
+
+export const DanmakuEvidenceSchema = Type.Union([
+  Type.Object(
+    {
+      kind: Type.Literal("filename"),
+      work: Type.Optional(Type.String({ maxLength: 256 })),
+      season: Type.Optional(Type.Integer({ minimum: 0 })),
+      episode: Type.Optional(Type.Integer({ minimum: 0 })),
+      group: Type.Optional(Type.String({ maxLength: 256 })),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("fingerprint"),
+      digest: DigestSchema,
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("size"),
+      bytes: Type.Integer({ minimum: 0 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("duration"),
+      seconds: Type.Number({ minimum: 0 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("provider"),
+      provider: Type.String({ minLength: 1, maxLength: 64 }),
+      reference: Type.String({ minLength: 1, maxLength: 512 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("confirmation"),
+      scope: DanmakuTrustScopeSchema,
+      note: Type.Optional(Type.String({ maxLength: 512 })),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal("third-party"),
+      provider: Type.String({ minLength: 1, maxLength: 64 }),
+      reference: Type.String({ minLength: 1, maxLength: 512 }),
+      tier: DanmakuConfidenceTierSchema,
+    },
+    { additionalProperties: false },
+  ),
+])
+export type DanmakuEvidence = Static<typeof DanmakuEvidenceSchema>
+
+export const DanmakuProvenanceSchema = Type.Object(
+  {
+    provider: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
+    reference: Type.Optional(Type.String({ minLength: 1, maxLength: 512 })),
+    label: Type.Optional(Type.String({ maxLength: 256 })),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuProvenance = Static<typeof DanmakuProvenanceSchema>
+
+export const DanmakuEpisodeSchema = Type.Object(
+  {
+    id: Type.String(),
+    title: Type.String({ minLength: 1, maxLength: 512 }),
+    season: Type.Optional(Type.Integer({ minimum: 0 })),
+    episode: Type.Optional(Type.Integer({ minimum: 0 })),
+    episodeTitle: Type.Optional(Type.String({ maxLength: 512 })),
+    description: Type.Optional(Type.String({ maxLength: 2000 })),
+    createdAt: Type.Number(),
+    updatedAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuEpisode = Static<typeof DanmakuEpisodeSchema>
+
+export const MediaReleaseSchema = Type.Object(
+  {
+    id: Type.String(),
+    provider: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
+    providerReference: Type.Optional(Type.String({ minLength: 1, maxLength: 512 })),
+    fileName: Type.Optional(Type.String({ minLength: 1, maxLength: 1024 })),
+    size: Type.Optional(Type.Integer({ minimum: 0 })),
+    duration: Type.Optional(Type.Number({ minimum: 0 })),
+    createdAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type MediaRelease = Static<typeof MediaReleaseSchema>
+
+const ReleaseEpisodeMatchCommon = {
+  id: Type.String(),
+  releaseId: Type.String(),
+  episodeId: Type.String(),
+  confidence: DanmakuConfidenceTierSchema,
+  evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+  createdAt: Type.Number(),
+}
+
+// Scope is an authority boundary, not just a label. Keep the owner required
+// for each scope in the shared contract so an invalid combination cannot pass
+// an edge validator and fail later in a database query.
+export const ReleaseEpisodeMatchSchema = Type.Union([
+  Type.Object(
+    {
+      ...ReleaseEpisodeMatchCommon,
+      trustScope: Type.Literal("personal"),
+      seitoId: Type.String(),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...ReleaseEpisodeMatchCommon,
+      trustScope: Type.Literal("room"),
+      bushitsuId: Type.String(),
+      enmokuId: Type.Optional(Type.String()),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...ReleaseEpisodeMatchCommon,
+      trustScope: Type.Literal("global"),
+      reviewerSeitoId: Type.String(),
+    },
+    { additionalProperties: false },
+  ),
+])
+export type ReleaseEpisodeMatch = Static<typeof ReleaseEpisodeMatchSchema>
+
+// Command input deliberately omits server-owned ids, timestamps, and
+// authority subjects. The service fills those from the authenticated actor.
+export const ReleaseEpisodeMatchInputSchema = Type.Union([
+  Type.Object(
+    {
+      releaseId: Type.String(),
+      episodeId: Type.String(),
+      trustScope: Type.Literal("personal"),
+      evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      releaseId: Type.String(),
+      episodeId: Type.String(),
+      trustScope: Type.Literal("room"),
+      bushitsuId: Type.String(),
+      enmokuId: Type.Optional(Type.String()),
+      evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      releaseId: Type.String(),
+      episodeId: Type.String(),
+      trustScope: Type.Literal("global"),
+      evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+    },
+    { additionalProperties: false },
+  ),
+])
+export type ReleaseEpisodeMatchInput = Static<typeof ReleaseEpisodeMatchInputSchema>
+
+export const DanmakuTrackStatusSchema = Type.Union([
+  Type.Literal("active"),
+  Type.Literal("disabled"),
+])
+export type DanmakuTrackStatus = Static<typeof DanmakuTrackStatusSchema>
+
+export const DanmakuTrackSchema = Type.Object(
+  {
+    id: Type.String(),
+    episodeId: Type.String(),
+    releaseId: Type.Optional(Type.String()),
+    sourceClass: DanmakuSourceClassSchema,
+    name: Type.String({ minLength: 1, maxLength: 256 }),
+    provenance: Type.Optional(DanmakuProvenanceSchema),
+    status: DanmakuTrackStatusSchema,
+    activeRevisionId: Type.Optional(Type.String()),
+    createdAt: Type.Number(),
+    updatedAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuTrack = Static<typeof DanmakuTrackSchema>
+
+export const DanmakuContentSchema = Type.Object(
+  {
+    contentHash: Type.String(),
+    algorithm: Type.String({ minLength: 1, maxLength: 64 }),
+    scope: Type.String({ minLength: 1, maxLength: 128 }),
+    canonicalJson: Type.String(),
+    byteLength: Type.Integer({ minimum: 0 }),
+    createdAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuContent = Static<typeof DanmakuContentSchema>
+
+export const DanmakuRevisionStatusSchema = Type.Union([
+  Type.Literal("valid"),
+  Type.Literal("failed"),
+])
+export type DanmakuRevisionStatus = Static<typeof DanmakuRevisionStatusSchema>
+
+const DanmakuRevisionSummaryCommon = {
+  id: Type.String(),
+  trackId: Type.String(),
+  fetchedAt: Type.Number(),
+  pinned: Type.Boolean(),
+  createdAt: Type.Number(),
+}
+
+export const DanmakuRevisionSummarySchema = Type.Union([
+  Type.Object(
+    {
+      ...DanmakuRevisionSummaryCommon,
+      status: Type.Literal("valid"),
+      contentHash: Type.String(),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...DanmakuRevisionSummaryCommon,
+      status: Type.Literal("failed"),
+      error: Type.Optional(Type.String()),
+    },
+    { additionalProperties: false },
+  ),
+])
+export type DanmakuRevisionSummary = Static<typeof DanmakuRevisionSummarySchema>
+
+const DanmakuRevisionCommon = {
+  id: Type.String(),
+  trackId: Type.String(),
+  fetchedAt: Type.Number(),
+  pinned: Type.Boolean(),
+  createdAt: Type.Number(),
+  provenance: Type.Optional(DanmakuProvenanceSchema),
+}
+
+export const DanmakuRevisionSchema = Type.Union([
+  Type.Object(
+    {
+      ...DanmakuRevisionCommon,
+      status: Type.Literal("valid"),
+      contentHash: Type.String(),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      ...DanmakuRevisionCommon,
+      status: Type.Literal("failed"),
+      error: Type.Optional(Type.String()),
+    },
+    { additionalProperties: false },
+  ),
+])
+export type DanmakuRevision = Static<typeof DanmakuRevisionSchema>
+
+export const DanmakuAlignmentSchema = Type.Object(
+  {
+    id: Type.String(),
+    releaseId: Type.String(),
+    trackId: Type.String(),
+    offsetSeconds: Type.Number(),
+    trimStartSeconds: Type.Optional(Type.Number({ minimum: 0 })),
+    trimEndSeconds: Type.Optional(Type.Number({ minimum: 0 })),
+    createdBy: Type.Optional(Type.String()),
+    createdAt: Type.Number(),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuAlignment = Static<typeof DanmakuAlignmentSchema>
+
+export const DanmakuProposalStatusSchema = Type.Union([
+  Type.Literal("pending"),
+  Type.Literal("approved"),
+  Type.Literal("rejected"),
+  Type.Literal("merged"),
+])
+export type DanmakuProposalStatus = Static<typeof DanmakuProposalStatusSchema>
+
+export const DanmakuProposalSchema = Type.Object(
+  {
+    id: Type.String(),
+    releaseId: Type.String(),
+    targetEpisodeId: Type.Optional(Type.String()),
+    suggestedTitle: Type.Optional(Type.String({ minLength: 1, maxLength: 512 })),
+    suggestedSeason: Type.Optional(Type.Integer({ minimum: 0 })),
+    suggestedEpisode: Type.Optional(Type.Integer({ minimum: 0 })),
+    suggestedDescription: Type.Optional(Type.String({ maxLength: 2000 })),
+    evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+    submitterSeitoId: Type.String(),
+    reviewerSeitoId: Type.Optional(Type.String()),
+    status: DanmakuProposalStatusSchema,
+    mergeTargetEpisodeId: Type.Optional(Type.String()),
+    disposition: Type.Optional(Type.String({ maxLength: 1000 })),
+    createdAt: Type.Number(),
+    decidedAt: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuProposal = Static<typeof DanmakuProposalSchema>
+
+export const DanmakuProposalDecisionSchema = Type.Object(
+  {
+    action: Type.Union([Type.Literal("approve"), Type.Literal("reject"), Type.Literal("merge")]),
+    episodeId: Type.Optional(Type.String()),
+    disposition: Type.Optional(Type.String({ maxLength: 1000 })),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuProposalDecision = Static<typeof DanmakuProposalDecisionSchema>
+
+export const DanmakuSourcePolicySchema = Type.Object(
+  {
+    allowedClasses: Type.Array(DanmakuSourceClassSchema, { minItems: 1 }),
+    order: Type.Array(DanmakuSourceClassSchema, { minItems: 1 }),
+    updatedAt: Type.Number(),
+    updatedBy: Type.Optional(Type.String()),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuSourcePolicy = Static<typeof DanmakuSourcePolicySchema>
+
+export const KomonGrantSchema = Type.Object(
+  {
+    id: Type.String(),
+    seitoId: Type.String(),
+    grantedAt: Type.Number(),
+    grantedBy: Type.Optional(Type.String()),
+    revokedAt: Type.Optional(Type.Number()),
+  },
+  { additionalProperties: false },
+)
+export type KomonGrant = Static<typeof KomonGrantSchema>

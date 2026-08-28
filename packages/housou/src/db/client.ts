@@ -98,3 +98,82 @@ db.exec(
      ROW_NUMBER() OVER (PARTITION BY bushitsu_id ORDER BY created_at ASC, id ASC) - 1
    FROM enmoku`,
 )
+
+bootstrapKomon()
+
+function bootstrapKomon(): void {
+  const configured = [
+    ...new Set(
+      (process.env.HOUKAGO_KOMON_USERNAMES ?? "")
+        .split(",")
+        .map((username) => username.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ]
+  if (configured.length === 0) return
+
+  const findSeito = db.query<{ id: string }, { $usernameNorm: string }>(
+    "SELECT id FROM seito WHERE username_norm = $usernameNorm",
+  )
+  const accounts = configured.map((usernameNorm) => {
+    const rows = findSeito.all({ $usernameNorm: usernameNorm })
+    if (rows.length !== 1) {
+      throw new Error(
+        `HOUKAGO_KOMON_USERNAMES account is missing or ambiguous: ${usernameNorm}; register it before startup`,
+      )
+    }
+    const account = rows[0]
+    if (!account) {
+      throw new Error(
+        `HOUKAGO_KOMON_USERNAMES account is missing or ambiguous: ${usernameNorm}; register it before startup`,
+      )
+    }
+    return { usernameNorm, seitoId: account.id }
+  })
+
+  const findGrant = db.query<{ id: string; revoked_at: number | null }, { $seitoId: string }>(
+    "SELECT id, revoked_at FROM komon WHERE seito_id = $seitoId",
+  )
+  const insertGrant = db.query(
+    `INSERT INTO komon (id, seito_id, granted_at, granted_by, revoked_at)
+     VALUES ($id, $seitoId, $grantedAt, NULL, NULL)`,
+  )
+  const restoreGrant = db.query("UPDATE komon SET revoked_at = NULL WHERE seito_id = $seitoId")
+  const insertAudit = db.query(
+    `INSERT OR IGNORE INTO danmaku_audit
+       (id, action, actor_seito_id, subject_type, subject_id, details_json, dedupe_key, created_at)
+     VALUES ($id, $action, NULL, 'komon', $subjectId, $detailsJson, $dedupeKey, $createdAt)`,
+  )
+  const now = Date.now()
+
+  db.transaction(() => {
+    for (const account of accounts) {
+      const existing = findGrant.get({ $seitoId: account.seitoId })
+      if (!existing) {
+        insertGrant.run({
+          $id: crypto.randomUUID(),
+          $seitoId: account.seitoId,
+          $grantedAt: now,
+        })
+        insertAudit.run({
+          $id: crypto.randomUUID(),
+          $action: "komon_granted",
+          $subjectId: account.seitoId,
+          $detailsJson: JSON.stringify({ source: "HOUKAGO_KOMON_USERNAMES" }),
+          $dedupeKey: `komon-bootstrap:${account.seitoId}`,
+          $createdAt: now,
+        })
+      } else if (existing.revoked_at !== null) {
+        restoreGrant.run({ $seitoId: account.seitoId })
+        insertAudit.run({
+          $id: crypto.randomUUID(),
+          $action: "komon_restored",
+          $subjectId: account.seitoId,
+          $detailsJson: JSON.stringify({ source: "HOUKAGO_KOMON_USERNAMES" }),
+          $dedupeKey: `komon-restore:${account.seitoId}:${now}`,
+          $createdAt: now,
+        })
+      }
+    }
+  })()
+}

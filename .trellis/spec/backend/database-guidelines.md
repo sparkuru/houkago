@@ -95,3 +95,102 @@ export function addEnmoku(e: Enmoku): void {
   and are re-resolved on demand; housou stores only the stable reference.
 - Parsing JSON metadata in routes/domain code instead of at the DB boundary →
   leaks storage format upward and makes BANGUMI snapshots inconsistent.
+
+## Scenario: Provider-neutral danmaku identity and content pool
+
+### 1. Scope / Trigger
+
+- Trigger: changes to canonical danmaku episodes, media-release evidence,
+  release matching, track revisions, content collection, alignment, or the
+  site-wide `Komon` grant.
+- `housou` stores identity and small normalized cue blobs only. It must not
+  store media bytes, provider credentials, private paths, fsids, dlinks, or
+  adaptor tokens.
+
+### 2. Signatures
+
+- `POST /danmaku/episodes` accepts a Komon-authorized canonical episode draft;
+  `GET /danmaku/episodes?q=<text>` searches only authenticated requests.
+- `POST /danmaku/matches` accepts a shared
+  `ReleaseEpisodeMatchInputSchema`; the service supplies ids, timestamps, and
+  the authenticated personal/room/global authority subject.
+- `POST /danmaku/proposals` accepts a release, optional episode target or
+  suggested title, and 1–32 typed evidence records. Komon decisions are at
+  `POST /danmaku/proposals/:proposalId/decision`.
+- `POST /danmaku/alignments` accepts release, track, offset, and optional trim
+  bounds; `POST /danmaku/policy` changes the singleton source policy as Komon.
+- `HOUKAGO_KOMON_USERNAMES` is an optional comma-separated deployment
+  bootstrap list. Every normalized username must already resolve to one
+  account before startup.
+- `danmaku_content` is keyed by SHA-256 of canonical JSON (`scope` is
+  `canonical-json/v1`); `danmaku_revision` retains the hash even after a
+  historical blob is collected.
+
+### 3. Contracts
+
+- `danmaku_episode`, `media_release`, `media_release_evidence`,
+  `release_episode_match`, `danmaku_track`, `danmaku_revision`,
+  `danmaku_alignment`, `danmaku_proposal`, `danmaku_audit`, and `komon` are
+  additive tables and use typed row-to-domain mapping at the DB boundary.
+- Personal matches belong only to the acting Seito; room matches belong to a
+  room Buchou and optional Enmoku; global matches require a Komon reviewer.
+  Only global matches are reusable server-wide knowledge.
+- Equal canonical cue JSON may reuse one content row, but tracks, revisions,
+  provenance, proposals, and audit events remain separate records.
+- Freshness failure creates a failed revision without changing the last valid
+  active revision. Disable chooses the newest retained, unblocked valid
+  revision or marks the track disabled. Rollback never mutates a revision and
+  requires its content blob to still exist.
+- Collection is opt-in, bounded, and skips active or pinned content. It removes
+  only the blob; revision hashes and audit metadata remain queryable.
+
+### 4. Validation & Error Matrix
+
+- Unknown configured Komon username -> startup fails and names the account;
+  registration order never grants the role.
+- Non-Komon canonical/policy/proposal-decision/global-promotion/revision
+  mutation -> `KOMON_REQUIRED` or `FORBIDDEN`.
+- Personal/room/global subject mismatch, missing release/episode, invalid
+  evidence, or invalid alignment -> `DANMAKU_MATCH_INVALID` / 422.
+- Digest algorithm, semantic scope, value, or byte count mismatch -> never
+  equal; content hash collision with different canonical bytes -> typed
+  integrity error.
+- Missing or blocked revision content -> rollback/fallback cannot activate it.
+- Private provider material in pool metadata -> rejected before persistence.
+
+### 5. Good/Base/Bad Cases
+
+- Good: two releases point to one episode with distinct evidence and alignment;
+  two tracks share one canonical blob while retaining separate provenance.
+- Base: an unchanged refresh reuses the valid revision and appends a reuse
+  audit; a failed refresh leaves playback on the previous revision.
+- Bad: selecting a candidate silently creates a public proposal, a Buchou
+  promotes global knowledge, GC deletes an active/pinned blob, or rollback
+  points at a collected blob.
+
+### 6. Tests Required
+
+- Assert additive startup creates the pool tables while legacy `enmoku.danmaku_json`
+  remains present.
+- Assert digest scope mismatch, byte-equality collision defense, personal vs
+  room vs global authority, proposal idempotence, and safe evidence rejection.
+- Assert unchanged-content deduplication, failed-refresh fallback, disable,
+  retained-content rollback, active/pinned GC protection, and audit records.
+- Exercise the real Elysia routes with session cookies and verify ordinary
+  Seito requests cannot invoke Komon endpoints.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+deleteDanmakuContent(revision.contentHash)
+setDanmakuTrackActiveRevision(trackId, revision.id)
+```
+
+#### Correct
+
+```ts
+if (!findDanmakuContent(revision.contentHash)) throw new DanmakuRevisionNotFound()
+setDanmakuTrackActiveRevision(trackId, revision.id, "active", now)
+```

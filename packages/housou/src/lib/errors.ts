@@ -55,6 +55,42 @@ export class BaiduGrantInvalid extends Error {
   code = "BAIDU_GRANT_INVALID" as const
 }
 
+export class KomonRequired extends Error {
+  code = "KOMON_REQUIRED" as const
+}
+
+export class DanmakuEpisodeNotFound extends Error {
+  code = "DANMAKU_EPISODE_NOT_FOUND" as const
+}
+
+export class DanmakuReleaseNotFound extends Error {
+  code = "DANMAKU_RELEASE_NOT_FOUND" as const
+}
+
+export class DanmakuTrackNotFound extends Error {
+  code = "DANMAKU_TRACK_NOT_FOUND" as const
+}
+
+export class DanmakuRevisionNotFound extends Error {
+  code = "DANMAKU_REVISION_NOT_FOUND" as const
+}
+
+export class DanmakuProposalNotFound extends Error {
+  code = "DANMAKU_PROPOSAL_NOT_FOUND" as const
+}
+
+export class DanmakuMatchInvalid extends Error {
+  code = "DANMAKU_MATCH_INVALID" as const
+}
+
+export class DanmakuPolicyInvalid extends Error {
+  code = "DANMAKU_POLICY_INVALID" as const
+}
+
+export class DanmakuContentHashCollision extends Error {
+  code = "DANMAKU_CONTENT_HASH_COLLISION" as const
+}
+
 const STATUS: Record<string, number> = {
   BUSHITSU_NOT_FOUND: 404,
   ENMOKU_NOT_FOUND: 404,
@@ -74,6 +110,15 @@ const STATUS: Record<string, number> = {
   BAIDU_ADAPTOR_REQUIRED: 428,
   BAIDU_SOURCE_NOT_FOUND: 404,
   BAIDU_GRANT_INVALID: 403,
+  KOMON_REQUIRED: 403,
+  DANMAKU_EPISODE_NOT_FOUND: 404,
+  DANMAKU_RELEASE_NOT_FOUND: 404,
+  DANMAKU_TRACK_NOT_FOUND: 404,
+  DANMAKU_REVISION_NOT_FOUND: 404,
+  DANMAKU_PROPOSAL_NOT_FOUND: 404,
+  DANMAKU_MATCH_INVALID: 422,
+  DANMAKU_POLICY_INVALID: 422,
+  DANMAKU_CONTENT_HASH_COLLISION: 500,
 }
 
 export function statusFor(code: string): number {
