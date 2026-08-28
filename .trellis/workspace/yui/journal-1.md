@@ -1876,3 +1876,24 @@ Implemented provider-neutral danmaku episode/release/track identity, typed evide
 ### Status
 
 [OK] **Completed**
+
+
+## Session 61: Deliver hybrid danmaku source selection
+
+**Date**: 2026-08-28
+**Task**: Deliver hybrid danmaku source selection
+**Branch**: `k-on`
+
+### Summary
+
+Implemented deployment policy ordering, owner-only Enmoku danmaku defaults with authoritative websocket snapshots, viewer-local versioned source overrides, single-track timeline orchestration, provenance/availability UI, and legacy fallback. Added authorization, persistence, late-join, selection, full-suite, build, and phone/desktop Playwright evidence. Left parent and sibling planning changes untouched.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ac291c9` | (see git log) |
+
+### Status
+
+[OK] **Completed**
