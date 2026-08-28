@@ -1919,3 +1919,27 @@ Implemented deployment policy ordering, owner-only Enmoku danmaku defaults with 
 ### Status
 
 [OK] **Completed**
+
+
+## Session 63: Complete Baidu danmaku matching mainline slice
+
+**Date**: 2026-08-29
+**Task**: Complete Baidu danmaku matching mainline slice
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Implemented privacy-safe Baidu release danmaku matching with explainable weighted candidates, scoped confirmation and reusable episode tracks; added bounded adapter-side MD5 prefix fingerprinting with grant/source/room/origin binding; added Kyoushitsu candidate confirmation UI. Focused tests, typecheck, and Biome passed. Preserved unrelated Trellis and design worktree changes.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8d41103` | (see git log) |
+| `432b9b9` | (see git log) |
+| `b26af0e` | (see git log) |
+
+### Status
+
+[OK] **Completed**

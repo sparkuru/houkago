@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 62
-- **Last Active**: 2026-08-28
+- **Total Sessions**: 63
+- **Last Active**: 2026-08-29
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1921 | Active |
+| `journal-1.md` | ~1945 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 63 | 2026-08-29 | Complete Baidu danmaku matching mainline slice | `8d41103`, `432b9b9`, `b26af0e` | `k-on` |
 | 62 | 2026-08-28 | Bilibili 与本地弹幕源迁移 | `9d3a38a` | `k-on` |
 | 61 | 2026-08-28 | Deliver hybrid danmaku source selection | `ac291c9` | `k-on` |
 | 60 | 2026-08-28 | Implement danmaku identity pool foundation | `eec4c82` | `k-on` |
