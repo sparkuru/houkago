@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/state-management.md","reason":"Server room truth, local presentation state, and timeline/realtime separation."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Danmaku orchestration extraction, player control, responsive UI, and accessibility."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Candidate/default/override data-flow ownership."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Buchou session-derived authority for room defaults."}
