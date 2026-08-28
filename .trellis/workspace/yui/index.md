@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 59
-- **Last Active**: 2026-08-08
+- **Total Sessions**: 60
+- **Last Active**: 2026-08-28
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1857 | Active |
+| `journal-1.md` | ~1878 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 60 | 2026-08-28 | Implement danmaku identity pool foundation | `eec4c82` | `k-on` |
 | 59 | 2026-08-08 | Chromium Baidu adaptor production gate | `e211897` | `k-on` |
 | 58 | 2026-08-08 | Baidu Netdisk direct adaptor | `114b69b`, `8a825c2` | `k-on` |
 | 57 | 2026-08-07 | Add viewer-local subtitle controls | `8d2c9f7`, `bfcce40` | `k-on` |

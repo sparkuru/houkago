@@ -1,0 +1,6 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Shared provider/release/episode/track boundaries and Dandanplay reference constraints."}
+{"file":".trellis/spec/backend/database-guidelines.md","reason":"SQLite query, additive migration, transaction, naming, and media-plane conventions."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Session-derived identity and room-versus-site authorization boundary."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Server truth, viewer-local state, and realtime-versus-timeline danmaku separation."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Player, room, provider, timeline orchestration, accessibility, and responsive UI boundaries."}
+{"file":".trellis/tasks/08-27-universal-danmaku-resolution/research/dandanplay-matching.md","reason":"Primary-source matching/fingerprint reference and approved reference-only scope."}

@@ -1,0 +1,34 @@
+{
+  "id": "universal-danmaku-resolution",
+  "name": "universal-danmaku-resolution",
+  "title": "Universal danmaku source resolution",
+  "description": "Plan a provider-neutral danmaku identity, candidate resolution, source policy, server storage pool, and user selection capability.",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-08-27",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-28-danmaku-identity-pool",
+    "08-28-danmaku-hybrid-selection",
+    "08-28-danmaku-source-migration",
+    "08-28-baidu-danmaku-matching"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "Final planning summary approved by the user on 2026-08-28. Implementation is intentionally paused; do not run task.py start until the user resumes.",
+  "meta": {
+    "planning_approved_at": "2026-08-28",
+    "implementation_paused": true
+  }
+}

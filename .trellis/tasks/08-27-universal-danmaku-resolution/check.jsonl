@@ -1,0 +1,5 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify ownership, evidence semantics, and complete cross-layer flow."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Verify stable backend errors and rejected authority paths."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify frontend regression, state, and browser-facing quality."}
+{"file":".trellis/spec/backend/baidu-provider-contract.md","reason":"Verify Baidu privacy, capability, and no-media-proxy invariants."}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Verify adapter capability and browser data boundaries."}

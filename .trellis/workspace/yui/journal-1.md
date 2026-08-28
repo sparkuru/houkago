@@ -1855,3 +1855,24 @@ Hardened Chromium MV3 grant/DNR lifecycle and cache enforcement, added an instal
 ### Status
 
 [OK] **Completed**
+
+
+## Session 60: Implement danmaku identity pool foundation
+
+**Date**: 2026-08-28
+**Task**: Implement danmaku identity pool foundation
+**Branch**: `k-on`
+
+### Summary
+
+Implemented provider-neutral danmaku episode/release/track identity, typed evidence and trust scopes, explicit Komon bootstrap, auditable proposals, canonical content hashing with immutable revisions, alignment and opt-in content GC. Added authenticated routes, additive SQLite schema, security validation, and regression coverage. Validation passed: Housou 98/98, Kousoku 5/5, Kokuban 3/3, full typecheck, and lint.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `eec4c82` | (see git log) |
+
+### Status
+
+[OK] **Completed**
