@@ -164,7 +164,22 @@ export function resolveDanmakuCandidates(
   }
 
   const legacyRef = safeLegacyDanmakuRef(enmoku.danmaku)
-  if (legacyRef) {
+  const poolOfficialCandidates =
+    release === null
+      ? []
+      : [...candidates.values()].filter(
+          (candidate) =>
+            candidate.sourceClass === "provider-official" &&
+            candidate.trackId !== undefined &&
+            candidate.releaseId === release.id,
+        )
+  const legacyFallbackAllowed =
+    poolOfficialCandidates.length === 0 ||
+    poolOfficialCandidates.every(
+      (candidate) =>
+        candidate.availability === "failed" || candidate.availability === "unavailable",
+    )
+  if (legacyRef && legacyFallbackAllowed) {
     const legacyCandidate: DanmakuCandidate = {
       id: `legacy:${enmoku.id}`,
       sourceClass: "provider-official",
@@ -628,6 +643,9 @@ export function ingestDanmakuRevision(
   now = Date.now(),
 ): DanmakuRevisionIngestResult {
   const track = requireTrack(trackId)
+  if (track.status === "disabled") {
+    throw new DanmakuMatchInvalid("disabled track cannot receive revisions")
+  }
   validateProvenance(provenance)
   const hashed = hashDanmakuCues(cues)
   const content: DanmakuContent = {
@@ -663,6 +681,16 @@ export function ingestDanmakuRevision(
       })
     })()
     return { track: requireTrack(trackId), revision: latest, changed: false }
+  }
+
+  const blockedContent = listDanmakuRevisions(trackId).find(
+    (revision) =>
+      revision.status === "valid" &&
+      revision.contentHash === content.contentHash &&
+      isDanmakuRevisionBlocked(revision.id),
+  )
+  if (blockedContent) {
+    throw new DanmakuMatchInvalid("danmaku content was blocked by Komon")
   }
 
   const revision: DanmakuRevision = {

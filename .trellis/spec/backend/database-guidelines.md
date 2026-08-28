@@ -119,6 +119,16 @@ export function addEnmoku(e: Enmoku): void {
   `POST /danmaku/proposals/:proposalId/decision`.
 - `POST /danmaku/alignments` accepts release, track, offset, and optional trim
   bounds; `POST /danmaku/policy` changes the singleton source policy as Komon.
+- Komon revision controls are `POST
+  /danmaku/tracks/:trackId/revisions/:revisionId/disable` with optional
+  `{ reason?: string }`, `POST
+  /danmaku/tracks/:trackId/revisions/:revisionId/rollback` with `{}`, and
+  `POST /danmaku/revisions/:revisionId/pin` with `{ pinned: boolean }`.
+  These routes require both a Seitoshou session and a trusted Origin.
+- A provider refresh enters through
+  `refreshBilibiliDanmakuTrack(trackId, reference, { now?, freshnessMs?,
+  fetcher? })`; it must use the same persisted track/revision contract as a
+  direct ingestion.
 - `HOUKAGO_KOMON_USERNAMES` is an optional comma-separated deployment
   bootstrap list. Every normalized username must already resolve to one
   account before startup.
@@ -141,6 +151,11 @@ export function addEnmoku(e: Enmoku): void {
   active revision. Disable chooses the newest retained, unblocked valid
   revision or marks the track disabled. Rollback never mutates a revision and
   requires its content blob to still exist.
+- A disabled track is a negative trust decision: refresh and ingestion must not
+  fetch, reactivate, or attach a new revision to it. If an upstream refresh
+  repeats content from a blocked revision, record a failed attempt and keep the
+  current valid fallback; do not create a new valid revision for the blocked
+  bytes.
 - Collection is opt-in, bounded, and skips active or pinned content. It removes
   only the blob; revision hashes and audit metadata remain queryable.
 
@@ -156,6 +171,9 @@ export function addEnmoku(e: Enmoku): void {
   equal; content hash collision with different canonical bytes -> typed
   integrity error.
 - Missing or blocked revision content -> rollback/fallback cannot activate it.
+- Disabled track ingestion -> `DANMAKU_MATCH_INVALID`; repeated blocked
+  canonical content during refresh -> failed refresh state plus
+  `DANMAKU_MATCH_INVALID` internally, with the last valid revision unchanged.
 - Private provider material in pool metadata -> rejected before persistence.
 
 ### 5. Good/Base/Bad Cases
@@ -164,9 +182,12 @@ export function addEnmoku(e: Enmoku): void {
   two tracks share one canonical blob while retaining separate provenance.
 - Base: an unchanged refresh reuses the valid revision and appends a reuse
   audit; a failed refresh leaves playback on the previous revision.
+- Base: disabling the active revision selects the newest retained safe revision;
+  disabling the last safe revision marks the track disabled.
 - Bad: selecting a candidate silently creates a public proposal, a Buchou
   promotes global knowledge, GC deletes an active/pinned blob, or rollback
-  points at a collected blob.
+  points at a collected blob. Re-fetching bytes a Komon blocked must not bypass
+  the block by creating a fresh revision.
 
 ### 6. Tests Required
 
@@ -176,6 +197,10 @@ export function addEnmoku(e: Enmoku): void {
   room vs global authority, proposal idempotence, and safe evidence rejection.
 - Assert unchanged-content deduplication, failed-refresh fallback, disable,
   retained-content rollback, active/pinned GC protection, and audit records.
+- Exercise Komon disable/rollback/pin routes with a session cookie and trusted
+  Origin; assert ordinary Seito and untrusted Origin requests are rejected.
+- Assert a disabled track makes no upstream request and a repeated blocked
+  content hash becomes a failed refresh without changing the active revision.
 - Exercise the real Elysia routes with session cookies and verify ordinary
   Seito requests cannot invoke Komon endpoints.
 
@@ -184,13 +209,16 @@ export function addEnmoku(e: Enmoku): void {
 #### Wrong
 
 ```ts
-deleteDanmakuContent(revision.contentHash)
-setDanmakuTrackActiveRevision(trackId, revision.id)
+fetchDanmakuCues(reference).then((cues) => ingestDanmakuRevision(trackId, cues))
 ```
 
 #### Correct
 
 ```ts
-if (!findDanmakuContent(revision.contentHash)) throw new DanmakuRevisionNotFound()
-setDanmakuTrackActiveRevision(trackId, revision.id, "active", now)
+if (track.status === "disabled") return { attempted: false, changed: false }
+try {
+  ingestDanmakuRevision(trackId, cues, provenance, now)
+} catch (error) {
+  recordDanmakuRefreshFailure(trackId, safeError(error), provenance, now)
+}
 ```

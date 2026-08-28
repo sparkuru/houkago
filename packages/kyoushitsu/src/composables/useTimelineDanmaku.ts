@@ -19,8 +19,9 @@ import {
   stableReleaseIdentity,
 } from "@/lib/danmaku-selection"
 import { loadFileDanmakuEnabled, saveFileDanmakuEnabled } from "@/lib/file-danmaku-pref"
+import { createLocalDanmakuCandidate } from "@/lib/local-danmaku-candidate"
 import { useBushitsuStore } from "@/stores/bushitsu"
-import { type DanmakuCue, parseBilibiliXml } from "houkago-kokuban"
+import type { DanmakuCue } from "houkago-kokuban"
 import type {
   DanmakuCandidate,
   DanmakuCandidateResolution,
@@ -159,20 +160,9 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     }
   }
 
-  async function loadResolution(enmoku: Enmoku, force = false): Promise<void> {
+  async function loadResolution(enmoku: Enmoku): Promise<void> {
     const request = ++resolutionRequest
     const cached = resolutionCache.get(enmoku.id)
-    if (!force && cached) {
-      resolution.value = {
-        ...cached,
-        roomDefault: hasAuthoritativeRoomDefaults.value
-          ? (bushitsu.danmakuDefaults[enmoku.id] ?? null)
-          : cached.roomDefault,
-      }
-      resolutionError.value = ""
-      resolutionLoading.value = false
-      return
-    }
     resolutionLoading.value = true
     resolutionError.value = ""
     try {
@@ -189,7 +179,14 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
       resolution.value = next
     } catch {
       if (request !== resolutionRequest || currentEnmokuId.value !== enmoku.id) return
-      const fallback = fallbackResolution(enmoku)
+      const fallback = cached
+        ? {
+            ...cached,
+            roomDefault: hasAuthoritativeRoomDefaults.value
+              ? (bushitsu.danmakuDefaults[enmoku.id] ?? null)
+              : cached.roomDefault,
+          }
+        : fallbackResolution(enmoku)
       resolution.value = fallback
       resolutionCache.set(enmoku.id, fallback)
       resolutionError.value = t("danmakuSourceLoadFailed")
@@ -248,22 +245,22 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     target.value = ""
     const enmoku = current.value
     if (!file || !enmoku) return
-    const cues = parseBilibiliXml(await file.text())
-    const id = `local:${stableReleaseIdentity(enmoku)}`
+    let input = ""
+    try {
+      input = await file.text()
+    } catch {
+      // A local read failure is an unavailable personal candidate and should
+      // not interrupt playback or the shared realtime danmaku stream.
+    }
+    const candidate = createLocalDanmakuCandidate(enmoku, file.name, input, t("fileDanmakuEmpty"))
     localCandidates.value = {
       ...localCandidates.value,
-      [enmoku.id]: {
-        id,
-        sourceClass: "local",
-        name: cues.length > 0 ? file.name : t("fileDanmakuEmpty"),
-        availability: cues.length > 0 ? "available" : "unavailable",
-        ...(cues.length > 0 ? { cues } : { reason: t("fileDanmakuEmpty") }),
-      },
+      [enmoku.id]: candidate,
     }
-    if (cues.length > 0) {
+    if (candidate.availability === "available") {
       overrides.value = {
         ...overrides.value,
-        [enmoku.id]: saveDanmakuOverride(enmoku, id),
+        [enmoku.id]: saveDanmakuOverride(enmoku, candidate.id),
       }
     }
     cueVersion.value += 1
@@ -348,7 +345,7 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     if (!enmoku) return
     failedCandidates.value = {}
     cueError.value = ""
-    void loadResolution(enmoku, true)
+    void loadResolution(enmoku)
   }
 
   watch(

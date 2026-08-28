@@ -532,6 +532,113 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   expect(forbiddenPolicy.status).toBe(403)
 })
 
+test("Komon revision controls are exposed through trusted-origin routes", async () => {
+  const komon = account("revision-route-komon")
+  const viewer = account("revision-route-viewer")
+  seedKomon(komon)
+  const canonicalEpisode = episode()
+  const mediaRelease = release()
+  const danmakuTrack = track(canonicalEpisode.id, mediaRelease.id)
+  const first = ingestDanmakuRevision(
+    danmakuTrack.id,
+    [{ time: 1, text: "good", mode: "scroll" }],
+    { provider: "fixture", reference: mediaRelease.id },
+    700,
+  )
+  const second = ingestDanmakuRevision(
+    danmakuTrack.id,
+    [{ time: 2, text: "bad", mode: "scroll" }],
+    { provider: "fixture", reference: mediaRelease.id },
+    701,
+  )
+  const origin = "http://127.0.0.1:5173"
+  const path = `http://localhost/danmaku/tracks/${danmakuTrack.id}/revisions/${second.revision.id}`
+
+  const forbidden = await app.handle(
+    new Request(`${path}/disable`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: sessionCookie(viewer),
+        origin,
+      },
+      body: JSON.stringify({ reason: "viewer cannot govern" }),
+    }),
+  )
+  expect(forbidden.status).toBe(403)
+
+  const disabled = await app.handle(
+    new Request(`${path}/disable`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: sessionCookie(komon),
+        origin,
+      },
+      body: JSON.stringify({ reason: "bad fixture revision" }),
+    }),
+  )
+  expect(disabled.status).toBe(200)
+  expect((await disabled.json()).activeRevisionId).toBe(first.revision.id)
+
+  const rollback = await app.handle(
+    new Request(`${path}/rollback`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: sessionCookie(komon),
+        origin,
+      },
+      body: "{}",
+    }),
+  )
+  expect(rollback.status).toBe(404)
+
+  const pin = await app.handle(
+    new Request(`http://localhost/danmaku/revisions/${first.revision.id}/pin`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: sessionCookie(komon),
+        origin,
+      },
+      body: JSON.stringify({ pinned: true }),
+    }),
+  )
+  expect(pin.status).toBe(200)
+  expect((await pin.json()).pinned).toBe(true)
+
+  const restored = await app.handle(
+    new Request(
+      `http://localhost/danmaku/tracks/${danmakuTrack.id}/revisions/${first.revision.id}/rollback`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: sessionCookie(komon),
+          origin,
+        },
+        body: "{}",
+      },
+    ),
+  )
+  expect(restored.status).toBe(200)
+  expect((await restored.json()).activeRevisionId).toBe(first.revision.id)
+
+  const untrusted = await app.handle(
+    new Request(`${path}/rollback`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: sessionCookie(komon),
+        origin: "https://evil.example",
+      },
+      body: "{}",
+    }),
+  )
+  expect(untrusted.status).toBe(403)
+})
+
 test("pool metadata rejects private provider material and redacts refresh errors", () => {
   const komon = account("secret-komon")
   seedKomon(komon)

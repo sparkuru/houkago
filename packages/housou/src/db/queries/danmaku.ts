@@ -269,6 +269,16 @@ const tracksByEpisodeStmt = db.query<TrackRow, { $episodeId: string }>(
   `SELECT ${trackColumns} FROM danmaku_track
    WHERE episode_id = $episodeId ORDER BY source_class ASC, created_at ASC, id ASC`,
 )
+const trackByReleaseEpisodeStmt = db.query<
+  TrackRow,
+  { $releaseId: string; $episodeId: string; $sourceClass: string }
+>(
+  `SELECT ${trackColumns} FROM danmaku_track
+   WHERE release_id = $releaseId
+     AND episode_id = $episodeId
+     AND source_class = $sourceClass
+   ORDER BY created_at ASC, id ASC LIMIT 1`,
+)
 const updateTrackActiveStmt = db.query(
   `UPDATE danmaku_track SET active_revision_id = $revisionId, status = $status,
       updated_at = $updatedAt
@@ -573,6 +583,19 @@ export function findDanmakuTrack(id: string): DanmakuTrack | null {
 
 export function listDanmakuTracks(episodeId: string): DanmakuTrack[] {
   return tracksByEpisodeStmt.all({ $episodeId: episodeId }).map(trackDomain)
+}
+
+export function findDanmakuTrackByReleaseAndEpisode(
+  releaseId: string,
+  episodeId: string,
+  sourceClass: DanmakuSourceClass,
+): DanmakuTrack | null {
+  const row = trackByReleaseEpisodeStmt.get({
+    $releaseId: releaseId,
+    $episodeId: episodeId,
+    $sourceClass: sourceClass,
+  })
+  return row ? trackDomain(row) : null
 }
 
 export function setDanmakuTrackActiveRevision(

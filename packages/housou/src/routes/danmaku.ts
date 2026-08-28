@@ -11,16 +11,19 @@ import {
   confirmReleaseEpisodeMatch,
   curateDanmakuEpisode,
   decideDanmakuProposal,
+  disableDanmakuRevision,
   getDanmakuDefaultSnapshot,
   getDanmakuSourcePolicy,
   listDanmakuProposals,
-  resolveDanmakuCandidates,
+  pinDanmakuRevision,
+  rollbackDanmakuRevision,
   saveDanmakuAlignment,
   searchDanmakuEpisodes,
   setEnmokuDanmakuDefault,
   submitDanmakuProposal,
   updateDanmakuSourcePolicy,
 } from "../domain/danmaku"
+import { resolveDanmakuCandidatesWithRefresh } from "../domain/danmaku-source"
 import { Forbidden } from "../lib/errors"
 import { requireKomon, requireKomonRequest } from "../lib/komon"
 import { requireTrustedOrigin } from "../lib/origin"
@@ -86,13 +89,27 @@ const DanmakuDefaultBody = t.Object(
   { additionalProperties: false },
 )
 
-function resolveCandidates(
+const RevisionDisableBody = t.Object(
+  { reason: t.Optional(t.String({ maxLength: 512 })) },
+  { additionalProperties: false },
+)
+
+const RevisionRollbackBody = t.Object({}, { additionalProperties: false })
+
+const RevisionPinBody = t.Object({ pinned: t.Boolean() }, { additionalProperties: false })
+
+async function resolveCandidates(
   request: Request,
   bushitsuId: string,
   enmokuId: string,
   releaseId?: string,
 ) {
-  return resolveDanmakuCandidates(seitoFromRequest(request).id, bushitsuId, enmokuId, releaseId)
+  return resolveDanmakuCandidatesWithRefresh(
+    seitoFromRequest(request).id,
+    bushitsuId,
+    enmokuId,
+    releaseId,
+  )
 }
 
 function updateDefault(
@@ -232,4 +249,28 @@ export const danmakuRoutes = new Elysia({ prefix: "/danmaku" })
       return decideDanmakuProposal(actor.id, params.proposalId, body)
     },
     { body: DanmakuProposalDecisionSchema },
+  )
+  .post(
+    "/tracks/:trackId/revisions/:revisionId/disable",
+    ({ request, params, body }) => {
+      const actor = requireKomonRequest(request)
+      return disableDanmakuRevision(actor.id, params.trackId, params.revisionId, body.reason)
+    },
+    { body: RevisionDisableBody },
+  )
+  .post(
+    "/tracks/:trackId/revisions/:revisionId/rollback",
+    ({ request, params }) => {
+      const actor = requireKomonRequest(request)
+      return rollbackDanmakuRevision(actor.id, params.trackId, params.revisionId)
+    },
+    { body: RevisionRollbackBody },
+  )
+  .post(
+    "/revisions/:revisionId/pin",
+    ({ request, params, body }) => {
+      const actor = requireKomonRequest(request)
+      return pinDanmakuRevision(actor.id, params.revisionId, body.pinned)
+    },
+    { body: RevisionPinBody },
   )
