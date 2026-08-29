@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 64
-- **Last Active**: 2026-08-29
+- **Total Sessions**: 65
+- **Last Active**: 2026-08-30
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1967 | Active |
+| `journal-1.md` | ~1989 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 65 | 2026-08-30 | Warm Club 2.0 foundation and configurable entry | `1b4ccd8` | `k-on` |
 | 64 | 2026-08-29 | Complete universal danmaku integration | `1964657` | `k-on` |
 | 63 | 2026-08-29 | Complete Baidu danmaku matching mainline slice | `8d41103`, `432b9b9`, `b26af0e` | `k-on` |
 | 62 | 2026-08-28 | Bilibili 与本地弹幕源迁移 | `9d3a38a` | `k-on` |

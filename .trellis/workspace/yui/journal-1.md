@@ -1965,3 +1965,25 @@ Completed the universal danmaku parent integration: added viewer-local manual ep
 ### Status
 
 [OK] **Completed**
+
+
+## Session 65: Warm Club 2.0 foundation and configurable entry
+
+**Date**: 2026-08-30
+**Task**: Warm Club 2.0 foundation and configurable entry
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Established the Warm Club design-token foundation and restrained Anime.js entry motion, redesigned the classroom-selection home experience, and added strict public site identity configuration through config/config.toml with backend, shared-contract, frontend, unit, build, and Playwright coverage.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1b4ccd8` | (see git log) |
+
+### Status
+
+[OK] **Completed**
