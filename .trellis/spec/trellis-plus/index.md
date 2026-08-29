@@ -33,14 +33,12 @@ available validation results. Report the initiative/evidence, exact dirty or
 blocked conditions, one candidate only when it is uniquely ready, and the next
 permitted action.
 
-The current control record is guided: `serial authorization: none`. Do not infer
-priority, create or start a task, or edit product files until the user chooses
-among competing or unclear candidates. The parent task
-`.trellis/tasks/08-27-universal-danmaku-resolution` remains in planning with
-implementation intentionally paused; its child tasks are evidence and
-proposals, not automatic authorization. The current mainline explicitly says
-there is no uniquely ready next candidate, so the next Pulse must request the
-user's scope and priority decision.
+The control record defaults to guided operation with no serial authorization.
+Do not infer priority, create or start work, or edit product files until the
+user has chosen the relevant scope and the normal Trellis planning gates have
+been satisfied. Treat `.trellis/mainline.md` as the current initiative record
+and active or archived task artifacts as the requirements and evidence source;
+do not duplicate transient task status in this durable policy.
 
 Trellis parent/child tasks remain the source of requirements, plans, checks,
 commits, and archive history. Mainline is a small continuity record, not a
@@ -163,4 +161,3 @@ Do not add the trailer merely because Codex touched a file. Omit it for small
 mechanical changes, user-authored or unrecognized files, task archive commits,
 journal commits, and commits the user will make manually. Never automatically
 stage or commit as part of this policy.
-

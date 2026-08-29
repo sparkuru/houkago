@@ -1,0 +1,17 @@
+# Every value in this file is public and may be returned to browsers.
+# Keep credentials, keys, CORS, ports, database paths, and other runtime
+# settings in .env or their existing configuration owner.
+
+[site]
+name = "社团活动室"
+# Optional; omit this line to hide the second identity line.
+# subtitle = "Houkago"
+# Optional; when omitted, the browser title uses site.name.
+# browserTitle = "社团活动室"
+
+[entry]
+floorCode = "2F"
+floorLabel = "社团活动楼层"
+hint = "沿着安静的走廊，前往你已经约好的教室。"
+privacyNote = "这里不会展示其他教室。请使用收到的教室号码或邀请链接。"
+defaultBushitsuName = "新部室"

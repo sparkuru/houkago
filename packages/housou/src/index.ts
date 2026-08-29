@@ -8,6 +8,7 @@ import { baiduRoutes } from "./routes/baidu"
 import { bushitsuRoutes } from "./routes/bushitsu"
 import { danmakuRoutes } from "./routes/danmaku"
 import { seitoshouRoutes } from "./routes/seitoshou"
+import { siteConfigRoutes } from "./routes/site-config"
 import { wsRoutes } from "./ws/handler"
 import { startTenko } from "./ws/tenko"
 
@@ -33,6 +34,7 @@ export const app = new Elysia()
     return { error: { code: "INTERNAL", message: "internal error" } }
   })
   .get("/health", () => ({ ok: true }))
+  .use(siteConfigRoutes)
   .use(eishaRoutes)
   .use(seitoshouRoutes)
   .use(baiduRoutes)

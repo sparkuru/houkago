@@ -1,0 +1,28 @@
+{
+  "id": "visual-experience-refresh",
+  "name": "visual-experience-refresh",
+  "title": "Houkago visual and interaction refresh",
+  "description": "Plan and deliver a coherent second-pass visual and interaction refresh for the Houkago entry and room experience.",
+  "status": "planning",
+  "dev_type": null,
+  "scope": "frontend",
+  "package": "houkago-kyoushitsu",
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-08-29",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-29-warm-club-foundation-entry"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "The user paused the mobile provider companion and selected project-wide visual polish as the next mainline direction on 2026-08-29. Warm Club 2.0 and the first foundation/entry child are approved; the child is implemented and awaiting its subjective visual review, while later parent slices remain unauthorized.",
+  "meta": {}
+}

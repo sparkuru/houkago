@@ -3,3 +3,4 @@
 export * from "./domain"
 export * from "./messages"
 export * from "./adapter"
+export * from "./site-config"

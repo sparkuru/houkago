@@ -2,11 +2,11 @@
 
 ## Initiative
 
-- title: pluggable media-provider adaptors
-- parent task: none
-- objective: Extend Houkago's URL-first resolver/player boundary with direct,
-  provider-specific adaptors while keeping credentials out of room state and
-  media bytes off the Houkago server data plane.
+- title: Houkago visual experience refresh
+- parent task: `.trellis/tasks/08-29-visual-experience-refresh`
+- objective: Raise the perceived quality, hierarchy, and cohesion of Houkago's
+  entry and shared watch-room experience without changing its media-first,
+  URL-first, player, room, or credential boundaries.
 - owner decisions: 2026-08-07 — queue placement remains owner-only; room guest
   controls persist per room and use chat/playback/playlist presets with optional
   fine-grained switches. 2026-08-07 — subtitle selection is viewer-local,
@@ -19,7 +19,20 @@
   as the next bounded mainline slice. 2026-08-29 — the parent danmaku
   integration completed manual episode correction, bounded Baidu fingerprint
   reuse, and cross-provider/browser evidence while preserving personal and
-  audited global trust boundaries.
+  audited global trust boundaries. 2026-08-29 — the user paused the mobile
+  provider companion and selected project-wide visual polish as the next
+  mainline direction. 2026-08-29 — the user approved an evolutionary
+  `Warm Club 2.0` direction rather than a broad visual rebrand; implementation
+  remains gated on delivery-slice planning. 2026-08-29 — the user chose an
+  asset-light, quiet school-floor/classroom-selection metaphor for the entry
+  experience, with no unrelated decorative focal point. 2026-08-29 — the user
+  approved a single Anime.js signature: one cancellable floor-sign/classroom
+  entrance plus short panel replacement, with all other atmosphere static.
+  2026-08-30 — the user approved the resulting entry atmosphere and requested
+  that its fixed identity become a strict public `config/config.toml` surface,
+  defaulting to `社团活动室`; secrets and operational values remain in `.env`.
+  Firefly is the contract reference, adapted to Houkago through Housou runtime
+  projection rather than Astro build-time embedding.
 
 ## Continuation
 
@@ -39,8 +52,11 @@
 | 6 | `.trellis/tasks/archive/2026-08/08-07-baidu-netdisk-adaptor` | complete | Direct official OAuth, both retention modes, read-only browsing, token-free grants, Firefox real-account/reference evidence, and shared Firefox/Chromium automated builds are complete and archived. |
 | 7 | `.trellis/tasks/archive/2026-08/08-08-chromium-baidu-adaptor` | complete | Chromium MV3 session-registry/DNR hardening delivered in `e211897`; final archived evidence records the 302-test full suite, installed Google Chrome and Microsoft Edge gates, and the controlled Playwright pass. |
 | 8 | `.trellis/tasks/archive/2026-08/08-27-universal-danmaku-resolution` | complete | Parent integration completed manual episode search/correction, bounded Baidu fingerprint candidate reuse, Bilibili-plus-Baidu convergence, and responsive browser evidence; child dependencies are archived and the final validation record is ready for finish-work archival. |
-| 9 | Houkago mobile provider companion | blocked | Deferred placeholder awaiting the user's scope and priority decision; no ordering or task start is authorized. |
-| 10 | Choose the next bounded provider-adaptor slice | blocked | No provider is ranked or proposed; awaiting the user's next-scope decision. |
+| 9 | `.trellis/tasks/08-29-warm-club-foundation-entry` | in progress | The Warm Club entry and its approved strict public TOML revision are implemented across Kousoku, Housou, and Kyoushitsu; automated verification passed, while configured-identity review and the submit-ready workflow remain. |
+| 10 | Room shell and media/workbench hierarchy | proposed | Follows the accepted token/entry foundation; no implementation start is authorized yet. |
+| 11 | Queue and dense-control consistency | proposed | Depends on the shared component/state language and room-shell hierarchy. |
+| 12 | Dialog, gate, chat-sheet, and cinema-state polish | proposed | Final surface convergence and parent integration boundary after preceding slices. |
+| 13 | Houkago mobile provider companion | paused | Explicitly deferred by the user on 2026-08-29; it is not part of the current visual initiative. |
 
 ## Evidence and Decisions
 
@@ -55,6 +71,11 @@
   Chromium artifact. Browser-compatible sources pass both retention modes;
   source/container/codec-dependent failures are recorded as the native media
   compatibility boundary.
-- next task/decision: no new provider-adaptor slice is authorized. Mobile
-  provider playback and any further provider-adaptor work remain deferred until
-  the user chooses the next scope.
+- current blocker / dirty-state warning: the active visual child has uncommitted
+  product and task changes. Its original implementation passed automated and
+  human visual gates; the subsequently approved public TOML revision passed
+  automated verification and awaits its focused screenshot review.
+- next permitted action: complete the configured-identity visual review, update
+  durable specs, and prepare the active child's explicit Phase 3.4 commit plan.
+  No later visual child is authorized. Mobile provider playback remains
+  deferred.

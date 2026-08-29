@@ -1,0 +1,11 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Package-scoped frontend verification entry point."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Check compatibility with the existing theme and local presentation-state boundary."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check Vue quality rules, project command usage, and unchanged room ownership/layout contracts."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Check the exact Playwright, accessibility, responsive, and human-review gates."}
+{"file":".trellis/tasks/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Verify implementation matches the approved quiet, asset-light classroom-selection direction."}
+{"file":".trellis/tasks/08-29-warm-club-foundation-entry/research/firefly-site-config.md","reason":"Verify the implementation reuses Firefly's strict/public principles without copying its Astro-only delivery mechanism."}
+{"file":".trellis/spec/houkago-kousoku/frontend/index.md","reason":"Check ownership and compatibility of the shared public SiteConfig contract."}
+{"file":".trellis/spec/houkago-housou/backend/index.md","reason":"Check startup parsing and route behavior in the Housou package."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Check one shared schema/type source and runtime validation across the REST boundary."}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"Check the browser uses Eden and memoizes one bootstrap load rather than raw/repeated fetches."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Check the full TOML-to-Housou-to-Kyoushitsu data flow, error cases, and public projection."}

@@ -1,0 +1,12 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Package-scoped frontend spec index for the active Kyoushitsu child."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Defines the warm-club root theme boundary and forbids theme state from entering room/session truth."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Defines Vue conventions, room layout preservation, project commands, and frontend validation expectations."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Token and constant changes require search-first compatibility and duplication review."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Provides the project Playwright profile, responsive/accessibility process, and submit-ready human-review gate."}
+{"file":".trellis/tasks/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Records the user-approved Warm Club 2.0 classroom metaphor and reconciled design-system evidence."}
+{"file":".trellis/tasks/08-29-warm-club-foundation-entry/research/firefly-site-config.md","reason":"Evidence for the strict TOML/public-secret contract and why Houkago uses runtime projection instead of Firefly's static embedding."}
+{"file":".trellis/spec/houkago-kousoku/frontend/index.md","reason":"Package entry point for the new shared SiteConfig schema, type, and default."}
+{"file":".trellis/spec/houkago-housou/backend/index.md","reason":"Package entry point for startup config parsing and the public config route."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Requires the shared config contract to live in Kousoku and remain runtime-validated at the server boundary."}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"Requires Kyoushitsu REST configuration loading to use the typed Eden client rather than raw fetch."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Defines the config source-to-schema-to-API-to-browser boundary checks for this cross-layer revision."}

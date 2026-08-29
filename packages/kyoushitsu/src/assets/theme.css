@@ -1,44 +1,166 @@
 :root[data-theme="warm-club"] {
   color-scheme: light;
-  --color-canvas: #f6f0e5;
-  --color-canvas-glow: #fffaf1;
-  --color-surface: #fffdf8;
-  --color-surface-raised: #ffffff;
-  --color-surface-muted: #eee4d3;
-  --color-text: #30291f;
-  --color-text-muted: #6d6253;
-  --color-border: #d8c8b1;
-  --color-border-strong: #b99b74;
-  --color-accent: #8b5b2d;
-  --color-accent-strong: #6c421f;
-  --color-on-accent: #fffaf2;
-  --color-danger: #a8443f;
-  --color-danger-surface: #f3d6d4;
-  --color-warning: #b7791f;
-  --color-media-surface: #111111;
-  --color-cinema-canvas: #000000;
-  --color-on-media: #ffffff;
-  --color-overlay: rgb(0 0 0 / 60%);
-  --color-overlay-strong: rgb(0 0 0 / 72%);
-  --color-overlay-surface: rgb(17 17 17 / 80%);
-  --color-overlay-muted: #cccccc;
-  --color-provider-brand: #00a1d6;
-  --color-provider-on-brand: #ffffff;
-  --color-tooltip-surface: #222222;
-  --color-tooltip-text: #ffffff;
-  --color-focus-ring: #2f7669;
-  --shadow-soft: 0 14px 32px rgb(89 60 30 / 12%);
-  --shadow-panel: 0 8px 20px rgb(89 60 30 / 10%);
-  --shadow-floating: 0 18px 48px rgb(89 60 30 / 18%);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
+
+  /* Primitive layer: stable raw values for the Warm Club palette and scales. */
+  --primitive-paper-50: #fffaf1;
+  --primitive-paper-100: #fffdf8;
+  --primitive-paper-0: #ffffff;
+  --primitive-paper-300: #f6f0e5;
+  --primitive-paper-500: #eee4d3;
+  --primitive-ink-900: #30291f;
+  --primitive-ink-600: #6d6253;
+  --primitive-wood-300: #d8c8b1;
+  --primitive-wood-500: #b99b74;
+  --primitive-wood-700: #8b5b2d;
+  --primitive-wood-900: #6c421f;
+  --primitive-teal-700: #2f7669;
+  --primitive-red-700: #a8443f;
+  --primitive-red-100: #f3d6d4;
+  --primitive-amber-700: #b7791f;
+  --primitive-black: #000000;
+  --primitive-media-950: #111111;
+  --primitive-media-900: #222222;
+  --primitive-media-300: #cccccc;
+  --primitive-provider-blue: #00a1d6;
+  --primitive-white: #ffffff;
+  --primitive-accent-ink: #fffaf2;
+  --primitive-overlay-60: rgb(0 0 0 / 60%);
+  --primitive-overlay-72: rgb(0 0 0 / 72%);
+  --primitive-overlay-surface: rgb(17 17 17 / 80%);
+  --primitive-shadow-soft: 0 14px 32px rgb(89 60 30 / 12%);
+  --primitive-shadow-panel: 0 8px 20px rgb(89 60 30 / 10%);
+  --primitive-shadow-floating: 0 18px 48px rgb(89 60 30 / 18%);
+  --primitive-radius-1: 8px;
+  --primitive-radius-2: 14px;
+  --primitive-radius-3: 20px;
+  --primitive-space-1: 4px;
+  --primitive-space-2: 8px;
+  --primitive-space-3: 12px;
+  --primitive-space-4: 16px;
+  --primitive-space-5: 24px;
+  --primitive-space-6: 32px;
+  --primitive-space-7: 48px;
+  --primitive-space-8: 64px;
+  --primitive-control-height: 44px;
+  --primitive-font-display: ui-serif, "Yu Mincho", "Hiragino Mincho ProN", Georgia, serif;
+  --primitive-font-body: ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans CJK SC",
+    "Microsoft YaHei", system-ui, sans-serif;
+  --primitive-type-display: clamp(34px, 5vw, 56px);
+  --primitive-type-title: 22px;
+  --primitive-type-body: 16px;
+  --primitive-type-label: 13px;
+  --primitive-line-display: 1.08;
+  --primitive-line-body: 1.6;
+  --primitive-line-compact: 1.35;
+  --primitive-duration-instant: 1ms;
+  --primitive-duration-fast: 160ms;
+  --primitive-duration-normal: 180ms;
+  --primitive-duration-slow: 220ms;
+  --primitive-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --primitive-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Semantic layer: product meaning and compatibility aliases. */
+  --color-canvas: var(--primitive-paper-300);
+  --color-canvas-glow: var(--primitive-paper-50);
+  --color-surface: var(--primitive-paper-100);
+  --color-surface-raised: var(--primitive-paper-0);
+  --color-surface-muted: var(--primitive-paper-500);
+  --color-text: var(--primitive-ink-900);
+  --color-text-muted: var(--primitive-ink-600);
+  --color-border: var(--primitive-wood-300);
+  --color-border-strong: var(--primitive-wood-500);
+  --color-accent: var(--primitive-wood-700);
+  --color-accent-strong: var(--primitive-wood-900);
+  --color-on-accent: var(--primitive-accent-ink);
+  --color-danger: var(--primitive-red-700);
+  --color-danger-surface: var(--primitive-red-100);
+  --color-warning: var(--primitive-amber-700);
+  --color-media-surface: var(--primitive-media-950);
+  --color-cinema-canvas: var(--primitive-black);
+  --color-on-media: var(--primitive-white);
+  --color-overlay: var(--primitive-overlay-60);
+  --color-overlay-strong: var(--primitive-overlay-72);
+  --color-overlay-surface: var(--primitive-overlay-surface);
+  --color-overlay-muted: var(--primitive-media-300);
+  --color-provider-brand: var(--primitive-provider-blue);
+  --color-provider-on-brand: var(--primitive-white);
+  --color-tooltip-surface: var(--primitive-media-900);
+  --color-tooltip-text: var(--primitive-white);
+  --color-focus-ring: var(--primitive-teal-700);
+  --color-interactive-subtle: var(--color-surface-muted);
+  --color-danger-border: color-mix(in srgb, var(--color-danger) 36%, var(--color-border));
+  --color-danger-subtle: color-mix(in srgb, var(--color-surface) 84%, var(--color-danger-surface));
+  --shadow-soft: var(--primitive-shadow-soft);
+  --shadow-panel: var(--primitive-shadow-panel);
+  --shadow-floating: var(--primitive-shadow-floating);
+  --elevation-card: var(--shadow-soft);
+  --elevation-panel: var(--shadow-panel);
+  --elevation-floating: var(--shadow-floating);
+  --radius-sm: var(--primitive-radius-1);
+  --radius-md: var(--primitive-radius-2);
+  --radius-lg: var(--primitive-radius-3);
+  --space-1: var(--primitive-space-1);
+  --space-2: var(--primitive-space-2);
+  --space-3: var(--primitive-space-3);
+  --space-4: var(--primitive-space-4);
+  --space-5: var(--primitive-space-5);
+  --space-6: var(--primitive-space-6);
+  --space-7: var(--primitive-space-7);
+  --space-8: var(--primitive-space-8);
+  --font-display: var(--primitive-font-display);
+  --font-body: var(--primitive-font-body);
+  --type-display-size: var(--primitive-type-display);
+  --type-title-size: var(--primitive-type-title);
+  --type-body-size: var(--primitive-type-body);
+  --type-label-size: var(--primitive-type-label);
+  --line-height-display: var(--primitive-line-display);
+  --line-height-body: var(--primitive-line-body);
+  --line-height-compact: var(--primitive-line-compact);
+  --control-height: var(--primitive-control-height);
+  --focus-outline-width: 3px;
+  --focus-outline-offset: 2px;
+  --duration-instant: var(--primitive-duration-instant);
+  --duration-fast: var(--primitive-duration-fast);
+  --duration-normal: var(--primitive-duration-normal);
+  --duration-slow: var(--primitive-duration-slow);
+  --ease-standard: var(--primitive-ease-standard);
+  --ease-exit: var(--primitive-ease-exit);
+  --layer-environment: 0;
+  --layer-content: 1;
+  --layout-entry-max: 1120px;
+  --layout-page-gutter: var(--space-5);
+
+  /* Component layer: entry recipes derived from semantic values only. */
+  --entry-environment-background: linear-gradient(
+    180deg,
+    var(--color-canvas-glow) 0%,
+    var(--color-canvas) 46%,
+    var(--color-surface-muted) 46%,
+    var(--color-canvas) 47%,
+    var(--color-canvas) 88%,
+    var(--color-border) 88%,
+    var(--color-surface-muted) 89%,
+    var(--color-canvas) 89%
+  );
+  --entry-sign-surface: color-mix(in srgb, var(--color-surface) 90%, var(--color-canvas-glow));
+  --entry-card-surface: var(--color-surface);
+  --entry-card-secondary-surface: color-mix(
+    in srgb,
+    var(--color-surface) 82%,
+    var(--color-surface-muted)
+  );
+  --entry-card-border: var(--color-border);
+  --entry-card-border-strong: var(--color-border-strong);
+  --entry-card-elevation: var(--elevation-card);
+  --entry-field-surface: var(--color-surface-raised);
+  --entry-field-border: var(--color-border);
+  --entry-button-surface: var(--color-accent);
+  --entry-button-hover: var(--color-accent-strong);
+  --entry-button-text: var(--color-on-accent);
+  --entry-button-quiet-surface: transparent;
+  --entry-button-quiet-hover: var(--color-interactive-subtle);
+  --entry-notice-danger-surface: var(--color-danger-subtle);
+  --entry-notice-danger-border: var(--color-danger-border);
 }
 
 html {
@@ -47,8 +169,7 @@ html {
 
 body {
   color: var(--color-text);
-  font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans CJK SC", "Microsoft YaHei",
-    system-ui, sans-serif;
+  font-family: var(--font-body);
 }
 
 button,
@@ -59,8 +180,8 @@ select {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus-ring);
-  outline-offset: 2px;
+  outline: var(--focus-outline-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-outline-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -68,7 +189,7 @@ select {
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    transition-duration: 1ms !important;
-    animation-duration: 1ms !important;
+    transition-duration: var(--duration-instant) !important;
+    animation-duration: var(--duration-instant) !important;
   }
 }

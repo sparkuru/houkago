@@ -12,6 +12,21 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "entry-phone",
+      testMatch: /entry-home\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "entry-desktop",
+      testMatch: /entry-home\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
       name: "phone-375",
       testMatch: /mobile-room\.spec\.ts/,
       use: {
