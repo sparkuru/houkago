@@ -136,7 +136,48 @@ test("danmaku source selection exposes provenance, fallback states, and responsi
             reason: "fixture policy",
           },
         ],
+        matchContext: {
+          releaseId: "fixture-release",
+          evidence: [{ kind: "filename", work: "fixture", episode: 1 }],
+        },
         roomDefault: null,
+      }),
+    })
+  })
+  await page.route("**/danmaku/episodes*", async (route) => {
+    expect(new URL(route.request().url()).searchParams.get("q")).toBe("Fixture manual")
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          id: "fixture-manual-episode",
+          title: "Fixture manual episode",
+          season: 1,
+          episode: 2,
+          episodeTitle: "Manual correction",
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      ]),
+    })
+  })
+  await page.route("**/danmaku/matches", async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({
+      releaseId: "fixture-release",
+      episodeId: "fixture-manual-episode",
+      trustScope: "personal",
+    })
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "fixture-personal-match",
+        releaseId: "fixture-release",
+        episodeId: "fixture-manual-episode",
+        trustScope: "personal",
+        seitoId: "fixture-viewer",
+        confidence: "confirmed",
+        evidence: [{ kind: "filename", work: "fixture", episode: 1 }],
+        createdAt: 0,
       }),
     })
   })
@@ -157,6 +198,12 @@ test("danmaku source selection exposes provenance, fallback states, and responsi
   await expect(panel.getByRole("button", { name: /停用弹幕/ })).toBeDisabled()
   await expect(panel.getByRole("button", { name: "设为部室默认" })).toBeVisible()
   await expect(panel.getByRole("button", { name: "提交公共建议" })).toBeVisible()
+  await expect(panel.getByRole("heading", { name: "手动搜索与修正", exact: true })).toBeVisible()
+  await panel.getByLabel("剧集名称或关键词").fill("Fixture manual")
+  await panel.getByRole("button", { name: "搜索", exact: true }).click()
+  await expect(panel).toContainText("Fixture manual episode")
+  await panel.getByRole("button", { name: "确认此剧集", exact: true }).click()
+  await expect(panel).toContainText("已确认，正在加载该剧集的弹幕。")
   const playerWrap = page.locator(".player-wrap").first()
   await playerWrap.evaluate((element) => element.setAttribute("data-danmaku-player", "stable"))
 

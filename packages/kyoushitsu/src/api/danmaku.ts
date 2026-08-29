@@ -1,12 +1,31 @@
 import { housou } from "@/api"
 import type {
+  BaiduMediaFingerprint,
   DanmakuCandidateResolution,
   DanmakuDefaultSnapshot,
+  DanmakuEpisode,
   DanmakuEvidence,
 } from "houkago-kousoku"
 
-export function fetchDanmakuCandidates(bushitsuId: string, enmokuId: string) {
-  return housou.danmaku.bushitsu({ bushitsuId }).enmoku({ enmokuId }).get()
+export function fetchDanmakuCandidates(
+  bushitsuId: string,
+  enmokuId: string,
+  options: { fingerprint?: BaiduMediaFingerprint } = {},
+) {
+  const fingerprint = options.fingerprint
+  return housou.danmaku
+    .bushitsu({ bushitsuId })
+    .enmoku({ enmokuId })
+    .get({
+      query:
+        fingerprint === undefined
+          ? {}
+          : { fingerprint: fingerprint.value, fingerprintBytes: fingerprint.bytes },
+    })
+}
+
+export function searchDanmakuEpisodes(query: string) {
+  return housou.danmaku.episodes.get({ query: query.trim() ? { q: query.trim() } : {} })
 }
 
 export function setDanmakuRoomDefault(bushitsuId: string, enmokuId: string, trackId: string) {
@@ -37,4 +56,4 @@ export function confirmDanmakuPersonalMatch(
   })
 }
 
-export type { DanmakuCandidateResolution, DanmakuDefaultSnapshot }
+export type { DanmakuCandidateResolution, DanmakuDefaultSnapshot, DanmakuEpisode }

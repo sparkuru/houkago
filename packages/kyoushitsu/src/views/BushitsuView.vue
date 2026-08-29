@@ -252,7 +252,12 @@ const danmakuTimeOffset = ref(0)
 const providerInfoEnmoku = ref<Enmoku | null>(null)
 const providerDialog = ref<HTMLElement | null>(null)
 
-const timelineDanmaku = useTimelineDanmaku(bushitsuId, current)
+const timelineDanmaku = useTimelineDanmaku(bushitsuId, current, {
+  fingerprint: (enmoku) => {
+    const provider = baiduProvider(enmoku)
+    return provider ? (baiduPlayback.fingerprintsBySourceId.value[provider.sourceId] ?? null) : null
+  },
+})
 const {
   candidates: danmakuCandidates,
   chooseFileDanmaku,
@@ -270,7 +275,14 @@ const {
   matchAction: danmakuMatchAction,
   matchCandidates: danmakuMatchCandidates,
   matchMessage: danmakuMatchMessage,
+  manualSearchAction: danmakuManualSearchAction,
+  manualSearchAvailable: danmakuManualSearchAvailable,
+  manualSearchMessage: danmakuManualSearchMessage,
+  manualSearchQuery: danmakuManualSearchQuery,
+  manualSearchResults: danmakuManualSearchResults,
+  searchManualMatches: searchDanmakuManual,
   confirmMatch: confirmDanmakuMatch,
+  confirmManualMatch: confirmDanmakuManualMatch,
   retry: retryTimelineDanmaku,
   roomAction: danmakuRoomAction,
   roomActionMessage: danmakuRoomActionMessage,
@@ -284,6 +296,17 @@ const {
   timelineDanmakuTrackVersion,
   toggleFileDanmaku,
 } = timelineDanmaku
+
+watch(
+  () => baiduPlayback.fingerprintsBySourceId.value,
+  (fingerprints, previousFingerprints) => {
+    const provider = current.value ? baiduProvider(current.value) : null
+    if (!provider || !fingerprints[provider.sourceId]) return
+    if (fingerprints[provider.sourceId] === previousFingerprints[provider.sourceId]) return
+    retryTimelineDanmaku()
+  },
+  { deep: true },
+)
 
 watch(providerInfoEnmoku, (provider) => {
   if (!provider) return
@@ -771,6 +794,11 @@ onBeforeUnmount(() => {
             :match-candidates="danmakuMatchCandidates"
             :match-action="danmakuMatchAction"
             :match-message="danmakuMatchMessage"
+            :manual-search-action="danmakuManualSearchAction"
+            :manual-search-available="danmakuManualSearchAvailable"
+            :manual-search-message="danmakuManualSearchMessage"
+            :manual-search-query="danmakuManualSearchQuery"
+            :manual-search-results="danmakuManualSearchResults"
             :selected-candidate="selectedDanmakuCandidate"
             :selection-origin="danmakuSelectionOrigin"
             :current-room-default="danmakuRoomDefault"
@@ -789,6 +817,9 @@ onBeforeUnmount(() => {
             @clear-room-default="clearRoomDefault"
             @submit-proposal="submitPublicProposal"
             @confirm-match="confirmDanmakuMatch"
+            @update-manual-search-query="danmakuManualSearchQuery = $event"
+            @search-manual="searchDanmakuManual"
+            @confirm-manual-match="confirmDanmakuManualMatch"
             @retry="retryTimelineDanmaku"
           />
         </template>

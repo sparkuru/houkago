@@ -624,6 +624,18 @@ export const DanmakuEpisodeMatchCandidateSchema = Type.Object(
 )
 export type DanmakuEpisodeMatchCandidate = Static<typeof DanmakuEpisodeMatchCandidateSchema>
 
+// A release-scoped context lets an admitted viewer search the canonical
+// episode pool and confirm a correction without exposing provider credentials
+// or making the client reconstruct identity evidence.
+export const DanmakuMatchContextSchema = Type.Object(
+  {
+    releaseId: Type.String({ minLength: 1 }),
+    evidence: Type.Array(DanmakuEvidenceSchema, { minItems: 1, maxItems: 32 }),
+  },
+  { additionalProperties: false },
+)
+export type DanmakuMatchContext = Static<typeof DanmakuMatchContextSchema>
+
 // One selected track is a viewer-local presentation decision. A room default
 // uses the same candidate identity but is broadcast separately as a snapshot.
 export const DanmakuSelectionSchema = Type.Object(
@@ -676,6 +688,7 @@ export const DanmakuCandidateResolutionSchema = Type.Object(
     policy: DanmakuSourcePolicySchema,
     candidates: Type.Array(DanmakuCandidateSchema),
     matchCandidates: Type.Optional(Type.Array(DanmakuEpisodeMatchCandidateSchema)),
+    matchContext: Type.Optional(DanmakuMatchContextSchema),
     roomDefault: Type.Union([DanmakuDefaultSchema, Type.Null()]),
   },
   { additionalProperties: false },

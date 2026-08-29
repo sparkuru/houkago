@@ -1,9 +1,11 @@
 import { expect, test } from "bun:test"
 import type { FetchLike } from "houkago-eisha"
-import type { Enmoku } from "houkago-kousoku"
+import type { BaiduSourceRecord, Enmoku } from "houkago-kousoku"
+import { insertBaiduSource } from "../src/db/queries/baidu"
 import { insertBushitsuWithBuchou } from "../src/db/queries/bushitsu"
 import {
   findDanmakuTrack,
+  findMediaReleaseByProvider,
   insertDanmakuEpisode,
   insertMediaRelease,
   listDanmakuRevisions,
@@ -19,6 +21,7 @@ import {
   rollbackDanmakuRevision,
 } from "../src/domain/danmaku"
 import {
+  ensureBaiduDanmakuSource,
   ensureBilibiliDanmakuSource,
   refreshBilibiliDanmakuTrack,
 } from "../src/domain/danmaku-source"
@@ -304,6 +307,159 @@ test("concurrent source resolution reuses one release and logical track", async 
     secondResult.tracks.map((track) => track.id),
   )
   expect(firstResult.tracks).toHaveLength(1)
+})
+
+test("Bilibili and Baidu releases reuse one canonical episode track", async () => {
+  const source = createBilibiliFixture()
+  const baiduSourceId = id("cross-provider-baidu-source")
+  const baiduFileName = "[BaiduGroup] Bilibili source episode.mkv"
+  const baiduEnmoku = addEnmoku(source.bushitsuId, {
+    title: baiduFileName,
+    type: "direct",
+    url: `/baidu/source/${baiduSourceId}`,
+    addedBy: source.actorId,
+    provider: {
+      kind: "baidu",
+      sourceId: baiduSourceId,
+      fileName: baiduFileName,
+      size: 456,
+    },
+  })
+  const baiduSource: BaiduSourceRecord = {
+    id: baiduSourceId,
+    ownerSeitoId: source.actorId,
+    authorizationId: id("cross-provider-authorization"),
+    bushitsuId: source.bushitsuId,
+    enmokuId: baiduEnmoku.id,
+    fileName: baiduFileName,
+    size: 456,
+    retentionMode: "server-saved",
+    encryptedFsid: "ciphertext-only",
+    createdAt: 1,
+  }
+  insertBaiduSource(baiduSource)
+
+  const bilibiliResult = await ensureBilibiliDanmakuSource(
+    source.actorId,
+    source.bushitsuId,
+    source.enmoku.id,
+    { now: 1_000, fetcher: async () => fixture(cue(1, "shared cue")) },
+  )
+  const bilibiliTrack = bilibiliResult.tracks[0]
+  expect(bilibiliTrack).toMatchObject({
+    episodeId: source.episodeId,
+    sourceClass: "provider-official",
+    provenance: {
+      provider: "bilibili",
+      reference: source.reference,
+      label: "Bilibili official",
+    },
+  })
+  if (!bilibiliTrack || !bilibiliResult.release) {
+    throw new Error("Bilibili fixture did not produce an official track")
+  }
+
+  const baiduResult = ensureBaiduDanmakuSource(source.actorId, source.bushitsuId, baiduEnmoku.id, {
+    now: 1_100,
+    duration: 600,
+  })
+  const baiduMatch = baiduResult.matchCandidates.find(
+    (candidate) => candidate.episodeId === source.episodeId,
+  )
+  const baiduRelease = baiduResult.release
+  expect(baiduRelease).toMatchObject({
+    provider: "baidu",
+    providerReference: baiduSourceId,
+    fileName: baiduFileName,
+    size: 456,
+    duration: 600,
+  })
+  if (!baiduRelease) {
+    throw new Error("Baidu fixture did not produce a media release")
+  }
+  expect(baiduRelease.id).not.toBe(bilibiliResult.release.id)
+  expect(listMediaReleaseEvidence(bilibiliResult.release.id)).toContainEqual({
+    kind: "provider",
+    provider: "bilibili",
+    reference: source.reference,
+  })
+  expect(listMediaReleaseEvidence(baiduRelease.id)).toContainEqual({
+    kind: "provider",
+    provider: "baidu",
+    reference: baiduSourceId,
+  })
+  expect(baiduMatch).toMatchObject({
+    releaseId: baiduRelease.id,
+    episodeId: source.episodeId,
+    requiresConfirmation: true,
+  })
+  if (!baiduMatch) {
+    throw new Error("Baidu fixture did not produce a canonical episode candidate")
+  }
+
+  const beforeConfirmation = resolveDanmakuCandidates(
+    source.actorId,
+    source.bushitsuId,
+    baiduEnmoku.id,
+  )
+  expect(beforeConfirmation.candidates).not.toContainEqual(
+    expect.objectContaining({ id: bilibiliTrack.id }),
+  )
+
+  confirmReleaseEpisodeMatch(source.actorId, {
+    releaseId: baiduRelease.id,
+    episodeId: source.episodeId,
+    trustScope: "room",
+    bushitsuId: source.bushitsuId,
+    enmokuId: baiduEnmoku.id,
+    evidence: baiduMatch.evidence,
+  })
+
+  const bilibiliCandidate = resolveDanmakuCandidates(
+    source.actorId,
+    source.bushitsuId,
+    source.enmoku.id,
+  ).candidates.find((candidate) => candidate.id === bilibiliTrack.id)
+  const baiduCandidate = resolveDanmakuCandidates(
+    source.actorId,
+    source.bushitsuId,
+    baiduEnmoku.id,
+  ).candidates.find((candidate) => candidate.id === bilibiliTrack.id)
+  expect(bilibiliCandidate).toMatchObject({
+    id: bilibiliTrack.id,
+    trackId: bilibiliTrack.id,
+    episodeId: source.episodeId,
+    sourceClass: "provider-official",
+    provenance: {
+      provider: "bilibili",
+      reference: source.reference,
+    },
+    cues: [{ time: 1, text: "shared cue", mode: "scroll" }],
+  })
+  expect(baiduCandidate).toMatchObject({
+    id: bilibiliTrack.id,
+    trackId: bilibiliTrack.id,
+    episodeId: source.episodeId,
+    sourceClass: "provider-official",
+    provenance: {
+      provider: "bilibili",
+      reference: source.reference,
+    },
+    revisionId: bilibiliCandidate?.revisionId,
+    cues: [{ time: 1, text: "shared cue", mode: "scroll" }],
+  })
+  expect(baiduCandidate?.evidence).toContainEqual({
+    kind: "provider",
+    provider: "baidu",
+    reference: baiduSourceId,
+  })
+  expect(baiduCandidate?.id).toBe(bilibiliCandidate?.id)
+  expect(baiduCandidate?.episodeId).toBe(bilibiliCandidate?.episodeId)
+  expect(baiduCandidate?.revisionId).toBe(bilibiliCandidate?.revisionId)
+  expect(findMediaReleaseByProvider("bilibili", source.reference)?.id).toBe(
+    bilibiliResult.release.id,
+  )
+  expect(findMediaReleaseByProvider("baidu", baiduSourceId)?.id).toBe(baiduRelease.id)
 })
 
 test("Komon revision controls disable a bad Bilibili revision without losing fallback", async () => {

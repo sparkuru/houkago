@@ -5,6 +5,7 @@ import type { DanmakuSelectionOrigin } from "@/lib/danmaku-selection"
 import type {
   DanmakuCandidate,
   DanmakuDefault,
+  DanmakuEpisode,
   DanmakuEpisodeMatchCandidate,
   DanmakuSourceClass,
 } from "houkago-kousoku"
@@ -21,6 +22,11 @@ defineProps<{
   matchCandidates: readonly DanmakuEpisodeMatchCandidate[]
   matchAction: RoomAction
   matchMessage: string
+  manualSearchAvailable: boolean
+  manualSearchQuery: string
+  manualSearchResults: readonly DanmakuEpisode[]
+  manualSearchAction: RoomAction
+  manualSearchMessage: string
   roomAction: RoomAction
   roomActionMessage: string
   proposalAction: RoomAction
@@ -35,10 +41,14 @@ const emit = defineEmits<{
   clearRoomDefault: []
   submitProposal: [candidateId: string]
   confirmMatch: [episodeId: string]
+  updateManualSearchQuery: [query: string]
+  searchManual: []
+  confirmManualMatch: [episodeId: string]
   retry: []
 }>()
 
 const MATCH_HEADING_ID = "timeline-danmaku-match-heading"
+const MANUAL_SEARCH_INPUT_ID = "timeline-danmaku-manual-search"
 
 function sourceClassLabel(sourceClass: DanmakuSourceClass): string {
   switch (sourceClass) {
@@ -114,6 +124,11 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
       return t("danmakuMatchWeak")
   }
 }
+
+function updateManualSearchQuery(event: Event): void {
+  const target = event.target
+  if (target instanceof HTMLInputElement) emit("updateManualSearchQuery", target.value)
+}
 </script>
 
 <template>
@@ -168,7 +183,7 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
       </ul>
       <p v-else class="timeline-danmaku-empty">{{ t("danmakuSourceEmpty") }}</p>
       <section
-        v-if="matchCandidates.length > 0"
+        v-if="matchCandidates.length > 0 || manualSearchAvailable"
         class="timeline-danmaku-matches"
         :aria-labelledby="MATCH_HEADING_ID"
       >
@@ -196,6 +211,64 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
             </button>
           </li>
         </ul>
+        <form
+          v-if="manualSearchAvailable"
+          class="timeline-danmaku-manual-search"
+          @submit.prevent="emit('searchManual')"
+        >
+          <div class="timeline-danmaku-match-heading">
+            <h4>{{ t("danmakuManualSearchHeading") }}</h4>
+            <span>{{ t("danmakuManualSearchHint") }}</span>
+          </div>
+          <div class="timeline-danmaku-search-controls">
+            <label :for="MANUAL_SEARCH_INPUT_ID">{{ t("danmakuManualSearchLabel") }}</label>
+            <div class="timeline-danmaku-search-row">
+              <input
+                :id="MANUAL_SEARCH_INPUT_ID"
+                :value="manualSearchQuery"
+                type="search"
+                autocomplete="off"
+                :placeholder="t('danmakuManualSearchPlaceholder')"
+                @input="updateManualSearchQuery"
+              />
+              <button
+                type="submit"
+                class="secondary"
+                :disabled="manualSearchAction === 'pending'"
+              >
+                {{ t("danmakuManualSearchAction") }}
+              </button>
+            </div>
+          </div>
+          <ul v-if="manualSearchResults.length > 0" class="timeline-danmaku-match-list">
+            <li v-for="episode in manualSearchResults" :key="episode.id">
+              <div class="timeline-danmaku-match-copy">
+                <strong>{{ episode.title }}</strong>
+                <span>
+                  <template v-if="episode.season !== undefined">S{{ episode.season }} · </template>
+                  <template v-if="episode.episode !== undefined">E{{ episode.episode }} · </template>
+                  {{ t("danmakuManualSearchResult") }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="secondary"
+                :disabled="matchAction === 'pending'"
+                @click="emit('confirmManualMatch', episode.id)"
+              >
+                {{ t("danmakuManualSearchConfirm") }}
+              </button>
+            </li>
+          </ul>
+          <p
+            v-if="manualSearchMessage"
+            class="timeline-danmaku-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {{ manualSearchMessage }}
+          </p>
+        </form>
         <p
           v-if="matchMessage"
           class="timeline-danmaku-feedback"
@@ -393,6 +466,11 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
   font-size: 1rem;
 }
 
+.timeline-danmaku-match-heading h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 .timeline-danmaku-match-heading span,
 .timeline-danmaku-match-copy span {
   color: var(--color-text-muted);
@@ -452,6 +530,45 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
   opacity: 0.55;
 }
 
+.timeline-danmaku-manual-search {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.timeline-danmaku-search-controls {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.timeline-danmaku-search-controls label {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.timeline-danmaku-search-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.timeline-danmaku-search-row input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.timeline-danmaku-search-row button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
 .timeline-danmaku-actions button {
   min-height: 44px;
   padding: 8px 12px;
@@ -484,6 +601,11 @@ function confidenceLabel(confidence: DanmakuEpisodeMatchCandidate["confidence"])
   }
 
   .timeline-danmaku-match-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .timeline-danmaku-search-row {
     align-items: stretch;
     flex-direction: column;
   }

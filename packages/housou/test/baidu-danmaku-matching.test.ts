@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { BaiduSourceRecord, DanmakuEvidence } from "houkago-kousoku"
+import type { BaiduMediaFingerprint, BaiduSourceRecord, DanmakuEvidence } from "houkago-kousoku"
 import { insertBaiduSource as insertBaiduSourceRecord } from "../src/db/queries/baidu"
 import { insertBushitsuWithBuchou } from "../src/db/queries/bushitsu"
 import {
@@ -86,6 +86,7 @@ async function readCandidates(
   bushitsuId: string,
   enmokuId: string,
   duration: number,
+  fingerprint?: BaiduMediaFingerprint,
 ): Promise<{
   bushitsuId: string
   enmokuId: string
@@ -101,7 +102,12 @@ async function readCandidates(
 }> {
   const response = await app.handle(
     new Request(
-      `http://localhost/danmaku/bushitsu/${bushitsuId}/enmoku/${enmokuId}?duration=${duration}`,
+      `http://localhost/danmaku/bushitsu/${bushitsuId}/enmoku/${enmokuId}?${new URLSearchParams({
+        duration: String(duration),
+        ...(fingerprint === undefined
+          ? {}
+          : { fingerprint: fingerprint.value, fingerprintBytes: String(fingerprint.bytes) }),
+      })}`,
       { headers: { cookie: actor.cookie } },
     ),
   )
@@ -406,4 +412,108 @@ test("different Baidu encodes reuse one episode track with release-specific alig
       alignment: expect.objectContaining({ offsetSeconds: -0.5 }),
     }),
   )
+})
+
+test("a promoted Baidu fingerprint reuses the canonical track through candidate resolution", async () => {
+  const owner = account("baidu-fingerprint-owner")
+  const komon = account("baidu-fingerprint-komon")
+  insertKomonGrant({ id: id("komon-fingerprint-grant"), seitoId: komon.id, grantedAt: 1 })
+
+  const bushitsuId = id("baidu-fingerprint-room")
+  const episodeId = id("baidu-fingerprint-episode")
+  const firstSourceId = id("baidu-fingerprint-source-a")
+  const secondSourceId = id("baidu-fingerprint-source-b")
+  const fingerprint: BaiduMediaFingerprint = {
+    algorithm: "md5",
+    scope: "prefix",
+    bytes: 1024,
+    value: "0123456789abcdef0123456789abcdef",
+  }
+  insertBushitsuWithBuchou({
+    id: bushitsuId,
+    name: "Baidu fingerprint room",
+    buchouId: owner.id,
+    createdAt: 1,
+  })
+  episode(episodeId, "Fingerprint episode", 1)
+  const track = registerDanmakuTrack({
+    id: id("baidu-fingerprint-track"),
+    episodeId,
+    sourceClass: "server-stored",
+    name: "Fingerprint canonical track",
+    status: "active",
+    createdAt: 1,
+    updatedAt: 1,
+  })
+  ingestDanmakuRevision(
+    track.id,
+    [{ time: 1, text: "fingerprint cue", mode: "scroll" }],
+    undefined,
+    2,
+  )
+
+  const firstFileName = "[Fingerprint Group] Fingerprint episode - S01E01.mkv"
+  const firstEnmoku = addEnmoku(bushitsuId, {
+    title: firstFileName,
+    type: "direct",
+    url: `/baidu/source/${firstSourceId}`,
+    addedBy: owner.id,
+    provider: {
+      kind: "baidu",
+      sourceId: firstSourceId,
+      fileName: firstFileName,
+      size: 100,
+    },
+  })
+  insertBaiduSourceRecord(
+    baiduSource(firstSourceId, owner.id, bushitsuId, firstEnmoku.id, firstFileName, 100),
+  )
+  join(bushitsuId, owner.id, "owner")
+
+  const first = await readCandidates(owner, bushitsuId, firstEnmoku.id, 600, fingerprint)
+  const firstMatch = first.matchCandidates?.find((candidate) => candidate.episodeId === episodeId)
+  const firstRelease = findMediaReleaseByProvider("baidu", firstSourceId)
+  expect(firstMatch).toBeDefined()
+  expect(firstRelease).toBeDefined()
+  if (!firstMatch || !firstRelease) throw new Error("fingerprint source did not produce a match")
+  expect(listMediaReleaseEvidence(firstRelease.id)).toContainEqual({
+    kind: "fingerprint",
+    digest: fingerprint,
+  })
+  confirmReleaseEpisodeMatch(komon.id, {
+    releaseId: firstRelease.id,
+    episodeId,
+    trustScope: "global",
+    evidence: firstMatch.evidence,
+  })
+
+  const secondFileName = "opaque-video-release.mkv"
+  const secondEnmoku = addEnmoku(bushitsuId, {
+    title: secondFileName,
+    type: "direct",
+    url: `/baidu/source/${secondSourceId}`,
+    addedBy: owner.id,
+    provider: {
+      kind: "baidu",
+      sourceId: secondSourceId,
+      fileName: secondFileName,
+      size: 200,
+    },
+  })
+  insertBaiduSourceRecord(
+    baiduSource(secondSourceId, owner.id, bushitsuId, secondEnmoku.id, secondFileName, 200),
+  )
+
+  const second = await readCandidates(owner, bushitsuId, secondEnmoku.id, 600, fingerprint)
+  const reused = second.candidates.find(
+    (candidate) => (candidate as { id?: string }).id === track.id,
+  )
+  expect(reused).toMatchObject({
+    id: track.id,
+    episodeId,
+    sourceClass: "server-stored",
+    cues: [{ time: 1, text: "fingerprint cue", mode: "scroll" }],
+  })
+  expect(second.matchCandidates ?? []).toEqual([])
+  expect(JSON.stringify(second)).not.toContain("ciphertext-only")
 })

@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia"
 import {
+  BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
   DanmakuEvidenceSchema,
   DanmakuProposalDecisionSchema,
   DanmakuProposalStatusSchema,
@@ -24,7 +25,7 @@ import {
   updateDanmakuSourcePolicy,
 } from "../domain/danmaku"
 import { resolveDanmakuCandidatesWithRefresh } from "../domain/danmaku-source"
-import { Forbidden } from "../lib/errors"
+import { DanmakuMatchInvalid, Forbidden } from "../lib/errors"
 import { requireKomon, requireKomonRequest } from "../lib/komon"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
@@ -57,6 +58,18 @@ const ProposalBody = t.Object(
 
 const EpisodeSearchQuery = t.Object(
   { q: t.Optional(t.String({ maxLength: 256 })) },
+  { additionalProperties: false },
+)
+
+const CandidateQuery = t.Object(
+  {
+    releaseId: t.Optional(t.String({ minLength: 1 })),
+    duration: t.Optional(t.Number({ minimum: 0 })),
+    fingerprint: t.Optional(t.String({ pattern: "^[0-9a-f]{32}$" })),
+    fingerprintBytes: t.Optional(
+      t.Integer({ minimum: 1, maximum: BAIDU_MEDIA_FINGERPRINT_MAX_BYTES }),
+    ),
+  },
   { additionalProperties: false },
 )
 
@@ -104,13 +117,29 @@ async function resolveCandidates(
   enmokuId: string,
   releaseId?: string,
   duration?: number,
+  fingerprintValue?: string,
+  fingerprintBytes?: number,
 ) {
+  const hasFingerprintValue = fingerprintValue !== undefined
+  const hasFingerprintBytes = fingerprintBytes !== undefined
+  if (hasFingerprintValue !== hasFingerprintBytes) {
+    throw new DanmakuMatchInvalid("fingerprint value and bytes must be provided together")
+  }
+  const fingerprint =
+    hasFingerprintValue && hasFingerprintBytes
+      ? {
+          algorithm: "md5" as const,
+          scope: "prefix" as const,
+          bytes: fingerprintBytes,
+          value: fingerprintValue,
+        }
+      : undefined
   return resolveDanmakuCandidatesWithRefresh(
     seitoFromRequest(request).id,
     bushitsuId,
     enmokuId,
     releaseId,
-    { duration },
+    { duration, ...(fingerprint === undefined ? {} : { fingerprint }) },
   )
 }
 
@@ -186,13 +215,10 @@ export const danmakuRoutes = new Elysia({ prefix: "/danmaku" })
         params.enmokuId,
         query.releaseId,
         query.duration,
+        query.fingerprint,
+        query.fingerprintBytes,
       ),
-    {
-      query: t.Object({
-        releaseId: t.Optional(t.String({ minLength: 1 })),
-        duration: t.Optional(t.Number({ minimum: 0 })),
-      }),
-    },
+    { query: CandidateQuery },
   )
   .get(
     "/candidates/:bushitsuId/:enmokuId",
@@ -203,13 +229,10 @@ export const danmakuRoutes = new Elysia({ prefix: "/danmaku" })
         params.enmokuId,
         query.releaseId,
         query.duration,
+        query.fingerprint,
+        query.fingerprintBytes,
       ),
-    {
-      query: t.Object({
-        releaseId: t.Optional(t.String({ minLength: 1 })),
-        duration: t.Optional(t.Number({ minimum: 0 })),
-      }),
-    },
+    { query: CandidateQuery },
   )
   // Owner default writes are REST mutations; the resulting full snapshot is
   // sent over the admitted room topic after the DB transaction succeeds.

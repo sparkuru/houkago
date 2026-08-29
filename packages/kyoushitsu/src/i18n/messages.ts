@@ -331,6 +331,16 @@ export const messages = {
     danmakuMatchConfirm: "确认并使用",
     danmakuMatchConfirmed: "已确认，正在加载该剧集的弹幕。",
     danmakuMatchFailed: "确认失败，播放不受影响，请稍后重试。",
+    danmakuManualSearchHeading: "手动搜索与修正",
+    danmakuManualSearchHint: "搜索剧集目录后，仅为自己确认当前媒体版本的对应关系。",
+    danmakuManualSearchLabel: "剧集名称或关键词",
+    danmakuManualSearchPlaceholder: "输入剧名、季或集数",
+    danmakuManualSearchAction: "搜索",
+    danmakuManualSearchConfirm: "确认此剧集",
+    danmakuManualSearchResult: "目录结果",
+    danmakuManualSearchEnter: "请输入剧集名称或关键词。",
+    danmakuManualSearchEmpty: "没有找到匹配的剧集。",
+    danmakuManualSearchFailed: "剧集搜索失败，请稍后重试。",
   },
 } as const
 

@@ -3,7 +3,7 @@
   "name": "universal-danmaku-resolution",
   "title": "Universal danmaku source resolution",
   "description": "Plan a provider-neutral danmaku identity, candidate resolution, source policy, server storage pool, and user selection capability.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -26,9 +26,10 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "Final planning summary approved by the user on 2026-08-28. Implementation is intentionally paused; do not run task.py start until the user resumes.",
+  "notes": "Final planning summary approved by the user on 2026-08-28. The user resumed on 2026-08-29; parent integration review is in progress.",
   "meta": {
     "planning_approved_at": "2026-08-28",
-    "implementation_paused": true
+    "implementation_paused": false,
+    "resumed_at": "2026-08-29"
   }
 }

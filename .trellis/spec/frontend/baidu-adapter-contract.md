@@ -27,6 +27,13 @@
 - The optional fingerprint result is
   `BAIDU_MEDIA_FINGERPRINT_RESULT` with `{ algorithm: "md5", scope: "prefix",
   bytes, value }`; the page never receives the private dlink or media bytes.
+- `useBaiduPlayback` requests that optional capability only after a ready
+  playback grant. A successful fingerprint operation also installs that same
+  claimed grant for playback; `fingerprintsBySourceId` then lets
+  `useTimelineDanmaku` forward the digest and byte count to candidate
+  resolution. If the read fails, the page requests a fresh grant and falls
+  back to ordinary media preparation, so matching remains optional and video
+  playback remains available.
 - Production build requires both exact origins:
   `HOUKAGO_ADAPTER_ORIGIN` (page) and `HOUKAGO_ADAPTER_SERVER_ORIGIN` (API).
   Development without these values deliberately injects into every HTTP/HTTPS

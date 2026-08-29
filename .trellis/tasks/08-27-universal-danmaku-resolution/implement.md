@@ -32,6 +32,13 @@ archive evidence before the next dependent slice is considered ready.
    - Exercise two source classes mapping to one episode/track, full precedence,
      proposal/promotion, refresh/rollback, safe failure, and legacy regression.
    - Update durable specs only after checked behavior exists.
+6. Parent integration completion
+   - Add a user-facing manual episode search/correction path that confirms only
+     the current viewer's release-to-episode association.
+   - Wire the bounded Baidu client/adaptor fingerprint into the candidate
+     resolution request while preserving the playback and credential boundary.
+   - Add one Bilibili-plus-Baidu cross-provider fixture and browser evidence for
+     the match/correction controls, including responsive behavior.
 
 ## Shared validation matrix
 
@@ -76,4 +83,3 @@ real-provider residual risk is called out for human review.
   association, and no media/private provider material reaches `housou`.
 - Before parent completion: GC remains disabled unless its protection and audit
   tests pass.
-

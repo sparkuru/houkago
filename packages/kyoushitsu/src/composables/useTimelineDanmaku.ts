@@ -3,6 +3,7 @@ import {
   clearDanmakuRoomDefault,
   confirmDanmakuPersonalMatch,
   fetchDanmakuCandidates,
+  searchDanmakuEpisodes,
   setDanmakuRoomDefault,
   submitDanmakuPublicProposal,
 } from "@/api/danmaku"
@@ -24,10 +25,13 @@ import { createLocalDanmakuCandidate } from "@/lib/local-danmaku-candidate"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import type { DanmakuCue } from "houkago-kokuban"
 import type {
+  BaiduMediaFingerprint,
   DanmakuCandidate,
   DanmakuCandidateResolution,
   DanmakuDefault,
+  DanmakuEpisode,
   DanmakuEpisodeMatchCandidate,
+  DanmakuEvidence,
   DanmakuSourcePolicy,
   Enmoku,
 } from "houkago-kousoku"
@@ -43,7 +47,17 @@ export type TimelineDanmakuState = "idle" | "loading" | "ready" | "empty" | "err
 
 export type RoomAction = "idle" | "pending" | "success" | "error"
 
-export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | null>) {
+export type TimelineDanmakuOptions = {
+  fingerprint?: (
+    enmoku: Enmoku,
+  ) => Promise<BaiduMediaFingerprint | null> | BaiduMediaFingerprint | null
+}
+
+export function useTimelineDanmaku(
+  bushitsuId: string,
+  current: Ref<Enmoku | null>,
+  options: TimelineDanmakuOptions = {},
+) {
   const bushitsu = useBushitsuStore()
   const fileInput = ref<HTMLInputElement | null>(null)
   const fileDanmakuEnabled = ref(loadFileDanmakuEnabled())
@@ -63,6 +77,10 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
   const proposalMessage = ref("")
   const matchAction = ref<RoomAction>("idle")
   const matchMessage = ref("")
+  const manualSearchQuery = ref("")
+  const manualSearchResults = ref<DanmakuEpisode[]>([])
+  const manualSearchAction = ref<RoomAction>("idle")
+  const manualSearchMessage = ref("")
   const cueVersion = ref(0)
   const trackVersion = ref(0)
   let resolutionRequest = 0
@@ -77,6 +95,8 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
   const matchCandidates = computed<DanmakuEpisodeMatchCandidate[]>(
     () => resolution.value?.matchCandidates ?? [],
   )
+  const matchContext = computed(() => resolution.value?.matchContext ?? null)
+  const manualSearchAvailable = computed(() => matchContext.value !== null)
   const hasAuthoritativeRoomDefaults = computed(
     () => bushitsu.danmakuDefaultsSnapshotRoomId === bushitsuId,
   )
@@ -173,7 +193,18 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     resolutionLoading.value = true
     resolutionError.value = ""
     try {
-      const response = await fetchDanmakuCandidates(bushitsuId, enmoku.id)
+      let fingerprint: BaiduMediaFingerprint | undefined
+      if (options.fingerprint) {
+        try {
+          fingerprint = (await options.fingerprint(enmoku)) ?? undefined
+        } catch {
+          // Fingerprinting is an optional hint. A bridge or media read failure
+          // must leave ordinary filename/metadata resolution available.
+        }
+      }
+      const response = await fetchDanmakuCandidates(bushitsuId, enmoku.id, {
+        ...(fingerprint === undefined ? {} : { fingerprint }),
+      })
       if (request !== resolutionRequest || currentEnmokuId.value !== enmoku.id) return
       if (response.error || !response.data) throw new Error("candidate resolution failed")
       const next = {
@@ -347,18 +378,16 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     return true
   }
 
-  async function confirmMatch(candidateId: string): Promise<boolean> {
-    const enmoku = current.value
-    const candidate = matchCandidates.value.find((item) => item.episodeId === candidateId)
-    if (!enmoku || !candidate || !candidate.requiresConfirmation) return false
+  async function confirmEpisodeMatch(
+    enmoku: Enmoku,
+    releaseId: string,
+    episodeId: string,
+    evidence: readonly DanmakuEvidence[],
+  ): Promise<boolean> {
     matchAction.value = "pending"
     matchMessage.value = ""
     try {
-      const response = await confirmDanmakuPersonalMatch(
-        candidate.releaseId,
-        candidate.episodeId,
-        candidate.evidence,
-      )
+      const response = await confirmDanmakuPersonalMatch(releaseId, episodeId, evidence)
       if (response.error) {
         matchAction.value = "error"
         matchMessage.value = t("danmakuMatchFailed")
@@ -373,6 +402,47 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     matchMessage.value = t("danmakuMatchConfirmed")
     await loadResolution(enmoku)
     return true
+  }
+
+  async function confirmMatch(candidateId: string): Promise<boolean> {
+    const enmoku = current.value
+    const candidate = matchCandidates.value.find((item) => item.episodeId === candidateId)
+    if (!enmoku || !candidate || !candidate.requiresConfirmation) return false
+    return confirmEpisodeMatch(enmoku, candidate.releaseId, candidate.episodeId, candidate.evidence)
+  }
+
+  async function searchManualMatches(): Promise<boolean> {
+    if (!manualSearchAvailable.value) return false
+    const query = manualSearchQuery.value.trim()
+    if (!query) {
+      manualSearchAction.value = "error"
+      manualSearchMessage.value = t("danmakuManualSearchEnter")
+      manualSearchResults.value = []
+      return false
+    }
+    manualSearchAction.value = "pending"
+    manualSearchMessage.value = ""
+    try {
+      const response = await searchDanmakuEpisodes(query)
+      if (response.error || !response.data) throw new Error("episode search failed")
+      manualSearchResults.value = response.data
+      manualSearchAction.value = "success"
+      manualSearchMessage.value = response.data.length === 0 ? t("danmakuManualSearchEmpty") : ""
+      return true
+    } catch {
+      manualSearchAction.value = "error"
+      manualSearchMessage.value = t("danmakuManualSearchFailed")
+      manualSearchResults.value = []
+      return false
+    }
+  }
+
+  async function confirmManualMatch(episodeId: string): Promise<boolean> {
+    const enmoku = current.value
+    const context = matchContext.value
+    const episode = manualSearchResults.value.find((item) => item.id === episodeId)
+    if (!enmoku || !context || !episode) return false
+    return confirmEpisodeMatch(enmoku, context.releaseId, episode.id, context.evidence)
   }
 
   function retry(): void {
@@ -394,6 +464,10 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
       cueLoading.value = false
       matchAction.value = "idle"
       matchMessage.value = ""
+      manualSearchQuery.value = ""
+      manualSearchResults.value = []
+      manualSearchAction.value = "idle"
+      manualSearchMessage.value = ""
       failedCandidates.value = {}
       const enmoku = current.value
       if (!id || !enmoku) return
@@ -455,6 +529,12 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     matchCandidates,
     matchAction,
     matchMessage,
+    matchContext,
+    manualSearchAvailable,
+    manualSearchQuery,
+    manualSearchResults,
+    manualSearchAction,
+    manualSearchMessage,
     toggleFileDanmaku,
     chooseFileDanmaku,
     onFileDanmakuSelected,
@@ -464,6 +544,8 @@ export function useTimelineDanmaku(bushitsuId: string, current: Ref<Enmoku | nul
     clearRoomDefault,
     submitPublicProposal,
     confirmMatch,
+    searchManualMatches,
+    confirmManualMatch,
     retry,
     releaseIdentity: computed(() => (current.value ? stableReleaseIdentity(current.value) : "")),
     overrideVersion: DANMAKU_OVERRIDE_VERSION,

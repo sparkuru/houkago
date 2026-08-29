@@ -5,13 +5,15 @@ import {
   extractFilenameEvidence,
   rankMediaReleaseCandidates,
 } from "houkago-kokuban"
-import type {
-  DanmakuEpisodeMatchCandidate,
-  DanmakuEvidence,
-  DanmakuRevision,
-  DanmakuTrack,
-  Enmoku,
-  MediaRelease,
+import {
+  BAIDU_MEDIA_FINGERPRINT_MAX_BYTES,
+  type BaiduMediaFingerprint,
+  type DanmakuEpisodeMatchCandidate,
+  type DanmakuEvidence,
+  type DanmakuRevision,
+  type DanmakuTrack,
+  type Enmoku,
+  type MediaRelease,
 } from "houkago-kousoku"
 import { type BaiduSourceRecord, getBaiduSource } from "../db/queries/baidu"
 import {
@@ -49,6 +51,7 @@ export type BilibiliDanmakuRefreshOptions = {
   freshnessMs?: number
   fetcher?: FetchLike
   duration?: number
+  fingerprint?: BaiduMediaFingerprint
 }
 
 export type BilibiliDanmakuTrackRefresh = {
@@ -180,6 +183,7 @@ export function ensureBaiduDanmakuSource(
     source,
     normalizedOptions.duration,
     normalizedOptions.now,
+    normalizedOptions.fingerprint,
   )
   if (findGlobalReleaseEpisodeMatch(release.id)) {
     return { release, matchCandidates: [] }
@@ -317,6 +321,7 @@ function normalizeOptions(options: BilibiliDanmakuRefreshOptions): {
   freshnessMs: number
   fetcher: FetchLike
   duration?: number
+  fingerprint?: BaiduMediaFingerprint
 } {
   const now = options.now ?? Date.now()
   const freshnessMs = options.freshnessMs ?? BILIBILI_DANMAKU_FRESHNESS_MS
@@ -324,18 +329,34 @@ function normalizeOptions(options: BilibiliDanmakuRefreshOptions): {
   if (!Number.isFinite(freshnessMs) || freshnessMs < 0) {
     throw new DanmakuMatchInvalid("refresh freshness is invalid")
   }
+  if (options.fingerprint !== undefined && !safeBaiduFingerprint(options.fingerprint)) {
+    throw new DanmakuMatchInvalid("fingerprint is invalid")
+  }
   return {
     now,
     freshnessMs,
     fetcher: options.fetcher ?? fetch,
     ...(isValidNonNegativeNumber(options.duration) ? { duration: options.duration } : {}),
+    ...(options.fingerprint === undefined ? {} : { fingerprint: options.fingerprint }),
   }
+}
+
+function safeBaiduFingerprint(value: BaiduMediaFingerprint): boolean {
+  return (
+    value.algorithm === "md5" &&
+    value.scope === "prefix" &&
+    Number.isInteger(value.bytes) &&
+    value.bytes >= 1 &&
+    value.bytes <= BAIDU_MEDIA_FINGERPRINT_MAX_BYTES &&
+    /^[0-9a-f]{32}$/.test(value.value)
+  )
 }
 
 function ensureBaiduMediaRelease(
   source: BaiduSourceRecord,
   duration: number | undefined,
   now: number,
+  fingerprint?: BaiduMediaFingerprint,
 ): { release: MediaRelease; evidence: DanmakuEvidence[] } {
   const existing = findMediaReleaseByProvider("baidu", source.id)
   const release =
@@ -371,6 +392,7 @@ function ensureBaiduMediaRelease(
     ...(isValidNonNegativeNumber(duration)
       ? [{ kind: "duration" as const, seconds: duration }]
       : []),
+    ...(fingerprint === undefined ? [] : [{ kind: "fingerprint" as const, digest: fingerprint }]),
   ]
   const storedEvidence = listMediaReleaseEvidence(release.id)
   for (const evidence of desiredEvidence) {

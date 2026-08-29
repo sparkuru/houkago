@@ -34,11 +34,14 @@
 - `GET /baidu/media/:grantId` is a sentinel and always returns
   `428 Adaptor Required`; it never returns or proxies media.
 - Danmaku matching reads a room-bound source through
-  `ensureBaiduDanmakuSource(actorSeitoId, bushitsuId, enmokuId, { duration? })`;
+  `ensureBaiduDanmakuSource(actorSeitoId, bushitsuId, enmokuId, { duration?, fingerprint? })`;
   candidate reads expose `/danmaku/bushitsu/:bushitsuId/enmoku/:enmokuId` and
-  `/danmaku/candidates/:bushitsuId/:enmokuId` with optional `duration`.
-- A Baidu release is identified by the safe source id plus filename, size, and
-  observed duration. The response may contain ranked
+  `/danmaku/candidates/:bushitsuId/:enmokuId` with optional `duration` and the
+  paired `fingerprint`/`fingerprintBytes` query fields.
+- A Baidu release is identified by the safe source id plus filename, size,
+  observed duration, and (when an authorized adaptor supplies it) a bounded
+  `{ algorithm: "md5", scope: "prefix", bytes, value }` fingerprint. The
+  response may contain ranked
   `DanmakuEpisodeMatchCandidate` rows, each with contributions, mismatches,
   warnings, and `requiresConfirmation: true`.
 
@@ -93,6 +96,12 @@
   bytes are read and hashed only by an authorized adaptor Range request;
   `housou` never downloads the source to hash it. Filename, size, duration,
   provider reference, and fingerprint remain separate evidence kinds.
+- The page forwards the adaptor's fingerprint value and exact byte count as a
+  pair to candidate resolution. The resolver stores it as release evidence;
+  it compares only equal algorithm, scope, and byte count, and may reuse a
+  peer release's track only when that peer already has a `Komon`-approved
+  global release-to-episode match. A fingerprint never creates a global match
+  or replaces a personal/room confirmation.
 - An active Komon global release-to-episode match is the only automatic exact
   reuse path. Weighted filename/size/duration results are suggestions even at
   high confidence; personal confirmation, room confirmation, and global
@@ -117,6 +126,7 @@
 | Baidu source has a path, control character, oversized filename/id, or invalid size | return no matcher release/candidates; leave the Enmoku playback URL unchanged |
 | Weighted matcher has no exact Komon mapping | return explainable candidates; never create a global match |
 | Personal/room confirmation | persist only the acting account or room scope; do not promote globally |
+| Fingerprint query has only one of `fingerprint` and `fingerprintBytes`, or has malformed digest metadata | 422; do not compare or persist a partial fingerprint |
 | Fingerprint/read/matcher failure | omit the optional evidence or timeline candidate; do not block Baidu playback |
 | Proposal submitted from a Baidu match | persist sanitized pending proposal only; global matching changes only after Komon approval |
 
@@ -151,7 +161,8 @@
   dlinks, extension handles, and encryption envelopes.
 - Danmaku matching tests must assert exact Komon reuse, high-score confirmation,
   shared episode track with per-release alignment, bounded fingerprint
-  handoff, safe proposal output, and unchanged playback on matcher failure.
+  handoff, candidate-route fingerprint reuse, safe proposal output, and
+  unchanged playback on matcher failure.
 - Fixture tests are not installed-browser evidence. Installed Firefox is the
   real-account reference gate for this delivery. Chromium's shared contracts,
   manifest checks, and builds do not establish installed production support;

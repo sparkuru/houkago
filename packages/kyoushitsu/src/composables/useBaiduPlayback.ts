@@ -6,8 +6,15 @@ import {
 import { detectAndPairBaiduAdapter } from "@/composables/baidu-adapter"
 import { shouldPollPendingBaiduGrant } from "@/lib/baidu-grant-polling"
 import { type BaiduClientState, baiduProvider, isMobileBaiduClient } from "@/lib/baidu-provider"
-import { houkagoAdapter } from "@/lib/houkago-adapter"
-import type { BaiduPlaybackGrant, BaiduSourceAvailability, Enmoku } from "houkago-kousoku"
+import { adapterCapabilityReady, houkagoAdapter } from "@/lib/houkago-adapter"
+import type {
+  AdapterHello,
+  BaiduMediaFingerprint,
+  BaiduPlaybackGrant,
+  BaiduSourceAvailability,
+  Enmoku,
+} from "houkago-kousoku"
+import { BAIDU_MEDIA_FINGERPRINT_CAPABILITY } from "houkago-kousoku"
 import { onBeforeUnmount, ref } from "vue"
 
 export type BaiduPlaybackState =
@@ -28,12 +35,15 @@ export function useBaiduPlayback(bushitsuId: string) {
   const state = ref<BaiduPlaybackState>("idle")
   const preparedGrantUrl = ref("")
   const clientState = ref<BaiduClientState>(mobileClient() ? "mobile" : "missing")
+  const adapterHello = ref<AdapterHello | null>(null)
   const availabilityBySourceId = ref<Record<string, BaiduSourceAvailability>>({})
+  const fingerprintsBySourceId = ref<Record<string, BaiduMediaFingerprint>>({})
   let preparation = 0
 
   async function checkAdapter(): Promise<BaiduClientState> {
     if (clientState.value === "mobile") return clientState.value
     const detection = await detectAndPairBaiduAdapter()
+    adapterHello.value = detection.hello
     clientState.value = detection.state
     return clientState.value
   }
@@ -46,6 +56,9 @@ export function useBaiduPlayback(bushitsuId: string) {
       state.value = "idle"
       return
     }
+    const fingerprints = { ...fingerprintsBySourceId.value }
+    delete fingerprints[provider.sourceId]
+    fingerprintsBySourceId.value = fingerprints
     if (clientState.value === "mobile") {
       state.value = "mobile"
       return
@@ -84,6 +97,43 @@ export function useBaiduPlayback(bushitsuId: string) {
         return
       }
       if (grant.state !== "ready") return
+
+      if (adapterCapabilityReady(adapterHello.value, BAIDU_MEDIA_FINGERPRINT_CAPABILITY)) {
+        try {
+          const fingerprint = await houkagoAdapter.fingerprintBaiduMedia(
+            provider.sourceId,
+            bushitsuId,
+            grant.grantUrl,
+            grant.expiresAt,
+          )
+          if (request !== preparation) return
+          fingerprintsBySourceId.value = {
+            ...fingerprintsBySourceId.value,
+            [provider.sourceId]: fingerprint,
+          }
+          preparedGrantUrl.value = grant.grantUrl
+          state.value = "ready"
+          return
+        } catch {
+          // The fingerprint is an optional hint. Request a fresh playback
+          // grant because a failed fingerprint attempt may have claimed this
+          // one before the bounded browser read failed.
+          const retryResponse = await createBaiduPlaybackGrant(provider.sourceId, bushitsuId)
+          const retryGrant = retryResponse.data
+          if (!retryGrant) {
+            state.value = "unavailable"
+            return
+          }
+          grant = await awaitReadyGrant(retryGrant, request)
+          if (request !== preparation || !grant) return
+          if (grant.state === "failed") {
+            state.value = "unavailable"
+            return
+          }
+          if (grant.state !== "ready") return
+        }
+      }
+
       await houkagoAdapter.prepareBaiduMedia(grant.grantUrl, grant.expiresAt)
       if (request !== preparation) return
       preparedGrantUrl.value = grant.grantUrl
@@ -138,7 +188,9 @@ export function useBaiduPlayback(bushitsuId: string) {
     state,
     preparedGrantUrl,
     clientState,
+    adapterHello,
     availabilityBySourceId,
+    fingerprintsBySourceId,
     checkAdapter,
     refreshAvailability,
     refreshAvailabilities,

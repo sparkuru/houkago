@@ -48,6 +48,7 @@ import {
   findDanmakuEpisode,
   findDanmakuRevision,
   findDanmakuTrack,
+  findEvidenceByDigest,
   findGlobalReleaseEpisodeMatch,
   findLatestValidDanmakuRevision,
   findMediaRelease,
@@ -68,6 +69,7 @@ import {
   listDanmakuRevisions,
   listDanmakuTracks,
   listEnmokuDanmakuDefaults,
+  listMediaReleaseEvidence,
   listReleaseEpisodeMatches,
   requireProposal,
   requireRevision,
@@ -144,11 +146,12 @@ export function resolveDanmakuCandidates(
   if (releaseId !== undefined && !release) {
     throw new DanmakuMatchInvalid("media release does not exist")
   }
+  const releaseEvidence = release ? listMediaReleaseEvidence(release.id) : []
   const matches = release
     ? visibleReleaseMatches(release.id, bushitsuId, enmokuId, actorSeitoId)
     : []
   const candidates = new Map<string, DanmakuCandidate>()
-  for (const match of matches) {
+  for (const match of [...matches, ...fingerprintEpisodeMatches(release?.id, releaseEvidence)]) {
     for (const track of listDanmakuTracks(match.episodeId)) {
       const candidate = candidateFromTrack(track, policy, match.evidence, release?.id)
       candidates.set(candidate.id, candidate)
@@ -207,6 +210,14 @@ export function resolveDanmakuCandidates(
     enmokuId,
     policy,
     candidates: orderedCandidates,
+    ...(release === null || release === undefined || releaseEvidence.length === 0
+      ? {}
+      : {
+          matchContext: {
+            releaseId: release.id,
+            evidence: releaseEvidence.slice(0, 32),
+          },
+        }),
     roomDefault,
   }
   if (!Value.Check(DanmakuCandidateResolutionSchema, result)) {
@@ -1208,6 +1219,64 @@ function visibleReleaseMatches(
       (match.enmokuId === undefined || match.enmokuId === enmokuId)
     )
   })
+}
+
+type FingerprintEpisodeMatch = {
+  episodeId: string
+  evidence: DanmakuEvidence[]
+}
+
+/**
+ * Reuse only an already-promoted global mapping from an exactly comparable
+ * release fingerprint. This is deliberately ephemeral: a candidate read may
+ * use trusted knowledge, but it never creates a new global association.
+ */
+function fingerprintEpisodeMatches(
+  releaseId: string | undefined,
+  releaseEvidence: readonly DanmakuEvidence[],
+): FingerprintEpisodeMatch[] {
+  if (!releaseId) return []
+  let matchedEpisodeId: string | null = null
+  let matchedEvidence: DanmakuEvidence[] = []
+  for (const evidence of releaseEvidence) {
+    if (evidence.kind !== "fingerprint") continue
+    const peers = findEvidenceByDigest(
+      evidence.digest.algorithm,
+      evidence.digest.scope,
+      evidence.digest.value,
+    ).filter(
+      (peer) =>
+        peer.releaseId !== releaseId &&
+        peer.evidence.kind === "fingerprint" &&
+        peer.evidence.digest.bytes === evidence.digest.bytes,
+    )
+    for (const peer of peers) {
+      const globalMatch = findGlobalReleaseEpisodeMatch(peer.releaseId)
+      if (!globalMatch) continue
+      if (matchedEpisodeId !== null && matchedEpisodeId !== globalMatch.episodeId) return []
+      matchedEpisodeId = globalMatch.episodeId
+      matchedEvidence = mergeEvidence(matchedEvidence, releaseEvidence, globalMatch.evidence, [
+        peer.evidence,
+      ])
+    }
+  }
+  return matchedEpisodeId === null
+    ? []
+    : [{ episodeId: matchedEpisodeId, evidence: matchedEvidence.slice(0, 32) }]
+}
+
+function mergeEvidence(...groups: readonly (readonly DanmakuEvidence[])[]): DanmakuEvidence[] {
+  const seen = new Set<string>()
+  const merged: DanmakuEvidence[] = []
+  for (const group of groups) {
+    for (const evidence of group) {
+      const key = JSON.stringify(evidence)
+      if (seen.has(key)) continue
+      seen.add(key)
+      merged.push(evidence)
+    }
+  }
+  return merged
 }
 
 function candidateFromTrack(
