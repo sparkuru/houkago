@@ -1943,3 +1943,25 @@ Implemented privacy-safe Baidu release danmaku matching with explainable weighte
 ### Status
 
 [OK] **Completed**
+
+
+## Session 64: Complete universal danmaku integration
+
+**Date**: 2026-08-29
+**Task**: Complete universal danmaku integration
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Completed the universal danmaku parent integration: added viewer-local manual episode search and correction, bounded Baidu fingerprint forwarding and trusted reuse, cross-provider Bilibili/Baidu coverage, and responsive browser evidence. Full tests, typecheck, lint, build, focused integration checks, Playwright, and diff checks passed; archived the parent task.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1964657` | (see git log) |
+
+### Status
+
+[OK] **Completed**
