@@ -88,12 +88,16 @@ watch(
 </script>
 
 <template>
-  <section class="enmoku-composer" :class="{ open }">
+  <section
+    class="enmoku-composer"
+    :class="{ open }"
+    :aria-busy="resolving || submitting ? 'true' : undefined"
+  >
     <div v-if="!open" class="composer-launchers">
       <button
         v-if="canPlaylist"
         type="button"
-        class="composer-launch"
+        class="composer-launch primary"
         :aria-expanded="open"
         @click="open = true"
       >
@@ -107,14 +111,19 @@ watch(
       >
         {{ t("baiduBrowse") }}
       </button>
-      <button type="button" class="composer-launch secondary" @click="manageBaiduConnection">
+      <button type="button" class="composer-launch quiet" @click="manageBaiduConnection">
         {{ t("baiduConnectionManager") }}
       </button>
     </div>
     <form v-else @submit.prevent="resolve" @keydown.esc.prevent="collapse">
       <div class="composer-head">
         <h4>{{ t("sourceAddHeading") }}</h4>
-        <button type="button" class="composer-close" :aria-label="t('sourceComposerCloseAria')" @click="close">
+        <button
+          type="button"
+          class="composer-close quiet"
+          :aria-label="t('sourceComposerCloseAria')"
+          @click="close"
+        >
           ×
         </button>
       </div>
@@ -149,17 +158,22 @@ watch(
         <small v-if="preview.provider">{{ t("sourceProviderPrefix") }} {{ preview.provider.kind }}</small>
       </section>
       <div class="composer-actions">
-        <button v-if="!preview" type="submit" :disabled="resolving || !sourceUrl.trim()">
+        <button
+          v-if="!preview"
+          type="submit"
+          class="primary"
+          :disabled="resolving || !sourceUrl.trim()"
+        >
           {{ resolving ? t("sourceResolving") : t("sourceResolve") }}
         </button>
         <template v-else>
-          <button type="button" :disabled="submitting" @click="queue">
+          <button type="button" class="primary" :disabled="submitting" @click="queue">
             {{ submitting ? t("sourceAdding") : t("sourceAddQueue") }}
           </button>
           <button type="button" class="secondary" :disabled="submitting" @click="queueAndJouei">
             {{ t("sourceAddAndSwitch") }}
           </button>
-          <button type="button" class="secondary" :disabled="submitting" @click="edit">
+          <button type="button" class="quiet" :disabled="submitting" @click="edit">
             {{ t("sourceEdit") }}
           </button>
         </template>
@@ -197,37 +211,41 @@ watch(
 <style scoped>
 .enmoku-composer {
   flex: none;
-  border-bottom: 1px solid var(--row-border);
+  min-width: 0;
+  border-bottom: 1px solid var(--room-composer-border);
 }
 .composer-launch,
 .composer-actions button,
 .composer-close {
-  min-height: 44px;
-  border: 1px solid var(--row-border);
-  border-radius: var(--radius-sm);
+  min-width: 44px;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
   color: var(--color-text);
-  background: var(--color-surface-muted);
+  background: var(--room-queue-control-surface);
+  border: 1px solid var(--room-composer-border);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 .composer-launch {
   flex: 1 1 180px;
-  color: var(--color-on-accent);
-  background: var(--color-accent);
 }
 .composer-launchers {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding: var(--space-2) 0;
-}
-.composer-launch.secondary {
-  color: var(--color-text);
-  background: var(--color-surface);
+  min-width: 0;
+  padding: var(--space-3);
 }
 form {
   display: grid;
-  gap: 10px;
-  padding: 12px;
-  background: var(--color-surface-muted);
+  min-width: 0;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--room-composer-surface);
 }
 .composer-head,
 .composer-actions,
@@ -239,6 +257,10 @@ form {
 .composer-head h4 {
   flex: 1;
   margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: var(--line-height-compact);
 }
 .composer-close {
   width: 44px;
@@ -247,73 +269,117 @@ form {
 }
 label {
   display: grid;
-  gap: 4px;
-  font-size: 13px;
+  min-width: 0;
+  gap: var(--space-1);
+  color: var(--color-text);
+  font-size: var(--type-label-size);
   font-weight: 600;
 }
 input {
   min-width: 0;
-  min-height: 44px;
-  padding: 0 10px;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
   color: var(--color-text);
-  background: var(--color-surface);
-  border: 1px solid var(--row-border);
+  background: var(--room-composer-field-surface);
+  border: 1px solid var(--room-composer-border);
   border-radius: var(--radius-sm);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 .composer-hint,
 .composer-error {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
 }
 .composer-hint {
   color: var(--color-text-muted);
 }
 .composer-error {
-  color: var(--danger-text);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-danger);
+  background: var(--room-queue-danger-surface);
+  border: 1px solid var(--room-queue-danger-border);
+  border-radius: var(--radius-sm);
 }
 .source-preview {
   flex-wrap: wrap;
-  padding: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--room-composer-preview-surface);
+  border: 1px solid var(--room-composer-border);
   border-radius: var(--radius-sm);
 }
 .source-preview strong {
+  min-width: 0;
   flex-basis: 100%;
+  overflow-wrap: anywhere;
 }
 .source-preview span {
-  font-size: 12px;
+  color: var(--color-accent-strong);
+  font-size: var(--type-label-size);
   font-weight: 700;
-  color: var(--color-accent);
 }
 .composer-actions {
   flex-wrap: wrap;
 }
 .composer-actions button {
   flex: 1 1 140px;
-  padding: 6px 10px;
 }
-.composer-actions .secondary {
+.primary:not(:disabled) {
+  color: var(--room-queue-primary-text);
+  background: var(--room-queue-primary-surface);
+  border-color: var(--room-queue-primary-surface);
+}
+.secondary {
+  background: var(--room-queue-control-surface);
+}
+.quiet {
   background: transparent;
 }
 button:not(:disabled):hover,
-button:not(:disabled):focus-visible,
 input:focus-visible {
-  border-color: var(--color-accent);
-  outline: 2px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
-  outline-offset: 1px;
+  background: var(--room-queue-control-hover);
+  border-color: var(--room-queue-current-border);
 }
-button:disabled {
+.primary:not(:disabled):hover {
+  background: var(--room-queue-primary-hover);
+  border-color: var(--room-queue-primary-hover);
+}
+input:focus-visible {
+  background: var(--room-composer-field-surface);
+}
+button:disabled,
+input:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.52;
 }
 @media (prefers-reduced-motion: no-preference) {
   .enmoku-composer.open form {
-    animation: composer-in 180ms ease-out;
+    animation: composer-in var(--duration-normal) var(--ease-standard);
   }
 }
 @keyframes composer-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 800px) and (orientation: portrait) {
+  .composer-launchers,
+  .composer-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .composer-launch,
+  .composer-actions button {
+    width: 100%;
+  }
 }
 </style>

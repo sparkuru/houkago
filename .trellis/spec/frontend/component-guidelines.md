@@ -118,15 +118,23 @@ const bushitsu = useBushitsuStore()
   helpers. Bilibili-specific rendering (provider mark, cover, owner, stats,
   external link) belongs in room/bangumi UI, while parsing/fetching those fields
   belongs in `eisha`.
-- 番組表 rows should keep a stable scan order: source mark, video title, current
-  status (`上映中`), provider info button, play, cancel play, delete. Cancel play
-  sends `JOUEI { enmokuId: null }`, is enabled only for the current item, and
-  should be represented as a room-level action rather than local-only UI state.
-  The list container may fill the panel height, but rows should be compact
-  fixed-height flex rows (currently 32px). Keep the title as the only flexible
-  middle cell, put status/info/play/cancel/delete inside a fixed right-side
-  action group, and avoid hidden placeholder cells; otherwise empty or malformed
-  titles can swallow the action area or make sparse queues look broken.
+- 番組表 rows should keep a stable scan order: source mark, video title, row
+  context (`上映中`, pending state, provider info), then play, cancel play,
+  delete, and owner-only move actions. Cancel play sends
+  `JOUEI { enmokuId: null }`, is enabled only for the current item, and should
+  be represented as a room-level action rather than local-only UI state. Keep
+  the title as the only flexible middle cell with `min-width: 0`, retain its
+  full value through the existing title affordance, and avoid hidden
+  placeholder cells. Queue actions are at least 44px high; the action group may
+  wrap on desktop and becomes a bounded two-column shelf in portrait rather
+  than shrinking or introducing horizontal scrolling. Eligibility still comes
+  from the existing queue helpers, and final row order/current state still
+  converges from the server-authoritative `BANGUMI` snapshot.
+- The URL source composer keeps local draft semantics: Escape collapses without
+  clearing the URL/title, while the explicit close action resets the draft and
+  preview. Resolve/add pending states expose `aria-busy` and disable competing
+  actions. Fields and actions remain at least 44px high, stack in portrait when
+  needed, and preserve the existing reduced-motion gate.
 - Keep player controls ordered by interaction frequency on the right side:
   source/quality selection, danmaku toggle, danmaku settings, cinema layout, web
   fullscreen, native fullscreen. Quality/source selection belongs as a visible

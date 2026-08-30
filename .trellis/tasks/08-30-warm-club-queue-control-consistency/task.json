@@ -1,0 +1,32 @@
+{
+  "id": "warm-club-queue-control-consistency",
+  "name": "warm-club-queue-control-consistency",
+  "title": "Warm Club queue and dense-control consistency",
+  "description": "Unify the Warm Club 2.0 queue and URL source-composer controls without changing room behavior.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "frontend",
+  "package": "houkago-kyoushitsu",
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-08-30",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-29-visual-experience-refresh",
+  "relatedFiles": [
+    "packages/kyoushitsu/src/views/BushitsuView.vue",
+    "packages/kyoushitsu/src/components/bangumi/EnmokuComposer.vue",
+    "packages/kyoushitsu/src/assets/theme.css",
+    "packages/kyoushitsu/e2e/desktop-room.spec.ts",
+    "packages/kyoushitsu/e2e/mobile-room.spec.ts"
+  ],
+  "notes": "Planning is intentionally limited to queue rows, queue feedback/actions, and the URL source composer; KengenPanel, ChatPanel, dialogs, and gates remain later slices unless the user expands scope.",
+  "meta": {}
+}

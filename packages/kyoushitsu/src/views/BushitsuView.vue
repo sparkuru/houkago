@@ -885,7 +885,10 @@ onBeforeUnmount(() => {
                 <span>{{ bushitsu.bangumi.length }}</span>
               </summary>
               <div class="bangumi-content">
-                <h3>{{ t("bangumiHeading") }}</h3>
+                <h3>
+                  <span>{{ t("bangumiHeading") }}</span>
+                  <span class="bangumi-count">{{ bushitsu.bangumi.length }}</span>
+                </h3>
                 <EnmokuComposer
                   :bushitsu-id="bushitsuId"
                   :can-playlist="bushitsu.canPlaylist"
@@ -894,8 +897,9 @@ onBeforeUnmount(() => {
                 <div v-if="bushitsu.isBuchou" class="bangumi-management">
                   <button
                     type="button"
-                    class="bangumi-action danger"
+                    class="bangumi-action destructive"
                     :disabled="!clearPendingEnabled || clearPendingRequest"
+                    :aria-busy="clearPendingRequest ? 'true' : undefined"
                     @click="openClearPendingDialog"
                   >
                     {{ t("clearPending") }}
@@ -904,90 +908,100 @@ onBeforeUnmount(() => {
                 <p v-if="queueManagementError" class="bangumi-feedback error" role="alert">
                   {{ queueManagementError }}
                 </p>
-                <p v-else-if="queueManagementSuccess" class="bangumi-feedback" role="status">
+                <p v-else-if="queueManagementSuccess" class="bangumi-feedback success" role="status">
                   {{ queueManagementSuccess }}
                 </p>
                 <ul>
-              <li
-                v-for="(e, index) in bushitsu.bangumi"
-                :key="e.id"
-                class="bangumi-row"
-                :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
-                :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
-              >
-                <span class="source-mark" :title="sourceBadgeTitle(e)">
-                  {{ sourceBadge(e) }}
-                </span>
-                <span class="bangumi-title">
-                  <span>{{ e.title || t("manualEnmokuTitle") }}</span>
-                  <small v-if="baiduQueueStatus(e)">{{ baiduQueueStatus(e) }}</small>
-                </span>
-                <span class="bangumi-meta">
-                  <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
-                    {{ t("joueiChuu") }}
-                  </span>
-                  <button
-                    v-if="bilibiliProvider(e)"
-                    type="button"
-                    class="provider-info-button"
-                    :aria-label="t('providerInfoAria')"
-                    @click="providerInfoEnmoku = e"
+                  <li
+                    v-for="(e, index) in bushitsu.bangumi"
+                    :key="e.id"
+                    class="bangumi-row"
+                    :class="{ current: isCurrentEnmoku(e.id, currentEnmokuId) }"
+                    :aria-current="isCurrentEnmoku(e.id, currentEnmokuId) ? 'true' : undefined"
+                    :aria-busy="movePendingId === e.id ? 'true' : undefined"
                   >
-                    i
-                  </button>
-                  <button
-                    v-if="bushitsu.canPlaylist"
-                    type="button"
-                    class="bangumi-action"
-                    :disabled="!canPlayEnmoku(e)"
-                    @click="playBangumi(e.id)"
-                  >
-                    {{ t("play") }}
-                  </button>
-                  <button
-                    v-if="bushitsu.canPlaylist"
-                    type="button"
-                    class="bangumi-action"
-                    :disabled="!canCancelBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
-                    @click="cancelBangumi(e.id)"
-                  >
-                    {{ t("cancelPlay") }}
-                  </button>
-                  <button
-                    v-if="bushitsu.canPlaylist"
-                    type="button"
-                    class="bangumi-action danger"
-                    :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
-                    @click="deleteBangumiEnmoku(e.id)"
-                  >
-                    {{ t("delete") }}
-                  </button>
-                  <button
-                    v-if="bushitsu.isBuchou"
-                    type="button"
-                    class="bangumi-action"
-                    :disabled="
-                      movePendingId !== null ||
-                      !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'up')
-                    "
-                    @click="moveBangumi(e.id, 'up', index)"
-                  >
-                    {{ t("moveUp") }}
-                  </button>
-                  <button
-                    v-if="bushitsu.isBuchou"
-                    type="button"
-                    class="bangumi-action"
-                    :disabled="
-                      movePendingId !== null ||
-                      !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'down')
-                    "
-                    @click="moveBangumi(e.id, 'down', index)"
-                  >
-                    {{ t("moveDown") }}
-                  </button>
-                </span>
-              </li>
+                    <span class="source-mark" :title="sourceBadgeTitle(e)">
+                      {{ sourceBadge(e) }}
+                    </span>
+                    <span class="bangumi-title">
+                      <span :title="e.title || t('manualEnmokuTitle')">
+                        {{ e.title || t("manualEnmokuTitle") }}
+                      </span>
+                      <small v-if="baiduQueueStatus(e)">{{ baiduQueueStatus(e) }}</small>
+                    </span>
+                    <span class="bangumi-meta">
+                      <span class="bangumi-row-context">
+                        <span v-if="isCurrentEnmoku(e.id, currentEnmokuId)" class="bangumi-status">
+                          {{ t("joueiChuu") }}
+                        </span>
+                        <span v-if="movePendingId === e.id" class="bangumi-pending" role="status">
+                          {{ t("authProcessing") }}
+                        </span>
+                        <button
+                          v-if="bilibiliProvider(e)"
+                          type="button"
+                          class="provider-info-button"
+                          :aria-label="t('providerInfoAria')"
+                          @click="providerInfoEnmoku = e"
+                        >
+                          i
+                        </button>
+                      </span>
+                      <span class="bangumi-actions">
+                        <button
+                          v-if="bushitsu.canPlaylist"
+                          type="button"
+                          class="bangumi-action primary"
+                          :disabled="!canPlayEnmoku(e)"
+                          @click="playBangumi(e.id)"
+                        >
+                          {{ t("play") }}
+                        </button>
+                        <button
+                          v-if="bushitsu.canPlaylist"
+                          type="button"
+                          class="bangumi-action secondary"
+                          :disabled="!canCancelBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
+                          @click="cancelBangumi(e.id)"
+                        >
+                          {{ t("cancelPlay") }}
+                        </button>
+                        <button
+                          v-if="bushitsu.canPlaylist"
+                          type="button"
+                          class="bangumi-action destructive"
+                          :disabled="!canDeleteBangumiItem(bushitsu.canPlaylist, e.id, currentEnmokuId)"
+                          @click="deleteBangumiEnmoku(e.id)"
+                        >
+                          {{ t("delete") }}
+                        </button>
+                        <button
+                          v-if="bushitsu.isBuchou"
+                          type="button"
+                          class="bangumi-action quiet"
+                          :disabled="
+                            movePendingId !== null ||
+                            !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'up')
+                          "
+                          @click="moveBangumi(e.id, 'up', index)"
+                        >
+                          {{ t("moveUp") }}
+                        </button>
+                        <button
+                          v-if="bushitsu.isBuchou"
+                          type="button"
+                          class="bangumi-action quiet"
+                          :disabled="
+                            movePendingId !== null ||
+                            !canMoveBangumiItem(bushitsu.isBuchou, index, bushitsu.bangumi.length, 'down')
+                          "
+                          @click="moveBangumi(e.id, 'down', index)"
+                        >
+                          {{ t("moveDown") }}
+                        </button>
+                      </span>
+                    </span>
+                  </li>
                 </ul>
               </div>
             </details>
@@ -1307,10 +1321,6 @@ onBeforeUnmount(() => {
 .room-control-panel,
 .bangumi {
   --surface-muted: var(--color-surface-muted);
-  --row-surface: var(--color-surface-raised);
-  --row-border: var(--color-border);
-  --row-current-border: var(--color-accent);
-  --row-current-surface: var(--color-surface-muted);
   --panel-accent: var(--color-accent);
   --danger-text: var(--color-danger);
   flex: 1 1 160px;
@@ -1349,6 +1359,26 @@ onBeforeUnmount(() => {
   background: var(--room-panel-raised-surface);
   border-bottom: 1px solid var(--room-panel-border);
 }
+.bangumi-content h3 {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+.bangumi-count {
+  display: inline-grid;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  place-items: center;
+  color: var(--color-accent-strong);
+  font-family: var(--font-body);
+  font-size: var(--type-label-size);
+  font-variant-numeric: tabular-nums;
+  background: var(--room-queue-current-surface);
+  border: 1px solid var(--room-queue-current-border);
+  border-radius: 999px;
+}
 .room-control-content :deep(.kengen-panel) {
   --kengen-muted: var(--color-text-muted);
   --kengen-text: var(--color-text);
@@ -1384,33 +1414,48 @@ onBeforeUnmount(() => {
 .bangumi-management {
   display: flex;
   justify-content: flex-end;
-  padding: 8px 8px 0;
+  padding: var(--space-2) var(--space-3) 0;
 }
 .bangumi-feedback {
-  margin: 8px;
+  margin: var(--space-2) var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
+  background: var(--room-queue-feedback-surface);
+  border: 1px solid var(--room-queue-row-border);
+  border-radius: var(--radius-sm);
+}
+.bangumi-feedback.success {
+  color: var(--color-accent-strong);
+  border-color: var(--room-queue-current-border);
 }
 .bangumi-feedback.error {
-  color: var(--danger-text);
+  color: var(--color-danger);
+  background: var(--room-queue-danger-surface);
+  border-color: var(--room-queue-danger-border);
 }
 .bangumi-row {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
   align-items: center;
-  min-height: 44px;
-  padding: 4px 6px;
+  min-height: var(--control-height);
+  padding: var(--space-2);
   overflow: visible;
-  border: 1px solid var(--row-border);
-  border-radius: 6px;
-  background: var(--row-surface);
+  border: 1px solid var(--room-queue-row-border);
+  border-radius: var(--radius-sm);
+  background: var(--room-queue-row-surface);
 }
 .bangumi-row + .bangumi-row {
-  margin-top: 6px;
+  margin-top: var(--space-2);
 }
 .bangumi-row.current {
-  border-color: var(--row-current-border);
-  background: var(--row-current-surface);
+  border-color: var(--room-queue-current-border);
+  background: var(--room-queue-current-surface);
+  box-shadow: inset 3px 0 0 var(--room-queue-current-border);
+}
+.bangumi-row[aria-busy="true"] {
+  border-style: dashed;
 }
 .bangumi-title {
   flex: 1 1 auto;
@@ -1431,66 +1476,123 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 .bangumi-meta {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: inline-flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
+}
+.bangumi-row-context {
+  display: inline-flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+  justify-content: flex-end;
 }
 .source-mark {
   flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 16px;
-  padding: 0 4px;
-  font-size: 12px;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 var(--space-1);
+  color: var(--color-accent-strong);
+  font-size: var(--type-label-size);
   font-weight: 700;
   line-height: 1;
-  color: var(--color-provider-on-brand);
-  background: var(--color-provider-brand);
-  border-radius: 4px;
+  background: var(--room-queue-current-surface);
+  border: 1px solid var(--room-queue-row-border);
+  border-radius: var(--radius-sm);
 }
 .provider-info-button {
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: var(--control-height);
+  height: var(--control-height);
   padding: 0;
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
-  color: var(--panel-accent);
-  background: transparent;
-  border: 1px solid var(--row-border);
+  color: var(--color-accent-strong);
+  background: var(--room-queue-control-surface);
+  border: 1px solid var(--room-queue-row-border);
   border-radius: 999px;
 }
-.bangumi-status {
+.bangumi-status,
+.bangumi-pending {
   flex: 0 0 auto;
-  min-width: 44px;
-  font-size: 12px;
-  color: var(--panel-accent);
+  min-height: 28px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-accent-strong);
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
+  background: var(--room-queue-current-surface);
+  border: 1px solid var(--room-queue-current-border);
+  border-radius: 999px;
+}
+.bangumi-pending {
+  color: var(--color-text-muted);
+  background: var(--room-queue-feedback-surface);
+  border-color: var(--room-queue-row-border);
 }
 .bangumi-actions {
   display: flex;
-  gap: 6px;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
 .bangumi-action {
   flex: 0 0 auto;
   min-width: 44px;
-  min-height: 44px;
-  padding: 2px 7px;
-  border: 1px solid var(--row-border);
-  border-radius: 4px;
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
+  color: var(--color-text);
+  background: var(--room-queue-control-surface);
+  border: 1px solid var(--room-queue-row-border);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+.bangumi-action.primary:not(:disabled) {
+  color: var(--room-queue-primary-text);
+  background: var(--room-queue-primary-surface);
+  border-color: var(--room-queue-primary-surface);
+}
+.bangumi-action.destructive {
+  margin-inline: var(--space-1);
+}
+.bangumi-action.destructive:not(:disabled) {
+  color: var(--color-danger);
+  background: var(--room-queue-danger-surface);
+  border-color: var(--room-queue-danger-border);
+}
+.bangumi-action.quiet {
   background: transparent;
 }
-.bangumi-action:not(:disabled):hover,
-.bangumi-action:not(:disabled):focus-visible {
-  border-color: var(--panel-accent);
+.bangumi-action:not(:disabled):hover {
+  background: var(--room-queue-control-hover);
+  border-color: var(--room-queue-current-border);
 }
-.bangumi-action.danger:not(:disabled) {
-  color: var(--danger-text);
+.bangumi-action.primary:not(:disabled):hover {
+  background: var(--room-queue-primary-hover);
+  border-color: var(--room-queue-primary-hover);
+}
+.bangumi-action.destructive:not(:disabled):hover {
+  background: var(--color-danger-surface);
+  border-color: var(--color-danger);
+}
+.bangumi-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
 }
 .queue-confirm-dialog {
   width: min(420px, calc(100% - 32px));
@@ -1812,11 +1914,30 @@ onBeforeUnmount(() => {
   }
   .bangumi-row {
     flex-wrap: wrap;
+    align-items: flex-start;
   }
   .bangumi-meta {
     flex-basis: 100%;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: flex-start;
+  }
+  .bangumi-row-context {
+    justify-content: flex-start;
+  }
+  .bangumi-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bangumi-action {
+    width: 100%;
+  }
+  .bangumi-action.destructive {
+    margin-inline: 0;
+  }
+  .bangumi-management .bangumi-action {
+    width: 100%;
   }
   .room-control-content :deep(.kengen-panel) {
     max-height: min(58dvh, 520px);
@@ -1824,6 +1945,7 @@ onBeforeUnmount(() => {
   }
   .bangumi-content ul {
     max-height: min(48dvh, 360px);
+    padding: var(--space-2);
   }
   .mobile-chat-sheet[open] {
     position: fixed;

@@ -111,6 +111,12 @@ Run the Kyoushitsu unit suite, typecheck, lint, build, and the applicable
 Playwright projects before commit. Screenshots are review evidence rather than
 pixel baselines.
 
+Browser fixtures that seed protected room data through the backend must first
+observe an admitted-room UI state, such as the visible Bangumi disclosure. A
+route change to `/bushitsu/:id` is not an admission barrier; seeding immediately
+after navigation can race the WebSocket admission handshake and correctly
+receive `403 room admission is required`.
+
 ---
 
 ## Common Mistakes

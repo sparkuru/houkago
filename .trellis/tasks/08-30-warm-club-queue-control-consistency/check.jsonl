@@ -1,0 +1,9 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Resolve the active frontend quality and component contracts for review."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Verify room scroll ownership, player-first hierarchy, token use, 44px controls, focus, and viewport bounds."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Verify no optimistic queue mutation, duplicated authority, store drift, or API/WS ownership change entered the presentation slice."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check Vue/CSS conventions, repository commands, and desktop/portrait scroll contracts."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Apply the exact Playwright, screenshot, failure-artifact, and human-review policies."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check for duplicated aliases, state recipes, and unnecessary helpers after implementation."}
+{"file":".trellis/tasks/08-30-warm-club-queue-control-consistency/research/queue-control-design-guidance.md","reason":"Review queue/composer state clarity, destructive separation, touch spacing, responsive behavior, and rejected scope."}
+{"file":".trellis/tasks/08-30-warm-club-queue-control-consistency/research/code-boundary-and-validation.md","reason":"Review the exact five-file scope, unchanged regression files, dense-queue coverage gap, and rollback guards."}
+{"file":".trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Confirm the visual slice remains compatible with the accepted room-shell hierarchy."}

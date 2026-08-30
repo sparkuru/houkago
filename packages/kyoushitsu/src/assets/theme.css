@@ -193,6 +193,24 @@
   --room-panel-radius: var(--radius-md);
   --room-chat-width: clamp(288px, 24vw, 360px);
   --room-status-accent: var(--color-accent);
+
+  /* Component layer: dense queue and source-composer recipes. */
+  --room-queue-row-surface: var(--room-panel-raised-surface);
+  --room-queue-row-border: var(--room-panel-border);
+  --room-queue-current-surface: var(--room-panel-muted-surface);
+  --room-queue-current-border: var(--room-status-accent);
+  --room-queue-control-surface: var(--room-panel-raised-surface);
+  --room-queue-control-hover: var(--color-interactive-subtle);
+  --room-queue-primary-surface: var(--color-accent);
+  --room-queue-primary-hover: var(--color-accent-strong);
+  --room-queue-primary-text: var(--color-on-accent);
+  --room-queue-danger-surface: var(--color-danger-subtle);
+  --room-queue-danger-border: var(--color-danger-border);
+  --room-queue-feedback-surface: var(--room-panel-muted-surface);
+  --room-composer-surface: var(--room-panel-muted-surface);
+  --room-composer-field-surface: var(--room-panel-raised-surface);
+  --room-composer-preview-surface: var(--room-panel-surface);
+  --room-composer-border: var(--room-panel-border);
 }
 
 html {

@@ -1,0 +1,9 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Route implementation through the active Kyoushitsu frontend contracts."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Preserve the room-shell layout, token, accessibility, cinema, and responsive ownership rules."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Keep BANGUMI as the server-authoritative full snapshot and all presentation state local to the owning component."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Follow the repository ./dx workflow and preserve fixed-desktop versus portrait scroll ownership."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Use the project Playwright profile, diagnostic screenshot policy, and submit-ready human visual review gate."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Search existing queue/composer aliases and patterns before adding component recipes or helpers."}
+{"file":".trellis/tasks/08-30-warm-club-queue-control-consistency/research/queue-control-design-guidance.md","reason":"Apply the approved queue/composer anatomy, state priority, touch, feedback, and responsive guidance while rejecting out-of-scope generated styling."}
+{"file":".trellis/tasks/08-30-warm-club-queue-control-consistency/research/code-boundary-and-validation.md","reason":"Use the independently verified five-file boundary, exact existing state contracts, focused coverage gaps, validation commands, and rollback risks."}
+{"file":".trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Keep the queue and composer subordinate to the completed player-first Warm Club room hierarchy."}

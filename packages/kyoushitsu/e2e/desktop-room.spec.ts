@@ -191,6 +191,93 @@ test("a tall desktop viewport keeps the room workbench content-sized", async ({
   await expect(workbench).toHaveCSS("flex-shrink", "0")
 })
 
+test("desktop queue presents current, pending, disabled, and action hierarchy states", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-tall", "desktop queue evidence")
+  await createRoom(page, "queue_hierarchy_desktop")
+  const titles = ["第一部 · 直接来源", "第二部 · 等待操作", "第三部 · 最后一项"]
+  for (const title of titles) await addRoomSource(page, title)
+  await page.reload()
+
+  const rows = page.locator(".bangumi-row")
+  await expect(rows).toHaveCount(3)
+  await expect(page.locator(".bangumi-count")).toHaveText("3")
+  await expect(rows.first().getByRole("button", { name: "上移" })).toBeDisabled()
+  await expect(rows.last().getByRole("button", { name: "下移" })).toBeDisabled()
+
+  const targetRow = page.locator(".bangumi-row", { hasText: titles[1] })
+  const play = targetRow.getByRole("button", { name: "播放", exact: true })
+  await expect(play).toHaveClass(/primary/)
+  await expect(targetRow.getByRole("button", { name: "取消播放" })).toHaveClass(/secondary/)
+  await expect(targetRow.getByRole("button", { name: "删除" })).toHaveClass(/destructive/)
+  await expect(targetRow.getByRole("button", { name: "上移" })).toHaveClass(/quiet/)
+  await play.focus()
+  await expect(play).toHaveCSS("outline-width", "3px")
+  await play.click()
+  await expect(targetRow).toHaveAttribute("aria-current", "true")
+  await expect(targetRow.getByText("上映中", { exact: true })).toBeVisible()
+
+  const movePattern = "**/bangumi/*/move"
+  let releaseMove: (() => void) | undefined
+  await page.route(movePattern, async (route) => {
+    await new Promise<void>((resolve) => {
+      releaseMove = resolve
+    })
+    await route.continue()
+  })
+  await targetRow.getByRole("button", { name: "上移" }).click()
+  await expect.poll(() => Boolean(releaseMove)).toBe(true)
+  await expect(targetRow).toHaveAttribute("aria-busy", "true")
+  await expect(targetRow.getByText("处理中…", { exact: true })).toBeVisible()
+  const moveButtons = page.getByRole("button", { name: /^(上移|下移)$/ })
+  for (let index = 0; index < (await moveButtons.count()); index += 1) {
+    await expect(moveButtons.nth(index)).toBeDisabled()
+  }
+  releaseMove?.()
+  await expect(page.locator(".bangumi-feedback[role='status']")).toHaveText("队列已更新。")
+
+  await page.unroute(movePattern)
+  await page.route(movePattern, (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "fixture failure" }),
+    }),
+  )
+  const movedRow = page.locator(".bangumi-row", { hasText: titles[1] })
+  await movedRow.getByRole("button", { name: "下移" }).click()
+  await expect(page.locator(".bangumi-content > .bangumi-feedback[role='alert']")).toHaveText(
+    "队列操作失败，请稍后重试。",
+  )
+
+  const geometry = await page.locator(".bangumi").evaluate((element) => ({
+    buttons: Array.from(element.querySelectorAll<HTMLButtonElement>(".bangumi-action")).map(
+      (button) => {
+        const box = button.getBoundingClientRect()
+        return {
+          height: box.height,
+          left: box.left,
+          minHeight: getComputedStyle(button).minHeight,
+          right: box.right,
+        }
+      },
+    ),
+    scrollWidth: document.documentElement.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }))
+  expect(geometry.buttons.every((button) => button.minHeight === "44px")).toBe(true)
+  expect(geometry.buttons.every((button) => button.height >= 43.5)).toBe(true)
+  expect(
+    geometry.buttons.every((button) => button.left >= 0 && button.right <= geometry.viewportWidth),
+  ).toBe(true)
+  expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.viewportWidth)
+  await page.screenshot({
+    path: testInfo.outputPath("queue-composer-desktop.png"),
+    fullPage: false,
+  })
+})
+
 test("the desktop room shell keeps the media stage primary and surfaces bounded", async ({
   page,
 }, testInfo) => {
