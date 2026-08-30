@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 66
-- **Last Active**: 2026-08-30
+- **Total Sessions**: 67
+- **Last Active**: 2026-08-31
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~29 | Active |
+| `journal-2.md` | ~51 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 67 | 2026-08-31 | Warm Club queue control consistency | `1bb23a6` | `k-on` |
 | 66 | 2026-08-30 | Warm Club 2.0 room shell | `ea61fb0` | `k-on` |
 | 65 | 2026-08-30 | Warm Club 2.0 foundation and configurable entry | `1b4ccd8` | `k-on` |
 | 64 | 2026-08-29 | Complete universal danmaku integration | `1964657` | `k-on` |
