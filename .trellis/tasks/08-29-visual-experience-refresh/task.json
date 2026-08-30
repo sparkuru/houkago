@@ -19,10 +19,11 @@
   "pr_url": null,
   "subtasks": [],
   "children": [
-    "08-29-warm-club-foundation-entry"
+    "08-29-warm-club-foundation-entry",
+    "08-30-warm-club-visual-followup"
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "The user paused the mobile provider companion and selected project-wide visual polish as the next mainline direction on 2026-08-29. Warm Club 2.0 and the first foundation/entry child are approved; the child is implemented and awaiting its subjective visual review, while later parent slices remain unauthorized.",
+  "notes": "The user paused the mobile provider companion and selected project-wide visual polish as the next mainline direction on 2026-08-29. Warm Club 2.0 and the first foundation/entry child are approved and archived. The room-shell/media/workbench hierarchy follow-up is now authorized for planning; dense queue-control and dialog/chat polish remain later slices.",
   "meta": {}
 }

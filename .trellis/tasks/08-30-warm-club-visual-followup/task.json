@@ -1,0 +1,33 @@
+{
+  "id": "warm-club-visual-followup",
+  "name": "warm-club-visual-followup",
+  "title": "Warm Club 2.0 visual follow-up",
+  "description": "Apply Warm Club 2.0 hierarchy to the shared room shell, media stage, chat rail, and workbench without changing room behavior.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "frontend",
+  "package": "houkago-kyoushitsu",
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-08-30",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-29-visual-experience-refresh",
+  "relatedFiles": [
+    "packages/kyoushitsu/src/views/BushitsuView.vue",
+    "packages/kyoushitsu/src/components/chat/ChatPanel.vue",
+    "packages/kyoushitsu/src/assets/theme.css",
+    "packages/kyoushitsu/src/composables/use-room-motion.ts",
+    "packages/kyoushitsu/e2e/desktop-room.spec.ts",
+    "packages/kyoushitsu/e2e/mobile-room.spec.ts"
+  ],
+  "notes": "",
+  "meta": {}
+}

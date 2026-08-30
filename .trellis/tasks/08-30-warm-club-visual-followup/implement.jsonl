@@ -1,0 +1,8 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Package-scoped frontend entry point for the room-shell implementation."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Preserves server-authoritative room truth and keeps shell layout state local to BushitsuView."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Defines fixed desktop viewport, intentional stage scrolling, portrait player sizing, token usage, and frontend validation rules."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Defines the project Playwright profiles, responsive/accessibility checks, visual evidence policy, and human-review gate."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Requires search-first reuse of existing room tokens, motion presets, and component recipes."}
+{"file":".trellis/tasks/08-29-visual-experience-refresh/prd.md","reason":"Parent-approved Warm Club 2.0 direction, child sequencing, and room-shell acceptance boundary."}
+{"file":".trellis/tasks/archive/2026-08/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Records the approved quiet, asset-light Warm Club visual language inherited by this child."}
+{"file":".trellis/tasks/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Captures current room composition evidence and reconciles UI/UX search output with product constraints."}

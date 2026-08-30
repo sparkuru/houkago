@@ -32,13 +32,15 @@
   that its fixed identity become a strict public `config/config.toml` surface,
   defaulting to `社团活动室`; secrets and operational values remain in `.env`.
   Firefly is the contract reference, adapted to Houkago through Housou runtime
-  projection rather than Astro build-time embedding.
+  projection rather than Astro build-time embedding. 2026-08-30 — the user
+  authorized planning the room-shell/media/workbench hierarchy follow-up while
+  keeping dense queue controls and dialog/chat content polish as later slices.
 
 ## Continuation
 
 - mode: guided
 - serial authorization: none
-- next pulse: no-task (including after archive or a project-relevant user request)
+- next pulse: commit-plan review for `.trellis/tasks/08-30-warm-club-visual-followup`
 
 ## Ordered Work
 
@@ -52,8 +54,8 @@
 | 6 | `.trellis/tasks/archive/2026-08/08-07-baidu-netdisk-adaptor` | complete | Direct official OAuth, both retention modes, read-only browsing, token-free grants, Firefox real-account/reference evidence, and shared Firefox/Chromium automated builds are complete and archived. |
 | 7 | `.trellis/tasks/archive/2026-08/08-08-chromium-baidu-adaptor` | complete | Chromium MV3 session-registry/DNR hardening delivered in `e211897`; final archived evidence records the 302-test full suite, installed Google Chrome and Microsoft Edge gates, and the controlled Playwright pass. |
 | 8 | `.trellis/tasks/archive/2026-08/08-27-universal-danmaku-resolution` | complete | Parent integration completed manual episode search/correction, bounded Baidu fingerprint candidate reuse, Bilibili-plus-Baidu convergence, and responsive browser evidence; child dependencies are archived and the final validation record is ready for finish-work archival. |
-| 9 | `.trellis/tasks/08-29-warm-club-foundation-entry` | in progress | The Warm Club entry and its approved strict public TOML revision are implemented across Kousoku, Housou, and Kyoushitsu; automated verification passed, while configured-identity review and the submit-ready workflow remain. |
-| 10 | Room shell and media/workbench hierarchy | proposed | Follows the accepted token/entry foundation; no implementation start is authorized yet. |
+| 9 | `.trellis/tasks/archive/2026-08/08-29-warm-club-foundation-entry` | complete | Warm Club entry, strict public TOML identity, automated verification, focused screenshot review, spec sync, work commit `1b4ccd8`, archive commit `237f105`, and journal commit `09ed698` are complete. |
+| 10 | `.trellis/tasks/08-30-warm-club-visual-followup` | in progress | Room shell/media/workbench implementation, focused checks, screenshot review, and Kyoushitsu spec sync are complete; the exact Phase 3.4 work commit is awaiting one-shot user confirmation. |
 | 11 | Queue and dense-control consistency | proposed | Depends on the shared component/state language and room-shell hierarchy. |
 | 12 | Dialog, gate, chat-sheet, and cinema-state polish | proposed | Final surface convergence and parent integration boundary after preceding slices. |
 | 13 | Houkago mobile provider companion | paused | Explicitly deferred by the user on 2026-08-29; it is not part of the current visual initiative. |
@@ -71,11 +73,11 @@
   Chromium artifact. Browser-compatible sources pass both retention modes;
   source/container/codec-dependent failures are recorded as the native media
   compatibility boundary.
-- current blocker / dirty-state warning: the active visual child has uncommitted
-  product and task changes. Its original implementation passed automated and
-  human visual gates; the subsequently approved public TOML revision passed
-  automated verification and awaits its focused screenshot review.
-- next permitted action: complete the configured-identity visual review, update
-  durable specs, and prepare the active child's explicit Phase 3.4 commit plan.
-  No later visual child is authorized. Mobile provider playback remains
-  deferred.
+- current execution state: the entry foundation child is archived and the room
+  shell follow-up is implemented under its approved shell/media/workbench
+  boundary. Focused unit/browser gates passed, the full-suite baseline failures
+  are recorded, the human visual review is approved, and the room-shell
+  component contract is synchronized into the Kyoushitsu spec.
+- next permitted action: present the exact Phase 3.4 work-commit plan and wait
+  for one-shot confirmation before staging/committing. Mobile provider
+  playback remains deferred.

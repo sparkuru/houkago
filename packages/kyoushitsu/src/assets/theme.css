@@ -161,6 +161,38 @@
   --entry-button-quiet-hover: var(--color-interactive-subtle);
   --entry-notice-danger-surface: var(--color-danger-subtle);
   --entry-notice-danger-border: var(--color-danger-border);
+
+  /* Component layer: quiet room-shell recipes derived from semantic values. */
+  --room-canvas-background: linear-gradient(
+    135deg,
+    var(--color-canvas-glow) 0%,
+    var(--color-canvas) 44%,
+    color-mix(in srgb, var(--color-canvas) 88%, var(--color-surface-muted)) 100%
+  );
+  --room-stage-surface: color-mix(in srgb, var(--color-canvas) 82%, var(--color-surface));
+  --room-stage-gutter: clamp(var(--space-3), 1.8vw, var(--space-5));
+  --room-section-gap: clamp(var(--space-2), 1.2vw, var(--space-3));
+  --room-media-radius: var(--radius-md);
+  --room-media-border: color-mix(
+    in srgb,
+    var(--color-border-strong) 56%,
+    var(--color-media-surface)
+  );
+  --room-media-elevation: var(--elevation-panel);
+  --room-panel-surface: var(--color-surface);
+  --room-panel-raised-surface: var(--color-surface-raised);
+  --room-panel-muted-surface: color-mix(
+    in srgb,
+    var(--color-surface) 78%,
+    var(--color-surface-muted)
+  );
+  --room-panel-border: var(--color-border);
+  --room-panel-border-strong: var(--color-border-strong);
+  --room-panel-elevation: var(--elevation-panel);
+  --room-floating-elevation: var(--elevation-floating);
+  --room-panel-radius: var(--radius-md);
+  --room-chat-width: clamp(288px, 24vw, 360px);
+  --room-status-accent: var(--color-accent);
 }
 
 html {

@@ -20,6 +20,27 @@ async function createRoom(page: Page, accountSuffix: string): Promise<void> {
   await expect(page).toHaveURL(/\/bushitsu\//)
 }
 
+async function addRoomSource(page: Page, title: string): Promise<void> {
+  const result = await page.evaluate(
+    async ({ sourceTitle }) => {
+      const roomId = new URL(location.href).pathname.split("/").at(-1)
+      const response = await fetch(`http://${location.hostname}:3000/bushitsu/${roomId}/enmoku`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: sourceTitle,
+          type: "direct",
+          url: "https://media.example.test/room-shell.mp4",
+        }),
+      })
+      return { body: await response.json(), status: response.status }
+    },
+    { sourceTitle: title },
+  )
+  expect(result.status).toBe(200)
+}
+
 async function installReadyAdapter(page: Page): Promise<void> {
   await page.route("**/baidu/adaptor/pairing", async (route) => {
     expect(route.request().postDataJSON()).toEqual({
@@ -168,6 +189,105 @@ test("a tall desktop viewport keeps the room workbench content-sized", async ({
   const workbench = page.locator(".room-workbench")
   await expect(workbench).toHaveCSS("flex-grow", "0")
   await expect(workbench).toHaveCSS("flex-shrink", "0")
+})
+
+test("the desktop room shell keeps the media stage primary and surfaces bounded", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-tall", "desktop shell evidence")
+  await createRoom(page, "room_shell_desktop")
+
+  const stage = page.locator(".stage")
+  const playerWrap = page.locator(".player-wrap, .placeholder").first()
+  const workbench = page.locator(".room-workbench")
+  const chat = page.locator(".bushitsu > .chat-panel")
+  await expect(playerWrap).toBeVisible()
+  await expect(workbench).toBeVisible()
+  await expect(chat).toBeVisible()
+  await expect(stage).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
+  await expect(playerWrap).toHaveCSS("border-radius", "14px")
+  await expect(workbench).toHaveCSS("gap", "12px")
+
+  const layout = await page.evaluate(() => {
+    const selectors = [
+      ".stage",
+      ".player-wrap, .placeholder",
+      ".room-workbench",
+      ".bushitsu > .chat-panel",
+    ]
+    const boxes = Object.fromEntries(
+      selectors.map((selector) => {
+        const element = document.querySelector(selector)
+        const box = element?.getBoundingClientRect()
+        return [
+          selector,
+          box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom } : null,
+        ]
+      }),
+    )
+    return {
+      boxes,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      scrollWidth: document.documentElement.scrollWidth,
+    }
+  })
+  const playerBox = layout.boxes[".player-wrap, .placeholder"]
+  const stageBox = layout.boxes[".stage"]
+  const workbenchBox = layout.boxes[".room-workbench"]
+  const chatBox = layout.boxes[".bushitsu > .chat-panel"]
+  expect(playerBox).not.toBeNull()
+  expect(stageBox).not.toBeNull()
+  expect(workbenchBox).not.toBeNull()
+  expect(chatBox).not.toBeNull()
+  expect(playerBox?.right).toBeLessThanOrEqual(workbenchBox?.right ?? 0)
+  expect(workbenchBox?.right).toBeLessThanOrEqual(stageBox?.right ?? 0)
+  expect(chatBox?.left).toBeGreaterThanOrEqual(stageBox?.right ?? 0)
+  expect(chatBox?.bottom).toBeLessThanOrEqual(layout.viewport.height)
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewport.width)
+
+  await page.screenshot({ path: testInfo.outputPath("room-shell-desktop.png"), fullPage: false })
+})
+
+test("cinema mode keeps the player and desktop chat rail visible", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-tall", "cinema mode coverage")
+  await createRoom(page, "room_shell_cinema")
+  const title = `cinema_${Date.now()}`
+  await addRoomSource(page, title)
+  await page.reload()
+
+  const row = page.locator(".bangumi-row", { hasText: title })
+  await expect(row).toBeVisible()
+  await row.getByRole("button", { name: "播放", exact: true }).click()
+  await expect(page.locator(".enmoku-player")).toBeVisible()
+
+  const cinemaControl = page.locator(".art-control-houkagoCinema")
+  await expect(cinemaControl).toBeVisible()
+  await cinemaControl.click()
+  await expect(page.locator(".bushitsu")).toHaveClass(/cinema-mode/)
+  await expect(page.locator(".media-toolbar")).toBeHidden()
+  await expect(page.locator(".room-workbench")).toBeHidden()
+  await expect(page.locator(".timeline-danmaku-source")).toBeHidden()
+  await expect(page.locator(".bushitsu > .chat-panel")).toBeVisible()
+  await expect(page.locator(".mobile-chat-launcher")).toBeHidden()
+
+  const cinemaLayout = await page.evaluate(() => {
+    const stage = document.querySelector(".stage")?.getBoundingClientRect()
+    const player = document.querySelector(".player-wrap")?.getBoundingClientRect()
+    return {
+      stage,
+      player,
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }
+  })
+  expect(cinemaLayout.player?.width).toBeGreaterThan(0)
+  expect(cinemaLayout.player?.width).toBeLessThanOrEqual(cinemaLayout.stage?.width ?? 0)
+  expect(cinemaLayout.scrollWidth).toBeLessThanOrEqual(cinemaLayout.viewportWidth)
+  await page.screenshot({ path: testInfo.outputPath("room-shell-cinema.png"), fullPage: false })
+
+  await cinemaControl.click()
+  await expect(page.locator(".room-workbench")).toBeVisible()
+  await expect(page.locator(".bushitsu > .chat-panel")).toBeVisible()
 })
 
 test("Baidu connection uses an unselected, keyboard-operable retention step", async ({

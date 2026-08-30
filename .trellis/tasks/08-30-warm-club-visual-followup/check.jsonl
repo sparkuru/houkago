@@ -1,0 +1,8 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Check the room-shell change against the package frontend contract."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Verify no layout polish changes server-authoritative room state or promotes transient UI state."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check viewport, scroll ownership, token, accessibility, and test expectations."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Run the prescribed room browser projects, responsive bounds, visual evidence, and human-review classification."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check that existing shell tokens, motion lifecycle, and component behavior are reused rather than duplicated."}
+{"file":".trellis/tasks/08-29-visual-experience-refresh/prd.md","reason":"Verify the child remains within the parent room-shell/media/workbench slice and preserves out-of-scope behavior."}
+{"file":".trellis/tasks/archive/2026-08/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Verify visual review against the approved quiet, asset-light Warm Club direction."}
+{"file":".trellis/tasks/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Check repository evidence and rejected raw UI/UX recommendations before accepting visual changes."}

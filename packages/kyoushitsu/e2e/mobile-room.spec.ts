@@ -16,6 +16,40 @@ async function createRoom(page: Page, accountSuffix: string): Promise<void> {
   await expect(page).toHaveURL(/\/bushitsu\//)
 }
 
+test("portrait room keeps the player first and shell controls within the viewport", async ({
+  page,
+}, testInfo) => {
+  await createRoom(page, `portrait_shell_${testInfo.project.name}`)
+
+  const player = page.locator(".player-wrap, .placeholder").first()
+  const launcher = page.getByRole("button", { name: "打开聊天室" })
+  const summaries = page.locator(".room-disclosure > summary, .bangumi-disclosure > summary")
+  await expect(player).toBeVisible()
+  await expect(launcher).toBeVisible()
+  await expect(summaries).toHaveCount(2)
+  await expect(launcher).toHaveCSS("min-height", "44px")
+
+  const order = await page.evaluate(() => {
+    const player = document.querySelector(".player-wrap, .placeholder")?.getBoundingClientRect()
+    const launcher = document.querySelector(".mobile-chat-launcher")?.getBoundingClientRect()
+    const summaries = Array.from(
+      document.querySelectorAll(".room-disclosure > summary, .bangumi-disclosure > summary"),
+    ).map((element) => element.getBoundingClientRect())
+    return {
+      playerBottom: player?.bottom ?? 0,
+      launcherTop: launcher?.top ?? 0,
+      summaryHeights: summaries.map((summary) => summary.height),
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    }
+  })
+  expect(order.playerBottom).toBeLessThanOrEqual(order.launcherTop)
+  expect(order.summaryHeights.every((height) => height >= 44)).toBe(true)
+  expect(order.scrollWidth).toBeLessThanOrEqual(order.viewportWidth)
+
+  await page.screenshot({ path: testInfo.outputPath("room-shell-portrait.png"), fullPage: false })
+})
+
 test("portrait chat opens, expands, and closes as a modal sheet", async ({ page }) => {
   await createRoom(page, "portrait_chat")
 
