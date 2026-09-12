@@ -1,0 +1,28 @@
+{
+  "id": "frontend-refactor-plan",
+  "name": "frontend-refactor-plan",
+  "title": "Frontend architecture audit and refactor planning",
+  "description": "Plan/spec-only assessment of current architecture and a Hey API, TanStack Query/Router, Tailwind and shadcn/ui frontend migration.",
+  "status": "planning",
+  "dev_type": "frontend",
+  "scope": "frontend architecture and HTTP/WS integration planning",
+  "package": "houkago-kyoushitsu",
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-09-12",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-12-behavior-baseline"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. On the subsequent review, user authorized only child 09-12-behavior-baseline (M0) for baseline evidence; M0 evidence is complete and awaits commit/archive. M1–M6, serial continuation, dependency/product changes and deployment remain unauthorized.",
+  "meta": {}
+}

@@ -34,6 +34,10 @@ blocked conditions, one candidate only when it is uniquely ready, and the next
 permitted action.
 
 The control record defaults to guided operation with no serial authorization.
+An approved direction or roadmap may explicitly remain plan/spec-only. In that
+case, benefit rankings and proposed child lists do not authorize task creation,
+implementation or automatic continuation; preserve that boundary in the
+mainline record and task context until the user authorizes a bounded next step.
 Do not infer priority, create or start work, or edit product files until the
 user has chosen the relevant scope and the normal Trellis planning gates have
 been satisfied. Treat `.trellis/mainline.md` as the current initiative record
@@ -119,6 +123,14 @@ motion, and semantic interaction behavior before delivery.
 - failure artifacts: Playwright retains traces on failure; preserve its
   reporter output and attachments under `packages/kyoushitsu/test-results`
   when a check fails; do not claim network capture is globally configured
+- container boundary: `./dx` is the standard wrapper for Bun typecheck, lint,
+  unit/integration tests, and builds. The current Bun image does not provide
+  the browser shared libraries and certificate tooling required by the
+  installed-browser suites (`libglib-2.0.so.0` and `openssl` were absent in
+  the M0 baseline). Run Playwright with the project-local/host browser profile
+  and the configured `PLAYWRIGHT_CHROMIUM_EXECUTABLE` after starting the
+  isolated services; do not install system packages as part of an ordinary
+  frontend check.
 
 For a browser-accessible change, classify the task before asking for human
 review. Prefer a focused reproducible test with semantic locators and the

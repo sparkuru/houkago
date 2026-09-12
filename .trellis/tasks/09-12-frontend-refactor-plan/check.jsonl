@@ -1,0 +1,7 @@
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/prd.md","reason":"Acceptance and planning-only scope."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/audit.md","reason":"Source evidence, specification drift and assessment limitations."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Behavioral and dependency constraints for future review."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/implement.md","reason":"Validation matrix and rollback gates."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Verify eight priorities, ordered dependencies and historical continuity."}
+{"file":".trellis/mainline.md","reason":"Confirm plan-only authorization and preserved prior initiative."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Project-owned continuity, validation and review policy."}

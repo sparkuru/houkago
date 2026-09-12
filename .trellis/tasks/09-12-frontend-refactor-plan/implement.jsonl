@@ -1,0 +1,7 @@
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/prd.md","reason":"Planning-only authorization and required scope; no implementation approval."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/design.md","reason":"Proposed architecture, alternatives and migration boundaries."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Proposed ownership, lifecycle and compatibility contracts."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/implement.md","reason":"Future staged plan, effort assumptions and verification gates."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Accepted migration-benefit ranking and authoritative M0–M6 order; plan only."}
+{"file":".trellis/mainline.md","reason":"Current initiative and explicit absence of execution/serial authorization."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Project-owned continuity, validation and review policy."}
