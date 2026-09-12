@@ -26,13 +26,13 @@ High benefit does not mean low risk. Priorities 1 and 3 contain the main lifecyc
 ## Ordered delivery map
 
 The initiative planning task owns the requirements and integration acceptance.
-M0 is now a created, separately reviewable child; M1–M6 remain proposed future
-children and require their own authorization through the normal Trellis
+M0 is now an archived, separately reviewable child; M1–M6 remain proposed
+future children and require their own authorization through the normal Trellis
 workflow.
 
 | Order | Proposed child | Scope and acceptance | Dependencies | State |
 | --- | --- | --- | --- | --- |
-| M0 | behavior-baseline | Inventory current behavior/spec drift; run and record existing test/browser baseline with fixtures | Fresh implementation authorization | Evidence complete in `09-12-behavior-baseline`; commit/archive pending; browser prerequisites remain blocked |
+| M0 | behavior-baseline | Inventory current behavior/spec drift; run and record existing test/browser baseline with fixtures | Fresh implementation authorization | Archived at `archive/2026-09/09-12-behavior-baseline`; browser prerequisites remain blocked |
 | M1 | session-player-boundaries | Extract session/queue authority, sync and player seams while retaining Vue; prove generation/disposal ordering; define feature ownership | M0 | Planned, not started |
 | M2 | http-contract-resources | Inventory/export OpenAPI; prove Hey API types/errors/cookies; define Query keys, resource policy and HTTP/WS boundaries | M0; M1 ownership contracts before resource integration | Planned, not started |
 | M3 | react-shell-ui-foundation | Parallel React/Vite app, Router/Query composition root, identity/home, tokens and reusable primitives | M1 and M2 | Planned, not started |
@@ -58,8 +58,8 @@ The global pointer is [mainline.md](../../mainline.md). Requirements are in [prd
 
 The previous visual initiative record is preserved verbatim in [previous-mainline.md](previous-mainline.md) as historical evidence, not live execution instructions. Its pending room-shell commit pointer was stale: both `08-30-warm-club-visual-followup` and `08-30-warm-club-queue-control-consistency` are archived with status completed. The old visual parent remains planning; this initiative does not mark it complete or archive it. Remaining dialog/chat polish is deferred from the current mainline, and the mobile provider companion remains paused.
 
-M0 is represented by the child task `09-12-behavior-baseline`, which the user
-authorized on 2026-09-12 with `启动`. Its baseline evidence is complete and
-awaits the normal commit/archive workflow. This does not authorize M1–M6,
-dependency changes, product-code edits, automatic serial continuation, or
-deployment.
+M0 is represented by the archived child task
+`archive/2026-09/09-12-behavior-baseline`, which the user authorized on
+2026-09-12 with `启动`. Its baseline evidence is complete. This does not
+authorize M1–M6, dependency changes, product-code edits, automatic serial
+continuation, or deployment.

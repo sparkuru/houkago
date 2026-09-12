@@ -20,20 +20,21 @@
 - mode: guided
 - serial authorization: none
 - execution authorization: M0 behavior baseline only
-- next pulse: review and commit the completed M0 evidence, then stop for an
-  explicit M1 decision
-- next permitted action: complete the M0 commit/archive workflow. Do not start
-  M1, change dependencies/product code, or deploy on the basis of this record.
+- next pulse: review the archived M0 evidence, then stop for an explicit M1
+  decision
+- next permitted action: review M0 and decide whether to authorize M1. Do not
+  start M1, change dependencies/product code, or deploy on the basis of this
+  record.
 
 ## Ordered Work
 
-M0 is an authorized child in progress. M1–M6 remain proposed children, and
-each requires its own normal planning/approval gates and dependency checks.
+M0 is an archived child. M1–M6 remain proposed children, and each requires its
+own normal planning/approval gates and dependency checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
 | --- | --- | --- | --- |
 | Plan | `09-12-frontend-refactor-plan` | planning | Audit, design, benefit ranking, contracts and staged estimates documented; implementation not authorized |
-| M0 | behavior-baseline | complete, commit pending | Baseline evidence recorded; browser suites remain environment-blocked and M1 is not authorized |
+| M0 | behavior-baseline | archived | Baseline evidence recorded; browser suites remain environment-blocked and M1 is not authorized |
 | M1 | session-player-boundaries | planned | Depends on M0; extract session/player ownership while preserving working Vue frontend |
 | M2 | http-contract-resources | planned | Depends on M0 and M1 ownership contracts for integration; OpenAPI/Hey API and Query policy |
 | M3 | react-shell-ui-foundation | planned | Depends on M1/M2; React/Vite, Router/Query, identity/home, tokens and primitives |
