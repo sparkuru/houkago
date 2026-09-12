@@ -49,3 +49,26 @@ Unified Warm Club queue and URL composer hierarchy, responsive controls, accessi
 ### Status
 
 [OK] **Completed**
+
+
+## Session 68: Frontend behavior baseline
+
+**Date**: 2026-09-12
+**Task**: Frontend behavior baseline
+**Package**: houkago-kyoushitsu
+**Branch**: `k-on`
+
+### Summary
+
+Completed and archived M0 frontend behavior baseline. Typecheck, lint, 372 unit/integration tests, Kyoushitsu build, and Chromium adapter build passed; main Playwright and installed Chromium adapter smoke were blocked by missing container prerequisites. Recorded behavior/fixture coverage, documented host-browser validation, and left M1–M6 unauthorized.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6fefded` | (see git log) |
+| `b222103` | (see git log) |
+
+### Status
+
+[OK] **Completed**
