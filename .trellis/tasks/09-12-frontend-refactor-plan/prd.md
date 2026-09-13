@@ -6,12 +6,13 @@ Assess the current implementation and the difficulty/value of adopting Hey API, 
 
 ## Authorization
 
-The user authorized task creation on 2026-09-12, then accepted the recommended direction and benefit priorities for a plan and global mainline. The planned target is the requested React stack with boundary-first migration. Keep the parent status `planning`: direction approval is not broad implementation approval. No product code, dependency, runtime configuration, database change, or implementation dispatch for M1–M6 is authorized.
+The user authorized task creation on 2026-09-12, then accepted the recommended direction and benefit priorities for a plan and global mainline. The planned target is the requested React stack with boundary-first migration. Keep the parent status `planning`: direction approval is not broad implementation approval. The parent itself does not authorize product code, dependency, runtime configuration, database change, or implementation dispatch; the separately authorized M1 child still requires its own artifact-review/start gate.
 
 The user subsequently approved starting the bounded M0 behavior-baseline child
-with `启动` on 2026-09-12. This authorizes baseline commands and task-local
-evidence only; M1–M6, dependency changes, product-code edits and cutover remain
-unapproved until separately authorized.
+with `启动` on 2026-09-12. M0 is complete and archived. The user has now
+authorized the bounded M1 session/player child; its own planning artifacts and
+normal start gate control implementation. M2–M6, unrelated dependency changes,
+serial continuation and cutover remain unapproved.
 
 ## Background
 

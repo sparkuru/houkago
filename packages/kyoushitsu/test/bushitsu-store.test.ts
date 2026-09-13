@@ -307,3 +307,55 @@ test("apply DANMAKU_DEFAULT replaces only the matching room snapshot", () => {
   })
   expect(store.danmakuDefaults).toEqual({})
 })
+
+test("resetRoom clears room state while preserving account and nickname", () => {
+  const store = useBushitsuStore()
+  store.setSenderId("account-1")
+  store.setNickname("Yui")
+  store.setRoom({ id: "room-a", name: "Room A", buchouId: "account-1", createdAt: 1 })
+  store.apply(shusseki([{ id: "account-1", nickname: "Yui", yakuwari: "buchou" }]))
+  store.apply({
+    type: "OSHABERI",
+    ts: 100,
+    senderId: "account-1",
+    payload: { content: "old room" },
+  })
+  store.apply({
+    type: "BANGUMI",
+    ts: 100,
+    senderId: "server",
+    payload: { enmoku: [enmoku("old")] },
+  })
+  store.apply({
+    type: "KENGEN",
+    ts: 100,
+    senderId: "server",
+    payload: { playback: true, chat: false, playlist: true },
+  })
+  store.apply({
+    type: "GENJOU",
+    ts: 100,
+    senderId: "server",
+    payload: {
+      enmokuId: "old",
+      shinkou: { isPlaying: true, currentTime: 5, playbackRate: 1 },
+      serverTime: 100,
+    },
+  })
+
+  store.resetRoom("room-b")
+
+  expect(store.senderId).toBe("account-1")
+  expect(store.nickname).toBe("Yui")
+  expect(store.bushitsuId).toBe("room-b")
+  expect(store.buchouId).toBeNull()
+  expect(store.chat).toEqual([])
+  expect(store.danmaku).toEqual([])
+  expect(store.bangumi).toEqual([])
+  expect(store.roster).toEqual({})
+  expect(store.presenceById).toEqual({})
+  expect(store.enmokuId).toBeNull()
+  expect(store.shinkou).toBeNull()
+  expect(store.nyuushitsuStatus).toBe("idle")
+  expect(store.kengen).toEqual({ playback: false, chat: true, playlist: false })
+})

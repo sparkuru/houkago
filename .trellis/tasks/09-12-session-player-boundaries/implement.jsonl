@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/09-12-session-player-boundaries/prd.md","reason":"M1 scope, preservation constraints, ownership requirements, and observable acceptance criteria."}
+{"file":".trellis/tasks/09-12-session-player-boundaries/design.md","reason":"Approved implementation boundaries, injected ports, lifecycle ordering, and stale-result guards."}
+{"file":".trellis/tasks/09-12-session-player-boundaries/spec.md","reason":"Executable M1 contracts for session lifecycle, queue ordering, sync/player isolation, and feature ownership."}
+{"file":".trellis/tasks/09-12-session-player-boundaries/implement.md","reason":"Ordered checklist, target files, validation commands, and rollback points for the implementation agent."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Parent S1/S2/S4 ownership, lifecycle, queue ordering, and player compatibility contracts."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Authoritative M1 scope, dependency order, benefit ranking, and stop conditions."}
+{"file":".trellis/tasks/archive/2026-09/09-12-behavior-baseline/validation.md","reason":"M0 command baseline and existing behavior/fixture inventory used to distinguish regressions."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Kyoushitsu frontend package guidance and validation entry point."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Existing room-shell ownership, player DOM boundary, admission-fixture, and responsive preservation rules."}
+{"file":".trellis/spec/guides/index.md","reason":"Required routing for cross-layer and code-reuse thinking before extracting shared boundaries."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Session/API/WS/store/player data-flow and media-boundary checklist."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Search-first and abstraction constraints for extracting existing controller logic."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Project wrapper, validation profile, browser limitations, and human-review/rollback policy."}

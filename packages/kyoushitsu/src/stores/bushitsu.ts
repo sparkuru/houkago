@@ -1,6 +1,7 @@
 import { canDo } from "@/lib/kengen"
 import { loadNickname, saveNickname } from "@/lib/nickname"
 import type {
+  Bushitsu,
   DanmakuDefault,
   Enmoku,
   Kengen,
@@ -218,6 +219,37 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     senderId.value = id
   }
 
+  // Reset only room/session state. Account identity and the persisted nickname
+  // intentionally survive a room leave, route replacement, or reconnect setup.
+  // The optional room id is installed immediately so room-scoped snapshots such
+  // as DANMAKU_DEFAULT can still reject another room before HTTP metadata arrives.
+  function resetRoom(nextBushitsuId: string | null = null): void {
+    bushitsuId.value = nextBushitsuId
+    buchouId.value = null
+    shusseki.value = 0
+    roster.value = {}
+    yakuwari.value = {}
+    presenceById.value = {}
+    enmokuId.value = null
+    bangumi.value = []
+    chat.value = []
+    danmaku.value = []
+    kengen.value = { ...DEFAULT_KENGEN }
+    nyuushitsuMode.value = DEFAULT_NYUUSHITSU_MODE
+    nyuushitsuStatus.value = "idle"
+    pendingNyuushitsu.value = []
+    meibo.value = []
+    danmakuDefaults.value = {}
+    danmakuDefaultsSnapshotRoomId.value = null
+    shinkou.value = null
+    shinkouServerTime.value = 0
+  }
+
+  function setRoom(room: Bushitsu | null): void {
+    bushitsuId.value = room?.id ?? null
+    buchouId.value = room?.buchouId ?? null
+  }
+
   function setBangumi(enmoku: readonly Enmoku[]): void {
     bangumi.value = uniqueEnmokuById(enmoku)
   }
@@ -263,6 +295,8 @@ export const useBushitsuStore = defineStore("bushitsu", () => {
     shinkou,
     shinkouServerTime,
     apply,
+    resetRoom,
+    setRoom,
     setBangumi,
     setNickname,
     setSenderId,

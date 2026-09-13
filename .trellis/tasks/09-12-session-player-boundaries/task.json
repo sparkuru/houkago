@@ -1,0 +1,29 @@
+{
+  "id": "session-player-boundaries",
+  "name": "session-player-boundaries",
+  "title": "Session and player boundaries",
+  "description": "Extract Vue-preserving room session, queue authority, sync and player lifecycle seams with generation/disposal ordering tests.",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "frontend room session, queue authority, sync and player boundary extraction",
+  "package": "houkago-kyoushitsu",
+  "priority": "P1",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-09-12",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-12-frontend-refactor-plan",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "stage": "M1",
+    "authorization": "user-approved-2026-09-12"
+  }
+}

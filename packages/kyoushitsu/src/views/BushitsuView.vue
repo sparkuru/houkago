@@ -37,6 +37,7 @@ import {
 import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import { housouUrl } from "@/lib/housou-url"
 import { showJoinGate } from "@/lib/join-gate"
+import { type RoomSessionController, createRoomSessionController } from "@/lib/room-session"
 import { useBushitsuStore } from "@/stores/bushitsu"
 import { useSeitoStore } from "@/stores/seito"
 import { KousokuClient, type KousokuConnectionStatus } from "@/ws/client"
@@ -127,15 +128,13 @@ const wsStatusLabel = computed(() => {
 // 部長は遮罩自体が出ないので影響しない。
 const joined = ref(false)
 
-let client: KousokuClient | null = null
+let roomSession: RoomSessionController | null = null
 
 // 進行制御: routes player events → SHINKOU (host) and remote SHINKOU/GENJOU →
 // player (部員). The controller gates by role + 追従中; this view just connects.
 const playerRef = ref<InstanceType<typeof EnmokuPlayer> | null>(null)
-const shinkou = useShinkou((msg) => client?.send(msg), playerRef)
+const shinkou = useShinkou((msg) => roomSession?.send(msg), playerRef)
 const baiduPlayback = useBaiduPlayback(bushitsuId)
-const bootstrapped = ref(false)
-let stopEnmokuWatch: ReturnType<typeof watch> | null = null
 
 // 参加ボタン押下：joined を立てて遮罩を消し、同じ同期スタック内で catchUp。
 // EnmokuPlayer 側が先に音付き play() を済ませてあるので、ここは房主の現在位置へ
@@ -192,7 +191,7 @@ function syncPortraitRoom() {
 }
 
 function reconnectKousoku() {
-  client?.connect(bushitsuId)
+  roomSession?.reconnect()
 }
 
 // ArtPlayer の $player を弹幕 overlay の Teleport target に。EnmokuPlayer mount 后
@@ -351,17 +350,26 @@ function providerStatLabel(key: ProviderStatKey): string {
 // own UI also follows the round-trip, not a local optimistic write.
 function settei(kengen: Kengen) {
   if (kengenPending.value) return
-  if (!client || wsStatus.value !== "open") {
+  if (!roomSession || wsStatus.value !== "open") {
     kengenError.value = t("kengenSaveFailed")
     return
   }
   kengenPending.value = true
   kengenError.value = ""
-  client.send({ type: "SETTEI", ts: Date.now(), senderId: bushitsu.senderId, payload: kengen })
+  const sent = roomSession.send({
+    type: "SETTEI",
+    ts: Date.now(),
+    senderId: bushitsu.senderId,
+    payload: kengen,
+  })
+  if (!sent) {
+    kengenPending.value = false
+    kengenError.value = t("kengenSaveFailed")
+  }
 }
 
 function nyuushitsuSettei(mode: NyuushitsuMode, password?: string) {
-  client?.send({
+  roomSession?.send({
     type: "NYUUSHITSU_SETTEI",
     ts: Date.now(),
     senderId: bushitsu.senderId,
@@ -370,7 +378,7 @@ function nyuushitsuSettei(mode: NyuushitsuMode, password?: string) {
 }
 
 function nyuushitsuHantei(senderId: string, approved: boolean) {
-  client?.send({
+  roomSession?.send({
     type: "NYUUSHITSU_HANTEI",
     ts: Date.now(),
     senderId: bushitsu.senderId,
@@ -385,7 +393,7 @@ async function removeBuin(seitoId: string) {
 
 function sendJouei(enmokuId: string | null) {
   if (!canPlayBangumiItem(bushitsu.canPlaylist)) return
-  client?.send({
+  roomSession?.send({
     type: "JOUEI",
     ts: Date.now(),
     senderId: bushitsu.senderId,
@@ -531,26 +539,8 @@ const baiduPlaybackMessage = computed(() => {
   }
 })
 
-// 上映中の解決：apply the authoritative enmokuId by resolving it to the room's
-// Enmoku and setting `current`. If the local 番組表 lacks it (late joiner, or a
-// source another client registered), re-fetch the 番組表 once and resolve again.
-async function applyEnmokuId(enmokuId: string | null) {
-  if (!enmokuId) {
-    current.value = null
-    return
-  }
-  let enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
-  if (!enmoku) {
-    const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
-    if (data) bushitsu.setBangumi(data)
-    enmoku = resolveEnmoku(bushitsu.bangumi, enmokuId)
-  }
-  current.value = enmoku
-  void baiduPlayback.prepare(enmoku)
-}
-
 function oshaberi(content: string) {
-  client?.send({
+  roomSession?.send({
     type: "OSHABERI",
     ts: Date.now(),
     senderId: bushitsu.senderId,
@@ -560,7 +550,7 @@ function oshaberi(content: string) {
 
 function danmaku(content: string, options?: { color?: string }) {
   const payload = options?.color ? { content, color: options.color } : { content }
-  client?.send({
+  roomSession?.send({
     type: "DANMAKU",
     ts: Date.now(),
     senderId: bushitsu.senderId,
@@ -581,80 +571,75 @@ function submitName() {
   startSession()
 }
 
-async function enterRoom() {
-  if (bootstrapped.value) return
-  bootstrapped.value = true
-  const roomRequest = housou.bushitsu({ id: bushitsuId }).get()
-  // A BANGUMI frame can arrive while this initial fetch is in flight. Keep that
-  // newer room snapshot instead of letting the older HTTP response overwrite it.
-  const bangumiAtRequest = bushitsu.bangumi
-  const bangumiRequest = housou.bushitsu({ id: bushitsuId }).bangumi.get()
-  void baiduPlayback.checkAdapter()
-
-  // Learn who the 部長 is so isBuchou is known before we decide to follow.
-  const { data: room } = await roomRequest
-  if (room) {
-    bushitsu.buchouId = room.buchouId
-    roomName.value = room.name
+// Connect first, then wait for the server-authoritative admission status. The
+// session controller owns bootstrap ordering and the single transport; this
+// page only adapts its ports to Pinia, Eden, the player, and presentation state.
+function startSession() {
+  if (roomSession) {
+    roomSession.start()
+    return
   }
 
-  // 追いかけ: a 部員 asks for authority state to catch up; the host drives, so it
-  // does not follow and does not ask.
-  if (!bushitsu.isBuchou) {
-    client.send({ type: "OIKAKE", ts: Date.now(), senderId: bushitsu.senderId, payload: {} })
-  }
-
-  const { data } = await bangumiRequest
-  if (data && bushitsu.bangumi === bangumiAtRequest) bushitsu.setBangumi(data)
-
-  // store.enmokuId is the single source of truth for 上映中, written by the WS
-  // client from JOUEI (host pick / echo) and GENJOU (late-joiner catch-up).
-  // Watching it gives host + 部員 + late joiners one resolve→play path.
-  // immediate covers the case where GENJOU已 set enmokuId before this mounts.
-  stopEnmokuWatch?.()
-  stopEnmokuWatch = watch(() => bushitsu.enmokuId, applyEnmokuId, { immediate: true })
-}
-
-// Connect first, then wait for the server-authoritative admission status. Only
-// after NYUUSHITSU says "entered" do we bootstrap room data and sync.
-async function startSession() {
-  const base = housouUrl()
-  bushitsu.nyuushitsuStatus = "idle"
-  bootstrapped.value = false
-  client = new KousokuClient(
-    base,
-    (msg) => {
-      bushitsu.apply(msg) // keep the store the single source of truth first
-      if (msg.type === "KENGEN") {
+  roomSession = createRoomSessionController({
+    roomId: bushitsuId,
+    identityKey: bushitsu.senderId,
+    createTransport: (onMessage, onStatus) => new KousokuClient(housouUrl(), onMessage, onStatus),
+    fetchRoom: async () => {
+      const { data } = await housou.bushitsu({ id: bushitsuId }).get()
+      return data ?? null
+    },
+    fetchBangumi: async () => {
+      const { data } = await housou.bushitsu({ id: bushitsuId }).bangumi.get()
+      return data ?? null
+    },
+    applyMessage: (message) => {
+      bushitsu.apply(message) // keep the store the single source of truth first
+    },
+    onAfterMessage: (message) => {
+      if (message.type === "KENGEN") {
         kengenPending.value = false
         kengenError.value = ""
       }
-      if (msg.type === "KEIHOU" && kengenPending.value) {
+      if (message.type === "KEIHOU" && kengenPending.value) {
         kengenPending.value = false
         kengenError.value = t("kengenSaveFailed")
       }
-      if (msg.type === "NYUUSHITSU" && msg.payload.status === "entered") {
-        void enterRoom()
-      }
-      if (msg.type === "NYUUSHITSU" && msg.payload.status === "revoked") {
-        client?.close()
-        void router.replace({ name: "home", query: { revoked: "1" } })
-      }
-      shinkou.handleRemote(msg) // then drive the player by message type
+      shinkou.handleRemote(message) // player effects follow the snapshot write
     },
-    (status) => {
+    resetRoom: (roomId) => {
+      bushitsu.resetRoom(roomId)
+      roomName.value = ""
+    },
+    setRoom: (room) => {
+      bushitsu.setRoom(room)
+      roomName.value = room?.name ?? ""
+    },
+    setBangumi: (items) => bushitsu.setBangumi(items),
+    getBangumi: () => bushitsu.bangumi,
+    getCurrentEnmokuId: () => bushitsu.enmokuId,
+    onCurrentEnmoku: (enmoku) => {
+      current.value = enmoku
+      void baiduPlayback.prepare(enmoku)
+    },
+    onStatus: (status) => {
       wsStatus.value = status
       if ((status === "closed" || status === "error") && kengenPending.value) {
         kengenPending.value = false
         kengenError.value = t("kengenSaveFailed")
       }
-      if (status === "connecting") {
-        bootstrapped.value = false
-      }
       if (status === "open") roomMotion.confirm(roomShell.value)
     },
-  )
-  client.connect(bushitsuId)
+    onAdmission: (status) => {
+      bushitsu.nyuushitsuStatus = status
+      if (status === "entered") void baiduPlayback.checkAdapter()
+    },
+    onRevoked: () => {
+      void router.replace({ name: "home", query: { revoked: "1" } })
+    },
+    isBuchou: () => bushitsu.isBuchou,
+    senderId: () => bushitsu.senderId,
+  })
+  roomSession.start()
 }
 
 onMounted(() => {
@@ -663,7 +648,6 @@ onMounted(() => {
   portraitRoomQuery.addEventListener("change", syncPortraitRoom)
   roomMotion.enterRoom(roomShell.value)
   baiduAvailabilityTimer = setInterval(refreshBaiduAvailabilities, BAIDU_AVAILABILITY_REFRESH_MS)
-  bushitsu.bushitsuId = bushitsuId
   void seito.restore().then((account) => {
     if (!account) {
       void router.replace({ name: "home" })
@@ -677,9 +661,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   portraitRoomQuery?.removeEventListener("change", syncPortraitRoom)
   closeChatSheet(false)
-  stopEnmokuWatch?.()
   if (baiduAvailabilityTimer !== null) clearInterval(baiduAvailabilityTimer)
-  client?.close()
+  roomSession?.dispose()
 })
 </script>
 

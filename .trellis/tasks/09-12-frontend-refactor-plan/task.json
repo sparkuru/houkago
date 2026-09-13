@@ -19,10 +19,11 @@
   "pr_url": null,
   "subtasks": [],
   "children": [
-    "09-12-behavior-baseline"
+    "09-12-behavior-baseline",
+    "09-12-session-player-boundaries"
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. On the subsequent review, user authorized only child 09-12-behavior-baseline (M0) for baseline evidence; M0 evidence is complete and archived at archive/2026-09/09-12-behavior-baseline. M1–M6, serial continuation, dependency/product changes and deployment remain unauthorized.",
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. M0 evidence is complete and archived at archive/2026-09/09-12-behavior-baseline. The user then authorized bounded child 09-12-session-player-boundaries (M1); implementation and validation are complete pending task closeout. M2–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
   "meta": {}
 }

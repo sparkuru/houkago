@@ -72,15 +72,18 @@ export class KousokuClient {
 
     const ws = new WebSocket(url)
     ws.addEventListener("message", (ev) => {
+      if (this.ws !== ws) return
       const msg = JSON.parse(ev.data) as KousokuMessage
       this.onMessage(msg)
     })
     ws.addEventListener("open", () => {
+      if (this.ws !== ws) return
       this.reconnectAttempt = 0
       this.onStatus("open")
       this.flush()
     })
     ws.addEventListener("error", () => {
+      if (this.ws !== ws) return
       this.onStatus("error")
     })
     ws.addEventListener("close", () => {

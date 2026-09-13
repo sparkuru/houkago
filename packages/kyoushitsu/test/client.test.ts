@@ -40,6 +40,7 @@ class MockWebSocket {
   sent: string[] = []
   closed = false
   private openHandlers: OpenHandler[] = []
+  private messageHandlers: ((ev: unknown) => void)[] = []
   private closeHandlers: EventHandler[] = []
   private errorHandlers: EventHandler[] = []
 
@@ -49,9 +50,14 @@ class MockWebSocket {
   }
 
   addEventListener(type: string, handler: (ev: unknown) => void): void {
+    if (type === "message") this.messageHandlers.push(handler)
     if (type === "open") this.openHandlers.push(handler as OpenHandler)
     if (type === "close") this.closeHandlers.push(handler as EventHandler)
     if (type === "error") this.errorHandlers.push(handler as EventHandler)
+  }
+
+  fireMessage(data: string): void {
+    for (const h of this.messageHandlers) h({ data })
   }
 
   // テスト用：接続完了をシミュレートし open を発火。
@@ -221,6 +227,34 @@ test("connection status callback follows websocket lifecycle", () => {
   expect(statuses).toEqual(["connecting", "open", "error"])
   client.close()
   expect(statuses.at(-1)).toBe("closed")
+})
+
+test("callbacks from a socket replaced by connect are ignored", () => {
+  const messages: KousokuMessage[] = []
+  const statuses: string[] = []
+  const client = new KousokuClient(
+    "http://x",
+    (message) => messages.push(message),
+    (status) => statuses.push(status),
+  )
+  client.connect("rA")
+  const old = MockWebSocket.last
+  if (!old) throw new Error("old mock ws not created")
+
+  client.connect("rB")
+  const current = MockWebSocket.last
+  if (!current) throw new Error("current mock ws not created")
+
+  old.fireMessage(JSON.stringify(oshaberi("stale")))
+  old.fireOpen()
+  old.fireError()
+  old.fireClose()
+  expect(messages).toEqual([])
+  expect(statuses).toEqual(["connecting", "connecting"])
+
+  current.fireOpen()
+  expect(statuses).toEqual(["connecting", "connecting", "open"])
+  client.close()
 })
 
 test("unexpected close reconnects with the same room identity", async () => {
