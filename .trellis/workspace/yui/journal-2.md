@@ -72,3 +72,42 @@ Completed and archived M0 frontend behavior baseline. Typecheck, lint, 372 unit/
 ### Status
 
 [OK] **Completed**
+
+
+## Session 69: 完成 M1 房间会话与播放器边界
+
+**Date**: 2026-09-13
+**Task**: 完成 M1 房间会话与播放器边界
+**Package**: houkago-kyoushitsu
+**Branch**: `k-on`
+
+### Summary
+
+完成 Vue 保持兼容的 room session、队列权威、同步/播放器端口提取；补齐 stale callback/跨房间响应/重连 epoch 测试，并归档 M1。M2–M6 仍未授权。
+
+### Main Changes
+
+- 新增框架无关 PlayerHandle、ShinkouController 与 RoomSessionController。
+- BushitsuView 改为注入 session；KousokuClient 强化 active-socket identity；store 增加 room reset。
+- 新增 session/sync focused tests，更新 M1 validation 与主线状态。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `53012a8` | (see git log) |
+| `c0d3bab` | (see git log) |
+
+### Testing
+
+- [OK] focused: 32 passed
+- [OK] full: 388 passed
+- [OK] typecheck, serial lint, and Kyoushitsu build passed
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 等待用户明确决定是否进入 M2；不自动串行推进。
