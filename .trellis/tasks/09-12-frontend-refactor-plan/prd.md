@@ -10,8 +10,8 @@ The user authorized task creation on 2026-09-12, then accepted the recommended d
 
 The user subsequently approved starting the bounded M0 behavior-baseline child
 with `启动` on 2026-09-12. M0 is complete and archived. The user has now
-authorized the bounded M1 session/player child; its own planning artifacts and
-normal start gate control implementation. M2–M6, unrelated dependency changes,
+authorized the bounded M1 session/player child; its planning artifacts,
+implementation, and validation are complete and archived. M2–M6, unrelated dependency changes,
 serial continuation and cutover remain unapproved.
 
 ## Background

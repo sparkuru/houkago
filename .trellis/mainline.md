@@ -11,33 +11,31 @@
 - owner decision: 2026-09-12 — the user accepted the recommended direction and
   migration-benefit priorities, requested plan and global mainline, and
   explicitly said not to implement yet.
-- stage authorization: 2026-09-12 — M0 is complete and archived; the user
-  authorized the bounded M1 session/player slice. M2–M6 remain unapproved.
+- stage authorization: 2026-09-12 — M0 and the bounded M1 session/player slice
+  are complete and archived; M2–M6 remain unapproved.
 - authoritative roadmap: [Benefit priorities and delivery map](tasks/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
 - mode: guided
 - serial authorization: none
-- execution authorization: M1 session/player slice in progress after its
-  planning review; no M2–M6 continuation
-- next pulse: finish the M1 quality gate, commit the bounded child, and archive
-  its evidence; do not infer M2 authorization
-- next permitted action: complete M1 verification and task closeout. Do not
-  change dependencies, start M2, or deploy.
+- execution authorization: M1 session/player slice complete; no M2–M6
+  continuation
+- next pulse: review archived M1 evidence and request explicit M2 authorization
+  if the user wants to continue
+- next permitted action: plan/review M2 only after explicit authorization. Do
+  not change dependencies, start M2, or deploy.
 
 ## Ordered Work
 
-M0 is an archived child. M1 is a user-authorized child currently in progress;
-its implementation and quality evidence are being closed out. M2–M6 remain
-proposed children
+M0 and M1 are archived children. M2–M6 remain proposed children
 and require their own authorization and dependency checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
 | --- | --- | --- | --- |
 | Plan | `09-12-frontend-refactor-plan` | planning | Audit, design, benefit ranking, contracts and staged estimates documented; implementation not authorized |
 | M0 | behavior-baseline | archived | Baseline evidence recorded; browser suites remain environment-blocked; M1 planning is now authorized |
-| M1 | session-player-boundaries | in_progress (authorized) | Depends on M0; session/player implementation and focused evidence are complete, final closeout pending |
+| M1 | session-player-boundaries | archived | Depends on M0; implementation and focused evidence archived at `archive/2026-09/09-12-session-player-boundaries` |
 | M2 | http-contract-resources | planned | Depends on M0 and M1 ownership contracts for integration; OpenAPI/Hey API and Query policy |
 | M3 | react-shell-ui-foundation | planned | Depends on M1/M2; React/Vite, Router/Query, identity/home, tokens and primitives |
 | M4 | room-features | planned | Depends on M3 and validated session controller; realtime queue/chat/governance |
@@ -63,9 +61,9 @@ and require their own authorization and dependency checks.
   new mobile-provider functionality. Existing shared/backend/media assets stay.
 - Estimate: 25–39 person-days before contingency, 30–51 with contingency under
   the plan assumptions; not a delivery commitment or implementation approval.
-- Next user decision: review the completed M1 evidence at task closeout. Do not
-  infer M2 continuation from M1 completion.
-- Dirty-state handling: inspect Git before any future action. The current M1
+- Next user decision: whether to authorize M2 after reviewing the archived M1
+  evidence. Do not infer serial continuation from M1 completion.
+- Dirty-state handling: inspect Git before any future action. The archived M1
   update includes bounded implementation and task evidence; no M2 product code
   or dependency changes are authorized.
 

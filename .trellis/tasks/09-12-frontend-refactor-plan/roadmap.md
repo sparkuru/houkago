@@ -26,15 +26,14 @@ High benefit does not mean low risk. Priorities 1 and 3 contain the main lifecyc
 ## Ordered delivery map
 
 The initiative planning task owns the requirements and integration acceptance.
-M0 is now an archived, separately reviewable child. M1 is a user-authorized
-bounded child currently in implementation/quality closeout; M2–M6 remain proposed
+M0 and M1 are now archived, separately reviewable children. M2–M6 remain proposed
 future children and require their own authorization through the normal Trellis
 workflow.
 
 | Order | Proposed child | Scope and acceptance | Dependencies | State |
 | --- | --- | --- | --- | --- |
 | M0 | behavior-baseline | Inventory current behavior/spec drift; run and record existing test/browser baseline with fixtures | Fresh implementation authorization | Archived at `archive/2026-09/09-12-behavior-baseline`; browser prerequisites remain blocked |
-| M1 | session-player-boundaries | Extract session/queue authority, sync and player seams while retaining Vue; prove generation/disposal ordering; define feature ownership | M0 | In progress; implementation and checks pass, closeout pending |
+| M1 | session-player-boundaries | Extract session/queue authority, sync and player seams while retaining Vue; prove generation/disposal ordering; define feature ownership | M0 | Archived at `archive/2026-09/09-12-session-player-boundaries`; implementation and checks pass |
 | M2 | http-contract-resources | Inventory/export OpenAPI; prove Hey API types/errors/cookies; define Query keys, resource policy and HTTP/WS boundaries | M0; M1 ownership contracts before resource integration | Planned, not started |
 | M3 | react-shell-ui-foundation | Parallel React/Vite app, Router/Query composition root, identity/home, tokens and reusable primitives | M1 and M2 | Planned, not started |
 | M4 | room-features | Admission, realtime queue/chat/governance with feature commands and selectors | M3, validated M1 session controller | Planned, not started |
@@ -62,6 +61,6 @@ The previous visual initiative record is preserved verbatim in [previous-mainlin
 M0 is represented by the archived child task
 `archive/2026-09/09-12-behavior-baseline`, which the user authorized on
 2026-09-12 with `启动`. Its baseline evidence is complete. M1 is represented
-by the child `09-12-session-player-boundaries`; implementation and validation
-are complete pending task closeout. M2–M6, unrelated dependency changes,
+by the archived child `archive/2026-09/09-12-session-player-boundaries`;
+implementation and validation are complete. M2–M6, unrelated dependency changes,
 automatic serial continuation, and deployment remain unauthorized.

@@ -24,6 +24,6 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. M0 evidence is complete and archived at archive/2026-09/09-12-behavior-baseline. The user then authorized bounded child 09-12-session-player-boundaries (M1); implementation and validation are complete pending task closeout. M2–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. M0 evidence is complete and archived at archive/2026-09/09-12-behavior-baseline. The user then authorized bounded child 09-12-session-player-boundaries (M1); implementation and validation are complete and archived at archive/2026-09/09-12-session-player-boundaries. M2–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
   "meta": {}
 }
