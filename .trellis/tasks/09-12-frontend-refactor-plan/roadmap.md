@@ -26,15 +26,15 @@ High benefit does not mean low risk. Priorities 1 and 3 contain the main lifecyc
 ## Ordered delivery map
 
 The initiative planning task owns the requirements and integration acceptance.
-M0 and M1 are now archived, separately reviewable children. M2 is active and
-the user explicitly requested continuing it on 2026-09-26. M3–M6 remain
+M0, M1 and M2 are now archived, separately reviewable children. The user
+approved M2 completion and its commit/archive batch on 2026-09-26. M3–M6 remain
 proposed future children requiring their own authorization.
 
 | Order | Proposed child | Scope and acceptance | Dependencies | State |
 | --- | --- | --- | --- | --- |
 | M0 | behavior-baseline | Inventory current behavior/spec drift; run and record existing test/browser baseline with fixtures | Fresh implementation authorization | Archived at `archive/2026-09/09-12-behavior-baseline`; browser prerequisites remain blocked |
 | M1 | session-player-boundaries | Extract session/queue authority, sync and player seams while retaining Vue; prove generation/disposal ordering; define feature ownership | M0 | Archived at `archive/2026-09/09-12-session-player-boundaries`; implementation and checks pass |
-| M2 | http-contract-resources | Inventory/export OpenAPI; prove Hey API types/errors/cookies; define Query keys, resource policy and HTTP/WS boundaries | M0; M1 ownership contracts before resource integration | Implementation and full-scope check passed; commit/archive batch approved |
+| M2 | http-contract-resources | Inventory/export OpenAPI; prove Hey API types/errors/cookies; define Query keys, resource policy and HTTP/WS boundaries | M0; M1 ownership contracts before resource integration | Archived at `archive/2026-09/09-13-http-contract-resources`; A1–A8 and quality gate passed |
 | M3 | react-shell-ui-foundation | Parallel React/Vite app, Router/Query composition root, identity/home, tokens and reusable primitives | M1 and M2 | Planned, not started |
 | M4 | room-features | Admission, realtime queue/chat/governance with feature commands and selectors | M3, validated M1 session controller | Planned, not started |
 | M5 | media-provider-danmaku | React player binding, subtitles/fullscreen, Baidu grants/adapter and danmaku, reusing extracted logic | M4 and validated M1 player seam | Planned, not started |
@@ -62,7 +62,8 @@ M0 is represented by the archived child task
 `archive/2026-09/09-12-behavior-baseline`, which the user authorized on
 2026-09-12 with `启动`. Its baseline evidence is complete. M1 is represented
 by the archived child `archive/2026-09/09-12-session-player-boundaries`;
-implementation and validation are complete. M2 is the active child
-`09-13-http-contract-resources`, explicitly continued by the user on 2026-09-26.
+implementation and validation are complete. M2 is the archived child
+`archive/2026-09/09-13-http-contract-resources`, completed and committed on
+2026-09-26 after explicit user authorization and commit-plan approval.
 M3–M6, unrelated dependency changes, automatic serial continuation, and
 deployment remain unauthorized.

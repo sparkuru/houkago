@@ -2,9 +2,9 @@
 
 Date: 2026-09-26 (Asia/Singapore)
 
-Implementation and independent full-scope review are complete. The task remains
-`in_progress` until the reviewed commit batch is committed and archived. The user
-approved the batch with `ok` on 2026-09-26.
+Implementation and independent full-scope review are complete. The user approved
+the batch with `ok` on 2026-09-26. Work commits are `d7410cf` (code/artifacts) and
+`d76c8e5` (specs/evidence); the task is completed and archived on 2026-09-26.
 
 ## Final quality gate
 
@@ -60,6 +60,6 @@ All M2 implementation, generated artifacts, tests and spec updates are included
 in `commit-plan.md`. The pre-existing `dev.sh` URL edits are unrelated, untouched
 and excluded from this task's commits. No push or M3 continuation is authorized.
 
-Remaining at this record's work-commit stage: finish the approved work commits,
-M2 archive/mainline sync and session journal. See `research/implementation-evidence.md` and
+The approved work commits and M2 archive are complete; the mainline points to
+this archived record. See `research/implementation-evidence.md` and
 `research/check-evidence.md` for implementation and independent-review history.

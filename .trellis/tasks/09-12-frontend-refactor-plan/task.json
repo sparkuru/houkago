@@ -25,6 +25,6 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0 and M1 are complete and archived. 2026-09-26: user explicitly requested starting the current M2 child 09-13-http-contract-resources; finish its existing implementation and quality gate. M3–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0 and M1 are complete and archived. 2026-09-26: user authorized M2 and approved its commit/archive batch; A1-A8 and full-scope quality gate passed. M2 is archived at archive/2026-09/09-13-http-contract-resources; work commits d7410cf/d76c8e5. M3–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
   "meta": {}
 }
