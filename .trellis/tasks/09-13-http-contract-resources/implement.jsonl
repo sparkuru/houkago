@@ -1,0 +1,12 @@
+{"file":".trellis/tasks/09-13-http-contract-resources/research/contract-inventory.md","reason":"Repository-backed endpoint inventory, current dependency evidence, OpenAPI isolation constraints and representative contract proof."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Accepted M2 scope, ordering, effort and dependency on M0/M1."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/design.md","reason":"Accepted frontend architecture, OpenAPI/client boundary and generated-artifact constraints."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Executable S1-S6 contracts for authority, generations, HTTP errors, credentials, Query policy and drift checks."}
+{"file":".trellis/spec/guides/index.md","reason":"Required cross-layer spec routing and reuse guidance."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Backend export, shared schemas and generated frontend client cross-layer reasoning."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Canonical kousoku schema reuse and avoidance of duplicated DTOs."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Uniform domain error shape, status mapping and schema-first backend contract."}
+{"file":".trellis/spec/backend/directory-structure.md","reason":"Housou route ownership and kousoku canonical shared-type boundary."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Cookie-session, auth and public identity contract that the generated client must preserve."}
+{"file":".trellis/spec/houkago-housou/backend/index.md","reason":"Housou package-specific backend spec routing."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Kyoushitsu frontend package boundary and current client/session ownership."}

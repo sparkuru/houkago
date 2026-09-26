@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/09-13-http-contract-resources/research/contract-inventory.md","reason":"Evidence used to check route completeness, isolated export, generated-client boundaries and representative transport behavior."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Acceptance contracts for WS authority, HTTP resource identity, error/cookie fidelity and deterministic generation."}
+{"file":".trellis/spec/guides/index.md","reason":"Quality-check routing for cross-layer and code-reuse changes."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Required checks across housou, kousoku, kyoushitsu, eisha and adaptor boundaries."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check for reuse of canonical schemas and existing transport/session ports."}
+{"file":".trellis/spec/backend/error-handling.md","reason":"Check declared and runtime error-shape/status consistency."}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Check cookie, auth and identity behavior."}
+{"file":".trellis/spec/houkago-housou/backend/index.md","reason":"Housou backend quality-check routing."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Kyoushitsu frontend quality-check routing."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check no raw fetch in UI, no Query polling of WS-owned state and current client boundaries."}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"Check resource adapters and future hook seams without prematurely migrating consumers."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/quality-guidelines.md","reason":"Check M1 session ordering, pure controller boundaries and frontend integration scope."}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Verify current M2 executable export, drift, private-resource, cancellation and grant contracts; report spec drift to the main session."}

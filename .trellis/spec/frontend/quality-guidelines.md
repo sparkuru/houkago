@@ -10,7 +10,9 @@ Stack: **Vue 3 + Vite**, TypeScript strict, Pinia, ArtPlayer + hls.js/dash.js,
 P1 Vue/CSS danmaku overlays, and later `weizhenye/Danmaku` (MIT) for dense
 flying danmaku. Contract and domain types come from
 `houkago-kousoku`; the REST client is Eden Treaty typed against housou's `App`
-(design §8, Elysia spike). Quality means: the client faithfully follows
+(design §8, Elysia spike). A parallel generated Hey API boundary and pure resource
+policies exist under `src/api/`; see [HTTP Contract and Resources](http-contract-resources.md).
+Existing Vue consumers retain Eden until a later migration. Quality means: the client faithfully follows
 server-authoritative state, third-party imperative objects are contained, and the
 naming dictionary is honored across the stack.
 
@@ -41,7 +43,8 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   (see type-safety.md).
 - **Client acting as playback source of truth.** Only the 部長 drives sync; a
   member's player events must not emit `SHINKOU` (design §5).
-- **Raw `fetch` in components.** Go through the Eden client in `src/api/`.
+- **Raw `fetch` in components.** Go through the API boundary in `src/api/`;
+  current Vue consumers use Eden and future consumers use generated resources.
 - **Polling REST for realtime data** the WS already pushes (playback, presence,
   chat, danmaku).
 - **Imperative third-party calls scattered across components** — ArtPlayer and
@@ -117,7 +120,7 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
 
 - [ ] Identifiers romaji; domain names match §13 (no synonyms vs backend).
 - [ ] Domain/protocol types imported from `kousoku`, not redefined; no `any`/casts.
-- [ ] REST via Eden client; realtime via WS — no polling, no raw `fetch`.
+- [ ] REST via the API boundary; realtime via WS — no live-state polling or raw component `fetch`.
 - [ ] Only the host emits `SHINKOU`; remote apply uses echo suppression.
 - [ ] Projected time derived, not stored as a ticking value.
 - [ ] ArtPlayer / Danmaku instances created and destroyed in lifecycle hooks.

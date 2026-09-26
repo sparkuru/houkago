@@ -21,6 +21,7 @@ This directory contains guidelines for frontend development. Fill in each file w
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
 | [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
 | [Public Site Configuration](../../frontend/site-configuration.md) | TOML-to-Housou-to-Kyoushitsu public identity contract | Active |
+| [HTTP Contract and Resources](../../frontend/http-contract-resources.md) | Generated transport, private keys, retry/cancellation policy and WS authority | Active |
 
 ---
 

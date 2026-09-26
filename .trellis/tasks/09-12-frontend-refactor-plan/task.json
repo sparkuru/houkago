@@ -20,10 +20,11 @@
   "subtasks": [],
   "children": [
     "09-12-behavior-baseline",
-    "09-12-session-player-boundaries"
+    "09-12-session-player-boundaries",
+    "09-13-http-contract-resources"
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities for plan and global mainline only. M0 evidence is complete and archived at archive/2026-09/09-12-behavior-baseline. The user then authorized bounded child 09-12-session-player-boundaries (M1); implementation and validation are complete and archived at archive/2026-09/09-12-session-player-boundaries. M2–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0 and M1 are complete and archived. 2026-09-26: user explicitly requested starting the current M2 child 09-13-http-contract-resources; finish its existing implementation and quality gate. M3–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
   "meta": {}
 }
