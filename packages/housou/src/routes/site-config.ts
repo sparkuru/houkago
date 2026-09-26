@@ -1,5 +1,6 @@
 import { Elysia } from "elysia"
 import { SiteConfigSchema } from "houkago-kousoku"
+import { httpDetail, httpResponses } from "../lib/http-contract"
 import { siteConfig } from "../lib/site-config"
 
 export const siteConfigRoutes = new Elysia().get(
@@ -8,5 +9,8 @@ export const siteConfigRoutes = new Elysia().get(
     set.headers["cache-control"] = "no-store"
     return siteConfig
   },
-  { response: SiteConfigSchema },
+  {
+    response: httpResponses(SiteConfigSchema),
+    ...httpDetail("siteConfig", ["browser-json", "public"], "none"),
+  },
 )

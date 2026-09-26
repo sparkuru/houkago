@@ -1,8 +1,11 @@
 import { Elysia, t } from "elysia"
 import {
-  BaiduDlinkFailureReasonSchema,
-  BaiduRetentionModeSchema,
+  BaiduConnectionStatusSchema,
+  BaiduDirectoryPageSchema,
+  BaiduPlaybackGrantSchema,
   type BaiduSourceAvailability,
+  BaiduSourceAvailabilitySchema,
+  EnmokuSchema,
 } from "houkago-kousoku"
 import { getBaiduConnection, getBaiduSource } from "../db/queries/baidu"
 import {
@@ -27,6 +30,21 @@ import {
   startBaiduOAuth,
 } from "../lib/baidu"
 import { BaiduAdaptorRequired, BaiduSourceNotFound, Forbidden } from "../lib/errors"
+import {
+  HttpAdaptorTokenSchema,
+  HttpBaiduAdaptorGrantSchema,
+  HttpBaiduDlinkRequestSchema,
+  HttpBaiduDlinkResponseSchema,
+  HttpBaiduOAuthStartBodySchema,
+  HttpBaiduOAuthStartSchema,
+  HttpBaiduPairingSchema,
+  HttpBaiduTokenBundleSchema,
+  HttpHtmlSchema,
+  HttpMediaSchema,
+  HttpOkSchema,
+  httpDetail,
+  httpResponses,
+} from "../lib/http-contract"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
 import { isPresent } from "../ws/housou"
@@ -35,7 +53,10 @@ import { authorizePlaylistMutation, broadcastBangumi } from "./bushitsu"
 const DeviceId = t.String({ minLength: 16, maxLength: 256 })
 
 export const baiduRoutes = new Elysia({ prefix: "/baidu" })
-  .get("/status", ({ request }) => baiduConnectionStatus(seitoFromRequest(request).id))
+  .get("/status", ({ request }) => baiduConnectionStatus(seitoFromRequest(request).id), {
+    response: httpResponses(BaiduConnectionStatusSchema),
+    ...httpDetail("baiduStatus", ["browser-json", "provider"]),
+  })
   .post(
     "/oauth/start",
     ({ request, body }) => {
@@ -43,10 +64,9 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
       return startBaiduOAuth(seitoFromRequest(request).id, body.retentionMode, body.deviceId)
     },
     {
-      body: t.Object(
-        { retentionMode: BaiduRetentionModeSchema, deviceId: t.Optional(DeviceId) },
-        { additionalProperties: false },
-      ),
+      body: HttpBaiduOAuthStartBodySchema,
+      response: httpResponses(HttpBaiduOAuthStartSchema),
+      ...httpDetail("baiduOAuthStart", ["browser-json", "provider"]),
     },
   )
   .get(
@@ -68,13 +88,22 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
         { code: t.String({ minLength: 1 }), state: t.String({ minLength: 16 }) },
         { additionalProperties: false },
       ),
+      response: httpResponses(HttpHtmlSchema),
+      ...httpDetail("baiduOAuthCallback", ["html-callback", "provider"], "none"),
     },
   )
-  .delete("/connection", ({ request }) => {
-    requireTrustedOrigin(request.headers.get("origin"))
-    revokeBaiduConnection(seitoFromRequest(request).id)
-    return { ok: true as const }
-  })
+  .delete(
+    "/connection",
+    ({ request }) => {
+      requireTrustedOrigin(request.headers.get("origin"))
+      revokeBaiduConnection(seitoFromRequest(request).id)
+      return { ok: true as const }
+    },
+    {
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("baiduConnectionDelete", ["browser-json", "provider"]),
+    },
+  )
   .post(
     "/adaptor/pairing",
     ({ request, body }) => {
@@ -86,6 +115,8 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
         { deviceId: DeviceId, localPaired: t.Boolean() },
         { additionalProperties: false },
       ),
+      response: httpResponses(HttpBaiduPairingSchema),
+      ...httpDetail("baiduAdaptorPairing", ["browser-json", "adaptor"]),
     },
   )
   .post("/adaptor/pair", ({ body }) => redeemBaiduPairing(body.pairingCode, body.deviceId), {
@@ -93,17 +124,38 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
       { pairingCode: t.String({ minLength: 16 }), deviceId: DeviceId },
       { additionalProperties: false },
     ),
+    response: httpResponses(HttpAdaptorTokenSchema),
+    ...httpDetail("baiduAdaptorPair", ["adaptor-json", "adaptor"], "none"),
   })
-  .post("/adaptor/heartbeat", ({ request }) => {
-    requireBaiduAdaptor(request)
-    return { ok: true as const }
-  })
-  .delete("/adaptor/session", ({ request }) => {
-    disconnectBaiduAdaptor(requireBaiduAdaptor(request))
-    return { ok: true as const }
-  })
-  .post("/adaptor/oauth/handoff", ({ request }) =>
-    consumeBaiduHandoff(requireBaiduAdaptor(request)),
+  .post(
+    "/adaptor/heartbeat",
+    ({ request }) => {
+      requireBaiduAdaptor(request)
+      return { ok: true as const }
+    },
+    {
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("baiduAdaptorHeartbeat", ["adaptor-json", "adaptor"], "adaptor"),
+    },
+  )
+  .delete(
+    "/adaptor/session",
+    ({ request }) => {
+      disconnectBaiduAdaptor(requireBaiduAdaptor(request))
+      return { ok: true as const }
+    },
+    {
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("baiduAdaptorSessionDelete", ["adaptor-json", "adaptor"], "adaptor"),
+    },
+  )
+  .post(
+    "/adaptor/oauth/handoff",
+    ({ request }) => consumeBaiduHandoff(requireBaiduAdaptor(request)),
+    {
+      response: httpResponses(HttpBaiduTokenBundleSchema),
+      ...httpDetail("baiduAdaptorOAuthHandoff", ["adaptor-json", "adaptor"], "adaptor"),
+    },
   )
   .post(
     "/adaptor/oauth/refresh",
@@ -111,38 +163,35 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
       refreshUserHeldBaiduToken(requireBaiduAdaptor(request), body.refreshToken),
     {
       body: t.Object({ refreshToken: t.String({ minLength: 1 }) }, { additionalProperties: false }),
+      response: httpResponses(HttpBaiduTokenBundleSchema),
+      ...httpDetail("baiduAdaptorOAuthRefresh", ["adaptor-json", "adaptor"], "adaptor"),
     },
   )
-  .get("/adaptor/dlink-requests", ({ request }) =>
-    listPendingBaiduDlinks(requireBaiduAdaptor(request)),
+  .get(
+    "/adaptor/dlink-requests",
+    ({ request }) => listPendingBaiduDlinks(requireBaiduAdaptor(request)),
+    {
+      response: httpResponses(t.Array(HttpBaiduDlinkRequestSchema)),
+      ...httpDetail("baiduAdaptorDlinkRequests", ["adaptor-json", "adaptor"], "adaptor"),
+    },
   )
   .post(
     "/adaptor/dlink-responses",
     ({ request, body }) => completePendingBaiduDlink(requireBaiduAdaptor(request), body),
     {
-      body: t.Union([
-        t.Object(
-          {
-            requestId: t.String({ minLength: 16 }),
-            nonce: t.String({ minLength: 16 }),
-            dlink: t.String({ minLength: 1 }),
-            expiresAt: t.Number(),
-          },
-          { additionalProperties: false },
-        ),
-        t.Object(
-          {
-            requestId: t.String({ minLength: 16 }),
-            nonce: t.String({ minLength: 16 }),
-            failure: BaiduDlinkFailureReasonSchema,
-          },
-          { additionalProperties: false },
-        ),
-      ]),
+      body: HttpBaiduDlinkResponseSchema,
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("baiduAdaptorDlinkResponse", ["adaptor-json", "adaptor"], "adaptor"),
     },
   )
-  .get("/adaptor/grants/:grantId", ({ request, params }) =>
-    claimBaiduMediaGrant(requireBaiduAdaptor(request), params.grantId, request.url),
+  .get(
+    "/adaptor/grants/:grantId",
+    ({ request, params }) =>
+      claimBaiduMediaGrant(requireBaiduAdaptor(request), params.grantId, request.url),
+    {
+      response: httpResponses(HttpBaiduAdaptorGrantSchema),
+      ...httpDetail("baiduAdaptorGrantClaim", ["adaptor-json", "adaptor"], "adaptor"),
+    },
   )
   .post(
     "/files/list",
@@ -155,6 +204,8 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
         { path: t.String(), cursor: t.Optional(t.String()) },
         { additionalProperties: false },
       ),
+      response: httpResponses(BaiduDirectoryPageSchema),
+      ...httpDetail("baiduFilesList", ["browser-json", "provider"]),
     },
   )
   .post(
@@ -176,12 +227,18 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
         },
         { additionalProperties: false },
       ),
+      response: httpResponses(EnmokuSchema),
+      ...httpDetail("baiduSourceCreate", ["browser-json", "provider", "room-command"]),
     },
   )
   .get(
     "/sources/:sourceId/availability",
     ({ request, params, query }) => sourceAvailability(request, params.sourceId, query.bushitsuId),
-    { query: t.Object({ bushitsuId: t.String({ minLength: 1 }) }) },
+    {
+      query: t.Object({ bushitsuId: t.String({ minLength: 1 }) }),
+      response: httpResponses(BaiduSourceAvailabilitySchema),
+      ...httpDetail("baiduSourceAvailability", ["browser-json", "provider"]),
+    },
   )
   .post(
     "/sources/:sourceId/grants",
@@ -192,14 +249,29 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
     },
     {
       body: t.Object({ bushitsuId: t.String({ minLength: 1 }) }, { additionalProperties: false }),
+      response: httpResponses(BaiduPlaybackGrantSchema),
+      ...httpDetail("baiduPlaybackGrantCreate", ["browser-json", "provider"]),
     },
   )
-  .get("/grants/:requestId", ({ request, params }) =>
-    pollBaiduPlaybackGrant(seitoFromRequest(request).id, params.requestId, request.url),
+  .get(
+    "/grants/:requestId",
+    ({ request, params }) =>
+      pollBaiduPlaybackGrant(seitoFromRequest(request).id, params.requestId, request.url),
+    {
+      response: httpResponses(BaiduPlaybackGrantSchema),
+      ...httpDetail("baiduPlaybackGrantPoll", ["browser-json", "provider"]),
+    },
   )
-  .get("/media/:grantId", () => {
-    throw new BaiduAdaptorRequired("desktop adaptor interception is required")
-  })
+  .get(
+    "/media/:grantId",
+    () => {
+      throw new BaiduAdaptorRequired("desktop adaptor interception is required")
+    },
+    {
+      response: httpResponses(HttpMediaSchema),
+      ...httpDetail("baiduMedia", ["media", "provider"], "none"),
+    },
+  )
 
 function sourceAvailability(
   request: Request,

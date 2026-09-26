@@ -1,7 +1,12 @@
 import { Elysia, t } from "elysia"
 import { previewPublicUrlWithMetadata, resolveUrlWithMetadata } from "houkago-eisha"
-import type { Enmoku } from "houkago-kousoku"
-import { EnmokuProviderSchema, EnmokuTypeSchema } from "houkago-kousoku"
+import {
+  BushitsuSchema,
+  type Enmoku,
+  EnmokuProviderSchema,
+  EnmokuSchema,
+  EnmokuTypeSchema,
+} from "houkago-kousoku"
 import {
   addEnmoku,
   clearBangumiPending,
@@ -14,6 +19,13 @@ import {
 } from "../domain/bushitsu"
 import { cancelBaiduForEnmoku } from "../lib/baidu"
 import { BaiduStateInvalid, Forbidden } from "../lib/errors"
+import {
+  HttpClearPendingSchema,
+  HttpOkSchema,
+  HttpPreviewEnmokuSchema,
+  httpDetail,
+  httpResponses,
+} from "../lib/http-contract"
 import { canDo, getKengen } from "../lib/kengen"
 import { requireTrustedOrigin } from "../lib/origin"
 import { seitoFromRequest } from "../lib/seitoshou"
@@ -72,12 +84,22 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
       requireTrustedOrigin(request.headers.get("origin"))
       return createBushitsu(body.name, seitoFromRequest(request).id)
     },
-    { body: t.Object({ name: t.String() }) },
+    {
+      body: t.Object({ name: t.String() }),
+      response: httpResponses(BushitsuSchema),
+      ...httpDetail("roomCreate", ["browser-json", "room-command"]),
+    },
   )
   // 部室を取る
-  .get("/:id", ({ params }) => fetchBushitsu(params.id))
+  .get("/:id", ({ params }) => fetchBushitsu(params.id), {
+    response: httpResponses(BushitsuSchema),
+    ...httpDetail("roomGet", ["browser-json", "room-bootstrap"], "none"),
+  })
   // 番組表：list a room's enmoku
-  .get("/:id/bangumi", ({ params }) => fetchBangumi(params.id))
+  .get("/:id/bangumi", ({ params }) => fetchBangumi(params.id), {
+    response: httpResponses(t.Array(EnmokuSchema)),
+    ...httpDetail("roomBangumiGet", ["browser-json", "room-bootstrap"], "none"),
+  })
   // 演目を下見する：parse a public URL without changing the room queue.
   .post(
     "/:id/enmoku/preview",
@@ -85,7 +107,11 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
       authorizePlaylistMutation(request, params.id)
       return previewEnmoku(params.id, body, new URL(request.url).origin)
     },
-    { body: PreviewEnmokuBody },
+    {
+      body: PreviewEnmokuBody,
+      response: httpResponses(HttpPreviewEnmokuSchema),
+      ...httpDetail("roomEnmokuPreview", ["browser-json", "room-command"]),
+    },
   )
   // 演目を投稿する：add a legacy direct source or resolve a dev source URL.
   .post(
@@ -98,16 +124,25 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     },
     {
       body: t.Union([DirectEnmokuBody, ResolveEnmokuBody]),
+      response: httpResponses(EnmokuSchema),
+      ...httpDetail("roomEnmokuCreate", ["browser-json", "room-command"]),
     },
   )
   // 演目を消す：delete a queued enmoku from this room.
-  .delete("/:id/enmoku/:enmokuId", ({ params, request }) => {
-    authorizePlaylistMutation(request, params.id)
-    cancelBaiduForEnmoku(params.enmokuId, params.id)
-    const result = removeEnmoku(params.id, params.enmokuId)
-    broadcastBangumi(params.id)
-    return result
-  })
+  .delete(
+    "/:id/enmoku/:enmokuId",
+    ({ params, request }) => {
+      authorizePlaylistMutation(request, params.id)
+      cancelBaiduForEnmoku(params.enmokuId, params.id)
+      const result = removeEnmoku(params.id, params.enmokuId)
+      broadcastBangumi(params.id)
+      return result
+    },
+    {
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("roomEnmokuDelete", ["browser-json", "room-command"]),
+    },
+  )
   .post(
     "/:id/bangumi/:enmokuId/move",
     ({ params, body, request }) => {
@@ -116,25 +151,43 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
       broadcastBangumi(params.id)
       return result
     },
-    { body: MoveBangumiBody },
+    {
+      body: MoveBangumiBody,
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("roomBangumiMove", ["browser-json", "room-command"]),
+    },
   )
-  .delete("/:id/bangumi/pending", ({ params, request }) => {
-    authorizeBuchouMutation(request, params.id)
-    const currentEnmokuId = shinkouSeigyo.genjou(params.id).enmokuId
-    for (const enmoku of fetchBangumi(params.id)) {
-      if (enmoku.id !== currentEnmokuId) cancelBaiduForEnmoku(enmoku.id, params.id)
-    }
-    const result = clearBangumiPending(params.id, currentEnmokuId)
-    broadcastBangumi(params.id)
-    return result
-  })
-  .delete("/:id/meibo/:seitoId", ({ params, request }) => {
-    requireTrustedOrigin(request.headers.get("origin"))
-    const actor = seitoFromRequest(request)
-    const result = removeBuin(params.id, actor.id, params.seitoId)
-    revokeBuin(params.id, params.seitoId)
-    return result
-  })
+  .delete(
+    "/:id/bangumi/pending",
+    ({ params, request }) => {
+      authorizeBuchouMutation(request, params.id)
+      const currentEnmokuId = shinkouSeigyo.genjou(params.id).enmokuId
+      for (const enmoku of fetchBangumi(params.id)) {
+        if (enmoku.id !== currentEnmokuId) cancelBaiduForEnmoku(enmoku.id, params.id)
+      }
+      const result = clearBangumiPending(params.id, currentEnmokuId)
+      broadcastBangumi(params.id)
+      return result
+    },
+    {
+      response: httpResponses(HttpClearPendingSchema),
+      ...httpDetail("roomBangumiPendingClear", ["browser-json", "room-command"]),
+    },
+  )
+  .delete(
+    "/:id/meibo/:seitoId",
+    ({ params, request }) => {
+      requireTrustedOrigin(request.headers.get("origin"))
+      const actor = seitoFromRequest(request)
+      const result = removeBuin(params.id, actor.id, params.seitoId)
+      revokeBuin(params.id, params.seitoId)
+      return result
+    },
+    {
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("roomMemberDelete", ["browser-json", "room-command"]),
+    },
+  )
 
 async function createEnmoku(
   bushitsuId: string,

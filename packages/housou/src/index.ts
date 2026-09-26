@@ -1,8 +1,10 @@
 import { cors } from "@elysiajs/cors"
+import { openapi } from "@elysiajs/openapi"
 import { Elysia } from "elysia"
 import { eishaRoutes } from "houkago-eisha"
 import "./db/client" // applies idempotent schema on module load
 import { statusFor } from "./lib/errors"
+import { HttpOkSchema, httpDetail, httpResponses } from "./lib/http-contract"
 import { corsOrigin } from "./lib/origin"
 import { baiduRoutes } from "./routes/baidu"
 import { bushitsuRoutes } from "./routes/bushitsu"
@@ -14,6 +16,27 @@ import { startTenko } from "./ws/tenko"
 
 export const app = new Elysia()
   .use(cors({ origin: corsOrigin(), credentials: true }))
+  .use(
+    openapi({
+      enabled: process.env.HOUKAGO_OPENAPI === "1",
+      path: "/openapi",
+      specPath: "/openapi/json",
+      provider: null,
+      documentation: {
+        info: {
+          title: "Houkago HTTP API",
+          version: "0.0.0",
+        },
+        servers: [{ url: "/", description: "Houkago housou HTTP origin" }],
+        components: {
+          securitySchemes: {
+            cookieSession: { type: "apiKey", in: "cookie", name: "houkago_seitoshou" },
+            adaptorBearer: { type: "http", scheme: "bearer" },
+          },
+        },
+      },
+    }),
+  )
   // Central error mapping: domain error `code` → HTTP status + uniform body.
   // Unmapped / unexpected errors become 500 with a generic message.
   .onError(({ error, code, set }) => {
@@ -33,7 +56,10 @@ export const app = new Elysia()
     set.status = 500
     return { error: { code: "INTERNAL", message: "internal error" } }
   })
-  .get("/health", () => ({ ok: true }))
+  .get("/health", () => ({ ok: true as const }), {
+    response: httpResponses(HttpOkSchema),
+    ...httpDetail("health", ["browser-json", "public"], "none"),
+  })
   .use(siteConfigRoutes)
   .use(eishaRoutes)
   .use(seitoshouRoutes)

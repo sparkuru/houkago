@@ -1,4 +1,6 @@
 import { Elysia, t } from "elysia"
+import { SeitoSchema } from "houkago-kousoku"
+import { HttpOkSchema, httpDetail, httpResponses } from "../lib/http-contract"
 import { requireTrustedOrigin } from "../lib/origin"
 import {
   issueSeitoshou,
@@ -28,7 +30,12 @@ export const seitoshouRoutes = new Elysia({ prefix: "/seitoshou" })
       })
       return seito
     },
-    { body: t.Object({ username: t.String(), password: t.String() }), cookie: CookieSchema },
+    {
+      body: t.Object({ username: t.String(), password: t.String() }),
+      cookie: CookieSchema,
+      response: httpResponses(SeitoSchema),
+      ...httpDetail("identityRegister", ["browser-json", "identity"], "none"),
+    },
   )
   .post(
     "/sign-in",
@@ -46,7 +53,12 @@ export const seitoshouRoutes = new Elysia({ prefix: "/seitoshou" })
       })
       return seito
     },
-    { body: t.Object({ username: t.String(), password: t.String() }), cookie: CookieSchema },
+    {
+      body: t.Object({ username: t.String(), password: t.String() }),
+      cookie: CookieSchema,
+      response: httpResponses(SeitoSchema),
+      ...httpDetail("identitySignIn", ["browser-json", "identity"], "none"),
+    },
   )
   .post(
     "/sign-out",
@@ -62,10 +74,16 @@ export const seitoshouRoutes = new Elysia({ prefix: "/seitoshou" })
       })
       return { ok: true as const }
     },
-    { cookie: CookieSchema },
+    {
+      cookie: CookieSchema,
+      response: httpResponses(HttpOkSchema),
+      ...httpDetail("identitySignOut", ["browser-json", "identity"], "optional-session"),
+    },
   )
   .get("/me", ({ cookie }) => resolveSeitoshou(tokenOf(cookie[COOKIE]?.value)), {
     cookie: CookieSchema,
+    response: httpResponses(SeitoSchema),
+    ...httpDetail("identityMe", ["browser-json", "identity"]),
   })
 
 export { COOKIE }

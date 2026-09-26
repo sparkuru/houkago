@@ -9,3 +9,8 @@ import type { App } from "houkago-housou"
 export const housou = treaty<App>(housouUrl(), {
   fetch: { credentials: "include" },
 })
+
+export * from "./http-client"
+export * from "./resources/http"
+export * from "./resources/keys"
+export * from "./resources/policy"

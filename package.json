@@ -7,6 +7,11 @@
     "test": "HOUSOU_DB=:memory: bun test packages/kokuban/test packages/eisha/test packages/houkago-adapter/test packages/housou/test packages/kousoku/test packages/kyoushitsu/test",
     "lint": "biome check .",
     "format": "biome format --write .",
+    "contract:export": "bun --no-env-file packages/housou/src/export-openapi.ts",
+    "contract:page": "bun --no-env-file scripts/prepare-page-openapi.ts",
+    "contract:verify": "bun --no-env-file scripts/verify-http-contract.ts",
+    "contract:generate": "bun --no-env-file run contract:export && bun --no-env-file run contract:page && bun --no-env-file run contract:verify && bunx openapi-ts",
+    "contract:drift": "bun --no-env-file scripts/check-contract-drift.ts",
     "dev:housou": "bun run --filter houkago-housou dev",
     "dev:kyoushitsu": "bun run --filter houkago-kyoushitsu dev",
     "start:housou": "bun run --filter houkago-housou start"
@@ -14,6 +19,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.61.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "@types/bun": "latest",
     "typescript": "^5.6.0"
   }

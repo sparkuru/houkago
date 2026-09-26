@@ -170,6 +170,13 @@ function rejectPending(
 export const wsRoutes = new Elysia().ws("/ws", {
   query: ConnectQuery,
   body: KousokuMessageSchema,
+  detail: {
+    operationId: "roomWebSocket",
+    tags: ["websocket", "room-session"],
+    security: [{ cookieSession: [] }],
+    description:
+      "Room admission and revisioned live state transport; not a JSON page SDK operation.",
+  },
   // Malformed envelope → KEIHOU (警報), never a silent drop or disconnect
   // (error-handling spec). Whatever this returns is sent back to the client.
   error() {

@@ -14,7 +14,10 @@
       ".claude",
       ".codex",
       "*.db",
-      "*.sqlite"
+      "*.sqlite",
+      "packages/housou/openapi.json",
+      "packages/kyoushitsu/openapi.json",
+      "packages/kyoushitsu/src/api/generated/**"
     ]
   },
   "organizeImports": { "enabled": true },
