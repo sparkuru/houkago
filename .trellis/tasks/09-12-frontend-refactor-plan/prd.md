@@ -15,8 +15,9 @@ implementation, and validation are complete and archived. M2 is also complete
 and archived after explicit authorization and commit approval on 2026-09-26.
 The user subsequently approved M3 task creation/planning and automatic same-window
 handoff to existing Vue rooms, then approved the completed final summary with
-`开始实现 M3` on 2026-09-26. M3 remains `in_progress`: implementation and
-automated validation passed; owner approved the presented residual-review and commit/archive batch with `提交`.
+`开始实现 M3` on 2026-09-26. The owner approved the presented residual-review
+and commit/archive batch with `提交`. M3 is complete and archived; work commits
+`8c5a326` / `ae37464`, 465 tests, 56 browser cases and 124 shell checks passed.
 M4–M6, unrelated dependency changes,
 serial continuation and cutover remain unapproved.
 

@@ -15,30 +15,31 @@
   the user requested completing M2 and approved its commit/archive batch.
   The user approved creating M3 and entering planning on 2026-09-26,
   then approved its final planning summary with `开始实现 M3`;
-  M3 implementation is authorized. M4–M6 remain unapproved.
+  M3 is complete, committed and archived after the owner's `提交` approval.
+  M4–M6 remain unapproved.
 - authoritative roadmap: [Benefit priorities and delivery map](tasks/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
 - mode: guided
 - serial authorization: none
-- execution authorization: M3 implementation and validation; bounded M2 task fulfilled
-- next pulse: execute owner-approved M3 commits, archive and journal
-- next permitted action: finish the approved M3 batch; no later-stage continuation
+- execution authorization: bounded M0–M3 tasks fulfilled; no serial continuation
+- next pulse: await explicit M4 stage authorization
+- next permitted action: discuss/refine M4 only when requested; no implementation or cutover authorization
 
 ## Ordered Work
 
-M0, M1 and M2 are archived children.
-M3 is the active child `09-26-react-shell-ui-foundation`. M4–M6 remain
+M0–M3 are complete and archived children. M3 evidence is retained at
+`archive/2026-09/09-26-react-shell-ui-foundation`. M4–M6 remain
 proposed children requiring their own authorization and checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
 | --- | --- | --- | --- |
-| Plan | `09-12-frontend-refactor-plan` | planning | Stage scope documented; M0–M2 archived; M3 authorized; M4–M6 authorization pending |
+| Plan | `09-12-frontend-refactor-plan` | planning | Stage scope documented; M0–M3 archived; M4–M6 authorization pending |
 | M0 | behavior-baseline | archived | Historical baseline recorded; browser failures are not parity evidence |
 | M1 | session-player-boundaries | archived | Depends on M0; implementation and focused evidence archived at `archive/2026-09/09-12-session-player-boundaries` |
 | M2 | http-contract-resources | archived | A1–A8 verified; work commits d7410cf/d76c8e5; 434 aggregate tests and static/build/drift gates pass |
-| M3 | react-shell-ui-foundation | in_progress | Implementation/independent check passed: 465 tests, 56 browser cases, 124 shell checks; preview stopped; owner accepted residual-review and commit/archive batch with 提交 |
+| M3 | react-shell-ui-foundation | archived | A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks and static/build/drift gates passed; preview stopped |
 | M4 | room-features | planned | Depends on M3 and validated session controller; realtime queue/chat/governance |
 | M5 | media-provider-danmaku | planned | Depends on M4 and player seam; media lifecycle, Baidu, subtitles/fullscreen and danmaku |
 | M6 | parity-cutover | planned | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
@@ -65,17 +66,18 @@ proposed children requiring their own authorization and checks.
   the plan assumptions; not a delivery commitment or implementation approval.
 - M3 scope decision: user approved automatic same-window handoff from React home
   to existing Vue rooms on 2026-09-26. New app stays opt-in; room/media migration
-  remains M4/M5. Its exact dependency patches need the bounded compatible build spike.
+  remains M4/M5. Compatible new patches are locked without upgrading old entries.
 - Implementation authorization: final summary from session
   `01a0dc8f-5005-74d1-9085-1c08b8f24c0d` was approved with `开始实现 M3`.
-  Next user decision follows runnable M3 evidence and residual human review;
-  no cutover or M4 continuation is authorized.
-- M3 automated evidence: [validation.md](tasks/09-26-react-shell-ui-foundation/validation.md).
-  A1–A7 accepted; user approved the presented batch with `提交`. Proposed work
-  batches: [commit-plan.md](tasks/09-26-react-shell-ui-foundation/commit-plan.md).
-  Functional work commit: `8c5a326`; docs and finish bookkeeping follow. Parent stays planning.
-- Dirty-state handling: M2 work is committed; the pre-existing `dev.sh` URL
-  edits remain outside its commits and must be preserved.
+  The owner approved residual review and commit/archive with `提交` after runnable
+  evidence. No cutover or M4 continuation is authorized.
+- M3 automated evidence: [validation.md](tasks/archive/2026-09/09-26-react-shell-ui-foundation/validation.md).
+  A1–A7 accepted; executed work batches:
+  [commit-plan.md](tasks/archive/2026-09/09-26-react-shell-ui-foundation/commit-plan.md).
+  Work commits: `8c5a326` / `ae37464`; archive commit: `670e4dd`.
+  Parent stays planning; M3 is archived.
+- Dirty-state handling: M2/M3 work is committed; the pre-existing `dev.sh` URL
+  edits remain outside their commits and must be preserved.
 
 ## Previous Initiative and Preserved History
 

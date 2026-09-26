@@ -26,10 +26,11 @@ High benefit does not mean low risk. Priorities 1 and 3 contain the main lifecyc
 ## Ordered delivery map
 
 The initiative planning task owns the requirements and integration acceptance.
-M0, M1 and M2 are now archived, separately reviewable children. The user
+M0–M3 are now archived, separately reviewable children. The user
 approved M2 completion and its commit/archive batch on 2026-09-26, then approved
 creating M3 and entering planning. The completed final summary was subsequently
-approved with `开始实现 M3`; M3 is `in_progress`.
+approved with `开始实现 M3`; after runnable validation the owner approved the
+residual-review and commit/archive batch with `提交`. M3 is complete and archived.
 M4–M6 remain proposed future children requiring their own authorization.
 
 | Order | Proposed child | Scope and acceptance | Dependencies | State |
@@ -37,7 +38,7 @@ M4–M6 remain proposed future children requiring their own authorization.
 | M0 | behavior-baseline | Inventory current behavior/spec drift; run and record existing test/browser baseline with fixtures | Fresh implementation authorization | Archived at `archive/2026-09/09-12-behavior-baseline`; browser prerequisites remain blocked |
 | M1 | session-player-boundaries | Extract session/queue authority, sync and player seams while retaining Vue; prove generation/disposal ordering; define feature ownership | M0 | Archived at `archive/2026-09/09-12-session-player-boundaries`; implementation and checks pass |
 | M2 | http-contract-resources | Inventory/export OpenAPI; prove Hey API types/errors/cookies; define Query keys, resource policy and HTTP/WS boundaries | M0; M1 ownership contracts before resource integration | Archived at `archive/2026-09/09-13-http-contract-resources`; A1–A8 and quality gate passed |
-| M3 | react-shell-ui-foundation | Parallel React/Vite app, Router/Query composition root, identity/home, tokens and primitives; approved automatic handoff to Vue rooms | M1 and M2 | Implementation/independent check passed (465 tests, 56 browser cases, 124 shell checks); owner approved residual-review and commit/archive batch |
+| M3 | react-shell-ui-foundation | Parallel React/Vite app, Router/Query composition root, identity/home, tokens and primitives; approved automatic handoff to Vue rooms | M1 and M2 | Archived at `archive/2026-09/09-26-react-shell-ui-foundation`; A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks passed |
 | M4 | room-features | Admission, realtime queue/chat/governance with feature commands and selectors | M3, validated M1 session controller | Planned, not started |
 | M5 | media-provider-danmaku | React player binding, subtitles/fullscreen, Baidu grants/adapter and danmaku, reusing extracted logic | M4 and validated M1 player seam | Planned, not started |
 | M6 | parity-cutover | Full behavior/layout regression, human residual review, rollout/rollback plan, then retire old frontend only after acceptance | M4 and M5, explicit cutover authorization | Planned, not started |
@@ -67,9 +68,10 @@ by the archived child `archive/2026-09/09-12-session-player-boundaries`;
 implementation and validation are complete. M2 is the archived child
 `archive/2026-09/09-13-http-contract-resources`, completed and committed on
 2026-09-26 after explicit user authorization and commit-plan approval.
-M3 is the active child `09-26-react-shell-ui-foundation`, approved on
+M3 is the archived child `archive/2026-09/09-26-react-shell-ui-foundation`, approved on
 2026-09-26. The user approved automatic same-window Vue room handoff and then
 the completed final summary with `开始实现 M3`. M3 implementation/check passed;
-the child remains in_progress while executing the approved work commits and finish bookkeeping.
+the owner approved the final batch with `提交`. Work commits `8c5a326` /
+`ae37464` and M3 archive `670e4dd` are complete; parent remains planning.
 M4–M6, unrelated dependency changes, automatic
 serial continuation and deployment remain unauthorized.
