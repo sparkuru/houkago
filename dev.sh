@@ -6,8 +6,8 @@ readonly SCRIPT_NAME
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 readonly SCRIPT_DIR
 readonly DX_PATH="${SCRIPT_DIR}/dx"
-readonly FRONTEND_URL="http://localhost:5173"
-readonly BACKEND_URL="http://localhost:3000"
+readonly FRONTEND_URL="http://0.0.0.0:5173"
+readonly BACKEND_URL="http://0.0.0.0:3000"
 
 usage() {
   printf 'Usage: %s [--origin <frontend-origin>] [--help]\n' "$SCRIPT_NAME"
