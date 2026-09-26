@@ -7,3 +7,5 @@ export function t(key: MessageKey): string {
 }
 
 export { DEFAULT_LOCALE }
+
+export type { MessageKey, Locale } from "./messages"

@@ -12,6 +12,7 @@ import {
   identitySignOut,
   roomBangumiGet,
   roomBangumiMove,
+  roomCreate,
   roomGet,
   siteConfig,
 } from "../generated"
@@ -32,10 +33,17 @@ import type {
   IdentitySignOutResponse,
   RoomBangumiGetResponse,
   RoomBangumiMoveResponse,
+  RoomCreateData,
+  RoomCreateResponse,
   RoomGetResponse,
   SiteConfigResponse,
 } from "../generated"
-import { HoukagoHttpError, unwrapResult } from "../http-client"
+import {
+  HoukagoHttpError,
+  housouHttpClient,
+  normalizeHttpError,
+  unwrapResult,
+} from "../http-client"
 import { normalizeSearchQuery } from "./keys"
 
 export type HttpRequestOptions = {
@@ -47,9 +55,47 @@ export type RoomBootstrap = {
   bangumi: RoomBangumiGetResponse
 }
 
-export function fetchSiteConfig(options: HttpRequestOptions = {}): Promise<SiteConfigResponse> {
-  return siteConfig({ ...options, throwOnError: false }).then((result) =>
-    unwrapResult<SiteConfigResponse>(result),
+export async function fetchSiteConfig(
+  options: HttpRequestOptions = {},
+): Promise<SiteConfigResponse> {
+  const configuredFetch = housouHttpClient.getConfig().fetch ?? globalThis.fetch
+  let empty = false
+  const scopedFetch: typeof fetch = Object.assign(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const response = await configuredFetch(input, init)
+      if (response.ok)
+        empty = response.status === 204 || (await response.clone().text()).length === 0
+      return response
+    },
+    { preconnect: configuredFetch.preconnect },
+  )
+  const result = await siteConfig({ ...options, fetch: scopedFetch, throwOnError: false })
+  if (options.signal?.aborted)
+    throw normalizeHttpError(
+      new HoukagoHttpError("aborted", "Site configuration request was aborted"),
+      result.response,
+      result.request,
+    )
+  if (empty && !(result.error instanceof HoukagoHttpError && result.error.kind === "aborted")) {
+    return unwrapResult<SiteConfigResponse>({
+      ...result,
+      error: new HoukagoHttpError(
+        "protocol",
+        "Public site configuration response is empty",
+        result.response?.status,
+        "EMPTY_RESPONSE",
+      ),
+    })
+  }
+  return unwrapResult<SiteConfigResponse>(result)
+}
+
+export function createRoom(
+  body: RoomCreateData["body"],
+  options: HttpRequestOptions = {},
+): Promise<RoomCreateResponse> {
+  return roomCreate({ body, ...options, throwOnError: false }).then((result) =>
+    unwrapResult<RoomCreateResponse>(result),
   )
 }
 

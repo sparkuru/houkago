@@ -1,50 +1,70 @@
 #!/usr/bin/env bash
-# dx —— 在 oven/bun:1 容器里跑命令的开发包裹器。
-# 宿主机不装 bun；所有 bun/bunx/服务全走容器。仓库挂到 /app，uid 映射避免 root 占文件。
-#
-# 用法:
-#   ./dx bun install
-#   ./dx bun run typecheck
-#   ./dx bun run lint
-#   ./dx bun test
-#   ./dx bun --version
-#   ./dx sh -c 'cd packages/housou && bun run dev'
-#
-# 端口: housou 3000、kyoushitsu(vite) 5173 空闲时发布到宿主；已被占用（dev-server
-# 在跑）则自动跳过该端口的 -p，使验证命令仍能在容器里跑通。
-# 容器内服务须监听 0.0.0.0（elysia listen / vite server.host）才能从宿主访问。
-set -euo pipefail
+set -Eeuo pipefail
 
-IMAGE="oven/bun:1"
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly IMAGE="oven/bun:1"
 
-# bun 缓存/HOME 落 repo 内（已 gitignore），任意 uid 都可写。
-DEVHOME="${REPO_ROOT}/.devhome"
-mkdir -p "${DEVHOME}"
+usage() {
+	printf 'Usage: [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]\n' >&2
+	printf 'Run in %s with the repository mounted at /app and your uid mapped.\n' "$IMAGE" >&2
+	printf 'Publish free ports 3000/5173 plus optional decimal ports 1-65535.\n' >&2
+	printf 'Examples: ./dx bun run typecheck; DX_EXTRA_PORTS=5174 ./dx bun run dev:react\n' >&2
+}
 
-TTY_FLAGS=()
-[ -t 0 ] && TTY_FLAGS+=(-i)
-[ -t 0 ] && [ -t 1 ] && TTY_FLAGS+=(-t)
+die() {
+	printf 'dx: %s\n' "$*" >&2
+	exit 1
+}
 
-# 端口发布按需：dev/serve 要把 3000/5173 暴露到宿主，但 typecheck/lint/test/build
-# 这类验证命令不需要端口。某端口已被占用（通常是正在跑的 dev-server）时直接发布会
-# "port is already allocated" 使整个 dx 失败 —— 此时跳过该端口的 -p，让验证命令仍能
-# 在容器里跑通。端口空闲时照常发布，dev 不受影响。
-PORT_FLAGS=()
-for p in 3000 5173; do
-  if (exec 3<>"/dev/tcp/127.0.0.1/${p}") 2>/dev/null; then
-    exec 3>&- 3<&-
-    echo "dx: port ${p} busy — skip publishing (fine for verify; dev needs it free)" >&2
-  else
-    PORT_FLAGS+=(-p "${p}:${p}")
-  fi
-done
+main() {
+	local repo_root devhome raw_port port extra_ports
+	local -a ports=(3000 5173) port_flags=() tty_flags=() requested_ports=()
 
-exec docker run --rm \
-  "${TTY_FLAGS[@]}" \
-  --user "$(id -u):$(id -g)" \
-  -e HOME=/app/.devhome \
-  -v "${REPO_ROOT}:/app" \
-  -w /app \
-  "${PORT_FLAGS[@]}" \
-  "${IMAGE}" "$@"
+	if [[ ${1:-} == --help || ${1:-} == -h ]]; then
+		usage
+		return 0
+	fi
+
+	extra_ports=${DX_EXTRA_PORTS:-}
+	if [[ -n "$extra_ports" ]]; then
+		[[ "$extra_ports" =~ ^[0-9]+(,[0-9]+)*$ ]] || die "DX_EXTRA_PORTS must be comma-separated decimal ports (1-65535)"
+		IFS=, read -r -a requested_ports <<<"$extra_ports"
+		for raw_port in "${requested_ports[@]}"; do
+			# Normalize before arithmetic so leading zeroes stay decimal and large inputs cannot overflow.
+			port=${raw_port#"${raw_port%%[!0]*}"}
+			[[ -n "$port" && ${#port} -le 5 ]] || die "DX_EXTRA_PORTS contains a port outside 1-65535"
+			((10#$port <= 65535)) || die "DX_EXTRA_PORTS contains a port outside 1-65535"
+			[[ " ${ports[*]} " == *" $port "* ]] || ports+=("$port")
+		done
+	fi
+
+	command -v docker >/dev/null 2>&1 || die "required command not found: docker"
+	command -v id >/dev/null 2>&1 || die "required command not found: id"
+	command -v dirname >/dev/null 2>&1 || die "required command not found: dirname"
+	command -v mkdir >/dev/null 2>&1 || die "required command not found: mkdir"
+	repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+	devhome="${repo_root}/.devhome"
+	mkdir -p -- "$devhome"
+
+	[[ ! -t 0 ]] || tty_flags+=(-i)
+	[[ ! -t 0 || ! -t 1 ]] || tty_flags+=(-t)
+
+	# Keep verification usable alongside a server already listening on a published port.
+	for port in "${ports[@]}"; do
+		if (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+			printf 'dx: port %s busy — skip publishing (fine for verify; dev needs it free)\n' "$port" >&2
+		else
+			port_flags+=(-p "${port}:${port}")
+		fi
+	done
+
+	exec docker run --rm \
+		"${tty_flags[@]}" \
+		--user "$(id -u):$(id -g)" \
+		-e HOME=/app/.devhome \
+		-v "${repo_root}:/app" \
+		-w /app \
+		"${port_flags[@]}" \
+		"$IMAGE" "$@"
+}
+
+main "$@"

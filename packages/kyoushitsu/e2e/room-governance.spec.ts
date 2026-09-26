@@ -170,7 +170,7 @@ test("owner can cancel, retry, and confirm a member removal without reconnecting
     await ownerPage.unroute("**/bushitsu/*/meibo/*")
 
     await expect(memberPage).toHaveURL(/\?revoked=1/)
-    await expect(memberPage.getByRole("alert")).toHaveText("你已被移出该部室。")
+    await expect(memberPage.getByRole("alert")).toMatchAriaSnapshot("- alert: 你已被移出该部室。")
     await expect(roster).not.toContainText(memberName)
     await expect
       .poll(() =>

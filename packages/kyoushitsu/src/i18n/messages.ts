@@ -2,6 +2,12 @@ export const DEFAULT_LOCALE = "zh-CN" as const
 
 export const messages = {
   "zh-CN": {
+    loadingSiteConfig: "正在读取楼层信息…",
+    siteConfigFailed: "楼层信息暂时无法读取。",
+    signOutFailed: "退出登录未能确认，请核对当前账号后重试。",
+    roomHandoffFailed: "无法打开教室，请检查教室号码或入口配置。",
+    routeNotFound: "没有找到这个入口。",
+    backHome: "返回楼层",
     restoringSession: "正在确认入校记录…",
     restoringSessionHint: "确认完成后，会为你打开正确的教室入口。",
     signInHeading: "回到活动室楼层",

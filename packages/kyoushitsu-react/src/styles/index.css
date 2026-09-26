@@ -1,0 +1,138 @@
+@import "tailwindcss";
+@import "houkago-kyoushitsu/theme.css";
+
+@theme inline {
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-primary: var(--color-accent);
+  --color-primary-foreground: var(--color-on-accent);
+  --color-muted: var(--color-surface-muted);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-input: var(--color-border-strong);
+  --color-outline: var(--color-border);
+  --color-destructive: var(--color-danger);
+  --color-ring: var(--color-focus-ring);
+  --radius-md: var(--primitive-radius-2);
+  --radius-lg: var(--primitive-radius-3);
+}
+body {
+  margin: 0;
+  font-size: var(--type-body-size);
+  line-height: var(--line-height-body);
+}
+.home {
+  min-height: 100dvh;
+  position: relative;
+  background: var(--entry-environment-background);
+  overflow-x: clip;
+}
+.home-architecture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 9%,
+    var(--color-border) 9%,
+    transparent 9.2%,
+    transparent 90%,
+    var(--color-border) 90%,
+    transparent 90.2%
+  );
+  opacity: 0.6;
+}
+.home-shell {
+  position: relative;
+  max-width: var(--layout-entry-max);
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-5);
+  align-items: start;
+}
+.floor-sign {
+  padding: var(--space-6) 0;
+  min-width: 0;
+}
+.floor-marker {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+}
+.floor-code {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+h1 {
+  margin: var(--space-5) 0;
+  font-family: var(--font-display);
+  font-size: var(--type-display-size);
+  line-height: var(--line-height-display);
+  overflow-wrap: anywhere;
+}
+.brand-romanized {
+  color: var(--color-accent);
+  letter-spacing: 0.12em;
+}
+.floor-hint {
+  margin-top: var(--space-5);
+}
+.floor-privacy {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  max-width: 40ch;
+}
+.entry-station {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+.card-heading h2 {
+  margin: var(--space-2) 0;
+  font-size: var(--type-title-size);
+  font-family: var(--font-display);
+  line-height: var(--line-height-compact);
+}
+.card-heading p:not(.card-kicker) {
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+}
+.card-kicker {
+  color: var(--color-accent);
+  font-size: var(--type-label-size);
+  font-weight: 700;
+}
+.secondary-card {
+  background: var(--entry-card-secondary-surface);
+}
+.boundary {
+  max-width: 640px;
+  margin: auto;
+  padding: var(--space-5);
+}
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+@media (max-width: 800px) {
+  .home-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4);
+  }
+  .floor-sign {
+    padding: var(--space-2) 0;
+  }
+  h1 {
+    font-size: clamp(30px, 8vw, 42px);
+  }
+}

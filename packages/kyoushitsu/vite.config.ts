@@ -3,6 +3,7 @@ import vue from "@vitejs/plugin-vue"
 import { defineConfig } from "vite"
 
 export default defineConfig({
+  envDir: process.env.HOUKAGO_ISOLATED_PREVIEW === "1" ? false : undefined,
   plugins: [vue()],
   resolve: {
     alias: {

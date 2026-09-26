@@ -16,8 +16,29 @@ async function createRoom(page: Page, accountSuffix: string): Promise<void> {
   await expect(page.getByText(`已登录为 ${username}`)).toBeVisible()
   await page.reload()
   await expect(page.getByText(`已登录为 ${username}`)).toBeVisible()
+  let admitted = false
+  page.on("websocket", (socket) => {
+    if (new URL(socket.url()).pathname !== "/ws") return
+    socket.on("framereceived", (frame) => {
+      const message = JSON.parse(frame.payload.toString()) as {
+        type?: string
+        senderId?: string
+        payload?: { status?: string }
+      }
+      if (
+        message.type === "NYUUSHITSU" &&
+        message.senderId === "server" &&
+        message.payload?.status === "entered"
+      ) {
+        admitted = true
+      }
+    })
+  })
   await page.getByRole("button", { name: "创建并入部" }).click()
   await expect(page).toHaveURL(/\/bushitsu\//)
+  await expect
+    .poll(() => admitted, { message: "room creator receives server admission before seeding" })
+    .toBe(true)
 }
 
 async function addRoomSource(page: Page, title: string): Promise<void> {

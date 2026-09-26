@@ -1,4 +1,4 @@
-import { housouUrl } from "@/lib/housou-url"
+import { housouUrl } from "../lib/housou-url"
 import { client } from "./generated/client.gen"
 
 export type HousouHttpConfig = {
@@ -81,6 +81,16 @@ export function normalizeHttpError(
   response?: Response,
   request?: Request,
 ): HoukagoHttpError {
+  if (error instanceof HoukagoHttpError) {
+    return new HoukagoHttpError(
+      error.kind,
+      error.message,
+      error.status ?? response?.status,
+      error.code,
+      error.response ?? responseMetadata(response),
+      error.request ?? requestMetadata(request),
+    )
+  }
   const details = errorDetails(error)
   const status = response?.status
   const aborted = isAbortError(error)

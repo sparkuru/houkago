@@ -32,5 +32,14 @@
     "typescript": "^5.6.0",
     "vite": "^8.0.0",
     "vue-tsc": "^3.0.0"
+  },
+  "exports": {
+    "./http": "./src/api/public.ts",
+    "./http/generated": "./src/api/generated/index.ts",
+    "./i18n": "./src/i18n/index.ts",
+    "./room-id": "./src/lib/room-id.ts",
+    "./theme": "./src/lib/theme.ts",
+    "./theme.css": "./src/assets/theme.css",
+    "./site-config": "./src/lib/site-config-core.ts"
   }
 }
