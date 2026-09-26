@@ -111,3 +111,42 @@ Completed and archived M0 frontend behavior baseline. Typecheck, lint, 372 unit/
 ### Next Steps
 
 - 等待用户明确决定是否进入 M2；不自动串行推进。
+
+
+## Session 70: 完成 M2 HTTP 契约与资源层
+
+**Date**: 2026-09-26
+**Task**: 完成 M2 HTTP 契约与资源层
+**Package**: houkago-kyoushitsu
+**Branch**: `k-on`
+
+### Summary
+
+完成并归档 M2：隔离 OpenAPI 导出、确定性 Hey API 客户端、框架无关资源策略与取消/grant 流程；独立全范围审查通过，用户确认后完成工作提交、归档和主线同步。
+
+### Main Changes
+
+- 59 个完整契约操作、46 个浏览器 JSON 操作；运行时路由对照、认证与媒体边界、生成漂移检查。
+- 保留 cookie/status/domain error/AbortSignal/union 类型；补齐会话代次键、logout 清理、grant 有界轮询与搜索取消。
+- 同步可执行规范与 M2 验收证据；保留未提交的既有 dev.sh URL 改动。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d7410cf` | (see git log) |
+| `d76c8e5` | (see git log) |
+
+### Testing
+
+- [OK] Focused: 46 passed, 0 failed; full: 434 passed, 0 failed across 82 files.
+- [OK] Six-package typecheck, lint (265 files), contract drift (18 stable files), Kyoushitsu build and git diff --check passed.
+- [OK] No browser/Playwright or live-provider validation this round; existing dash.js build warning recorded.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 等待用户明确决定是否进入 M3 React shell/UI foundation；不自动推进或推送。

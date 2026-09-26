@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 69
-- **Last Active**: 2026-09-13
+- **Total Sessions**: 70
+- **Last Active**: 2026-09-26
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~113 | Active |
+| `journal-2.md` | ~152 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 70 | 2026-09-26 | 完成 M2 HTTP 契约与资源层 | `d7410cf`, `d76c8e5` | `k-on` |
 | 69 | 2026-09-13 | 完成 M1 房间会话与播放器边界 | `53012a8`, `c0d3bab` | `k-on` |
 | 68 | 2026-09-12 | Frontend behavior baseline | `6fefded`, `b222103` | `k-on` |
 | 67 | 2026-08-31 | Warm Club queue control consistency | `1bb23a6` | `k-on` |
