@@ -102,4 +102,4 @@ authorize broader toolchain upgrades. No unresolved product scope question remai
 2026-09-26: implementation/independent check complete; A1–A6 automated
 requirements passed. A7 scope is verified; the owner accepted the residual-review and one-shot
 commit batch with `提交`. Commit and finish bookkeeping are now authorized. See `validation.md`, `check-report.md`
-and `commit-plan.md`. Task stays in_progress until committed and archived.
+and `commit-plan.md`. Work commits `8c5a326` / `ae37464` completed; M3-only archive follows.

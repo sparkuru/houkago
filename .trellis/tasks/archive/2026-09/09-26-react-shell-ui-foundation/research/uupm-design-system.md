@@ -56,4 +56,3 @@ Large sections (48px+ gaps), animated patterns, bold hover (color shift), scroll
 - [ ] Focus states visible for keyboard nav
 - [ ] prefers-reduced-motion respected
 - [ ] Responsive: 375px, 768px, 1024px, 1440px
-

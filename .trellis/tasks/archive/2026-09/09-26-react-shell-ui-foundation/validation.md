@@ -145,7 +145,8 @@ technology certification or credentialed external-provider behavior is claimed;
 broader room/media surfaces are outside M3 acceptance scope.
 
 [Commit plan](commit-plan.md) lists exact batches/bodies/trailers and excluded
-`dev.sh`. After approval, commit work first, archive only M3 and record the journal.
+`dev.sh`. Owner approval received; work commits `8c5a326` / `ae37464` completed. Archive
+only M3 and record the journal.
 Parent remains planning; M4 is not started; nothing is pushed.
 
 ## Owner approval
@@ -155,3 +156,11 @@ and exact commit plan were presented, the user replied `提交`. Treat this as
 approval of the presented batch and residual-review gate, not an independent
 claim of user-run browser checks. A7 is accepted. Proceed with the two work
 commits, M3-only archive and journal; preserve `dev.sh`, do not push/start M4.
+
+## Work commit execution
+
+Functional commit: `8c5a326`. Documentation commit: `ae37464`. Both use the
+exact approved messages and Codex trailers. No `dev.sh` path was staged. Two
+research files had redundant trailing blank lines exposed by staged diff checking;
+normalized during archive preparation. No product code changed after validated
+gates. M3-only archive, mainline sync and journal follow; no push or M4 start.

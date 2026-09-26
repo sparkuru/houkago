@@ -56,4 +56,3 @@
 - **Code Example Good:** loading='lazy'
 - **Code Example Bad:** All images eager load
 - **Severity:** Medium
-
