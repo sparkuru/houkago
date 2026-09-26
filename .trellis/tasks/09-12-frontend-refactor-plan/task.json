@@ -21,10 +21,11 @@
   "children": [
     "09-12-behavior-baseline",
     "09-12-session-player-boundaries",
-    "09-13-http-contract-resources"
+    "09-13-http-contract-resources",
+    "09-26-react-shell-ui-foundation"
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0 and M1 are complete and archived. 2026-09-26: user authorized M2 and approved its commit/archive batch; A1-A8 and full-scope quality gate passed. M2 is archived at archive/2026-09/09-13-http-contract-resources; work commits d7410cf/d76c8e5. M3–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized.",
+  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0-M2 are complete and archived; M2 work commits d7410cf/d76c8e5 with A1-A8 verified. 2026-09-26: user approved creating M3 child 09-26-react-shell-ui-foundation, entering planning and automatic same-window handoff to existing Vue rooms, then approved final planning-summary implementation with 开始实现 M3. M3 is in_progress. M4–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized. M3 implementation/independent check passed on 2026-09-26; 465 tests, 56 browser cases and 124 shell checks. Residual human review and one-shot commit approval pending; no archive or M4 start. Owner approved the presented residual-review and commit/archive batch with 提交; functional commit 8c5a326 done. Finish M3 only; parent stays planning.",
   "meta": {}
 }

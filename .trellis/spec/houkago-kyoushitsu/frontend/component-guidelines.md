@@ -117,6 +117,17 @@ route change to `/bushitsu/:id` is not an admission barrier; seeding immediately
 after navigation can race the WebSocket admission handshake and correctly
 receive `403 room admission is required`.
 
+For direct protected seeding, `e2e/desktop-room.spec.ts` observes `/ws` frames
+before create and waits for `type: "NYUUSHITSU"`, `senderId: "server"`,
+`payload.status: "entered"`. This proves membership rather than elapsed time or
+URL state. Preserve the 200 assertion on the protected write; never mask the
+race by retrying authorization failures.
+
+For an alert containing an `aria-hidden` decorative glyph, assert role and the
+exact accessible text with `toMatchAriaSnapshot`, as in
+`e2e/room-governance.spec.ts`. Raw DOM `textContent` includes decoration and is
+not the user-facing accessibility contract.
+
 ---
 
 ## Common Mistakes

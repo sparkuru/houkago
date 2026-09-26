@@ -16,6 +16,12 @@ Existing Vue consumers retain Eden until a later migration. Quality means: the c
 server-authoritative state, third-party imperative objects are contained, and the
 naming dictionary is honored across the stack.
 
+The parallel `houkago-kyoushitsu-react` app consumes generated resources through
+explicit pure subpaths, with TanStack Router/Query and owned Tailwind/shadcn
+primitives. Follow [React Entry Runtime](react-entry-runtime.md) for its identity,
+Query, handoff and preview contracts; Vue-specific bindings remain in the legacy
+app. The new entry does not start room sockets or media engines.
+
 ---
 
 ## Build & Run + dependency pins (this project)

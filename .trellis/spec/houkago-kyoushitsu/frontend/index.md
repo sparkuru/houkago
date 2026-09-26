@@ -22,6 +22,7 @@ This directory contains guidelines for frontend development. Fill in each file w
 | [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
 | [Public Site Configuration](../../frontend/site-configuration.md) | TOML-to-Housou-to-Kyoushitsu public identity contract | Active |
 | [HTTP Contract and Resources](../../frontend/http-contract-resources.md) | Generated transport, private keys, retry/cancellation policy and WS authority | Active |
+| [React Entry Runtime](../../frontend/react-entry-runtime.md) | Parallel entry, Query/identity epochs, portable subpaths, Vue handoff and isolated preview | Active |
 
 ---
 

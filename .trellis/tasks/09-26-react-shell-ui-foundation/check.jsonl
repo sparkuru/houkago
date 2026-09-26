@@ -1,0 +1,9 @@
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Integration invariants and unchanged M4/M5 room/media ownership."}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Contract drift, typed error preservation, cookies/abort/retry and private-scope tests."}
+{"file":".trellis/spec/frontend/site-configuration.md","reason":"One config request, title/default, value-free warning and invalid-success rejection."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Strict actual React subpath compilation and no copied wire types/casts."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Runnable browser evidence before residual human review, diagnostic artifacts and finish boundaries."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/reuse-boundary.md","reason":"Review actual transitive module graph, generation paths and narrow response/body distinctions."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/browser-validation.md","reason":"Desktop/375px entry, no pre-handoff protected requests, old Vue regressions and isolated real-cookie continuity."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/dependency-and-ui-decisions.md","reason":"Exact version/peer evidence, Warm Club mapping, focus/reflow/reduced-motion without rebrand."}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Review actual epoch ownership, delayed create guard, form mode, lifecycle reload, compiled token mapping and preview boundaries."}

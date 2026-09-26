@@ -1,0 +1,13 @@
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Accepted M3 scope and M4/M5/M6 boundaries; Vue remains default and rollback."}
+{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"S1-S6 contracts for session ownership, HTTP resources, private generations and UI reuse."}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"One generated tree, DTO/error/cookie/abort fidelity, explicit Query policy and private purge port."}
+{"file":".trellis/spec/frontend/site-configuration.md","reason":"Public copy/title/default name, memoization, true-empty/transport fallback versus invalid-success rejection."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Wrapper policy, no raw component fetch, naming/domain boundaries; Vue-specific bindings remain legacy-only."}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Strict contracts, no duplicated domain DTOs or casts suppressing errors."}
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Scoped UUPM application, existing Docker wrapper, host Playwright, residual human review and commit evidence."}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Reuse existing framework-free boundaries rather than duplicate generated code or extract unrelated modules."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/entry-boundaries.md","reason":"Actual entry/auth/theme/config source anchors and user-approved same-window room handoff."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/reuse-boundary.md","reason":"Exact portable subpaths/import closure, pure config extraction, typed EMPTY_RESPONSE mechanism and tests."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/browser-validation.md","reason":"Host browser evidence, task-owned services, Docker extra port, mock versus real-cookie matrix."}
+{"file":".trellis/tasks/09-26-react-shell-ui-foundation/research/dependency-and-ui-decisions.md","reason":"Official stack sources, bounded compatibility spike and Warm Club token/UUPM overrides."}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Implemented composition/epoch/command-consumption, typed handoff, React token and isolated preview contracts."}

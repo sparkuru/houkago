@@ -6,12 +6,18 @@ Assess the current implementation and the difficulty/value of adopting Hey API, 
 
 ## Authorization
 
-The user authorized task creation on 2026-09-12, then accepted the recommended direction and benefit priorities for a plan and global mainline. The planned target is the requested React stack with boundary-first migration. Keep the parent status `planning`: direction approval is not broad implementation approval. The parent itself does not authorize product code, dependency, runtime configuration, database change, or implementation dispatch; the separately authorized M1 child still requires its own artifact-review/start gate.
+The user authorized task creation on 2026-09-12, then accepted the recommended direction and benefit priorities for a plan and global mainline. The planned target is the requested React stack with boundary-first migration. Keep the parent status `planning`: direction approval is not broad implementation approval. The parent itself does not authorize product code, dependency, runtime configuration, database change, or implementation dispatch; each stage uses its own artifact-review/start gate.
 
 The user subsequently approved starting the bounded M0 behavior-baseline child
 with `启动` on 2026-09-12. M0 is complete and archived. The user has now
 authorized the bounded M1 session/player child; its planning artifacts,
-implementation, and validation are complete and archived. M2–M6, unrelated dependency changes,
+implementation, and validation are complete and archived. M2 is also complete
+and archived after explicit authorization and commit approval on 2026-09-26.
+The user subsequently approved M3 task creation/planning and automatic same-window
+handoff to existing Vue rooms, then approved the completed final summary with
+`开始实现 M3` on 2026-09-26. M3 remains `in_progress`: implementation and
+automated validation passed; owner approved the presented residual-review and commit/archive batch with `提交`.
+M4–M6, unrelated dependency changes,
 serial continuation and cutover remain unapproved.
 
 ## Background

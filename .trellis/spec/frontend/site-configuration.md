@@ -22,14 +22,17 @@ loadSiteConfig(source?: string): SiteConfig
 GET /site-config -> SiteConfig
 
 // houkago-kyoushitsu
-createSiteConfigLoader(fetcher, warn?): () => Promise<SiteConfig>
+createSiteConfigLoader(fetcher, warn?, options?: { shouldFallbackOnFailure?: (error: unknown) => boolean }): () => Promise<SiteConfig>
 applySiteConfigTitle(config, target?): void
 useSiteConfig(): SiteConfig
 ```
 
 The REST response schema is `SiteConfigSchema` from `houkago-kousoku`. Housou
-registers it as the Elysia response schema, and Kyoushitsu consumes the route
-through the Eden Treaty client rather than raw `fetch`.
+registers it as the Elysia response schema. Vue consumes the route through Eden;
+the parallel React app uses the generated `fetchSiteConfig` resource rather
+than component-owned raw `fetch`. The pure loader/title/types live in
+`lib/site-config-core.ts`, exported through `houkago-kyoushitsu/site-config`.
+Vue's `lib/site-config.ts` reexports those APIs and retains Vue injection.
 
 ## 3. Contracts
 
@@ -70,6 +73,12 @@ defaultBushitsuName = "新部室"
   `DEFAULT_SITE_CONFIG` and one value-free warning. A successful but invalid
   response rejects bootstrap; it must not silently fall back and hide contract
   drift.
+- React supplies `shouldFallbackOnFailure(error)` to keep typed protocol/abort
+  failures distinct: HTTP/network or `protocol` + `EMPTY_RESPONSE` may default.
+  The resource distinguishes actual zero bytes/204 from `{}`, JSON null,
+  primitives and malformed JSON before the generated parser can collapse them.
+  The latter successful invalid bodies reject, and abort never becomes fallback.
+  Existing Vue callers omit the predicate and retain their original behavior.
 - Changes require a Housou restart and browser refresh. There is no polling,
   watcher, live editor, per-room branding, JSON/YAML mirror, or config-path
   override in this contract.
@@ -90,6 +99,9 @@ runtime projection so public copy changes do not require a frontend rebuild.
 | secret sentinel exists in environment | serialized route contains neither name nor value |
 | request rejects, Eden returns error, or body is empty | frontend uses shared default and generic warning |
 | successful response violates schema | frontend bootstrap rejects; no fallback warning |
+| React actual zero bytes/204 | typed `EMPTY_RESPONSE`, then one default warning |
+| React literal `{}`/null/primitive/malformed successful JSON | protocol failure; no fallback |
+| React aborted request | preserve typed abort/metadata; no fallback warning |
 | config request is called repeatedly | return the same memoized promise/result; one network request |
 | default or long custom name at desktop/375px | readable layout with no horizontal overflow; default title stays on one line |
 

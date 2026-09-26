@@ -4,7 +4,9 @@
 
 Use this contract when adding a Housou HTTP operation, generating the browser
 SDK, or consuming framework-independent HTTP resources. M2 retains the Vue/Eden
-consumer path; React and QueryClient composition belong to later tasks.
+consumer path; M3 consumes pure package subpaths in the parallel React entry.
+QueryClient/identity ownership is specified in
+[react-entry-runtime.md](react-entry-runtime.md).
 
 The source of truth is runtime route registration plus canonical TypeBox schemas
 in `houkago-kousoku`. `packages/housou/openapi.json` records the full surface;
@@ -38,6 +40,7 @@ The handwritten boundary exposes:
 configureHousouHttpClient(config?: { baseUrl?: string; fetch?: typeof fetch }): void
 fetchIdentityMe(options?: { signal?: AbortSignal }): Promise<IdentityMeResponse>
 fetchSiteConfig(options?: { signal?: AbortSignal }): Promise<SiteConfigResponse>
+createRoom(body: RoomCreateData["body"], options?: { signal?: AbortSignal }): Promise<RoomCreateResponse>
 roomBootstrapKey(sessionScope: string, roomId: string): ResourceKey
 bangumiBootstrapKey(sessionScope: string, roomId: string, bootstrapGeneration: string): ResourceKey
 purgePrivateResources(cache: PrivateResourceCache): Promise<void>
@@ -48,6 +51,13 @@ Response DTOs come from the generated SDK; resource adapters may compose them,
 but must not redefine wire DTOs or import Housou's server `App` type.
 `ResourceKey` begins with `keyof typeof import("../generated/sdk.gen")` followed
 by string dimensions, tying key roots to generated operation IDs.
+
+The legacy package exposes only explicit portable subpaths: `http` points to
+the handwritten `api/public.ts` barrel, `http/generated` to the existing
+generated tree, and `site-config` to the pure loader. `i18n`, `room-id`, `theme`
+and `theme.css` are additional pure assets. Never import the package root/Eden
+barrel from React, copy generated code or resolve a legacy `@` alias through the
+new app. The HTTP URL helper uses its relative source path.
 
 ## 3. Contracts
 
@@ -109,6 +119,15 @@ Current page success DTOs are JSON objects or arrays. Reject malformed JSON,
 `null`, primitive JSON, empty objects, HTTP 204 and zero-length success bodies
 as protocol errors; empty arrays remain valid. This guard does not replace each
 operation's canonical backend schema or imply full runtime DTO decoding.
+Only `fetchSiteConfig` distinguishes a true zero-byte/204 success with protocol
+code `EMPTY_RESPONSE`. It captures configured fetch and supplies a per-call
+response-clone check; the original response still reaches the generated parser.
+Literal `{}`, JSON null/primitive and malformed JSON remain ordinary protocol
+errors. `normalizeHttpError` preserves an existing typed kind/code/status and
+metadata, filling absent Request/Response metadata from the SDK result. Abort
+takes precedence over empty-response classification. The pure config loader may
+default on `EMPTY_RESPONSE`, HTTP or network failure; no generated parser/global
+interceptor or generic protocol fallback is changed.
 Identity restoration and sign-in/register/sign-out commands are enabled before a
 known session (`enabledWhen: "always"`); gating restoration on identity would
 prevent discovering a valid cookie session. Private provider resources require
@@ -130,6 +149,9 @@ their session/panel/workflow context.
   origin, cookies, `AbortSignal`, status/domain code and response metadata.
   Include malformed/null/primitive/empty success and 204/zero-length responses;
   they must reject with protocol kind and retained response metadata.
+  Site-config tests additionally distinguish actual empty success from literal
+  empty-object/null/malformed JSON, preserve typed `EMPTY_RESPONSE` and abort
+  metadata, and prove one response body is consumed without global fetch changes.
 - Resource tests distinguish identity/room/source/search/cursor keys, purge
   private scope, disable auth/abort/protocol retries, and retain WS authority.
 - Grant tests prove one creation, bounded polling, terminal stop and cancellation.
