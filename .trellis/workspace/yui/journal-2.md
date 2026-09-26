@@ -150,3 +150,41 @@ Completed and archived M0 frontend behavior baseline. Typecheck, lint, 372 unit/
 ### Next Steps
 
 - 等待用户明确决定是否进入 M3 React shell/UI foundation；不自动推进或推送。
+
+
+## Session 71: Complete M3 parallel React entry and Vue handoff
+
+**Date**: 2026-09-26
+**Task**: Complete M3 parallel React entry and Vue handoff
+**Package**: houkago-kyoushitsu
+**Branch**: `k-on`
+
+### Summary
+
+Implemented and verified M3, owner approved residual review and commit/archive with 提交; archived M3 and synchronized mainline. Preserved dev.sh; no push or M4 start.
+
+### Main Changes
+
+- Parallel React Router/Query identity/home, Warm Club primitives, safe same-window Vue room handoff and pure M2 resource/config exports.
+- Epoch fences, StrictMode-safe QueryCache subscriptions, auth reconciliation, late-create navigation protection, typed revoked search and persisted-page recovery.
+- Validated DX_EXTRA_PORTS and isolated memory Housou/Vue/React preview; task-owned services stopped and ports released.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8c5a326` | (see git log) |
+| `ae37464` | (see git log) |
+
+### Testing
+
+- [OK] 465 tests, 56 distinct browser cases, 124 shell checks; seven workspace typechecks, lint, deterministic contract drift and both builds passed.
+- [OK] Real-cookie register/refresh/Vue admission/same identity/return/logout continuity passed; actual React graph 443 IDs, no forbidden runtime imports.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Await explicit M4 stage authorization; parent stays planning. Pre-existing dev.sh URL edits remain uncommitted.
