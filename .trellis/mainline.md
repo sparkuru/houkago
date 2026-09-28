@@ -19,19 +19,21 @@
   On 2026-09-28, the user selected the 08-29 visual-refresh parent to handle
   before further migration work and authorized planning its final
   interaction-surface child. The user then approved the child's final planning
-  summary and implementation started on 2026-09-28. M4–M6 remain unapproved.
+  summary and implementation started on 2026-09-28. The child was reviewed,
+  committed and archived after the owner's `可以；归档`; M4–M6 remain
+  unapproved.
 - authoritative roadmap: [Benefit priorities and delivery map](tasks/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
 - mode: guided
 - serial authorization: none
-- execution authorization: bounded M0–M3 tasks fulfilled; implementation
-  approved for `.trellis/tasks/09-28-warm-club-interaction-surface-polish`
-- next pulse: finish the approved visual child and present implementation
-  evidence for review
-- next permitted action: continue the approved visual child; M4 and cutover
-  remain unapproved
+- execution authorization: bounded M0–M3 tasks fulfilled; the approved visual
+  interaction-surface child is complete and archived
+- next pulse: await owner direction on closing the 08-29 visual parent or
+  resuming migration planning
+- next permitted action: discuss parent integration/closure when requested;
+  M4 and cutover remain unapproved
 
 ## Ordered Work
 
@@ -46,7 +48,7 @@ proposed children requiring their own authorization and checks.
 | M1 | session-player-boundaries | archived | Depends on M0; implementation and focused evidence archived at `archive/2026-09/09-12-session-player-boundaries` |
 | M2 | http-contract-resources | archived | A1–A8 verified; work commits d7410cf/d76c8e5; 434 aggregate tests and static/build/drift gates pass |
 | M3 | react-shell-ui-foundation | archived | A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks and static/build/drift gates passed; preview stopped |
-| Visual final slice | `09-28-warm-club-interaction-surface-polish` | in_progress | User approved the final plan and implementation started on 2026-09-28; parent remains planning |
+| Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; parent remains planning |
 | M4 | room-features | planned | Depends on M3 and validated session controller; realtime queue/chat/governance |
 | M5 | media-provider-danmaku | planned | Depends on M4 and player seam; media lifecycle, Baidu, subtitles/fullscreen and danmaku |
 | M6 | parity-cutover | planned | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
@@ -95,8 +97,10 @@ proposed children requiring their own authorization and checks.
   status planning; this update neither completes nor archives it.
 - On 2026-09-28, the owner selected that parent to handle before further
   migration work and authorized planning its final dialog/gate/chat/cinema
-  child. The owner approved the final planning summary and implementation
-  started on 2026-09-28; M4–M6 remain unapproved.
+  child. The owner approved the final planning summary, reviewed the completed
+  implementation and requested archival on 2026-09-28. The child is archived
+  at `tasks/archive/2026-09/09-28-warm-club-interaction-surface-polish`;
+  M4–M6 remain unapproved.
 - Room-shell and queue-control children are already archived with status
   completed: `.trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup`
   and `.trellis/tasks/archive/2026-08/08-30-warm-club-queue-control-consistency`.
