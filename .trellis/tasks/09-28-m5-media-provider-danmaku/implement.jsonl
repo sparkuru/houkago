@@ -1,0 +1,7 @@
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/index.md","reason":"React room and feature guideline index"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md","reason":"M4 session authority and media handoff contract"}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Identity epoch, Query and direct route lifecycle"}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Generated resource, grant cancellation and WS authority rules"}
+{"file":".trellis/spec/frontend/baidu-adapter-contract.md","reason":"Baidu capability, OAuth, revoke, grant and permission contracts"}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Existing room media, cinema and responsive behavior"}
+{"file":".trellis/tasks/09-28-m5-media-provider-danmaku/research/current-boundaries.md","reason":"Evidence map for M1/M4, Vue media and generated SDK seams"}

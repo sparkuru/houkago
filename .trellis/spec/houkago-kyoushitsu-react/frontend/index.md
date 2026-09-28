@@ -6,6 +6,7 @@ The React package owns the local entry and room interface. Read these contracts 
 | --- | --- |
 | [React Entry Runtime](../../frontend/react-entry-runtime.md) | Identity restoration, Query cache, routing, lifecycle, and local startup |
 | [React Room Runtime](./room-runtime.md) | Admission, WebSocket authority, room commands, and media boundary |
+| [React Media, Baidu and Danmaku](./media-provider-danmaku.md) | Player lifecycle, authorized sync, provider grants and overlays |
 | [HTTP Contract and Resources](../../frontend/http-contract-resources.md) | Generated SDK adapters, request errors, cancellation, and private data |
 | [Public Site Configuration](../../frontend/site-configuration.md) | Shared public identity and configuration |
 

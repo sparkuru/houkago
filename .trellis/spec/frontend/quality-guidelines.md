@@ -47,8 +47,9 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
   `Bushitsu`, `Shinkou`) — across components, stores, composables, and kousoku.
 - **`any` / casts to dodge the contract**; redefining kousoku types locally
   (see type-safety.md).
-- **Client acting as playback source of truth.** Only the 部長 drives sync; a
-  member's player events must not emit `SHINKOU` (design §5).
+- **Client acting as playback source of truth.** The host and guests with
+  current `Kengen.playback` may send `SHINKOU`; others only follow. Last
+  accepted WS state remains authoritative.
 - **Raw `fetch` in components.** Go through the API boundary in `src/api/`;
   current Vue consumers use Eden and future consumers use generated resources.
 - **Polling REST for realtime data** the WS already pushes (playback, presence,
@@ -127,7 +128,8 @@ that self-recurses (stack overflow on navigation). 4.x and 5.x share the
 - [ ] Identifiers romaji; domain names match §13 (no synonyms vs backend).
 - [ ] Domain/protocol types imported from `kousoku`, not redefined; no `any`/casts.
 - [ ] REST via the API boundary; realtime via WS — no live-state polling or raw component `fetch`.
-- [ ] Only the host emits `SHINKOU`; remote apply uses echo suppression.
+- [ ] Only the host or a currently permitted guest emits `SHINKOU`; remote
+      apply uses echo suppression.
 - [ ] Projected time derived, not stored as a ticking value.
 - [ ] ArtPlayer / Danmaku instances created and destroyed in lifecycle hooks.
 - [ ] HLS/DASH engine instances are created only by `EnmokuPlayer` custom types

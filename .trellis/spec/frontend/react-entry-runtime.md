@@ -6,7 +6,8 @@ Use this contract for the `houkago-kyoushitsu-react` entry, its identity
 lifecycle, Query binding and room routing. React is the default local frontend
 in M4. The room route owns a separate room session and socket, specified in
 [React Room Runtime](../houkago-kyoushitsu-react/frontend/room-runtime.md).
-Provider and media lifecycles belong to M5.
+Provider and media lifecycles are specified in
+[React Media, Baidu and Danmaku](../houkago-kyoushitsu-react/frontend/media-provider-danmaku.md).
 
 ## 2. Signatures
 
@@ -78,7 +79,8 @@ Run development and checks through the existing wrapper:
   `room-id`, `theme`, `theme.css`, `site-config`). No root import or wildcard alias.
   React's `@` alias resolves only its own source. Generated files remain owned by
   the existing contract pipeline. Verify the actual build graph excludes Vue,
-  Pinia, Eden, Housou server and media engines.
+  Pinia, Eden and Housou server modules. Media engines are allowed only in the
+  lazy room chunk through the React player driver.
 - React serves the normal local entry on port 5173. Validate decoded room ID
   segments before a room session is constructed. Home create/join and direct
   `/bushitsu/:id` navigation render the React route. Route-code preload must

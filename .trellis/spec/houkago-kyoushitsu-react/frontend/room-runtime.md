@@ -5,8 +5,9 @@
 Use this contract for `packages/kyoushitsu-react/src/routes/room.tsx` and
 `src/features/room/room-runtime.ts`. M4 renders `/bushitsu/:id` directly in
 React. The existing M1 room controller and Kousoku WebSocket protocol remain
-the session authority. This scope includes admission, roster, chat, queue and
-host governance. Media playback and provider controls belong to M5.
+the session authority. This scope includes admission, roster, chat, queue,
+host governance, playback snapshots and room danmaku defaults. Media feature
+details are in [React Media and Danmaku](./media-provider-danmaku.md).
 
 ## 2. Signatures
 
@@ -17,6 +18,11 @@ room.reconnect()
 room.subscribe(listener)
 room.getSnapshot()
 room.can("chat" | "playlist" | "playback")
+room.attachPlayer(player)
+room.localPlayback(state)
+room.userPlayback(state)
+room.catchUpPlayback()
+room.danmaku(content)
 room.chat(content)
 room.select(enmokuId)
 room.setPermissions(kengen)
@@ -47,8 +53,8 @@ session to the restored identity epoch and room ID.
   The route also checks the session's creation epoch during render. An epoch
   change for the same account ID must hide the old snapshot immediately,
   before effect cleanup constructs its replacement.
-- Apply `NYUUSHITSU`, `KENGEN`, `BANGUMI`, `JOUEI`, `GENJOU`, `SHUSSEKI`,
-  `MEIBO`, `OSHABERI`, `DANMAKU` and `KEIHOU` from WS. HTTP bootstrap is for
+- Apply `NYUUSHITSU`, `KENGEN`, `BANGUMI`, `JOUEI`, `GENJOU`, `SHINKOU`,
+  `DANMAKU_DEFAULT`, `SHUSSEKI`, `MEIBO`, `OSHABERI`, `DANMAKU` and `KEIHOU` from WS. HTTP bootstrap is for
   initial/recovery data; delayed HTTP cannot overwrite a newer WS queue.
   Queue HTTP mutations acknowledge commands but do not write local queue
   state. Resolve current item from authoritative current ID and queue.
@@ -61,9 +67,13 @@ session to the restored identity epoch and room ID.
   permissions, queue entries or current item. A disconnected command is not
   replayed on reconnect. A revoked visitor leaves the room and sees a notice
   on the home route; stale async completions cannot revive room state.
-- The current item panel states that video playback is unavailable until M5.
-  `JOUEI` designates a current item only. Do not mount players, media engines
-  or provider workflows in this route, or describe designation as playback.
+- `JOUEI` designates a current item and resets the previous playback snapshot
+  to paused at 0 seconds. `GENJOU` and `SHINKOU` write the last
+  server-authored playback state before the M1 controller applies player
+  effects. `DANMAKU_DEFAULT` writes a room-scoped authoritative snapshot;
+  candidate HTTP cannot overwrite it. The player attaches through one port
+  and is disposed with the route. Host and permitted guests can send playback;
+  all others follow only.
 - Local development uses Housou at port 3000 and React at port 5173.
   `scripts/dev-react-preview.sh` provides an isolated memory setup for browser
   verification. Browser tests may use task-owned ports when defaults are
@@ -79,6 +89,8 @@ session to the restored identity epoch and room ID.
 | HTTP completion after newer `BANGUMI` or disposal | No stale queue or disposed state revival |
 | Identity epoch changes with the same account ID | Old room view is gated immediately; a fresh session owns later state |
 | WS disconnect | Controls stop sending; reconnect requires fresh admission |
+| Guest without playback permission | Control inputs disabled; remote playback still applies |
+| Manual control within remote echo-suppression window | `userPlayback` sends a permitted gesture; automatic player events remain suppressed |
 | `KEIHOU` or HTTP command error | Pending state clears and an actionable error is shown |
 | Server revokes membership | Socket and pending reads close; home receives `revoked=1` |
 | Invalid room ID | Safe route error; no socket or protected read |
@@ -89,11 +101,10 @@ session to the restored identity epoch and room ID.
   after approval, both clients see chat and queue broadcasts. Host removal
   redirects the visitor with a revocation notice.
 - Base: a restored host opens a direct room URL, receives `entered`, reads
-  room/queue once and uses WS controls. The current item title appears with
-  the M5 playback notice.
+  room/queue once and uses WS controls. A selected item mounts one player.
 - Bad: fetch the queue before admission, seed queue from a mutation response,
-  create a second socket in a component effect, or claim that selecting an
-  item starts video playback.
+  create a second socket in a component effect, or treat local player time as
+  authoritative room state.
 
 ## 6. Tests Required
 
@@ -104,8 +115,7 @@ session to the restored identity epoch and room ID.
   cookie credentials, abort signal and typed domain errors.
 - Browser tests use real Housou cookies/WS with two clients for approval,
   entry, chat, queue/current broadcast and revocation. Check direct room URLs,
-  desktop and 375px layout, focusable controls, error feedback and the M5
-  notice. Record any environment limit explicitly; do not replace these checks
+  desktop and 375px layout, focusable controls and error feedback. Record any environment limit explicitly; do not replace these checks
   with mocked admission alone. A deterministic preview response fixture may
   replace the external video's Range request; keep the actual add mutation and
   resulting WS `BANGUMI` broadcast on real Housou.

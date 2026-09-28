@@ -73,9 +73,11 @@ Anything that is purely one component's view concern stays a local `ref`.
   by trailing codec (`avc1`/`hev1`/`hvc1`/etc.) and keep the first source index.
   It should hide explicit non-AVC video choices such as `hvc1`/`hev1`, so old
   queued Bilibili items do not expose audio-only codec variants.
-- **Host-authority on the client:** only the 部長's player events emit `SHINKOU`.
-  When applying a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo
-  for ~200ms so the resulting local player event is not re-broadcast (design §5).
+- **Playback authority on the client:** the 部長 and a member with current
+  `Kengen.playback` may emit `SHINKOU`; other members only follow. When applying
+  a remote `SHINKOU`, set `tsuijuuChuu`（追従中）to suppress the echo for ~200ms.
+  A permitted explicit control gesture during that window must still send
+  through the room's guarded controller port.
 - **Projected progress is derived, not stored as a ticking value:** compute
   `projected = shinkou.currentTime + (isPlaying ? (now - shinkouServerTime) *
   rate : 0)` on read. Store the last `Shinkou` + its server time, not a value you
