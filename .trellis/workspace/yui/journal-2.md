@@ -270,3 +270,41 @@ Migrated local room admission, realtime queue, chat and governance to React; ver
 ### Status
 
 [OK] **Completed**
+
+
+## Session 75: Complete M5 React room media and danmaku migration
+
+**Date**: 2026-09-28
+**Task**: Complete M5 React room media and danmaku migration
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Implemented and validated M5 React room playback, Baidu provider, and danmaku flows; recorded contracts and archived the completed task.
+
+### Main Changes
+
+- Moved room playback, provider, and danmaku workflows into the React room with shared portable media helpers.
+- Recorded M5 contracts, browser fixtures, validation evidence, and archive links.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e6c9535` | (see git log) |
+| `b8bc7e9` | (see git log) |
+| `34d239c` | (see git log) |
+
+### Testing
+
+- [OK] Root typecheck, lint, 480 tests, contract drift, React build, and module graph passed.
+- [OK] React Playwright suite: 41 passed, 3 expected skips, 0 failures.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Continue with the next planned mainline milestone.

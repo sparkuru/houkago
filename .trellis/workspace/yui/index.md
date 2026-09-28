@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 74
+- **Total Sessions**: 75
 - **Last Active**: 2026-09-28
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~272 | Active |
+| `journal-2.md` | ~310 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 75 | 2026-09-28 | Complete M5 React room media and danmaku migration | `e6c9535`, `b8bc7e9`, `34d239c` | `k-on` |
 | 74 | 2026-09-28 | M4 React room migration | `7908b61`, `7c6b4fa` | `k-on` |
 | 73 | 2026-09-28 | Archive legacy parent tasks | `5aa6df8` | `k-on` |
 | 72 | 2026-09-28 | Warm Club interaction surface polish | `e0ff941`, `db9c50a` | `k-on` |
