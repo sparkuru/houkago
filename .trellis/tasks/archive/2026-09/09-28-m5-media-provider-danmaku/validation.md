@@ -1,7 +1,8 @@
 # M5 validation
 
 Implementation and tests were committed as `e6c9535` after the owner's
-Trellis Phase 3.4 approval.
+Trellis Phase 3.4 approval. The task/spec record was committed as `b8bc7e9`;
+`34d239c` updated mainline links for the archive location.
 
 ## Automated gates
 

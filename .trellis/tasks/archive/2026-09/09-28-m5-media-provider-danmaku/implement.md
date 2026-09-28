@@ -1,7 +1,7 @@
 # M5 implementation plan
 
-Status: implementation and verification complete, pending the owner's Trellis
-Phase 3.4 work commit review. The owner authorized implementation with
+Status: implementation and verification complete. The owner approved the
+Trellis Phase 3.4 work commits. The owner authorized implementation with
 `开始实现 M5`; `task.py start` has been run.
 
 ## Ordered work

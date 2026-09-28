@@ -3,8 +3,8 @@
 The workspace was clean when M5 planning began. Every dirty path below was
 created or edited for this M5 task by this session and its assigned agents.
 No unrecognized dirty files were present. The owner confirmed the plan with
-`可以提交；`. The first work commit is `e6c9535`; the documentation commit is
-the second batch below. Nothing has been pushed.
+`可以提交；`. Work commits are `e6c9535` and `b8bc7e9`; `34d239c` points the
+mainline to the archive path before Trellis moves the task. Nothing was pushed.
 
 1. `feat(frontend): migrate React room media and danmaku`
    - `bun.lock`
@@ -41,5 +41,5 @@ the second batch below. Nothing has been pushed.
    - `.trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md`
    - `.trellis/tasks/09-28-m5-media-provider-danmaku/` (planning, research, manifests, validation and this plan)
 
-After both work commits, Trellis archive and journal bookkeeping remain a
+After the work commits, Trellis archive and journal bookkeeping remain a
 separate finish-work step. The plan contains no push or deployment.
