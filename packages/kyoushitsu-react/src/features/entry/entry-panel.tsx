@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { legacyRoomUrl, roomIdFromInput } from "@/lib/legacy-room-url"
+import { roomIdFromInput } from "@/lib/room-id"
 import type { SiteConfig } from "houkago-kousoku"
 import { t } from "houkago-kyoushitsu/i18n"
 import { useEffect, useRef, useState } from "react"
@@ -35,20 +35,13 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
     )
       return
     try {
-      const target = legacyRoomUrl(
-        id,
-        location.href,
-        import.meta.env.VITE_LEGACY_FRONTEND_URL,
-        import.meta.env.DEV,
-      )
-      runtime.dispose()
-      location.replace(target)
+      location.assign(`/bushitsu/${encodeURIComponent(id)}`)
     } catch {
       setError(true)
     }
   }
   function prefetch() {
-    void import("@/routes/room-handoff")
+    void import("@/routes/room")
   }
   return (
     <div className="grid gap-5">

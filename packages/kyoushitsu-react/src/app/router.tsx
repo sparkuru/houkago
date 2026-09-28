@@ -41,7 +41,7 @@ export function createAppRouter(runtime: AppRuntime) {
   const room = createRoute({
     getParentRoute: () => root,
     path: "/bushitsu/$id",
-    component: lazyRouteComponent(() => import("@/routes/room-handoff"), "RoomHandoff"),
+    component: lazyRouteComponent(() => import("@/routes/room"), "Room"),
   })
   return createRouter({
     routeTree: root.addChildren([home, room]),

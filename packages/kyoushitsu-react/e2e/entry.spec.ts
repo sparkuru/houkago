@@ -1,5 +1,8 @@
 import { type Page, expect, test } from "@playwright/test"
 import { DEFAULT_SITE_CONFIG } from "houkago-kousoku"
+const frontendUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"
+const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouPort = new URL(housouUrl).port
 const account = { id: "fixture", username: "Mika", createdAt: 1 }
 const anonymous = { error: { code: "UNAUTHORIZED", message: "Unauthorized" } }
 async function identity(page: Page, signedIn = false) {
@@ -12,15 +15,11 @@ function protectedActivity(page: Page) {
   page.on("request", (request) => {
     const url = new URL(request.url())
     if (
-      url.port === "3000" &&
+      url.port === housouPort &&
       (url.pathname.startsWith("/bushitsu/") ||
         /^\/(?:ws|bangumi|enmoku|baidu|danmaku)(?:\/|$)/.test(url.pathname))
     )
       activity.push(request.url())
-  })
-  page.on("websocket", (socket) => {
-    const url = new URL(socket.url())
-    if (url.port === "3000" || url.pathname === "/ws") activity.push(socket.url())
   })
   return activity
 }
@@ -230,9 +229,6 @@ test("create locks pending controls, reports failure and retries only on submit"
         json: { id: "retry-room", name: "retry-room", buchouId: "fixture", createdAt: 1 },
       })
   })
-  await page.route("http://127.0.0.1:5173/bushitsu/retry-room", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<h1>Vue destination</h1>" }),
-  )
   await page.goto("/")
   await page.getByLabel("部室名").fill("retry-room")
   await page.getByRole("button", { name: "创建并入部" }).click()
@@ -242,10 +238,10 @@ test("create locks pending controls, reports failure and retries only on submit"
   release()
   await expect(page.getByRole("alert")).toContainText("部室创建失败")
   await expect(page.getByRole("button", { name: "创建并入部" })).toBeEnabled()
-  await expect(page).toHaveURL(/5174\/$/)
+  await expect(page).toHaveURL(`${frontendUrl}/`)
   expect(calls).toBe(1)
   await page.getByRole("button", { name: "创建并入部" }).click()
-  await expect(page).toHaveURL("http://127.0.0.1:5173/bushitsu/retry-room")
+  await expect(page).toHaveURL(`${frontendUrl}/bushitsu/retry-room`)
   expect(calls).toBe(2)
   expect(forbidden).toEqual([])
 })
@@ -271,9 +267,7 @@ test("persisted pageshow reloads a disposed entry and restores current cookie id
   await expect(page.getByText("Mika", { exact: true })).toBeVisible()
 })
 
-test("configured name/title create body and same-window handoff have no protected React requests", async ({
-  page,
-}, info) => {
+test("configured name/title create body enters the direct React room", async ({ page }, info) => {
   await identity(page, true)
   await page.route("**/site-config", (route) =>
     route.fulfill({
@@ -293,50 +287,41 @@ test("configured name/title create body and same-window handoff have no protecte
       json: { id: "created-room", name: "周末新教室", buchouId: "fixture", createdAt: 1 },
     })
   })
-  await page.route("http://127.0.0.1:5173/bushitsu/created-room", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<h1>Vue destination</h1>" }),
-  )
   await page.goto("/")
   await expect(page).toHaveTitle("周末放映")
   await expect(page.getByLabel("部室名")).toHaveAttribute("placeholder", "周末新教室")
   await checkLayout(page)
   await page.screenshot({ path: info.outputPath("signed-in.png"), fullPage: true })
   await page.getByRole("button", { name: "创建并入部" }).click()
-  await expect(page).toHaveURL("http://127.0.0.1:5173/bushitsu/created-room")
+  await expect(page).toHaveURL(`${frontendUrl}/bushitsu/created-room`)
+  await expect(page.getByRole("main")).toContainText("正在入室")
   expect(creates).toBe(1)
   expect(forbidden).toEqual([])
 })
 
-test("join invite preloads inert code then hands off encoded ID without search/hash", async ({
-  page,
-}) => {
+test("join invite opens encoded React room ID without search/hash", async ({ page }) => {
   await identity(page, true)
-  await page.route("http://127.0.0.1:5173/bushitsu/%E6%95%99%E5%AE%A4", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<h1>Vue destination</h1>" }),
-  )
   await page.goto("/")
   await expect(page.getByRole("button", { name: "入部", exact: true })).toBeDisabled()
   await page
     .getByLabel("部室 id")
     .fill("https://invite.test/bushitsu/%E6%95%99%E5%AE%A4?secret=x#hash")
   await expect(page.getByRole("button", { name: "入部", exact: true })).toBeEnabled()
-  await expect(page).toHaveURL(/5174\/$/)
+  await expect(page).toHaveURL(`${frontendUrl}/`)
   await page.getByRole("button", { name: "入部", exact: true }).click()
-  await expect(page).toHaveURL("http://127.0.0.1:5173/bushitsu/%E6%95%99%E5%AE%A4")
+  await expect(page).toHaveURL(`${frontendUrl}/bushitsu/%E6%95%99%E5%AE%A4`)
 })
 
-test("direct room refresh hands off with zero React HTTP/WS bootstrap", async ({ page }) => {
+test("direct anonymous room restores identity before protected HTTP", async ({ page }) => {
+  await identity(page)
   const requests: string[] = []
   page.on("request", (request) => {
-    if (request.url().includes(":3000")) requests.push(request.url())
+    if (request.url().startsWith(housouUrl)) requests.push(request.url())
   })
   const forbidden = protectedActivity(page)
-  await page.route("http://127.0.0.1:5173/bushitsu/direct-room", (route) =>
-    route.fulfill({ contentType: "text/html", body: "<h1>Vue destination</h1>" }),
-  )
   await page.goto("/bushitsu/direct-room?secret=x#hash")
-  await expect(page).toHaveURL("http://127.0.0.1:5173/bushitsu/direct-room")
-  expect(requests).toEqual([])
+  await expect(page).toHaveURL(`${frontendUrl}/`)
+  expect(requests.some((url) => url.includes("/seitoshou/me"))).toBe(true)
   expect(forbidden).toEqual([])
 })
 

@@ -40,6 +40,10 @@
     "./room-id": "./src/lib/room-id.ts",
     "./theme": "./src/lib/theme.ts",
     "./theme.css": "./src/assets/theme.css",
-    "./site-config": "./src/lib/site-config-core.ts"
+    "./site-config": "./src/lib/site-config-core.ts",
+    "./room-session": "./src/lib/room-session.ts",
+    "./ws-client": "./src/ws/client.ts",
+    "./kengen": "./src/lib/kengen.ts",
+    "./bangumi-actions": "./src/lib/bangumi-actions.ts"
   }
 }

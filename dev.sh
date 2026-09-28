@@ -16,7 +16,7 @@ usage() {
   printf '\n'
   printf 'Services:\n'
   printf '  housou      %s\n' "$BACKEND_URL"
-  printf '  kyoushitsu  %s\n' "$FRONTEND_URL"
+  printf '  kyoushitsu-react  %s\n' "$FRONTEND_URL"
   printf '\n'
   printf 'Development accepts all frontend origins by default. To restrict it:\n'
   printf '  %s --origin http://192.168.9.4:5173\n' "$SCRIPT_NAME"
@@ -38,18 +38,18 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --origin)
-        [[ $# -ge 2 ]] || die "--origin requires an http(s) origin"
-        cors_origin=$2
-        shift 2
-        ;;
-      --help | -h)
-        usage
-        return 0
-        ;;
-      *)
-        die "unknown argument: $1"
-        ;;
+    --origin)
+      [[ $# -ge 2 ]] || die "--origin requires an http(s) origin"
+      cors_origin=$2
+      shift 2
+      ;;
+    --help | -h)
+      usage
+      return 0
+      ;;
+    *)
+      die "unknown argument: $1"
+      ;;
     esac
   done
 
@@ -94,7 +94,7 @@ else
 fi
 housou_pid=$!
 
-bun run dev:kyoushitsu &
+bun run dev:react &
 kyoushitsu_pid=$!
 
 wait -n "$housou_pid" "$kyoushitsu_pid"

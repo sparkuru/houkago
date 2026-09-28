@@ -12,8 +12,13 @@ import {
   identitySignOut,
   roomBangumiGet,
   roomBangumiMove,
+  roomBangumiPendingClear,
   roomCreate,
+  roomEnmokuCreate,
+  roomEnmokuDelete,
+  roomEnmokuPreview,
   roomGet,
+  roomMemberDelete,
   siteConfig,
 } from "../generated"
 import type {
@@ -33,9 +38,14 @@ import type {
   IdentitySignOutResponse,
   RoomBangumiGetResponse,
   RoomBangumiMoveResponse,
+  RoomBangumiPendingClearResponse,
   RoomCreateData,
   RoomCreateResponse,
+  RoomEnmokuCreateResponse,
+  RoomEnmokuDeleteResponse,
+  RoomEnmokuPreviewResponse,
   RoomGetResponse,
+  RoomMemberDeleteResponse,
   SiteConfigResponse,
 } from "../generated"
 import {
@@ -142,6 +152,81 @@ export function fetchRoomBootstrap(
     room: unwrapResult<RoomGetResponse>(roomResult),
     bangumi: unwrapResult<RoomBangumiGetResponse>(bangumiResult),
   }))
+}
+
+export function fetchRoom(
+  roomId: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomGetResponse> {
+  return roomGet({ path: { id: roomId }, ...options, throwOnError: false }).then((result) =>
+    unwrapResult<RoomGetResponse>(result),
+  )
+}
+
+export function fetchRoomBangumi(
+  roomId: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomBangumiGetResponse> {
+  return roomBangumiGet({ path: { id: roomId }, ...options, throwOnError: false }).then((result) =>
+    unwrapResult<RoomBangumiGetResponse>(result),
+  )
+}
+
+export function previewRoomEnmoku(
+  roomId: string,
+  sourceUrl: string,
+  title?: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomEnmokuPreviewResponse> {
+  return roomEnmokuPreview({
+    path: { id: roomId },
+    body: { sourceUrl, ...(title ? { title } : {}) },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<RoomEnmokuPreviewResponse>(result))
+}
+
+export function createRoomEnmoku(
+  roomId: string,
+  sourceUrl: string,
+  title?: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomEnmokuCreateResponse> {
+  return roomEnmokuCreate({
+    path: { id: roomId },
+    body: { sourceUrl, ...(title ? { title } : {}) },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<RoomEnmokuCreateResponse>(result))
+}
+
+export function deleteRoomEnmoku(
+  roomId: string,
+  enmokuId: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomEnmokuDeleteResponse> {
+  return roomEnmokuDelete({ path: { id: roomId, enmokuId }, ...options, throwOnError: false }).then(
+    (result) => unwrapResult<RoomEnmokuDeleteResponse>(result),
+  )
+}
+
+export function clearPendingRoomBangumi(
+  roomId: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomBangumiPendingClearResponse> {
+  return roomBangumiPendingClear({ path: { id: roomId }, ...options, throwOnError: false }).then(
+    (result) => unwrapResult<RoomBangumiPendingClearResponse>(result),
+  )
+}
+
+export function deleteRoomMember(
+  roomId: string,
+  seitoId: string,
+  options: HttpRequestOptions = {},
+): Promise<RoomMemberDeleteResponse> {
+  return roomMemberDelete({ path: { id: roomId, seitoId }, ...options, throwOnError: false }).then(
+    (result) => unwrapResult<RoomMemberDeleteResponse>(result),
+  )
 }
 
 export function moveRoomBangumi(

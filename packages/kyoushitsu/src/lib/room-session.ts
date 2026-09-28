@@ -1,5 +1,5 @@
-import { resolveEnmoku } from "@/lib/enmoku-resolve"
 import type { Bushitsu, Enmoku, KousokuMessage, NyuushitsuStatus } from "houkago-kousoku"
+import { resolveEnmoku } from "./enmoku-resolve"
 
 export type RoomSessionConnectionStatus = "connecting" | "open" | "closed" | "error"
 export type RoomSessionAdmission = NyuushitsuStatus | "idle"
