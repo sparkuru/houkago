@@ -27,7 +27,7 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@types/bun": "1.3.14",
+    "@types/bun": "1.4.2",
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "^5.6.0",
     "vite": "^8.0.0",
@@ -44,6 +44,23 @@
     "./room-session": "./src/lib/room-session.ts",
     "./ws-client": "./src/ws/client.ts",
     "./kengen": "./src/lib/kengen.ts",
-    "./bangumi-actions": "./src/lib/bangumi-actions.ts"
+    "./bangumi-actions": "./src/lib/bangumi-actions.ts",
+    "./player": "./src/lib/player.ts",
+    "./shinkou-controller": "./src/lib/shinkou-controller.ts",
+    "./enmoku-metadata": "./src/lib/enmoku-metadata.ts",
+    "./seekable": "./src/lib/seekable.ts",
+    "./danmaku-selection": "./src/lib/danmaku-selection.ts",
+    "./local-danmaku-candidate": "./src/lib/local-danmaku-candidate.ts",
+    "./file-danmaku-pref": "./src/lib/file-danmaku-pref.ts",
+    "./file-danmaku": "./src/lib/file-danmaku.ts",
+    "./danmaku-track": "./src/lib/danmaku-track.ts",
+    "./baidu-provider": "./src/lib/baidu-provider.ts",
+    "./baidu-adapter-detection": "./src/lib/baidu-adapter-detection.ts",
+    "./baidu-oauth-handoff": "./src/lib/baidu-oauth-handoff.ts",
+    "./baidu-oauth-window": "./src/lib/baidu-oauth-window.ts",
+    "./baidu-source-creation": "./src/lib/baidu-source-creation.ts",
+    "./baidu-grant-polling": "./src/lib/baidu-grant-polling.ts",
+    "./houkago-adapter": "./src/lib/houkago-adapter.ts",
+    "./housou-url": "./src/lib/housou-url.ts"
   }
 }

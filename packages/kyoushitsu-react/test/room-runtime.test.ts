@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { Bushitsu, Enmoku, KousokuMessage } from "houkago-kousoku"
+import type { Bushitsu, Enmoku, KousokuMessage, Shinkou } from "houkago-kousoku"
+import type { PlayerHandle } from "houkago-kyoushitsu/player"
 import { RoomRuntime, type RoomServices } from "../src/features/room/room-runtime"
 
 const room: Bushitsu = { id: "room-1", name: "Test room", buchouId: "host", createdAt: 1 }
@@ -252,6 +253,57 @@ describe("React room runtime", () => {
       error: "move denied",
       queue: [],
     })
+    f.runtime.dispose()
+  })
+
+  test("server playback and default snapshots precede player effects, and permission gates local drive", async () => {
+    const f = fixture(Promise.resolve(room), Promise.resolve([item]), "guest")
+    f.runtime.start()
+    f.status("open")
+    f.server("NYUUSHITSU", entered)
+    await Bun.sleep(0)
+    f.server("JOUEI", { enmokuId: item.id })
+    const playback: Shinkou = { isPlaying: true, currentTime: 12, playbackRate: 1 }
+    const observed: Array<{ time: number; snapshotTime: number | undefined }> = []
+    const player: PlayerHandle = {
+      apply: (state) =>
+        observed.push({
+          time: state.currentTime,
+          snapshotTime: f.runtime.getSnapshot().playback?.currentTime,
+        }),
+      alignTransport: () => {},
+      setRate: () => {},
+      snapshot: () => ({ isPlaying: false, currentTime: 0, playbackRate: 1 }),
+    }
+    const detach = f.runtime.attachPlayer(player)
+    f.server("SHINKOU", playback)
+    expect(observed).toHaveLength(1)
+    expect(observed[0]?.snapshotTime).toBe(12)
+    expect(f.runtime.getSnapshot().playbackServerTime).toBeGreaterThan(0)
+    await Bun.sleep(225)
+    f.runtime.localPlayback({ ...playback, currentTime: 13 })
+    expect(f.sent.some((message) => message.type === "SHINKOU")).toBe(false)
+    f.server("KENGEN", { chat: true, playlist: false, playback: true })
+    f.runtime.localPlayback({ ...playback, currentTime: 13 })
+    expect(f.sent.some((message) => message.type === "SHINKOU")).toBe(true)
+    f.server("DANMAKU_DEFAULT", { bushitsuId: "other-room", defaults: [] })
+    expect(f.runtime.getSnapshot().danmakuDefaultsAuthoritative).toBe(false)
+    f.server("DANMAKU_DEFAULT", { bushitsuId: "room-1", defaults: [] })
+    expect(f.runtime.getSnapshot()).toMatchObject({
+      danmakuDefaults: {},
+      danmakuDefaultsAuthoritative: true,
+    })
+    expect(f.runtime.danmaku("live line")).toBe(true)
+    expect(f.sent.some((message) => message.type === "DANMAKU")).toBe(true)
+    f.server("JOUEI", { enmokuId: "item-2" })
+    expect(f.runtime.getSnapshot().playback).toEqual({
+      isPlaying: false,
+      currentTime: 0,
+      playbackRate: 1,
+    })
+    detach()
+    f.server("SHINKOU", { ...playback, currentTime: 30 })
+    expect(observed).toHaveLength(1)
     f.runtime.dispose()
   })
 })

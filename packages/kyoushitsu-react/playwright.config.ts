@@ -41,5 +41,52 @@ export default defineConfig({
         hasTouch: true,
       },
     },
+    {
+      name: "media-desktop",
+      testMatch: /media-room\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
+      name: "media-phone",
+      testMatch: /media-room\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "danmaku-desktop",
+      testMatch: /danmaku-room\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
+      name: "danmaku-phone",
+      testMatch: /danmaku-room\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "baidu-desktop",
+      testMatch: /baidu-room\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
+      name: "baidu-phone",
+      testMatch: /baidu-room\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+        userAgent:
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      },
+    },
   ],
 })

@@ -1,11 +1,13 @@
 import type {
   Bushitsu,
+  DanmakuDefault,
   Enmoku,
   Kengen,
   KousokuMessage,
   MeiboBuin,
   NyuushitsuMode,
   NyuushitsuRequest,
+  Shinkou,
   Yakuwari,
 } from "houkago-kousoku"
 import {
@@ -19,16 +21,24 @@ import {
   previewRoomEnmoku,
 } from "houkago-kyoushitsu/http"
 import { canDo } from "houkago-kyoushitsu/kengen"
+import type { PlayerHandle } from "houkago-kyoushitsu/player"
 import {
   type RoomSessionAdmission,
   type RoomSessionConnectionStatus,
   type RoomSessionTransport,
   createRoomSessionController,
 } from "houkago-kyoushitsu/room-session"
+import { createShinkouController } from "houkago-kyoushitsu/shinkou-controller"
 import { KousokuClient } from "houkago-kyoushitsu/ws-client"
 
 export type ChatLine = { senderId: string; content: string; ts: number; kind: "chat" | "danmaku" }
-type RoomCommandType = "OSHABERI" | "JOUEI" | "SETTEI" | "NYUUSHITSU_SETTEI" | "NYUUSHITSU_HANTEI"
+type RoomCommandType =
+  | "OSHABERI"
+  | "DANMAKU"
+  | "JOUEI"
+  | "SETTEI"
+  | "NYUUSHITSU_SETTEI"
+  | "NYUUSHITSU_HANTEI"
 type RoomCommandMessage = {
   [T in RoomCommandType]: {
     type: T
@@ -44,6 +54,10 @@ export type RoomState = {
   queue: readonly Enmoku[]
   currentId: string | null
   current: Enmoku | null
+  playback: Shinkou | null
+  playbackServerTime: number
+  danmakuDefaults: Readonly<Record<string, DanmakuDefault>>
+  danmakuDefaultsAuthoritative: boolean
   admission: RoomSessionAdmission
   connection: RoomSessionConnectionStatus
   permissions: Kengen
@@ -63,6 +77,10 @@ const initialState: RoomState = {
   queue: [],
   currentId: null,
   current: null,
+  playback: null,
+  playbackServerTime: 0,
+  danmakuDefaults: {},
+  danmakuDefaultsAuthoritative: false,
   admission: "idle",
   connection: "connecting",
   permissions: { playback: false, chat: true, playlist: false },
@@ -93,6 +111,20 @@ export class RoomRuntime {
   private disposed = false
   private pendingReply: PendingReply | null = null
   private commandController: AbortController | null = null
+  private player: PlayerHandle | null = null
+  private playbackController = createShinkouController({
+    send: (message) => {
+      if (message.type === "SHINKOU" && this.can("playback")) this.session.send(message)
+    },
+    getPlayer: () => this.player,
+    canControl: () => this.can("playback"),
+    isBuchou: () => this.isHost,
+    senderId: () => this.identityId,
+    getAuthoritativeState: () => ({
+      shinkou: this.state.playback,
+      serverTime: this.state.playbackServerTime,
+    }),
+  })
   private session
 
   constructor(
@@ -140,6 +172,7 @@ export class RoomRuntime {
       onError: (error) =>
         this.update({ error: error instanceof Error ? error.message : "Room request failed" }),
       onAfterMessage: (message) => {
+        this.playbackController.handleRemote(message)
         if (message.senderId === "server" && this.matchesPendingReply(message))
           this.clearCommandPending()
         if (message.type === "KEIHOU") {
@@ -155,6 +188,22 @@ export class RoomRuntime {
     return () => this.listeners.delete(listener)
   }
   readonly getSnapshot = () => this.state
+  attachPlayer(player: PlayerHandle): () => void {
+    if (this.disposed) return () => {}
+    this.player = player
+    return () => {
+      if (this.player === player) this.player = null
+    }
+  }
+  localPlayback(state: Shinkou): void {
+    this.playbackController.onLocalShinkou(state)
+  }
+  userPlayback(state: Shinkou): void {
+    this.playbackController.onUserShinkou(state)
+  }
+  catchUpPlayback(): void {
+    this.playbackController.catchUp()
+  }
   start() {
     return this.session.start()
   }
@@ -210,8 +259,32 @@ export class RoomRuntime {
         })
         break
       case "JOUEI":
+        // The server resets transport when it accepts a new programme. Clear the
+        // previous item's progress before a new player can mount and catch up.
+        this.update({
+          currentId: message.payload.enmokuId,
+          playback: { isPlaying: false, currentTime: 0, playbackRate: 1 },
+          playbackServerTime: message.ts,
+        })
+        break
       case "GENJOU":
-        this.update({ currentId: message.payload.enmokuId })
+        this.update({
+          currentId: message.payload.enmokuId,
+          playback: message.payload.shinkou,
+          playbackServerTime: message.payload.serverTime,
+        })
+        break
+      case "SHINKOU":
+        this.update({ playback: message.payload, playbackServerTime: message.ts })
+        break
+      case "DANMAKU_DEFAULT":
+        if (message.payload.bushitsuId !== this.roomId) break
+        this.update({
+          danmakuDefaults: Object.fromEntries(
+            message.payload.defaults.map((item) => [item.enmokuId, item]),
+          ),
+          danmakuDefaultsAuthoritative: true,
+        })
         break
       case "SHUSSEKI": {
         const names = { ...this.state.names }
@@ -261,6 +334,9 @@ export class RoomRuntime {
   }
   chat(content: string) {
     return this.message({ type: "OSHABERI", payload: { content } }, "chat")
+  }
+  danmaku(content: string) {
+    return this.message({ type: "DANMAKU", payload: { content } }, "chat")
   }
   select(enmokuId: string | null) {
     return this.message({ type: "JOUEI", payload: { enmokuId } }, "playlist")
@@ -354,6 +430,8 @@ export class RoomRuntime {
     if (this.disposed) return
     this.clearCommandPending()
     this.abort.abort()
+    this.playbackController.dispose()
+    this.player = null
     this.session.dispose()
     this.disposed = true
     this.listeners.clear()

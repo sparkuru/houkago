@@ -1,11 +1,20 @@
 import {
+  baiduAdaptorPairing,
+  baiduConnectionDelete,
   baiduFilesList,
+  baiduOAuthStart,
   baiduPlaybackGrantCreate,
   baiduPlaybackGrantPoll,
   baiduSourceAvailability,
+  baiduSourceCreate,
   baiduStatus,
   danmakuCandidatesResolve,
+  danmakuEnmokuDefaultDelete,
+  danmakuEnmokuDefaultUpdate,
   danmakuEpisodeSearch,
+  danmakuMatchCreate,
+  danmakuProposalCreate,
+  eishaDanmaku,
   identityMe,
   identityRegister,
   identitySignIn,
@@ -22,14 +31,27 @@ import {
   siteConfig,
 } from "../generated"
 import type {
+  BaiduAdaptorPairingResponse,
+  BaiduConnectionDeleteResponse,
   BaiduFilesListResponse,
+  BaiduOAuthStartData,
+  BaiduOAuthStartResponse,
   BaiduPlaybackGrantCreateResponse,
   BaiduPlaybackGrantPollResponse,
   BaiduSourceAvailabilityResponse,
+  BaiduSourceCreateData,
+  BaiduSourceCreateResponse,
   BaiduStatusResponse,
   DanmakuCandidatesResolveData,
   DanmakuCandidatesResolveResponse,
+  DanmakuEnmokuDefaultDeleteResponse,
+  DanmakuEnmokuDefaultUpdateResponse,
   DanmakuEpisodeSearchResponse,
+  DanmakuMatchCreateData,
+  DanmakuMatchCreateResponse,
+  DanmakuProposalCreateData,
+  DanmakuProposalCreateResponse,
+  EishaDanmakuResponse,
   IdentityMeResponse,
   IdentityRegisterData,
   IdentityRegisterResponse,
@@ -249,6 +271,47 @@ export function fetchBaiduStatus(options: HttpRequestOptions = {}): Promise<Baid
   )
 }
 
+export function requestBaiduAdapterPairing(
+  deviceId: string,
+  localPaired: boolean,
+  options: HttpRequestOptions = {},
+): Promise<BaiduAdaptorPairingResponse> {
+  return baiduAdaptorPairing({
+    body: { deviceId, localPaired },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<BaiduAdaptorPairingResponse>(result))
+}
+
+export function startBaiduOauth(
+  retentionMode: BaiduOAuthStartData["body"]["retentionMode"],
+  deviceId?: string,
+  options: HttpRequestOptions = {},
+): Promise<BaiduOAuthStartResponse> {
+  return baiduOAuthStart({
+    body: { retentionMode, ...(deviceId === undefined ? {} : { deviceId }) },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<BaiduOAuthStartResponse>(result))
+}
+
+export function revokeBaiduConnection(
+  options: HttpRequestOptions = {},
+): Promise<BaiduConnectionDeleteResponse> {
+  return baiduConnectionDelete({ ...options, throwOnError: false }).then((result) =>
+    unwrapResult<BaiduConnectionDeleteResponse>(result),
+  )
+}
+
+export function createBaiduSource(
+  body: BaiduSourceCreateData["body"],
+  options: HttpRequestOptions = {},
+): Promise<BaiduSourceCreateResponse> {
+  return baiduSourceCreate({ body, ...options, throwOnError: false }).then((result) =>
+    unwrapResult<BaiduSourceCreateResponse>(result),
+  )
+}
+
 export function fetchBaiduFiles(
   path: string,
   cursor?: string,
@@ -302,6 +365,7 @@ export type BaiduGrantPreparationOptions = {
   signal: AbortSignal
   maxPolls?: number
   pollIntervalMs?: number
+  onPending?: () => void
 }
 
 // Invoke once for an active preparation. Errors are never replayed; cancel the
@@ -309,7 +373,7 @@ export type BaiduGrantPreparationOptions = {
 export async function prepareBaiduGrant(
   sourceId: string,
   roomId: string,
-  { signal, maxPolls = 10, pollIntervalMs = 1_000 }: BaiduGrantPreparationOptions,
+  { signal, maxPolls = 10, pollIntervalMs = 1_000, onPending }: BaiduGrantPreparationOptions,
 ): Promise<BaiduPlaybackGrantPollResponse> {
   if (!Number.isInteger(maxPolls) || maxPolls < 0) {
     throw new RangeError("maxPolls must be a non-negative integer")
@@ -319,6 +383,8 @@ export async function prepareBaiduGrant(
   }
   assertNotAborted(signal)
   let grant = await createBaiduGrant(sourceId, roomId, { signal })
+  assertNotAborted(signal)
+  if (grant.state === "pending") onPending?.()
   for (let count = 0; grant.state === "pending" && count < maxPolls; count += 1) {
     assertNotAborted(signal)
     const remainingMs = grant.expiresAt - Date.now()
@@ -363,6 +429,66 @@ export function fetchDanmakuSearch(
     ...options,
     throwOnError: false,
   }).then((result) => unwrapResult<DanmakuEpisodeSearchResponse>(result))
+}
+
+export function fetchLegacyDanmakuCues(
+  ref: string,
+  options: HttpRequestOptions = {},
+): Promise<EishaDanmakuResponse> {
+  return eishaDanmaku({ path: { ref }, ...options, throwOnError: false }).then((result) =>
+    unwrapResult<EishaDanmakuResponse>(result),
+  )
+}
+
+export function setDanmakuRoomDefault(
+  roomId: string,
+  enmokuId: string,
+  trackId: string,
+  options: HttpRequestOptions = {},
+): Promise<DanmakuEnmokuDefaultUpdateResponse> {
+  return danmakuEnmokuDefaultUpdate({
+    path: { bushitsuId: roomId, enmokuId },
+    body: { trackId },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<DanmakuEnmokuDefaultUpdateResponse>(result))
+}
+
+export function clearDanmakuRoomDefault(
+  roomId: string,
+  enmokuId: string,
+  options: HttpRequestOptions = {},
+): Promise<DanmakuEnmokuDefaultDeleteResponse> {
+  return danmakuEnmokuDefaultDelete({
+    path: { bushitsuId: roomId, enmokuId },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<DanmakuEnmokuDefaultDeleteResponse>(result))
+}
+
+export function submitDanmakuPublicProposal(
+  releaseId: string,
+  evidence: DanmakuProposalCreateData["body"]["evidence"],
+  options: HttpRequestOptions = {},
+): Promise<DanmakuProposalCreateResponse> {
+  return danmakuProposalCreate({
+    body: { releaseId, evidence },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<DanmakuProposalCreateResponse>(result))
+}
+
+export function confirmDanmakuPersonalMatch(
+  releaseId: string,
+  episodeId: string,
+  evidence: DanmakuMatchCreateData["body"]["evidence"],
+  options: HttpRequestOptions = {},
+): Promise<DanmakuMatchCreateResponse> {
+  return danmakuMatchCreate({
+    body: { releaseId, episodeId, trustScope: "personal", evidence },
+    ...options,
+    throwOnError: false,
+  }).then((result) => unwrapResult<DanmakuMatchCreateResponse>(result))
 }
 
 export function fetchDanmakuCandidates(

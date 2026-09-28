@@ -192,6 +192,63 @@ a {
 .room-current p {
   color: var(--color-overlay-muted);
 }
+.room-current .player-stage {
+  margin: var(--space-4) 0;
+}
+.room-media-state {
+  min-height: 190px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-3);
+}
+.room-media-state p {
+  margin: 0;
+}
+.room-chat-rail {
+  min-width: 0;
+}
+.room-cinema {
+  height: 100dvh;
+  overflow: hidden;
+  padding: var(--space-3);
+}
+.room-cinema .room-topbar,
+.room-cinema .room-main > .danmaku-feature,
+.room-cinema .room-main > [data-slot="card"]:not(.room-current),
+.room-cinema .room-side > :not(.room-chat-rail),
+.room-cinema .room-current > .card-kicker,
+.room-cinema .room-current > h2,
+.room-cinema .room-current > button {
+  display: none;
+}
+.room-cinema .room-grid {
+  max-width: none;
+  height: 100%;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+}
+.room-cinema .room-main,
+.room-cinema .room-side,
+.room-cinema .room-chat-rail,
+.room-cinema .room-chat-rail > [data-slot="card"] {
+  min-height: 0;
+  height: 100%;
+}
+.room-cinema .room-current {
+  padding: var(--space-3);
+}
+.room-cinema .room-current .player-stage {
+  margin: 0;
+}
+.room-cinema .room-feed {
+  max-height: none;
+  min-height: 0;
+  flex: 1;
+}
+.room-cinema .room-chat-rail > [data-slot="card"] {
+  display: flex;
+  flex-direction: column;
+}
 .room-gate {
   max-width: 640px;
   margin: var(--space-8) auto;
@@ -288,5 +345,20 @@ a {
   }
   .room-actions {
     justify-content: flex-start;
+  }
+  .room-current {
+    padding: var(--space-3);
+  }
+  .room-cinema {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .room-cinema .room-grid {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .room-cinema .room-side > .room-chat-rail {
+    height: auto;
   }
 }

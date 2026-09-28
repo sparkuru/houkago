@@ -1,7 +1,7 @@
-import { createOffsetEstimator } from "@/lib/clock-offset"
-import type { PlayerHandle } from "@/lib/player"
-import { zureHosei } from "@/lib/zure"
 import type { KousokuMessage, Shinkou } from "houkago-kousoku"
+import { createOffsetEstimator } from "./clock-offset"
+import type { PlayerHandle } from "./player"
+import { zureHosei } from "./zure"
 
 const TSUIJUU_MS = 200
 
@@ -24,6 +24,7 @@ export type ShinkouControllerOptions = {
 
 export type ShinkouController = {
   onLocalShinkou: (state: Shinkou) => void
+  onUserShinkou: (state: Shinkou) => void
   handleRemote: (message: KousokuMessage) => void
   catchUp: () => void
   dispose: () => void
@@ -62,14 +63,23 @@ export function createShinkouController(options: ShinkouControllerOptions): Shin
     }, TSUIJUU_MS)
   }
 
-  function onLocalShinkou(state: Shinkou): void {
-    if (disposed || !options.canControl() || tsuijuuChuu) return
+  function sendShinkou(state: Shinkou): void {
     options.send({
       type: "SHINKOU",
       ts: now(),
       senderId: options.senderId(),
       payload: state,
     })
+  }
+
+  function onLocalShinkou(state: Shinkou): void {
+    if (disposed || !options.canControl() || tsuijuuChuu) return
+    sendShinkou(state)
+  }
+
+  function onUserShinkou(state: Shinkou): void {
+    if (disposed || !options.canControl()) return
+    sendShinkou(state)
   }
 
   function applyShinkou(state: Shinkou, serverTime: number): void {
@@ -149,5 +159,5 @@ export function createShinkouController(options: ShinkouControllerOptions): Shin
     nudging = false
   }
 
-  return { onLocalShinkou, handleRemote, catchUp, dispose }
+  return { onLocalShinkou, onUserShinkou, handleRemote, catchUp, dispose }
 }

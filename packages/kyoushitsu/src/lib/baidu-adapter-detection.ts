@@ -1,10 +1,10 @@
-import type { BaiduClientState } from "@/lib/baidu-provider"
-import { AdapterBridgeError, adapterCapabilityReady } from "@/lib/houkago-adapter"
 import {
   type AdapterHello,
   BAIDU_MEDIA_HEADERS_CAPABILITY,
   HOUKAGO_ADAPTER_PROTOCOL_VERSION,
 } from "houkago-kousoku"
+import type { BaiduClientState } from "./baidu-provider"
+import { AdapterBridgeError, adapterCapabilityReady } from "./houkago-adapter"
 
 type PairingDecision =
   | { state: "paired" }

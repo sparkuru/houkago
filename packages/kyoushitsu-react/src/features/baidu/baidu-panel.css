@@ -1,0 +1,137 @@
+.baidu-panel {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.baidu-panel h2,
+.baidu-panel p {
+  margin: 0;
+}
+
+.baidu-panel-actions,
+.baidu-dialog-actions,
+.baidu-dialog-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.baidu-panel button,
+.baidu-dialog button {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.baidu-panel button:disabled,
+.baidu-dialog button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.baidu-dialog {
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: auto;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+}
+
+.baidu-dialog::backdrop {
+  background: var(--color-overlay);
+}
+.baidu-dialog-header,
+.baidu-dialog-actions {
+  justify-content: space-between;
+  padding: var(--space-3);
+}
+.baidu-dialog-header {
+  border-bottom: 1px solid var(--color-border);
+}
+.baidu-dialog-actions {
+  border-top: 1px solid var(--color-border);
+}
+.baidu-dialog-header h2 {
+  margin: 0;
+}
+.baidu-dialog-body {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.baidu-dialog-body fieldset {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  border: 0;
+}
+.baidu-dialog-body label {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+.baidu-dialog-body input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.baidu-breadcrumbs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+.baidu-file-list {
+  display: grid;
+  gap: var(--space-1);
+  max-height: 40dvh;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.baidu-file-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+}
+.baidu-file-row span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.baidu-file-row[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+.baidu-dialog-actions span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 560px) {
+  .baidu-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .baidu-dialog-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .baidu-file-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+  .baidu-file-row small {
+    grid-column: 2;
+  }
+}

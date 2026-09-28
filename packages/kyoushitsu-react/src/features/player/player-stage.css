@@ -1,0 +1,97 @@
+.player-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+}
+
+.player-mount,
+.player-mount .artplayer-app {
+  width: 100%;
+  height: 100%;
+}
+
+.player-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.player-overlay > * {
+  pointer-events: auto;
+}
+
+.player-join-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  width: 100%;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.player-control-locked .art-bottom,
+.player-control-locked .art-mask {
+  display: none !important;
+}
+
+.player-control-locked .art-video {
+  pointer-events: none;
+}
+
+.player-web-fullscreen {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+.player-stage:fullscreen {
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+.player-stage:is(:fullscreen, .player-web-fullscreen) .player-screen {
+  width: 100%;
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.player-web-exit {
+  position: absolute;
+  z-index: 30;
+  top: 1rem;
+  right: 1rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: rgb(0 0 0 / 70%);
+  color: #fff;
+}
+
+.player-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-controls > button,
+.player-controls select {
+  min-height: 44px;
+}
+
+.player-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

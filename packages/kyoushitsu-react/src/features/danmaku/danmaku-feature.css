@@ -1,0 +1,253 @@
+.danmaku-feature {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.danmaku-feature button,
+.danmaku-feature input {
+  font: inherit;
+}
+
+.danmaku-feature button {
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.danmaku-feature button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.danmaku-feature button:focus-visible,
+.danmaku-feature input:focus-visible,
+.danmaku-source-panel summary:focus-visible,
+.danmaku-live-toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.danmaku-live-form,
+.danmaku-source-body,
+.danmaku-manual-search,
+.danmaku-display-settings {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.danmaku-live-form-row,
+.danmaku-manual-search > div {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.danmaku-live-form input,
+.danmaku-manual-search input {
+  flex: 1 1 14rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.danmaku-source-panel {
+  min-width: 0;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.danmaku-source-panel summary {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.danmaku-source-body {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.danmaku-source-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.danmaku-source-body output {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.danmaku-candidate-list,
+.danmaku-match-section ul,
+.danmaku-manual-search ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.danmaku-candidate-list button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+}
+
+.danmaku-candidate-list small {
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.danmaku-candidate-list button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+}
+
+.danmaku-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.danmaku-source-actions input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.danmaku-match-section li,
+.danmaku-manual-search li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.danmaku-display-settings {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.danmaku-display-settings label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.danmaku-display-settings input {
+  max-width: min(14rem, 55%);
+}
+
+.danmaku-timeline-overlay,
+.danmaku-live-overlay {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.danmaku-timeline-overlay {
+  contain: layout style paint;
+}
+
+.danmaku-live-overlay {
+  inset: 0;
+  z-index: 60;
+}
+
+.danmaku-cue {
+  position: absolute;
+  left: 100%;
+  max-width: 80%;
+  color: white;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 0 0 3px #000;
+  will-change: transform, opacity;
+}
+
+.danmaku-cue-reverse {
+  left: auto;
+  right: 100%;
+}
+
+.danmaku-cue-top,
+.danmaku-cue-bottom,
+.danmaku-cue-special {
+  left: 50%;
+}
+
+.danmaku-live-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  min-height: 32px;
+  padding: 2px 8px;
+  color: #fff;
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.danmaku-live-track {
+  position: absolute;
+  left: 12px;
+  display: grid;
+  gap: 4px;
+  max-width: 60%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: bottom 0.2s ease;
+}
+
+.danmaku-live-bubble {
+  padding: 2px 8px;
+  color: rgb(255 255 255 / 90%);
+  background: rgb(0 0 0 / 48%);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .danmaku-live-form-row,
+  .danmaku-manual-search > div,
+  .danmaku-match-section li,
+  .danmaku-manual-search li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .danmaku-source-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .danmaku-live-track {
+    transition: none;
+  }
+}

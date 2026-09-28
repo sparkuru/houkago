@@ -69,16 +69,19 @@ test("framework-free sync gates local drive by authority and suppresses echoes",
 
   harness.setCanControl(false)
   controller.onLocalShinkou(state)
+  controller.onUserShinkou(state)
   expect(harness.sent).toEqual([])
 
   harness.setCanControl(true)
   controller.handleRemote(remoteShinkou())
   controller.onLocalShinkou(state)
   expect(harness.sent).toEqual([])
-  scheduled?.()
-  controller.onLocalShinkou(state)
+  controller.onUserShinkou({ ...state, isPlaying: false })
   expect(harness.sent).toHaveLength(1)
   expect(harness.sent[0]?.type).toBe("SHINKOU")
+  scheduled?.()
+  controller.onLocalShinkou(state)
+  expect(harness.sent).toHaveLength(2)
 })
 
 test("remote SHINKOU is applied for guests and GENJOU is ignored by the host", () => {

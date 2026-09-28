@@ -49,7 +49,7 @@ test("@real-cookie register refresh React room continuity and confirmed signout"
   await page.getByRole("button", { name: "创建并入部" }).click()
   await expect(page).toHaveURL(new RegExp(`${frontendUrl}/bushitsu/`))
   await expect(page.getByText(roomName, { exact: true }).first()).toBeVisible()
-  await expect(page.getByText("视频播放暂不可用，将在 M5 迁入。")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "聊天室" })).toBeVisible()
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
@@ -91,7 +91,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
     await register(page, "m4_host")
     await page.getByLabel("部室名").fill("M4 shared room")
     await page.getByRole("button", { name: "创建并入部" }).click()
-    await expect(page.getByText("视频播放暂不可用，将在 M5 迁入。")).toBeVisible()
+    await expect(page.getByRole("heading", { name: "聊天室" })).toBeVisible()
     const roomUrl = page.url()
     const roomId = new URL(roomUrl).pathname.split("/").at(-1)
     expect(roomId).toBeTruthy()
@@ -102,7 +102,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
     await expect(guest.getByText("正在等待部長承认…")).toBeVisible()
     await expect(page.getByText("待审")).toBeVisible()
     await page.getByRole("button", { name: "承认" }).click()
-    await expect(guest.getByText("视频播放暂不可用，将在 M5 迁入。")).toBeVisible()
+    await expect(guest.getByRole("heading", { name: "聊天室" })).toBeVisible()
     await page.route("**/enmoku/preview", (route) =>
       route.fulfill({
         status: 403,
@@ -122,10 +122,10 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
       }),
     )
     await page.locator("#chat-message").fill("Hello from host")
-    await page.getByRole("button", { name: "发送" }).click()
+    await page.locator(".room-chat-form").getByRole("button", { name: "发送" }).click()
     await expect(guest.getByText("Hello from host")).toBeVisible()
     await guest.locator("#chat-message").fill("Hello from guest")
-    await guest.getByRole("button", { name: "发送" }).click()
+    await guest.locator(".room-chat-form").getByRole("button", { name: "发送" }).click()
     await expect(page.getByText("Hello from guest")).toBeVisible()
     await expect(guest.getByLabel("视频链接")).toHaveCount(0)
     const denied = await guestContext.request.post(`${housouUrl}/bushitsu/${roomId}/enmoku`, {

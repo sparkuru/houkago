@@ -13,7 +13,7 @@ export default defineConfig({
       generateBundle() {
         const modules = [...this.getModuleIds()]
         const forbidden = modules.filter((id) =>
-          /\.vue(?:\?|$)|\/node_modules\/(?:vue|@vue|pinia|@elysiajs\/eden|artplayer|hls\.js|dashjs)\/|\/packages\/housou\/src\//.test(
+          /\.vue(?:\?|$)|\/node_modules\/(?:vue|@vue|pinia|@elysiajs\/eden)\/|\/packages\/housou\/src\//.test(
             id,
           ),
         )
