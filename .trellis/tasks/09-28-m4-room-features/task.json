@@ -1,0 +1,33 @@
+{
+  "id": "m4-room-features",
+  "name": "m4-room-features",
+  "title": "M4 room features migration",
+  "description": "Plan direct React room migration for admission, realtime queue, chat and governance; React becomes the default local frontend without a Vue fallback.",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "React room session and feature integration, typed room HTTP resources, direct route and local development entry",
+  "package": "houkago-kyoushitsu",
+  "priority": "P2",
+  "creator": "yui",
+  "assignee": "yui",
+  "createdAt": "2026-09-28",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "k-on",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "packages/kyoushitsu-react",
+    "packages/kyoushitsu/src/lib/room-session.ts",
+    "packages/kyoushitsu/src/ws/client.ts",
+    "packages/kyoushitsu/src/api/resources/http.ts",
+    "dev.sh",
+    "scripts/dev-react-preview.sh"
+  ],
+  "notes": "2026-09-28: owner reviewed the final M4 planning summary and approved implementation with 开始. Direct React room migration and local default are in scope; Vue fallback/old-version compatibility is not required. M5/M6, production deployment, commit/archive await separate gates. task.py start succeeded for the active Codex session.",
+  "meta": {}
+}

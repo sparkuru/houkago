@@ -20,28 +20,33 @@
   before further migration work and authorized planning its final
   interaction-surface child. The user then approved the child's final planning
   summary and implementation started on 2026-09-28. The child was reviewed,
-  committed and archived after the owner's `可以；归档`; M4–M6 remain
-  unapproved. On 2026-09-28, the owner requested archival of both legacy
+  committed and archived after the owner's `可以；归档`; M4–M6 were still
+  unapproved at that point. On 2026-09-28, the owner requested archival of both legacy
   parent tasks. Their closure records distinguish delivered children from
-  outstanding proposals.
+  outstanding proposals. Later on 2026-09-28, the owner requested M4,
+  reviewed its final planning summary, and approved implementation with
+  `开始`. The owner selected direct React room migration without a Vue fallback
+  or old-version compatibility requirement; M5/M6 and production deployment
+  remain unapproved.
 - historical roadmap: [Benefit priorities and delivery map](tasks/archive/2026-09/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
-- mode: no active parent task
-- serial authorization: none
-- execution authorization: bounded M0–M3 tasks fulfilled; the approved visual
-  interaction-surface child is complete and archived
-- next pulse: await a new scoped request; review the archived roadmap against
-  current code before any migration continuation
-- next permitted action: plan a newly authorized slice; M4–M6 and cutover
-  remain unapproved
+- mode: active standalone M4 task at `.trellis/tasks/09-28-m4-room-features`
+- serial authorization: M4 only; no automatic M5/M6 continuation
+- execution authorization: M4 planning summary approved on 2026-09-28;
+  task status `in_progress`
+- next pulse: close verified M4 work with its commit, archive and journal
+  records; any M5 planning needs separate owner authorization
+- next permitted action: complete M4 bookkeeping; M5/M6 and production
+  deployment remain unapproved
 
 ## Ordered Work
 
-Both parent tasks and all eight existing children are archived. M3 evidence is
-retained at `archive/2026-09/09-26-react-shell-ui-foundation`. M4–M6 remain
-historical proposals requiring new planning, authorization and checks.
+Both historical parent tasks and their completed children are archived. M3
+evidence is retained at `archive/2026-09/09-26-react-shell-ui-foundation`.
+M4 now has its own active task and approved plan. M5/M6 remain proposals
+requiring separate planning, authorization and checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
 | --- | --- | --- | --- |
@@ -51,7 +56,7 @@ historical proposals requiring new planning, authorization and checks.
 | M2 | http-contract-resources | archived | A1–A8 verified; work commits d7410cf/d76c8e5; 434 aggregate tests and static/build/drift gates pass |
 | M3 | react-shell-ui-foundation | archived | A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks and static/build/drift gates passed; preview stopped |
 | Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; visual parent also archived |
-| M4 | room-features | unstarted proposal | Depends on M3 and validated session controller; realtime queue/chat/governance |
+| M4 | `09-28-m4-room-features` | validated | Direct React room/default local entry; admission, realtime queue/chat/governance; 471 tests and 28 browser cases passed; player deferred to M5 |
 | M5 | media-provider-danmaku | unstarted proposal | Depends on M4 and player seam; media lifecycle, Baidu, subtitles/fullscreen and danmaku |
 | M6 | parity-cutover | unstarted proposal | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
 
@@ -79,15 +84,19 @@ historical proposals requiring new planning, authorization and checks.
 - M3 scope decision: user approved automatic same-window handoff from React home
   to existing Vue rooms on 2026-09-26. New app stays opt-in; room/media migration
   remains M4/M5. Compatible new patches are locked without upgrading old entries.
-- Implementation authorization: final summary from session
+- M3 implementation authorization: final summary from session
   `01a0dc8f-5005-74d1-9085-1c08b8f24c0d` was approved with `开始实现 M3`.
   The owner approved residual review and commit/archive with `提交` after runnable
-  evidence. No cutover or M4 continuation is authorized.
+  evidence. At M3 close, cutover and M4 continuation had not yet been authorized.
 - M3 automated evidence: [validation.md](tasks/archive/2026-09/09-26-react-shell-ui-foundation/validation.md).
   A1–A7 accepted; executed work batches:
   [commit-plan.md](tasks/archive/2026-09/09-26-react-shell-ui-foundation/commit-plan.md).
   Work commits: `8c5a326` / `ae37464`; archive commit: `670e4dd`.
   M3 is archived; the parent was subsequently closed at the owner's request.
+- M4 implementation and independent review evidence:
+  [validation.md](tasks/09-28-m4-room-features/validation.md). React is the
+  default local frontend and room URLs render React directly. M5 media and
+  production cutover remain separate approvals.
 - Dirty-state handling: M2/M3 work is committed; the pre-existing `dev.sh` URL
   edits remain outside their commits and must be preserved.
 
@@ -105,7 +114,7 @@ historical proposals requiring new planning, authorization and checks.
   child. The owner approved the final planning summary, reviewed the completed
   implementation and requested archival on 2026-09-28. The child is archived
   at `tasks/archive/2026-09/09-28-warm-club-interaction-surface-polish`;
-  M4–M6 remain unapproved.
+  M4 was later authorized as a separate task; M5/M6 remain unapproved.
 - Room-shell and queue-control children are already archived with status
   completed: `.trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup`
   and `.trellis/tasks/archive/2026-08/08-30-warm-club-queue-control-consistency`.

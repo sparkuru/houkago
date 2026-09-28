@@ -2,10 +2,11 @@
 
 ## 1. Scope / Trigger
 
-Use this contract for the parallel `houkago-kyoushitsu-react` entry, its identity
-lifecycle, Query binding and Vue room handoff. The existing Vue app remains the
-default. This shell owns no room admission, socket, provider or media lifecycle.
-Room migration belongs to later stages and must preserve the M1 controller ports.
+Use this contract for the `houkago-kyoushitsu-react` entry, its identity
+lifecycle, Query binding and room routing. React is the default local frontend
+in M4. The room route owns a separate room session and socket, specified in
+[React Room Runtime](../houkago-kyoushitsu-react/frontend/room-runtime.md).
+Provider and media lifecycles belong to M5.
 
 ## 2. Signatures
 
@@ -20,15 +21,14 @@ to the current Query key, not a second account store.
 ```ts
 identityMeKey(`epoch:${epoch}`)
 resourceQueryOptions("identityMe")
-legacyRoomUrl(id, currentUrl, configuredOrigin, development)
-createRoomHandoff((target) => location.replace(target))
+safeRoomId(id)
 ```
 
 Run development and checks through the existing wrapper:
 
 ```sh
-DX_EXTRA_PORTS=5174 ./dx bun run dev:react
-DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh
+./dx bun run dev:react
+./dx bash scripts/dev-react-preview.sh
 ./dx bun run --filter houkago-kyoushitsu-react typecheck
 ./dx bun run --filter houkago-kyoushitsu-react build
 ```
@@ -37,8 +37,9 @@ DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh
 
 - Bootstrap memoizes one public-config read and one initial identity restoration.
   Query's ordinary AbortSignal reaches the generated resource adapter. UI
-  subscriptions do not independently repeat restoration. Room deep links bypass
-  React home bootstrap and go straight to the lazy handoff boundary.
+  subscriptions do not independently repeat restoration. Room deep links restore
+  identity before constructing their room session; route preload does not open
+  a room socket.
   Identity/config UI uses stable QueryCache snapshots through
   `useSyncExternalStore`, without mounting QueryObservers for these runtime-owned
   reads. Even `useQuery({ enabled: false })` creates an observer whose final
@@ -78,12 +79,10 @@ DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh
   React's `@` alias resolves only its own source. Generated files remain owned by
   the existing contract pipeline. Verify the actual build graph excludes Vue,
   Pinia, Eden, Housou server and media engines.
-- `VITE_LEGACY_FRONTEND_URL` is an http(s) origin without credentials/path/query/
-  fragment. It must share protocol/hostname with React for the supported cookie
-  setup and must differ from React's origin. Development defaults to port 5173;
-  non-development builds need explicit configuration. Validate decoded safe room
-  segments and encode exactly once; forward no search/hash. Handoff uses
-  idempotent `location.replace`; route-code preload never navigates.
+- React serves the normal local entry on port 5173. Validate decoded room ID
+  segments before a room session is constructed. Home create/join and direct
+  `/bushitsu/:id` navigation render the React route. Route-code preload must
+  never open a socket or start protected room reads.
 - React imports the existing Warm Club CSS and typed copy. Tailwind aliases map
   shared semantic tokens without copying palettes or modifying Vue styles.
   Controls retain visible labels/focus, pending status, 44px targets and reduced
@@ -101,9 +100,11 @@ DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh
   a particular browser's Back/Forward Cache.
 - `DX_EXTRA_PORTS` accepts comma-separated decimal ports 1–65535, deduplicated
   with defaults 3000/5173 and validated before Docker; it never evaluates input.
-  The preview runner owns a single container's memory Housou and both frontends.
+  The preview runner owns a single container's memory Housou and React frontend.
+  `--backend-port` and `--frontend-port` allow task-owned ports when defaults
+  are occupied; both values must be valid distinct decimal ports.
   It uses Bun `--no-env-file`, `HOUSOU_DB=:memory:` and
-  `HOUKAGO_ISOLATED_PREVIEW=1`. Both Vite configs disable `envDir` only under that
+  `HOUKAGO_ISOLATED_PREVIEW=1`. The React Vite config disables `envDir` under that
   flag, because Bun's option alone does not disable Vite dotenv loading. Ordinary
   service startup retains its existing env behavior. Track actual child service
   PIDs and clean them on first service exit or signals.
@@ -118,8 +119,8 @@ DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh
 | Private cancellation rejects | Private keys still removed; epoch fence remains authoritative |
 | Sign-out fails | Failure feedback; fresh `/me` reconciliation before enabling commands |
 | Reconciliation fails | Error/retry state; no success claim or old cache reuse |
-| Invalid/self legacy origin or unsafe room segment | Accessible error; no navigation |
-| Direct React room URL | One handoff; no protected reads/WS/media beforehand |
+| Unsafe room segment | Accessible error; no socket or protected read |
+| Direct React room URL | Restore identity, then one room socket; protected reads wait for admission |
 | Invalid extra-port list | Fail before invoking Docker |
 | Preview child exits or TERM/INT arrives | Stop/reap owned siblings and propagate status |
 
@@ -131,24 +132,25 @@ Public-config empty/invalid response distinctions are governed by
 
 - Good: logout while an old private response is pending; clear the private scope,
   reject its late completion, reconcile any uncertain cookie result, keep config.
-- Base: restore once on home, authenticate, create/join and replace the document
-  with the existing Vue room on the same hostname.
-- Bad: add a page-owned restore effect, retain credential mutation variables,
-  replay auth/create after network failure, or start room HTTP/WS before handoff.
+- Base: restore once on home, authenticate, create/join and render the React
+  room through typed router navigation.
+- Bad: add a second home restoration effect, retain credential mutation
+  variables, replay auth/create after network failure, or start room HTTP
+  before server admission.
 
 ## 6. Tests Required
 
 - Runtime tests cover one bootstrap, real 401 anonymous, retry/recovery, duplicate
   submits, stale restore/auth/create, private purge despite cancel rejection,
   logout reconciliation, disposal and no retained credentials.
-- URL tests cover invite normalization, encoding, unsafe/control/dot segments,
-  missing/self/cross-host origins and preload without navigation.
+- URL tests cover room ID normalization and unsafe/control/dot segments.
 - Run drift, aggregate tests/typecheck/lint and both production builds. Inspect
   the emitted `module-graph.json` for the actual transitive boundary.
 - React entry Playwright covers 1280x900 and 375x812, focus/labels/status/pending,
-  config/title/default name, refresh/deep links, handoff, overflow and motion.
-  Keep identity mocks separate from isolated real-cookie register/refresh/Vue/
-  return/logout continuity. Run old Vue entry and affected room regressions.
+  config/title/default name, refresh/deep links, direct room rendering,
+  overflow and motion. Keep identity mocks separate from isolated real-cookie
+  register/refresh/room/return/logout continuity. Run affected room regressions;
+  Vue browser parity is not an M4 gate.
 - Fake Docker/Bun checks verify port validation and preview process cleanup;
   actual service teardown is an integration check. Browser screenshots are
   diagnostic evidence, never automatically updated baselines.
@@ -162,6 +164,6 @@ Correct: create the runtime once at the composition root, let home bootstrap
 restore once, submit through its serialized metadata-only command and fence
 every completion before committing identity or navigation.
 
-Wrong: run three separate dx containers and assume a TCP probe sees Docker's
-unlistened reserved ports. Correct: run the isolated three-service preview in one
-task-owned container and stop only that session.
+Wrong: launch Housou and React in unrelated containers, or terminate unknown
+processes to free ports. Correct: run the isolated memory preview in one
+task-owned container and stop only its child services.

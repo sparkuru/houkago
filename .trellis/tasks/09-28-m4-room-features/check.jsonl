@@ -1,0 +1,5 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Check applicable frontend conventions and linked active contracts."}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Verify identity/Query lifecycle and ensure handoff rules are updated to delivered React room behavior."}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Verify generated HTTP fidelity, command error handling and WS authority."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Verify retained responsive, keyboard and admission fixture behavior where applicable."}
+{"file":".trellis/tasks/09-28-m4-room-features/research/current-room-boundaries.md","reason":"Compare implemented scope against inspected starting boundaries and media exclusions."}

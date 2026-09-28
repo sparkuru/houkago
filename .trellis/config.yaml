@@ -171,4 +171,6 @@ packages:
     path: packages/kousoku
   houkago-kyoushitsu:
     path: packages/kyoushitsu
+  houkago-kyoushitsu-react:
+    path: packages/kyoushitsu-react
 default_package: houkago-eisha

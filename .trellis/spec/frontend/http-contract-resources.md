@@ -4,7 +4,8 @@
 
 Use this contract when adding a Housou HTTP operation, generating the browser
 SDK, or consuming framework-independent HTTP resources. M2 retains the Vue/Eden
-consumer path; M3 consumes pure package subpaths in the parallel React entry.
+consumer path; M4's default local React frontend consumes explicit pure package
+subpaths for room and identity operations.
 QueryClient/identity ownership is specified in
 [react-entry-runtime.md](react-entry-runtime.md).
 
@@ -41,6 +42,14 @@ configureHousouHttpClient(config?: { baseUrl?: string; fetch?: typeof fetch }): 
 fetchIdentityMe(options?: { signal?: AbortSignal }): Promise<IdentityMeResponse>
 fetchSiteConfig(options?: { signal?: AbortSignal }): Promise<SiteConfigResponse>
 createRoom(body: RoomCreateData["body"], options?: { signal?: AbortSignal }): Promise<RoomCreateResponse>
+fetchRoom(roomId: string, options?: HttpRequestOptions): Promise<RoomGetResponse>
+fetchRoomBangumi(roomId: string, options?: HttpRequestOptions): Promise<RoomBangumiGetResponse>
+previewRoomEnmoku(roomId: string, sourceUrl: string, title?: string, options?: HttpRequestOptions): Promise<RoomEnmokuPreviewResponse>
+createRoomEnmoku(roomId: string, sourceUrl: string, title?: string, options?: HttpRequestOptions): Promise<RoomEnmokuCreateResponse>
+deleteRoomEnmoku(roomId: string, enmokuId: string, options?: HttpRequestOptions): Promise<RoomEnmokuDeleteResponse>
+clearPendingRoomBangumi(roomId: string, options?: HttpRequestOptions): Promise<RoomBangumiPendingClearResponse>
+deleteRoomMember(roomId: string, seitoId: string, options?: HttpRequestOptions): Promise<RoomMemberDeleteResponse>
+moveRoomBangumi(roomId: string, enmokuId: string, direction: "up" | "down", options?: HttpRequestOptions): Promise<RoomBangumiMoveResponse>
 roomBootstrapKey(sessionScope: string, roomId: string): ResourceKey
 bangumiBootstrapKey(sessionScope: string, roomId: string, bootstrapGeneration: string): ResourceKey
 purgePrivateResources(cache: PrivateResourceCache): Promise<void>
@@ -52,10 +61,11 @@ but must not redefine wire DTOs or import Housou's server `App` type.
 `ResourceKey` begins with `keyof typeof import("../generated/sdk.gen")` followed
 by string dimensions, tying key roots to generated operation IDs.
 
-The legacy package exposes only explicit portable subpaths: `http` points to
+The shared package exposes only explicit portable subpaths: `http` points to
 the handwritten `api/public.ts` barrel, `http/generated` to the existing
-generated tree, and `site-config` to the pure loader. `i18n`, `room-id`, `theme`
-and `theme.css` are additional pure assets. Never import the package root/Eden
+generated tree, and `site-config` to the pure loader. `i18n`, `room-id`, `theme`,
+`theme.css`, `room-session`, `ws-client`, `kengen` and `bangumi-actions` are
+additional portable assets. Never import the package root/Eden
 barrel from React, copy generated code or resolve a legacy `@` alias through the
 new app. The HTTP URL helper uses its relative source path.
 
@@ -86,9 +96,13 @@ new app. The HTTP URL helper uses its relative source path.
   `PrivateResourceCache.cancel(matches)` returns a promise;
   `remove(matches)` runs even if cancellation rejects. A future Query binding
   implements this port and guards account-switch writes independently.
-- Admission, permissions, roster, current playback and live queue are owned by
+- Admission, permissions, roster, current item and live queue are owned by
   room-session/WS. HTTP room/Bangumi reads are guarded bootstrap/recovery only.
   Queue mutations acknowledge commands; they do not overwrite live state.
+  The React room runtime waits for server `NYUUSHITSU entered` before these
+  protected reads, uses the generated SDK wrappers for commands, and retains
+  `HoukagoHttpError` details for visible failures. A failed or uncertain
+  command is not replayed automatically.
 - Grant acquisition is an explicit creation plus bounded polling workflow.
   Never cache or replay creation, persist grant URLs, or poll after cancellation,
   expiry or terminal completion.
@@ -152,6 +166,8 @@ their session/panel/workflow context.
   Site-config tests additionally distinguish actual empty success from literal
   empty-object/null/malformed JSON, preserve typed `EMPTY_RESPONSE` and abort
   metadata, and prove one response body is consumed without global fetch changes.
+  M4 wrapper tests also cover room/queue reads, preview/create/delete, pending
+  clear, member delete and move with path/body, credentials, abort and errors.
 - Resource tests distinguish identity/room/source/search/cursor keys, purge
   private scope, disable auth/abort/protocol retries, and retain WS authority.
 - Grant tests prove one creation, bounded polling, terminal stop and cancellation.

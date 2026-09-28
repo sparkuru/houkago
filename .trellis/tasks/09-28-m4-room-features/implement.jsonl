@@ -1,0 +1,6 @@
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Kyoushitsu frontend guideline index and links for room migration."}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"M3 React identity, Query, route and preview contracts to update for direct room migration."}
+{"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Generated HTTP transport, command errors, private scopes and WS authority."}
+{"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Existing Warm Club room shell, admission fixture and accessibility behavior to adapt."}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"M4 crosses React room, shared session and Housou HTTP/WS boundaries."}
+{"file":".trellis/tasks/09-28-m4-room-features/research/current-room-boundaries.md","reason":"Current route, session, state, transport and command evidence for implementation."}
