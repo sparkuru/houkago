@@ -247,3 +247,26 @@ Closed and archived the visual refresh and frontend refactor planning parents; p
 ### Status
 
 [OK] **Completed**
+
+
+## Session 74: M4 React room migration
+
+**Date**: 2026-09-28
+**Task**: M4 React room migration
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Migrated local room admission, realtime queue, chat and governance to React; verified 471 unit tests and 28 browser cases; archived M4.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7908b61` | (see git log) |
+| `7c6b4fa` | (see git log) |
+
+### Status
+
+[OK] **Completed**
