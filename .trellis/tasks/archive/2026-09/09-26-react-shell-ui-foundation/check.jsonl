@@ -1,4 +1,4 @@
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Integration invariants and unchanged M4/M5 room/media ownership."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/spec.md","reason":"Integration invariants and unchanged M4/M5 room/media ownership."}
 {"file":".trellis/spec/frontend/http-contract-resources.md","reason":"Contract drift, typed error preservation, cookies/abort/retry and private-scope tests."}
 {"file":".trellis/spec/frontend/site-configuration.md","reason":"One config request, title/default, value-free warning and invalid-success rejection."}
 {"file":".trellis/spec/frontend/type-safety.md","reason":"Strict actual React subpath compilation and no copied wire types/casts."}

@@ -93,4 +93,5 @@ for later UI slices.
 4. `.trellis/tasks/09-28-warm-club-interaction-surface-polish` — final surface
    convergence for dialogs, gates, the mobile chat sheet/composer, and cinema
    state. Planning was authorized and the final plan was approved on
-   2026-09-28; implementation is in progress.
+   2026-09-28; implementation and child archival are complete. See
+   `closure.md` for the parent closure boundary.

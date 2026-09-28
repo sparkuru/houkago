@@ -1,5 +1,5 @@
 {"file":".trellis/tasks/09-12-behavior-baseline/prd.md","reason":"M0 scope and observable acceptance criteria."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/audit.md","reason":"Existing architecture and test-coverage evidence to cross-check against the baseline."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/implement.md","reason":"Required commands, acceptance matrix and limitation policy."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/audit.md","reason":"Existing architecture and test-coverage evidence to cross-check against the baseline."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/implement.md","reason":"Required commands, acceptance matrix and limitation policy."}
 {"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Responsive room-shell and admission-fixture validation constraints."}
 {"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify package boundary and data-flow coverage in the inventory."}

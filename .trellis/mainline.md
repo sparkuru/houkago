@@ -3,7 +3,7 @@
 ## Initiative
 
 - title: Houkago frontend architecture and stack migration
-- parent task: `.trellis/tasks/09-12-frontend-refactor-plan`
+- historical parent task: `.trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan`
 - objective: Thin pages, business features, an independent room-session
   controller, an HTTP Query layer and an independent player driver; migrate
   toward React, Hey API, TanStack Query/Router, Tailwind and shadcn/ui after
@@ -21,47 +21,50 @@
   interaction-surface child. The user then approved the child's final planning
   summary and implementation started on 2026-09-28. The child was reviewed,
   committed and archived after the owner's `可以；归档`; M4–M6 remain
-  unapproved.
-- authoritative roadmap: [Benefit priorities and delivery map](tasks/09-12-frontend-refactor-plan/roadmap.md)
+  unapproved. On 2026-09-28, the owner requested archival of both legacy
+  parent tasks. Their closure records distinguish delivered children from
+  outstanding proposals.
+- historical roadmap: [Benefit priorities and delivery map](tasks/archive/2026-09/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
-- mode: guided
+- mode: no active parent task
 - serial authorization: none
 - execution authorization: bounded M0–M3 tasks fulfilled; the approved visual
   interaction-surface child is complete and archived
-- next pulse: await owner direction on closing the 08-29 visual parent or
-  resuming migration planning
-- next permitted action: discuss parent integration/closure when requested;
-  M4 and cutover remain unapproved
+- next pulse: await a new scoped request; review the archived roadmap against
+  current code before any migration continuation
+- next permitted action: plan a newly authorized slice; M4–M6 and cutover
+  remain unapproved
 
 ## Ordered Work
 
-M0–M3 are complete and archived children. M3 evidence is retained at
-`archive/2026-09/09-26-react-shell-ui-foundation`. M4–M6 remain
-proposed children requiring their own authorization and checks.
+Both parent tasks and all eight existing children are archived. M3 evidence is
+retained at `archive/2026-09/09-26-react-shell-ui-foundation`. M4–M6 remain
+historical proposals requiring new planning, authorization and checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
 | --- | --- | --- | --- |
-| Plan | `09-12-frontend-refactor-plan` | planning | Stage scope documented; M0–M3 archived; M4–M6 authorization pending |
+| Plan | `09-12-frontend-refactor-plan` | archived | Planning delivered; M0–M3 archived; M4–M6 were not started |
 | M0 | behavior-baseline | archived | Historical baseline recorded; browser failures are not parity evidence |
 | M1 | session-player-boundaries | archived | Depends on M0; implementation and focused evidence archived at `archive/2026-09/09-12-session-player-boundaries` |
 | M2 | http-contract-resources | archived | A1–A8 verified; work commits d7410cf/d76c8e5; 434 aggregate tests and static/build/drift gates pass |
 | M3 | react-shell-ui-foundation | archived | A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks and static/build/drift gates passed; preview stopped |
-| Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; parent remains planning |
-| M4 | room-features | planned | Depends on M3 and validated session controller; realtime queue/chat/governance |
-| M5 | media-provider-danmaku | planned | Depends on M4 and player seam; media lifecycle, Baidu, subtitles/fullscreen and danmaku |
-| M6 | parity-cutover | planned | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
+| Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; visual parent also archived |
+| M4 | room-features | unstarted proposal | Depends on M3 and validated session controller; realtime queue/chat/governance |
+| M5 | media-provider-danmaku | unstarted proposal | Depends on M4 and player seam; media lifecycle, Baidu, subtitles/fullscreen and danmaku |
+| M6 | parity-cutover | unstarted proposal | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
 
 ## Evidence and Decisions
 
-- Initial planning assessment: [audit.md](tasks/09-12-frontend-refactor-plan/audit.md).
+- Initial planning assessment: [audit.md](tasks/archive/2026-09/09-12-frontend-refactor-plan/audit.md).
   That historical assessment was static analysis only. Completed M2 evidence:
   [validation.md](tasks/archive/2026-09/09-13-http-contract-resources/validation.md).
-- Acceptance: [PRD](tasks/09-12-frontend-refactor-plan/prd.md),
-  [contracts S1–S6](tasks/09-12-frontend-refactor-plan/spec.md),
-  [design](tasks/09-12-frontend-refactor-plan/design.md),
-  [effort and verification](tasks/09-12-frontend-refactor-plan/implement.md).
+- Acceptance: [PRD](tasks/archive/2026-09/09-12-frontend-refactor-plan/prd.md),
+  [contracts S1–S6](tasks/archive/2026-09/09-12-frontend-refactor-plan/spec.md),
+  [design](tasks/archive/2026-09/09-12-frontend-refactor-plan/design.md),
+  [effort and verification](tasks/archive/2026-09/09-12-frontend-refactor-plan/implement.md),
+  and [closure boundary](tasks/archive/2026-09/09-12-frontend-refactor-plan/closure.md).
 - Priority: session ownership and HTTP resources first in benefit; player and
   feature boundaries next, then UI reuse. Hey API provides contract separation;
   routing and React replacement alone have lower immediate maintenance value.
@@ -84,17 +87,19 @@ proposed children requiring their own authorization and checks.
   A1–A7 accepted; executed work batches:
   [commit-plan.md](tasks/archive/2026-09/09-26-react-shell-ui-foundation/commit-plan.md).
   Work commits: `8c5a326` / `ae37464`; archive commit: `670e4dd`.
-  Parent stays planning; M3 is archived.
+  M3 is archived; the parent was subsequently closed at the owner's request.
 - Dirty-state handling: M2/M3 work is committed; the pre-existing `dev.sh` URL
   edits remain outside their commits and must be preserved.
 
 ## Previous Initiative and Preserved History
 
 - Previous visual mainline is retained verbatim as a historical snapshot:
-  [previous-mainline.md](tasks/09-12-frontend-refactor-plan/previous-mainline.md).
+  [previous-mainline.md](tasks/archive/2026-09/09-12-frontend-refactor-plan/previous-mainline.md).
   Its old pending-commit/next-action instructions are superseded by this record.
-- The visual parent `.trellis/tasks/08-29-visual-experience-refresh` still has
-  status planning; this update neither completes nor archives it.
+- The visual parent is archived at
+  [08-29-visual-experience-refresh](tasks/archive/2026-09/08-29-visual-experience-refresh/closure.md).
+  Its four child slices are complete; the closure record does not claim fresh
+  full-parent integration validation.
 - On 2026-09-28, the owner selected that parent to handle before further
   migration work and authorized planning its final dialog/gate/chat/cinema
   child. The owner approved the final planning summary, reviewed the completed

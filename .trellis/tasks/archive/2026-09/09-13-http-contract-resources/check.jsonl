@@ -1,5 +1,5 @@
 {"file":".trellis/tasks/09-13-http-contract-resources/research/contract-inventory.md","reason":"Evidence used to check route completeness, isolated export, generated-client boundaries and representative transport behavior."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Acceptance contracts for WS authority, HTTP resource identity, error/cookie fidelity and deterministic generation."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/spec.md","reason":"Acceptance contracts for WS authority, HTTP resource identity, error/cookie fidelity and deterministic generation."}
 {"file":".trellis/spec/guides/index.md","reason":"Quality-check routing for cross-layer and code-reuse changes."}
 {"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Required checks across housou, kousoku, kyoushitsu, eisha and adaptor boundaries."}
 {"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check for reuse of canonical schemas and existing transport/session ports."}

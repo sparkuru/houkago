@@ -4,7 +4,7 @@
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Follow token, viewport, scroll, accessibility, and frontend quality constraints."}
 {"file":".trellis/spec/trellis-plus/index.md","reason":"Use the approved Playwright projects, screenshot policy, and visual human-review gate."}
 {"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Search and reuse existing theme tokens and component recipes before introducing new styles."}
-{"file":".trellis/tasks/08-29-visual-experience-refresh/prd.md","reason":"Parent-approved Warm Club direction, acceptance boundary, and final child scope."}
+{"file":".trellis/tasks/archive/2026-09/08-29-visual-experience-refresh/prd.md","reason":"Parent-approved Warm Club direction, acceptance boundary, and final child scope."}
 {"file":".trellis/tasks/archive/2026-08/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Approved quiet, asset-light Warm Club visual identity and token direction."}
 {"file":".trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Prior UUPM synthesis and deferred dialog/chat-composer scope."}
 {"file":".trellis/tasks/09-28-warm-club-interaction-surface-polish/research/ui-ux-guidance.md","reason":"Current target inventory and the UUPM recommendations retained or rejected for this task."}

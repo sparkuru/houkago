@@ -1,5 +1,5 @@
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/roadmap.md","reason":"Accepted M3 scope and M4/M5/M6 boundaries; Vue remains default and rollback."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"S1-S6 contracts for session ownership, HTTP resources, private generations and UI reuse."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/roadmap.md","reason":"Accepted M3 scope and M4/M5/M6 boundaries; Vue remains default and rollback."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/spec.md","reason":"S1-S6 contracts for session ownership, HTTP resources, private generations and UI reuse."}
 {"file":".trellis/spec/frontend/http-contract-resources.md","reason":"One generated tree, DTO/error/cookie/abort fidelity, explicit Query policy and private purge port."}
 {"file":".trellis/spec/frontend/site-configuration.md","reason":"Public copy/title/default name, memoization, true-empty/transport fallback versus invalid-success rejection."}
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Wrapper policy, no raw component fetch, naming/domain boundaries; Vue-specific bindings remain legacy-only."}

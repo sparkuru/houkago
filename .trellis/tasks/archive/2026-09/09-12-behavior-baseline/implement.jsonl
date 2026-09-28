@@ -1,5 +1,5 @@
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/prd.md","reason":"Parent requirements, preservation boundaries and M0 acceptance."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/implement.md","reason":"Authoritative baseline commands, behavior inventory scope and future gates."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/prd.md","reason":"Parent requirements, preservation boundaries and M0 acceptance."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/implement.md","reason":"Authoritative baseline commands, behavior inventory scope and future gates."}
 {"file":".trellis/spec/houkago-kyoushitsu/frontend/index.md","reason":"Kyoushitsu frontend test and browser validation guidance."}
 {"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Room-shell preservation and required responsive/browser checks."}
 {"file":".trellis/spec/guides/index.md","reason":"Cross-layer and code-reuse checks for the baseline inventory."}

@@ -26,6 +26,6 @@
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "2026-09-12: user accepted boundary-first architecture and migration-benefit priorities. M0-M2 are complete and archived; M2 work commits d7410cf/d76c8e5 with A1-A8 verified. 2026-09-26: user approved creating M3 child 09-26-react-shell-ui-foundation, entering planning and automatic same-window handoff to existing Vue rooms, then approved final planning-summary implementation with 开始实现 M3. M3 is in_progress. M4–M6, unrelated dependency changes, serial continuation and deployment remain unauthorized. M3 implementation/independent check passed on 2026-09-26; 465 tests, 56 browser cases and 124 shell checks. Residual human review and one-shot commit approval pending; no archive or M4 start. Owner approved the presented residual-review and commit/archive batch with 提交; functional commit 8c5a326 done. Finish M3 only; parent stays planning. Final: M3 completed/archived at archive/2026-09/09-26-react-shell-ui-foundation; work commits 8c5a326/ae37464 and archive 670e4dd. A1-A7 accepted. Parent remains planning, M4-M6 unauthorized; dev.sh preserved.",
+  "notes": "The planning deliverables and M0–M3 child tasks are complete and archived. The owner requested closure of this legacy planning parent on 2026-09-28. See closure.md: M4–M6 remain proposed, unstarted and unauthorized; parent archival does not approve migration continuation or cutover.",
   "meta": {}
 }

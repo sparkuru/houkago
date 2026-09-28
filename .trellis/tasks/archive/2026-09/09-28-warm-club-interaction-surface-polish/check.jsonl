@@ -4,7 +4,7 @@
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Review viewport bounds, scroll ownership, tokens, keyboard access, and frontend quality."}
 {"file":".trellis/spec/trellis-plus/index.md","reason":"Classify Playwright evidence, screenshots, and required visual review."}
 {"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Check for duplicate recipes and missed component instances after batch styling."}
-{"file":".trellis/tasks/08-29-visual-experience-refresh/prd.md","reason":"Verify child acceptance and scope against the visual refresh parent."}
+{"file":".trellis/tasks/archive/2026-09/08-29-visual-experience-refresh/prd.md","reason":"Verify child acceptance and scope against the visual refresh parent."}
 {"file":".trellis/tasks/archive/2026-08/08-29-warm-club-foundation-entry/research/visual-direction.md","reason":"Review visual changes against the approved Warm Club direction."}
 {"file":".trellis/tasks/archive/2026-08/08-30-warm-club-visual-followup/research/room-shell-direction.md","reason":"Preserve the earlier shell decisions and deferred dialog/chat scope."}
 {"file":".trellis/tasks/09-28-warm-club-interaction-surface-polish/research/ui-ux-guidance.md","reason":"Confirm rejected generic style suggestions do not override product direction."}

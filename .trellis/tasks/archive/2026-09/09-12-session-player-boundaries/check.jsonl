@@ -2,8 +2,8 @@
 {"file":".trellis/tasks/09-12-session-player-boundaries/design.md","reason":"Review the actual code against the injected ports, authority ownership, and lifecycle guards."}
 {"file":".trellis/tasks/09-12-session-player-boundaries/spec.md","reason":"Cross-check executable session, queue, sync/player, and feature-ownership contracts."}
 {"file":".trellis/tasks/09-12-session-player-boundaries/implement.md","reason":"Run the planned focused and repository checks; inspect rollback points and changed-file scope."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/spec.md","reason":"Cross-check S1/S2/S4 behavior, especially queue authority, admission ordering, player semantics, and no duplicate writers."}
-{"file":".trellis/tasks/09-12-frontend-refactor-plan/audit.md","reason":"Verify the extraction addresses the documented page coupling and stale-result risks without treating hypotheses as facts."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/spec.md","reason":"Cross-check S1/S2/S4 behavior, especially queue authority, admission ordering, player semantics, and no duplicate writers."}
+{"file":".trellis/tasks/archive/2026-09/09-12-frontend-refactor-plan/audit.md","reason":"Verify the extraction addresses the documented page coupling and stale-result risks without treating hypotheses as facts."}
 {"file":".trellis/tasks/archive/2026-09/09-12-behavior-baseline/validation.md","reason":"Compare checks and behavior coverage with the pre-M1 baseline and report environment-blocked browser results honestly."}
 {"file":".trellis/spec/houkago-kyoushitsu/frontend/component-guidelines.md","reason":"Confirm page/player ownership and visible room-shell behavior did not regress."}
 {"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"Verify message → snapshot → sync → player flow and boundary-specific edge cases."}
