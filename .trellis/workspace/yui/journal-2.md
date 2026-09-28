@@ -188,3 +188,40 @@ Implemented and verified M3, owner approved residual review and commit/archive w
 ### Next Steps
 
 - Await explicit M4 stage authorization; parent stays planning. Pre-existing dev.sh URL edits remain uncommitted.
+
+
+## Session 72: Warm Club interaction surface polish
+
+**Date**: 2026-09-28
+**Task**: Warm Club interaction surface polish
+**Package**: houkago-kyoushitsu
+**Branch**: `k-on`
+
+### Summary
+
+Implemented and archived the reviewed Warm Club 2.0 room-surface polish; preserved product behavior and recorded browser-check caveats.
+
+### Main Changes
+
+- Polished room gates, dialogs, mobile chat sheet/composer, provider surfaces, and cinema controls with focused responsive assertions.
+- Updated frontend motion screenshot guidance; archived the child task after owner approval.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e0ff941` | (see git log) |
+| `db9c50a` | (see git log) |
+
+### Testing
+
+- [OK] Kyoushitsu unit tests 203/203; lint, typecheck, build, task validation, and diff check passed; focused Playwright 7/7 passed.
+- [OK] Full browser run retained an intermittent iPad setup timeout; subtitle interception passed isolated rerun.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 08-29 visual parent remains planning; await owner direction. M4-M6 remain unauthorized.
