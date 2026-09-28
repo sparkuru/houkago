@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 72
+- **Total Sessions**: 73
 - **Last Active**: 2026-09-28
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~227 | Active |
+| `journal-2.md` | ~249 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 73 | 2026-09-28 | Archive legacy parent tasks | `5aa6df8` | `k-on` |
 | 72 | 2026-09-28 | Warm Club interaction surface polish | `e0ff941`, `db9c50a` | `k-on` |
 | 71 | 2026-09-26 | Complete M3 parallel React entry and Vue handoff | `8c5a326`, `ae37464` | `k-on` |
 | 70 | 2026-09-26 | 完成 M2 HTTP 契约与资源层 | `d7410cf`, `d76c8e5` | `k-on` |

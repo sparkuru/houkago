@@ -225,3 +225,25 @@ Implemented and archived the reviewed Warm Club 2.0 room-surface polish; preserv
 ### Next Steps
 
 - 08-29 visual parent remains planning; await owner direction. M4-M6 remain unauthorized.
+
+
+## Session 73: Archive legacy parent tasks
+
+**Date**: 2026-09-28
+**Task**: Archive legacy parent tasks
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Closed and archived the visual refresh and frontend refactor planning parents; preserved completed child evidence, recorded unstarted migration stages, and repaired mainline/context paths.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5aa6df8` | (see git log) |
+
+### Status
+
+[OK] **Completed**
