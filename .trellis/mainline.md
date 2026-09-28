@@ -31,26 +31,26 @@
   The owner reviewed the M5 plan and approved implementation with
   `开始实现 M5`; M5 implementation and validation passed. The owner approved the
   Phase 3.4 work commit plan with `可以提交；`, and the implementation commit is
-  `e6c9535`. M6 and production deployment remain
-  unapproved.
+  `e6c9535`, followed by the M5 contract and validation commit `b8bc7e9`.
+  M6 and production deployment remain unapproved.
 - historical roadmap: [Benefit priorities and delivery map](tasks/archive/2026-09/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
-- mode: M5 validated; work commits and finish-work bookkeeping at
-  `.trellis/tasks/09-28-m5-media-provider-danmaku`
+- mode: M5 validated and committed; archival at
+  `.trellis/tasks/archive/2026-09/09-28-m5-media-provider-danmaku`
 - serial authorization: implement and validate M5; no automatic M6
   continuation or production deployment
 - execution authorization: `开始实现 M5` on 2026-09-28; `task.py start` run
-- next pulse: complete the approved documentation work commit, then finish
-  and archive the task as separate bookkeeping
-- next permitted action: finish the approved M5 commit batch and Trellis wrap-up
+- next pulse: archive M5 and record the session; M6 remains a separate
+  proposal requiring its own authorization
+- next permitted action: Trellis finish-work bookkeeping for M5
 
 ## Ordered Work
 
 Both historical parent tasks and their completed children are archived. M3
 evidence is retained at `archive/2026-09/09-26-react-shell-ui-foundation`.
-M4 is archived. M5 is in progress; M6 remains a proposal requiring
+M4 is archived. M5 is ready for archival; M6 remains a proposal requiring
 separate authorization and checks.
 
 | order | task / proposed child | state | readiness and dependency evidence |
@@ -62,7 +62,7 @@ separate authorization and checks.
 | M3 | react-shell-ui-foundation | archived | A1–A7 accepted; work commits 8c5a326/ae37464; 465 tests, 56 browser cases, 124 shell checks and static/build/drift gates passed; preview stopped |
 | Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; visual parent also archived |
 | M4 | `09-28-m4-room-features` | archived | Direct React room/default local entry; admission, realtime queue/chat/governance; 471 tests and 28 browser cases passed; player deferred to M5 |
-| M5 | `09-28-m5-media-provider-danmaku` | validated, commit in progress | A1–A6 fixture evidence recorded; 480 aggregate tests and 41/44 browser cases passed (3 intentional device skips); root lint/typecheck/drift and React build passed; implementation commit `e6c9535` |
+| M5 | `09-28-m5-media-provider-danmaku` | validated, ready to archive | A1–A6 fixture evidence recorded; 480 aggregate tests and 41/44 browser cases passed (3 intentional device skips); root lint/typecheck/drift and React build passed; work commits `e6c9535` and `b8bc7e9` |
 | M6 | parity-cutover | unstarted proposal | Depends on M4/M5, all acceptance gates and explicit cutover authorization; preserve rollback |
 
 ## Evidence and Decisions
@@ -101,10 +101,10 @@ separate authorization and checks.
 - M4 implementation and independent review evidence:
   [validation.md](tasks/archive/2026-09/09-28-m4-room-features/validation.md).
   React is the default local frontend and room URLs render React directly.
-- M5 planning artifacts: [PRD](tasks/09-28-m5-media-provider-danmaku/prd.md),
-  [design](tasks/09-28-m5-media-provider-danmaku/design.md) and
-  [execution plan](tasks/09-28-m5-media-provider-danmaku/implement.md).
-  [validation](tasks/09-28-m5-media-provider-danmaku/validation.md) records
+- M5 planning artifacts: [PRD](tasks/archive/2026-09/09-28-m5-media-provider-danmaku/prd.md),
+  [design](tasks/archive/2026-09/09-28-m5-media-provider-danmaku/design.md) and
+  [execution plan](tasks/archive/2026-09/09-28-m5-media-provider-danmaku/implement.md).
+  [validation](tasks/archive/2026-09/09-28-m5-media-provider-danmaku/validation.md) records
   final automated and browser gates. Production cutover remains a separate
   M6 decision.
 - Dirty-state handling: M2/M3 work is committed. The workspace was clean when
