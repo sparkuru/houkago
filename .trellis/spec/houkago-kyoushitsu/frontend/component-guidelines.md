@@ -111,6 +111,19 @@ Run the Kyoushitsu unit suite, typecheck, lint, build, and the applicable
 Playwright projects before commit. Screenshots are review evidence rather than
 pixel baselines.
 
+When a browser assertion targets a panel animated by `useRoomMotion().enterPanel()`
+or a room animated by `enterRoom()`, wait for the animation to settle before
+capturing screenshots or measuring viewport geometry. These helpers animate
+opacity and vertical translation, so an immediate measurement can observe a
+partly transparent surface or a transient offset. Prefer polling computed
+opacity over a fixed sleep or loosening the geometry bound:
+
+```ts
+await expect
+  .poll(() => panel.evaluate((element) => Number(getComputedStyle(element).opacity)))
+  .toBe(1)
+```
+
 Browser fixtures that seed protected room data through the backend must first
 observe an admitted-room UI state, such as the visible Bangumi disclosure. A
 route change to `/bushitsu/:id` is not an admission barrier; seeding immediately

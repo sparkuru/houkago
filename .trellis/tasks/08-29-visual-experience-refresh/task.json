@@ -21,10 +21,11 @@
   "children": [
     "08-29-warm-club-foundation-entry",
     "08-30-warm-club-visual-followup",
-    "08-30-warm-club-queue-control-consistency"
+    "08-30-warm-club-queue-control-consistency",
+    "09-28-warm-club-interaction-surface-polish"
   ],
   "parent": null,
   "relatedFiles": [],
-  "notes": "The user paused the mobile provider companion and selected project-wide visual polish as the next mainline direction on 2026-08-29. Warm Club 2.0 and the first foundation/entry child are approved and archived. The room-shell/media/workbench hierarchy follow-up is now authorized for planning; dense queue-control and dialog/chat polish remain later slices.",
+  "notes": "The user paused the mobile provider companion and selected project-wide visual polish as the next mainline direction on 2026-08-29. Warm Club 2.0 and the foundation/entry, room-shell, and queue-control children are archived. On 2026-09-28, the user prioritized this parent, approved planning and then the final interaction-surface child's final summary, and authorized its implementation. The parent remains planning; M4–M6 remain unapproved.",
   "meta": {}
 }

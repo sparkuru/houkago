@@ -90,5 +90,7 @@ for later UI slices.
    foundation child is accepted.
 3. Queue and dense-control consistency — proposed follow-up after the room
    shell has adopted the shared component/state language.
-4. Dialog, gate, chat-sheet, and cinema-state polish — proposed final surface
-   convergence and parent integration slice.
+4. `.trellis/tasks/09-28-warm-club-interaction-surface-polish` — final surface
+   convergence for dialogs, gates, the mobile chat sheet/composer, and cinema
+   state. Planning was authorized and the final plan was approved on
+   2026-09-28; implementation is in progress.
