@@ -544,7 +544,7 @@ onBeforeUnmount(() => {
     </div>
   </div>
   <dialog ref="removeDialog" class="remove-dialog" :aria-label="t('removeMemberTitle')">
-    <p>{{ t("removeMemberTitle") }}</p>
+    <h2>{{ t("removeMemberTitle") }}</h2>
     <p>{{ selectedBuin?.username }}：{{ t("removeMemberNotice") }}</p>
     <p v-if="removeError" class="remove-error" role="alert">{{ removeError }}</p>
     <div class="remove-dialog-actions">
@@ -768,12 +768,69 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 .member-table-action { grid-template-columns: minmax(0, 1fr) 42px auto; }
-.remove-member { min-height: 44px; padding: 4px 8px; color: var(--color-on-accent); background: var(--color-danger); border: 0; border-radius: 6px; cursor: pointer; }
+.remove-member { min-height: var(--control-height); padding: 0 var(--space-3); color: var(--color-on-accent); font-weight: 700; background: var(--color-danger); border: 1px solid var(--color-danger); border-radius: var(--radius-sm); cursor: pointer; }
 .remove-member:disabled { cursor: wait; opacity: 0.7; }
-.remove-dialog { max-width: min(360px, calc(100vw - 32px)); color: var(--kengen-text); background: var(--color-surface); border: 1px solid var(--kengen-border); border-radius: 12px; }
-.remove-dialog::backdrop { background: rgb(0 0 0 / 45%); }
-.remove-dialog-actions { display: flex; justify-content: end; gap: 8px; }
-.remove-error { color: var(--color-danger); }
+.remove-dialog {
+  width: min(420px, calc(100vw - var(--space-6)));
+  max-height: calc(100dvh - var(--space-6));
+  box-sizing: border-box;
+  padding: var(--space-4);
+  overflow: auto;
+  color: var(--kengen-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+}
+.remove-dialog h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  line-height: var(--line-height-compact);
+}
+.remove-dialog p {
+  margin: var(--space-3) 0 0;
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+}
+.remove-dialog::backdrop { background: var(--color-overlay); }
+.remove-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.remove-dialog-actions button {
+  flex: 1 1 120px;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.remove-dialog-actions .secondary-button {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+.remove-dialog-actions .secondary-button:hover:not(:disabled) {
+  background: var(--color-interactive-subtle);
+}
+.remove-dialog-actions .remove-member {
+  border-color: var(--color-danger);
+}
+.remove-dialog-actions .remove-member:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.remove-dialog-actions button:disabled { cursor: wait; opacity: 0.58; }
+.remove-error {
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-danger);
+  background: var(--color-danger-subtle);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+}
 .member-name {
   font-weight: 600;
 }

@@ -132,6 +132,14 @@ test("owner can cancel, retry, and confirm a member removal without reconnecting
     await remove.click()
     const dialog = ownerPage.getByRole("dialog", { name: "移除成员？" })
     await expect(dialog).toBeVisible()
+    const removeActionHeights = await dialog
+      .locator(".remove-dialog-actions button")
+      .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height))
+    expect(removeActionHeights.every((height) => height >= 43.5)).toBe(true)
+    await ownerPage.screenshot({
+      path: testInfo.outputPath("member-removal-dialog.png"),
+      fullPage: false,
+    })
     await ownerPage.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
     await expect(roster).toContainText(memberName)
@@ -252,6 +260,14 @@ test("owner reorders and clears pending sources while members never receive queu
     await ownerPage.getByRole("button", { name: "清空待播" }).click()
     const dialog = ownerPage.getByRole("dialog")
     await expect(dialog.getByRole("heading", { name: "清空待播节目？" })).toBeVisible()
+    const clearActionHeights = await dialog
+      .locator(".queue-confirm-actions button")
+      .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height))
+    expect(clearActionHeights.every((height) => height >= 43.5)).toBe(true)
+    await ownerPage.screenshot({
+      path: testInfo.outputPath("queue-clear-dialog.png"),
+      fullPage: false,
+    })
     await ownerPage.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
     await expect(ownerRows).toHaveCount(3)

@@ -186,6 +186,10 @@ test("a short desktop viewport scrolls the left room stage to its expanded queue
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-short", "short viewport coverage")
   await createRoom(page, "Short desktop")
+  await page.screenshot({
+    path: testInfo.outputPath("room-shell-short-desktop.png"),
+    fullPage: false,
+  })
   await page.getByRole("button", { name: "添加链接" }).click()
 
   const stage = page.locator(".stage")
@@ -372,6 +376,10 @@ test("cinema mode keeps the player and desktop chat rail visible", async ({ page
   await expect(cinemaControl).toBeVisible()
   await cinemaControl.click()
   await expect(page.locator(".bushitsu")).toHaveClass(/cinema-mode/)
+  await expect(cinemaControl.locator(".houkago-cinema-icon")).toHaveCSS(
+    "color",
+    "rgb(183, 121, 31)",
+  )
   await expect(page.locator(".media-toolbar")).toBeHidden()
   await expect(page.locator(".room-workbench")).toBeHidden()
   await expect(page.locator(".timeline-danmaku-source")).toBeHidden()
@@ -422,6 +430,24 @@ test("Baidu connection uses an unselected, keyboard-operable retention step", as
   await expect(dialog).toBeVisible()
   await dialog.getByRole("button", { name: "继续" }).click()
   await expect(dialog.getByText("凭据保存方式", { exact: true })).toBeVisible()
+  const dialogGeometry = await dialog.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const buttons = Array.from(element.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"))
+    return {
+      bounds: { left: box.left, right: box.right, top: box.top, bottom: box.bottom },
+      buttonHeights: buttons.map((button) => button.getBoundingClientRect().height),
+      viewport: { width: innerWidth, height: innerHeight },
+    }
+  })
+  expect(dialogGeometry.bounds.left).toBeGreaterThanOrEqual(0)
+  expect(dialogGeometry.bounds.right).toBeLessThanOrEqual(dialogGeometry.viewport.width)
+  expect(dialogGeometry.bounds.top).toBeGreaterThanOrEqual(0)
+  expect(dialogGeometry.bounds.bottom).toBeLessThanOrEqual(dialogGeometry.viewport.height)
+  expect(dialogGeometry.buttonHeights.every((height) => height >= 43.5)).toBe(true)
+  await page.screenshot({
+    path: testInfo.outputPath("baidu-retention-dialog-desktop.png"),
+    fullPage: false,
+  })
   await expect(dialog.getByRole("radio", { name: /服务端加密保存/ })).not.toBeChecked()
   await expect(dialog.getByRole("radio", { name: /仅由本机适配器保存/ })).not.toBeChecked()
   await expect(dialog.getByText("推荐", { exact: true })).toBeVisible()
@@ -490,6 +516,28 @@ test("Baidu browser exposes read-only file states and selection", async ({ page 
   await dialog.getByRole("button", { name: /movie\.mp4/ }).click()
   await expect(add).toBeEnabled()
   await expect(dialog.getByText("已选择: movie.mp4")).toBeVisible()
+  const dialogGeometry = await dialog.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const buttons = Array.from(
+      element.querySelectorAll<HTMLButtonElement>(
+        "button:not(:disabled), .file-row:not(:disabled)",
+      ),
+    )
+    return {
+      bounds: { left: box.left, right: box.right, top: box.top, bottom: box.bottom },
+      buttonHeights: buttons.map((button) => button.getBoundingClientRect().height),
+      viewport: { width: innerWidth, height: innerHeight },
+    }
+  })
+  expect(dialogGeometry.bounds.left).toBeGreaterThanOrEqual(0)
+  expect(dialogGeometry.bounds.right).toBeLessThanOrEqual(dialogGeometry.viewport.width)
+  expect(dialogGeometry.bounds.top).toBeGreaterThanOrEqual(0)
+  expect(dialogGeometry.bounds.bottom).toBeLessThanOrEqual(dialogGeometry.viewport.height)
+  expect(dialogGeometry.buttonHeights.every((height) => height >= 43.5)).toBe(true)
+  await page.screenshot({
+    path: testInfo.outputPath("baidu-file-dialog-desktop.png"),
+    fullPage: false,
+  })
 
   const manage = dialog.getByRole("button", { name: "管理连接", exact: true })
   await expect(manage).toHaveCSS("min-height", "44px")

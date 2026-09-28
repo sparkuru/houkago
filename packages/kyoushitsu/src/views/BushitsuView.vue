@@ -1018,7 +1018,12 @@ onBeforeUnmount(() => {
         class="provider-dialog-backdrop"
         @click.self="closeProviderInfo"
       >
-        <section ref="providerDialog" class="provider-dialog" role="dialog" :aria-label="t('providerInfoAria')">
+        <section
+          ref="providerDialog"
+          class="provider-dialog"
+          role="dialog"
+          :aria-label="t('providerInfoAria')"
+        >
           <header>
             <strong>{{ t("providerBilibili") }}</strong>
             <button type="button" :aria-label="t('providerDialogClose')" @click="closeProviderInfo">
@@ -1268,6 +1273,9 @@ onBeforeUnmount(() => {
 .bushitsu.cinema-mode .mobile-chat-launcher,
 .bushitsu.cinema-mode .hiraku-handle {
   display: none;
+}
+.bushitsu.cinema-mode > :deep(.chat-panel) {
+  display: flex;
 }
 .room-workbench {
   flex: 0 0 auto;
@@ -1579,25 +1587,30 @@ onBeforeUnmount(() => {
 }
 .queue-confirm-dialog {
   width: min(420px, calc(100% - 32px));
+  max-height: calc(100dvh - var(--space-6));
   padding: 0;
+  overflow: auto;
   color: var(--color-text);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-floating);
+  border: 1px solid var(--room-panel-border-strong);
+  border-radius: var(--room-panel-radius);
+  box-shadow: var(--room-floating-elevation);
 }
 .queue-confirm-dialog::backdrop {
   background: var(--color-overlay);
 }
 .queue-confirm-dialog form {
+  margin: 0;
   padding: var(--space-4);
 }
 .queue-confirm-dialog h2 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  line-height: var(--line-height-compact);
 }
 .queue-confirm-dialog p {
-  line-height: 1.5;
+  line-height: var(--line-height-body);
 }
 .queue-confirm-actions {
   display: flex;
@@ -1610,12 +1623,23 @@ onBeforeUnmount(() => {
   min-height: 44px;
   padding: 0 var(--space-3);
   color: var(--color-text);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
+  background: var(--room-panel-raised-surface);
+  border: 1px solid var(--room-panel-border);
   border-radius: var(--radius-sm);
 }
-.queue-confirm-actions .danger:not(:disabled) {
-  color: var(--danger-text);
+.queue-confirm-actions .danger {
+  color: var(--color-danger);
+  font-weight: 700;
+  background: var(--room-queue-danger-surface);
+  border-color: var(--room-queue-danger-border);
+}
+.queue-confirm-actions .danger:not(:disabled):hover {
+  background: var(--color-danger-surface);
+  border-color: var(--color-danger);
+}
+.queue-confirm-actions button:disabled {
+  cursor: wait;
+  opacity: 0.56;
 }
 .provider-dialog-backdrop {
   position: fixed;
@@ -1624,33 +1648,43 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: max(var(--space-3), env(safe-area-inset-top, 0px)) var(--space-3)
+    max(var(--space-3), env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
   background: var(--color-overlay);
 }
 .provider-dialog {
-  width: min(420px, 100%);
-  max-height: min(680px, calc(100dvh - 48px));
+  width: min(440px, 100%);
+  max-height: min(720px, calc(100dvh - var(--space-6)));
   overflow-y: auto;
   color: var(--color-text);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-floating);
+  border: 1px solid var(--room-panel-border-strong);
+  border-radius: var(--room-panel-radius);
+  box-shadow: var(--room-floating-elevation);
+  overscroll-behavior: contain;
 }
 .provider-dialog header {
   display: flex;
+  gap: var(--space-3);
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border);
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  background: var(--room-panel-raised-surface);
+  border-bottom: 1px solid var(--room-panel-border);
 }
 .provider-dialog header button {
-  width: 28px;
-  height: 28px;
+  flex: 0 0 var(--control-height);
+  width: var(--control-height);
+  min-height: var(--control-height);
   padding: 0;
-  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--room-panel-surface);
+  border: 1px solid var(--room-panel-border);
   border-radius: var(--radius-sm);
-  background: transparent;
+  font-size: 22px;
+  line-height: 1;
 }
 .provider-dialog img {
   display: block;
@@ -1658,42 +1692,55 @@ onBeforeUnmount(() => {
   aspect-ratio: 16 / 9;
   object-fit: cover;
   background: var(--color-media-surface);
+  border-bottom: 1px solid var(--room-panel-border);
 }
 .provider-dialog h4,
 .provider-dialog p,
 .provider-dialog a {
-  margin: 12px;
+  margin: var(--space-3);
+}
+.provider-dialog h4 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: var(--line-height-compact);
+  overflow-wrap: anywhere;
 }
 .provider-dialog p {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
+  flex-wrap: wrap;
 }
 .provider-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-  gap: 8px;
-  margin: 12px;
+  gap: var(--space-2);
+  margin: var(--space-3);
 }
 .provider-stats div {
   min-width: 0;
-  padding: 8px;
-  background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
+  padding: var(--space-2);
+  background: var(--room-panel-muted-surface);
+  border: 1px solid var(--room-panel-border);
   border-radius: var(--radius-sm);
 }
 .provider-stats dt {
-  margin: 0 0 4px;
-  font-size: 12px;
+  margin: 0 0 var(--space-1);
+  font-size: var(--type-label-size);
   color: var(--color-text-muted);
 }
 .provider-stats dd {
   margin: 0;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .provider-dialog a {
   display: inline-flex;
+  min-height: var(--control-height);
+  align-items: center;
+  padding: 0 var(--space-2);
   color: var(--panel-accent);
+  border-radius: var(--radius-sm);
 }
 /* 折叠態の展开手柄（prd #4）：右缘に細いホットゾーンを常駐させ hover を受ける。
    中の ‹ ボタンは既定 opacity:0、hover/focus でのみ浮現（color だけで状態を伝えない）。 */
@@ -1739,14 +1786,45 @@ onBeforeUnmount(() => {
   background: var(--color-overlay);
 }
 .name-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 24px;
+  display: grid;
+  gap: var(--space-4);
+  width: min(420px, calc(100vw - var(--space-6)));
+  box-sizing: border-box;
+  padding: var(--space-5);
   color: var(--color-text);
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-floating);
+  background: var(--entry-sign-surface);
+  border: 1px solid var(--entry-card-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-floating);
+}
+.name-form label {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+.name-form input {
+  width: 100%;
+  min-height: var(--control-height);
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
+  color: var(--color-text);
+  background: var(--entry-field-surface);
+  border: 1px solid var(--entry-field-border);
+  border-radius: var(--radius-sm);
+}
+.name-form button {
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  color: var(--entry-button-text);
+  font-weight: 700;
+  background: var(--entry-button-surface);
+  border: 1px solid var(--entry-button-surface);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.name-form button:hover {
+  background: var(--entry-button-hover);
+  border-color: var(--entry-button-hover);
 }
 .nyuushitsu-gate {
   position: fixed;
@@ -1758,21 +1836,26 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  color: var(--color-on-accent);
+  color: var(--color-on-media);
   background: var(--color-overlay-strong);
 }
 .nyuushitsu-gate p {
   margin: 0;
-  padding: 20px 24px;
-  background: var(--color-media-surface);
-  border: 1px solid var(--color-border-strong);
-  border-radius: 8px;
+  max-width: min(520px, calc(100vw - var(--space-6)));
+  padding: var(--space-4) var(--space-5);
+  line-height: var(--line-height-body);
+  text-align: center;
+  background: var(--color-overlay-surface);
+  border: 1px solid color-mix(in srgb, var(--color-on-media) 24%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-floating);
 }
 .nyuushitsu-gate .nyuushitsu-status {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   color: var(--color-overlay-muted);
-  font-size: 13px;
-  background: var(--color-overlay-surface);
+  font-size: var(--type-label-size);
+  background: color-mix(in srgb, var(--color-overlay-surface) 82%, transparent);
+  box-shadow: none;
 }
 
 @media (max-width: 800px) and (orientation: portrait) {
@@ -1936,8 +2019,9 @@ onBeforeUnmount(() => {
     display: block;
     width: 100%;
     height: min(60dvh, 620px);
-    max-width: none;
-    max-height: none;
+    max-width: 100%;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--space-3));
+    box-sizing: border-box;
     padding: 0;
     margin: 0;
     overflow: hidden;
@@ -1954,9 +2038,11 @@ onBeforeUnmount(() => {
   .mobile-chat-sheet-shell {
     display: flex;
     height: 100%;
+    box-sizing: border-box;
     min-height: 0;
     flex-direction: column;
     overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: var(--room-panel-surface);
     border: 1px solid var(--room-panel-border);
     border-bottom: 0;
@@ -1970,6 +2056,10 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     min-height: 48px;
     padding: 0 var(--space-3);
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-weight: 700;
+    background: var(--room-panel-raised-surface);
     border-bottom: 1px solid var(--room-panel-border);
   }
   .mobile-chat-sheet-actions {
@@ -1983,6 +2073,10 @@ onBeforeUnmount(() => {
     background: var(--room-panel-raised-surface);
     border: 1px solid var(--room-panel-border);
     border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .mobile-chat-sheet-actions button:hover {
+    background: var(--color-interactive-subtle);
   }
   .mobile-chat-sheet :deep(.chat-panel) {
     flex: 1;

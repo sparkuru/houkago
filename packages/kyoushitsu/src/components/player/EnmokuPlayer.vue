@@ -560,7 +560,7 @@ function escapeHtml(value: string): string {
 }
 
 function controlColor(active: boolean): string {
-  return active ? "var(--art-theme, #f00)" : "currentColor"
+  return active ? "var(--color-warning)" : "currentColor"
 }
 
 function exitPlayerFullscreen(): void {
@@ -1057,7 +1057,7 @@ onBeforeUnmount(() => {
 }
 .enmoku-player.file-danmaku-enabled :deep(.art-control-houkagoDanmakuToggle),
 .enmoku-player.cinema-mode :deep(.art-control-houkagoCinema) {
-  color: var(--art-theme);
+  color: var(--color-warning);
 }
 .enmoku-player :deep(.houkago-danmaku-toggle) {
   display: flex;
@@ -1299,14 +1299,15 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: center;
   padding-top: 8px;
-  color: #fff;
+  color: var(--color-on-media);
   font-size: 0.9rem;
-  background: rgba(0, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--color-overlay-strong) 35%, transparent);
 }
 .control-lock span {
-  padding: 2px 8px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-overlay-surface);
+  border: 1px solid color-mix(in srgb, var(--color-on-media) 20%, transparent);
+  border-radius: var(--radius-sm);
 }
 .join-gate {
   position: absolute;
@@ -1316,10 +1317,20 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-4);
   border: none;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 1.25rem;
+  color: var(--color-on-media);
+  font-family: var(--font-display);
+  font-size: clamp(18px, 3vw, 26px);
+  font-weight: 700;
+  line-height: var(--line-height-compact);
+  text-shadow: 0 1px 3px var(--color-cinema-canvas);
+  background: var(--color-overlay-strong);
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.join-gate:hover {
+  background: var(--color-overlay-surface);
 }
 </style>

@@ -168,43 +168,60 @@ defineExpose({ open, close })
 </template>
 
 <style scoped>
-.baidu-file-dialog { width: min(760px, calc(100vw - 32px)); height: min(720px, calc(100dvh - 32px)); padding: 0; overflow: hidden; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-floating); }
+.baidu-file-dialog {
+  width: min(760px, calc(100vw - var(--space-6)));
+  height: min(
+    720px,
+    calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--space-6))
+  );
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+}
 .baidu-file-dialog[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .baidu-file-dialog::backdrop { background: var(--color-overlay); }
 header, footer { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); }
-header { border-bottom: 1px solid var(--color-border); }
+header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
 header p, h2, h3, .browser-state p, .selection { margin: 0; }
-header p { margin-bottom: var(--space-1); color: var(--color-accent); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-h2 { font-size: 22px; }
-.icon-button { width: 44px; min-width: 44px; padding: 0; font-size: 22px; }
+header p { margin-bottom: var(--space-1); color: var(--color-accent); font-size: var(--type-label-size); font-weight: 700; text-transform: uppercase; }
+h2 { font-family: var(--font-display); font-size: var(--type-title-size); line-height: var(--line-height-compact); }
+.icon-button { width: var(--control-height); min-width: var(--control-height); min-height: var(--control-height); padding: 0; font-size: 22px; }
 .breadcrumbs { display: flex; gap: var(--space-2); align-items: center; min-width: 0; padding: var(--space-2) var(--space-5); background: var(--color-surface-muted); border-bottom: 1px solid var(--color-border); }
 .breadcrumbs ol { display: flex; gap: var(--space-1); min-width: 0; margin: 0; padding: 0; overflow-x: auto; list-style: none; }
-.crumb { min-width: 44px; color: var(--color-accent); background: transparent; border-color: transparent; }
-main { min-height: 0; overflow: auto; }
+.crumb { min-width: var(--control-height); color: var(--color-accent); background: transparent; border-color: transparent; }
+main { min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .browser-state { display: grid; gap: var(--space-3); place-items: center; align-content: center; min-height: 260px; padding: var(--space-5); text-align: center; color: var(--color-text-muted); }
-.browser-state.error { color: var(--color-danger); }
+.browser-state h3 { font-family: var(--font-display); font-size: 18px; }
+.browser-state.error { color: var(--color-danger); background: var(--color-danger-subtle); }
 .spinner { width: 28px; height: 28px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; }
 .file-list { margin: 0; padding: var(--space-2); list-style: none; }
-.file-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--space-2); align-items: center; width: 100%; min-height: 48px; padding: var(--space-2) var(--space-3); color: var(--color-text); text-align: left; background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; }
+.file-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--space-2); align-items: center; width: 100%; min-height: 48px; padding: var(--space-2) var(--space-3); color: var(--color-text); text-align: left; background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
 .file-row:hover:not(:disabled), .file-row.selected { background: var(--color-surface-muted); border-color: var(--color-border); }
-.file-row.selected { border-color: var(--color-accent); }
-.file-row:disabled { cursor: not-allowed; opacity: 0.5; }
+.file-row.selected { border-color: var(--color-accent); box-shadow: inset 3px 0 0 var(--color-accent); }
+.file-row:disabled { cursor: not-allowed; opacity: 0.52; }
 .file-kind { color: var(--color-accent); text-align: center; }
-.file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-meta { display: grid; gap: 2px; color: var(--color-text-muted); font-size: 12px; text-align: right; }
+.file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta { display: grid; gap: 2px; color: var(--color-text-muted); font-size: var(--type-label-size); text-align: right; }
 footer { align-items: flex-end; border-top: 1px solid var(--color-border); }
-.selection { min-width: 0; overflow-wrap: anywhere; color: var(--color-text-muted); font-size: 13px; }
-.actions { display: flex; flex: none; gap: var(--space-2); }
-button { min-height: 44px; padding: 8px 14px; color: var(--color-on-accent); background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); cursor: pointer; }
+.selection { min-width: 0; overflow-wrap: anywhere; color: var(--color-text-muted); font-size: var(--type-label-size); }
+.actions { display: flex; flex: none; flex-wrap: wrap; gap: var(--space-2); }
+button { min-height: var(--control-height); padding: 0 var(--space-3); color: var(--color-on-accent); background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
+button:hover:not(:disabled) { background: var(--color-accent-strong); border-color: var(--color-accent-strong); }
 button.secondary { color: var(--color-text); background: var(--color-surface); border-color: var(--color-border); }
-button:disabled { cursor: not-allowed; opacity: 0.5; }
+button.secondary:hover:not(:disabled) { background: var(--color-interactive-subtle); border-color: var(--color-border-strong); }
+button:disabled { cursor: not-allowed; opacity: 0.52; }
 @media (prefers-reduced-motion: no-preference) { .spinner { animation: spin 800ms linear infinite; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 560px) {
-  .baidu-file-dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); }
+  .baidu-file-dialog { width: calc(100vw - var(--space-4)); height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - var(--space-4)); }
   header, footer, .breadcrumbs { padding-inline: var(--space-3); }
   footer { align-items: stretch; flex-direction: column; }
-  .actions button { flex: 1; }
+  .actions { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr); }
   .file-row { grid-template-columns: 28px minmax(0, 1fr); }
   .file-meta { grid-column: 2; text-align: left; }
 }

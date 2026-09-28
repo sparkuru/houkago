@@ -71,7 +71,7 @@ test("portrait room keeps the player first and shell controls within the viewpor
   await page.screenshot({ path: testInfo.outputPath("room-shell-portrait.png"), fullPage: false })
 })
 
-test("portrait chat opens, expands, and closes as a modal sheet", async ({ page }) => {
+test("portrait chat opens, expands, and closes as a modal sheet", async ({ page }, testInfo) => {
   await createRoom(page, "portrait_chat")
 
   const launcher = page.getByRole("button", { name: "打开聊天室" })
@@ -82,13 +82,68 @@ test("portrait chat opens, expands, and closes as a modal sheet", async ({ page 
   await launcher.click()
   await expect(dialog).toBeVisible()
   await expect(dialog).toHaveAttribute("open", "")
+  await expect
+    .poll(() => dialog.evaluate((element) => Number(getComputedStyle(element).opacity)))
+    .toBe(1)
+  await page.screenshot({
+    path: testInfo.outputPath("chat-sheet-portrait.png"),
+    fullPage: false,
+  })
   const defaultHeight = await dialog.evaluate((element) => element.getBoundingClientRect().height)
+  const sheetGeometry = await dialog.evaluate((element) => {
+    const buttons = Array.from(
+      element.querySelectorAll<HTMLButtonElement>(
+        ".mobile-chat-sheet-actions button, .chat-toolbar button",
+      ),
+    )
+    const buttonHeights = buttons.map((button) => button.getBoundingClientRect().height)
+    const controlBottom = Math.max(
+      ...buttons.map((button) => button.getBoundingClientRect().bottom),
+    )
+    const sheet = element.getBoundingClientRect()
+    return {
+      buttonHeights,
+      resizerHeight:
+        element.querySelector(".composer-resizer")?.getBoundingClientRect().height ?? 0,
+      controlBottom,
+      bottom: sheet.bottom,
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportHeight: window.innerHeight,
+      viewportWidth: window.innerWidth,
+    }
+  })
+  expect(sheetGeometry.buttonHeights.every((height) => height >= 43.5)).toBe(true)
+  expect(sheetGeometry.resizerHeight).toBeGreaterThanOrEqual(43.5)
+  expect(sheetGeometry.controlBottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight)
+  expect(sheetGeometry.bottom).toBeLessThanOrEqual(sheetGeometry.viewportHeight)
+  expect(sheetGeometry.scrollWidth).toBeLessThanOrEqual(sheetGeometry.viewportWidth)
+
+  const settings = page.getByRole("button", { name: "设置", exact: true })
+  await expect(settings).toHaveCSS("min-height", "44px")
+  await settings.click()
+  const settingsPanel = page.locator(".composer-settings")
+  await expect(settingsPanel).toBeVisible()
+  const settingHeights = await settingsPanel
+    .locator("input")
+    .evaluateAll((inputs) => inputs.map((input) => input.getBoundingClientRect().height))
+  expect(settingHeights.every((height) => height >= 43.5)).toBe(true)
+  await page.screenshot({
+    path: testInfo.outputPath("chat-composer-settings-portrait.png"),
+    fullPage: false,
+  })
+  await settings.click()
 
   await page.getByRole("button", { name: "展开聊天" }).click()
   await expect(page.getByRole("button", { name: "缩小聊天" })).toBeVisible()
   await expect
     .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height))
     .toBeGreaterThan(defaultHeight + 200)
+  await page.getByRole("button", { name: "缩小聊天" }).click()
+  await expect(page.getByRole("button", { name: "展开聊天" })).toBeVisible()
+  await expect
+    .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height))
+    .toBeLessThan(defaultHeight + 100)
+  await page.getByRole("button", { name: "展开聊天" }).click()
 
   await page.getByRole("button", { name: "关闭聊天" }).click()
   await expect(dialog).toBeHidden()

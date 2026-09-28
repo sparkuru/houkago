@@ -276,7 +276,8 @@ defineExpose({ open, close })
 <style scoped>
 .baidu-dialog {
   width: min(620px, calc(100vw - 32px));
-  max-height: min(760px, calc(100dvh - 32px));
+  max-height: min(760px, calc(100dvh - var(--space-6)));
+  box-sizing: border-box;
   padding: 0;
   overflow: auto;
   color: var(--color-text);
@@ -284,24 +285,27 @@ defineExpose({ open, close })
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-floating);
+  overscroll-behavior: contain;
 }
 .baidu-dialog::backdrop { background: var(--color-overlay); }
-header { display: flex; gap: var(--space-3); align-items: flex-start; justify-content: space-between; padding: var(--space-5); border-bottom: 1px solid var(--color-border); }
+header { position: sticky; top: 0; z-index: 1; display: flex; gap: var(--space-3); align-items: flex-start; justify-content: space-between; padding: var(--space-4) var(--space-5); background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
 h2, h3, p { margin-top: 0; }
-h2 { margin-bottom: 0; font-size: 22px; }
+h2 { margin-bottom: 0; font-family: var(--font-display); font-size: var(--type-title-size); line-height: var(--line-height-compact); }
 .eyebrow { margin-bottom: var(--space-1); color: var(--color-accent); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .icon-button { width: 44px; min-width: 44px; height: 44px; font-size: 22px; }
 .step-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-5); color: var(--color-text-muted); list-style: none; border-bottom: 1px solid var(--color-border); }
-.step-list li { padding: var(--space-2); font-size: 12px; text-align: center; border-radius: var(--radius-sm); }
-.step-list li[aria-current="step"] { color: var(--color-on-accent); background: var(--color-accent); }
+.step-list li { padding: var(--space-2); font-size: var(--type-label-size); line-height: var(--line-height-compact); text-align: center; border: 1px solid transparent; border-radius: var(--radius-sm); }
+.step-list li[aria-current="step"] { color: var(--color-on-accent); font-weight: 700; background: var(--color-accent); border-color: var(--color-accent-strong); }
 .dialog-step { display: grid; gap: var(--space-4); padding: var(--space-5); }
+.dialog-step h3 { margin-bottom: 0; font-family: var(--font-display); font-size: 18px; line-height: var(--line-height-compact); }
 .state-copy, .feedback { margin-bottom: 0; padding: var(--space-3); color: var(--color-text-muted); background: var(--color-surface-muted); border-radius: var(--radius-sm); }
 .success { color: var(--color-text); }
-.error { color: var(--color-danger); background: var(--color-danger-surface); }
+.error { color: var(--color-danger); background: var(--color-danger-subtle); border: 1px solid var(--color-danger-border); }
 fieldset { display: grid; gap: var(--space-3); min-width: 0; margin: 0; padding: 0; border: 0; }
 legend { margin-bottom: var(--space-3); font-weight: 700; }
-.retention-card { display: grid; gap: var(--space-2); min-height: 44px; padding: var(--space-4); color: var(--color-text-muted); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; }
+.retention-card { display: grid; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-4); color: var(--color-text-muted); background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
 .retention-card.selected { color: var(--color-text); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)); }
+.retention-card:hover:not(:has(input:disabled)) { border-color: var(--color-border-strong); }
 .retention-card:has(input:disabled) { cursor: not-allowed; opacity: 0.6; }
 .retention-heading { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; color: var(--color-text); }
 .retention-heading input { width: 20px; height: 20px; }
@@ -311,12 +315,15 @@ legend { margin-bottom: var(--space-3); font-weight: 700; }
 button { min-height: 44px; padding: 8px 14px; color: var(--color-on-accent); background: var(--color-accent); border: 1px solid var(--color-accent); border-radius: var(--radius-sm); cursor: pointer; }
 button.secondary, button.icon-button { color: var(--color-text); background: var(--color-surface); border-color: var(--color-border); }
 button.danger { background: var(--color-danger); border-color: var(--color-danger); }
-button:disabled { cursor: not-allowed; opacity: 0.5; }
+button:hover:not(:disabled):not(.icon-button) { background: var(--color-accent-strong); border-color: var(--color-accent-strong); }
+button.secondary:hover:not(:disabled) { background: var(--color-interactive-subtle); border-color: var(--color-border-strong); }
+button.danger:hover:not(:disabled) { background: var(--color-danger); border-color: var(--color-danger); }
+button:disabled { cursor: not-allowed; opacity: 0.52; }
 .connection-summary { display: grid; gap: var(--space-2); margin: 0; }
 .connection-summary div { display: grid; grid-template-columns: minmax(110px, 0.35fr) 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
 .connection-summary dt { color: var(--color-text-muted); }
 .connection-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-.revoke-confirmation { padding: var(--space-4); color: var(--color-danger); background: var(--color-danger-surface); border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border)); border-radius: var(--radius-md); }
+.revoke-confirmation { padding: var(--space-4); color: var(--color-danger); background: var(--color-danger-subtle); border: 1px solid var(--color-danger-border); border-radius: var(--radius-md); }
 .revoke-confirmation h4, .revoke-confirmation p { margin-top: 0; }
 .revoke-confirmation ul { display: grid; gap: var(--space-2); margin-bottom: 0; padding-left: 1.25rem; color: var(--color-text); }
 @media (max-width: 520px) {
