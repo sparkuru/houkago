@@ -1,8 +1,9 @@
 # Frontend Design Integration
 
 Houkago has user-facing React/Vite/Tailwind room and entry sources under
-`packages/kyoushitsu-react`; `packages/kyoushitsu` still contains Vue and shared
-assets pending M6. Dependencies and actual sources prove UI applicability.
+`packages/kyoushitsu-react`; portable helpers are in `packages/kyoushitsu-core`.
+M6 retired the old application after owner acceptance. Dependencies and actual
+sources prove UI applicability.
 A backend-only change does not need design generation.
 
 ## Initialization

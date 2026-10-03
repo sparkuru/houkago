@@ -26,6 +26,11 @@ export type RoomFloatingPixels = {
   top: number
 }
 
+export type RoomFloatingObstacle = RoomFloatingPixels & {
+  width: number
+  height: number
+}
+
 type PositionStorage = Pick<Storage, "getItem" | "setItem">
 
 export const DEFAULT_ROOM_FLOATING_POSITION: RoomFloatingPosition = Object.freeze({
@@ -104,6 +109,59 @@ export function roomFloatingPositionFromPixels(
         ? 0
         : clampUnit((finiteOr(pixels.top, resolved.top) - resolved.top) / resolved.vertical),
   }
+}
+
+export function findClearRoomFloatingPosition(
+  position: RoomFloatingPosition,
+  bounds: RoomFloatingBounds,
+  obstacles: readonly RoomFloatingObstacle[],
+): RoomFloatingPixels | null {
+  const preferred = roomFloatingPositionToPixels(position, bounds)
+  const limits = boundsFor(bounds)
+  const maxLeft = limits.left + limits.horizontal
+  const maxTop = limits.top + limits.vertical
+  const gap = 8
+  const visible = obstacles.filter(
+    ({ left, top, width, height }) =>
+      [left, top, width, height].every(Number.isFinite) &&
+      width > 0 &&
+      height > 0 &&
+      left < bounds.viewportWidth &&
+      top < bounds.viewportHeight &&
+      left + width > 0 &&
+      top + height > 0,
+  )
+  const isClear = ({ left, top }: RoomFloatingPixels) =>
+    visible.every(
+      (obstacle) =>
+        left + bounds.elementWidth + gap <= obstacle.left ||
+        left >= obstacle.left + obstacle.width + gap ||
+        top + bounds.elementHeight + gap <= obstacle.top ||
+        top >= obstacle.top + obstacle.height + gap,
+    )
+  if (isClear(preferred)) return preferred
+
+  const horizontal = new Set([preferred.left, limits.left, maxLeft])
+  const vertical = new Set([preferred.top, limits.top, maxTop])
+  for (const obstacle of visible) {
+    for (const left of [
+      obstacle.left - bounds.elementWidth - gap,
+      obstacle.left + obstacle.width + gap,
+    ]) {
+      if (left >= limits.left && left <= maxLeft) horizontal.add(left)
+    }
+    for (const top of [
+      obstacle.top - bounds.elementHeight - gap,
+      obstacle.top + obstacle.height + gap,
+    ]) {
+      if (top >= limits.top && top <= maxTop) vertical.add(top)
+    }
+  }
+  const candidates = [...horizontal].flatMap((left) => [...vertical].map((top) => ({ left, top })))
+  const distance = ({ left, top }: RoomFloatingPixels) =>
+    (left - preferred.left) ** 2 + (top - preferred.top) ** 2
+  candidates.sort((first, second) => distance(first) - distance(second))
+  return candidates.find(isClear) ?? null
 }
 
 function browserStorage(): PositionStorage | null {

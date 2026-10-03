@@ -35,34 +35,33 @@
   M6 planning was authorized on 2026-09-28. The owner chose a full frontend
   migration: move React-required shared assets to `houkago-kyoushitsu-core`,
   then remove the legacy Vue workspace with no fallback/reference. M6
-  implementation and production deployment remain unapproved.
+  implementation was approved on 2026-10-04 with `开始` after review of the
+  refreshed final plan. Legacy removal still waits for parity and human
+  acceptance; production deployment remains unapproved.
 - historical roadmap: [Benefit priorities and delivery map](tasks/archive/2026-09/09-12-frontend-refactor-plan/roadmap.md)
 
 ## Continuation
 
-- mode: M6 planning active; M5 is completed, validated, committed, and archived
-  at `.trellis/tasks/archive/2026-09/09-28-m5-media-provider-danmaku`
-- serial authorization: M6 planning only; no M6 implementation, cutover, or
-  production deployment authorization
-- prior execution authorization: `开始实现 M5` on 2026-09-28 applied to M5;
-  the M6 parent task remains in planning; the linked speed-dial child keeps its
-  pre-existing `in_progress` status
-- next pulse: present the completed `.trellis/tasks/09-28-m6-parity-cutover`
-  planning artifacts for owner review
-- next permitted action: wait for explicit approval of the final M6 planning
-  summary before starting the M6 parent or performing cutover work
-- coordination: `.trellis/tasks/09-28-room-control-speed-dial` is now linked as
-  an independently verifiable M6 child. Its existing `in_progress` status is
-  preserved; M6 whole-app parity and legacy removal depend on the child passing
-  its own acceptance criteria.
+- mode: M6 implementation, parity, owner acceptance and local cutover passed;
+  work commits and normal closure are being completed
+- authorization: owner `视校通过；可以提交/继续；包括所有脏文件` accepts all
+  presented residuals and authorizes all trackable dirty-file commits
+- delivered: neutral core and 46-operation SDK retained; old application,
+  framework-specific dependencies and active references removed
+- validation: post-removal 459 root tests, 60 React browser cases, one installed
+  adapter case, 93 shell checks and 11 preview tests passed; seven workspace
+  types, lint, deterministic contracts, builds and independent review passed
+- speed-dial: child A1–A6 accepted against mapped automation and visual review
+- remaining: archive M6 and its accepted speed-dial child and record journal;
+  production deployment is outside this authorized scope
 
 ## Ordered Work
 
 Both historical parent tasks and their completed children are archived. M3
 evidence is retained at `archive/2026-09/09-26-react-shell-ui-foundation`.
-M4 and M5 are archived. M6 planning is active at
-`.trellis/tasks/09-28-m6-parity-cutover`; implementation and cutover require
-separate approval. The room-control speed-dial deliverable is linked beneath
+M4 and M5 are archived. M6 local cutover is complete at
+`.trellis/tasks/09-28-m6-parity-cutover` and ready for normal closure; parity
+and owner acceptance passed. The room-control speed-dial deliverable is linked beneath
 M6 and keeps independent feature acceptance.
 
 | order | task / proposed child | state | readiness and dependency evidence |
@@ -75,7 +74,7 @@ M6 and keeps independent feature acceptance.
 | Visual final slice | `09-28-warm-club-interaction-surface-polish` | archived | Reviewed and approved; work commits `e0ff941` / `db9c50a`, archive commit `ff019f2`; visual parent also archived |
 | M4 | `09-28-m4-room-features` | archived | Direct React room/default local entry; admission, realtime queue/chat/governance; 471 tests and 28 browser cases passed; player deferred to M5 |
 | M5 | `09-28-m5-media-provider-danmaku` | archived | A1–A6 fixture evidence recorded; 480 aggregate tests and 41/44 browser cases passed (3 intentional device skips); root lint/typecheck/drift and React build passed; work commits `e6c9535` and `b8bc7e9`; archived in `ca1ee0a` |
-| M6 | `.trellis/tasks/09-28-m6-parity-cutover` | planning | M4/M5 are complete; migrate React-required shared assets to `houkago-kyoushitsu-core`, establish behavior/layout parity and human residual acceptance, then remove the legacy Vue workspace; use last known-good Git revision for rollback; production deployment remains separate |
+| M6 | `.trellis/tasks/09-28-m6-parity-cutover` | in_progress | Implementation approved 2026-10-04; migrate shared assets to `houkago-kyoushitsu-core`, verify whole-app behavior/layout and child criteria, then request residual human acceptance before Vue removal; production deployment remains separate |
 | M6 child | `.trellis/tasks/09-28-room-control-speed-dial` | in_progress | Absorbed as a separate React room-controls deliverable; speed-dial and queue-layout criteria must pass before M6 freezes whole-app parity and removes Vue |
 
 ## Evidence and Decisions

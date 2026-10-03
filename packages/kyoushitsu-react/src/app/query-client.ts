@@ -1,5 +1,9 @@
 import { QueryClient } from "@tanstack/react-query"
-import { HoukagoHttpError, RESOURCE_POLICIES, type ResourceName } from "houkago-kyoushitsu/http"
+import {
+  HoukagoHttpError,
+  RESOURCE_POLICIES,
+  type ResourceName,
+} from "houkago-kyoushitsu-core/http"
 
 export function resourceQueryOptions(name: ResourceName) {
   const policy = RESOURCE_POLICIES[name]

@@ -7,8 +7,7 @@
 ## Overview
 
 Stack: **Bun + Elysia.js**, TypeScript strict, `bun:sqlite`, TypeBox for
-validation, Eden Treaty for compile-time contract sharing with the frontend
-(design §8, Elysia spike). Quality here means: the contract is the single source
+validation, OpenAPI-generated DTOs/resources for browser contract sharing. Quality here means: the contract is the single source
 of truth, the sync core is correct, and the control plane never touches media.
 
 ---
@@ -44,7 +43,7 @@ Container services must listen on `0.0.0.0` to be reachable from the host
   introduce `Member`/`User` alongside `Buin`, or `Movie` alongside `Enmoku`.
 - **Media bytes in housou.** The control plane must not proxy or buffer streams —
   that is `eisha`'s job (design §2). No fetch-and-pipe of media in housou.
-- **`any` and unchecked casts** to bypass the TypeBox/Eden contract. If types
+- **`any` and unchecked casts** to bypass the TypeBox/generated DTO contract. If types
   fight you, fix the schema in `kousoku`, do not cast around it.
 - **SQL string interpolation** with user input (see database-guidelines.md).
 - **Redefining shared types locally** instead of importing from `houkago-kousoku`.
@@ -270,7 +269,7 @@ ws.send(serverMsg("NYUUSHITSU", { mode: "approval", status: "waiting", pending: 
 - REST/e2e: resolver-body create broadcasts the full `BANGUMI` snapshot.
 - REST/e2e: extended `Enmoku` metadata survives create/list and BANGUMI broadcast.
 - REST/e2e: old minimal enmoku rows do not gain empty optional metadata fields.
-- Frontend typecheck: dev direct-link form posts `sourceUrl` via the Eden client.
+- Frontend typecheck: dev direct-link form posts `sourceUrl` via the generated core resource.
 - Sync unit: `ShinkouSeigyo.jouei` resets transport to paused start.
 - Sync unit: `ShinkouSeigyo.jouei(..., null, ...)` clears `enmokuId` and resets
   transport to paused start.

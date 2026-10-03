@@ -20,7 +20,7 @@ notice are established, do not stage new UUPM platform/source copies. Existing
 tracked platform files are preserved without retroactive untracking.
 
 Ordinary dependencies retain package notices; this inventory does not vendor
-every dependency. `dx`, `dev.sh`, isolated preview scripts and the new thin
+every dependency. `dx`, isolated preview scripts and the new thin
 `preview.sh` remain ordinary project scripts; no tool implementation was copied
 into them here. Recheck notices when retained versions/assets change, preserving
 applicable older entries and verifying collected bytes.

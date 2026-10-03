@@ -1,9 +1,15 @@
 import { Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "@tanstack/react-router"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
+import {
+  formatLastSeen,
+  formatOnlineDuration,
+  historicalMembers,
+  onlineMembers,
+} from "houkago-kyoushitsu-core/member-presence"
 import { useEffect, useRef, useState } from "react"
-import { GovernancePanel } from "./governance-panel"
+import { GovernancePanel, PermissionSummary } from "./governance-panel"
 import type { RoomRuntime, RoomState } from "./room-runtime"
 import { RoomSpeedDial } from "./room-speed-dial"
 import type { RoomSpeedDialAction } from "./room-speed-dial"
@@ -89,7 +95,16 @@ export function RoomControls({
           window.requestAnimationFrame(() => launcherRef.current?.focus())
         }}
         onClick={(event) => {
-          if (event.target === event.currentTarget) event.currentTarget.close()
+          if (event.target !== event.currentTarget) return
+          const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect()
+          if (
+            event.clientX < left ||
+            event.clientX > right ||
+            event.clientY < top ||
+            event.clientY > bottom
+          ) {
+            event.currentTarget.close()
+          }
         }}
       >
         <header className="room-controls-dialog-header">
@@ -106,14 +121,27 @@ export function RoomControls({
           </Button>
         </header>
         {state.error && <Alert>{state.error}</Alert>}
-        <RoomInformation room={room} state={state} />
+        <RoomInformation room={room} state={state} active={controlsOpen && !hidden} />
         {room.isHost && <GovernancePanel room={room} state={state} />}
       </dialog>
     </>
   )
 }
 
-function RoomInformation({ room, state }: { room: RoomRuntime; state: RoomState }) {
+function RoomInformation({
+  room,
+  state,
+  active,
+}: { room: RoomRuntime; state: RoomState; active: boolean }) {
+  const [now, setNow] = useState(Date.now)
+  useEffect(() => {
+    if (!active) return
+    setNow(Date.now())
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [active])
+  const online = onlineMembers(state.presenceById)
+  const history = historicalMembers(state.presenceById)
   const connectionLabel =
     state.connection === "open"
       ? t("roomStatusNormal")
@@ -159,19 +187,67 @@ function RoomInformation({ room, state }: { room: RoomRuntime; state: RoomState 
       <h4>
         {t("roomMembersHeading")} · {state.members.length}
       </h4>
-      <ul className="room-list">
-        {state.members.length === 0 ? (
-          <li>{t("noOnlineMembers")}</li>
+      <section aria-labelledby="room-online-members-heading">
+        <h4 id="room-online-members-heading">{t("onlineMembersHeading")}</h4>
+        {online.length === 0 ? (
+          <p>{t("noOnlineMembers")}</p>
         ) : (
-          state.members.map((member) => (
-            <li key={member.id}>
-              {member.nickname} ·{" "}
-              {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
-            </li>
-          ))
+          <table className="w-full table-fixed text-left">
+            <thead>
+              <tr>
+                <th scope="col">{t("memberName")}</th>
+                <th scope="col">{t("memberRole")}</th>
+                <th scope="col">{t("memberOnlineDuration")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {online.map((member) => (
+                <tr key={member.id}>
+                  <td className="break-words">{member.nickname}</td>
+                  <td>{member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}</td>
+                  <td data-testid="member-online-duration">
+                    {formatOnlineDuration(member.joinedAt, now, {
+                      hour: t("durationHour"),
+                      minute: t("durationMinute"),
+                      second: t("durationSecond"),
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-      </ul>
-      <h4>{t("kengenPolicyCurrent")}</h4>
+      </section>
+      <section aria-labelledby="room-history-members-heading">
+        <h4 id="room-history-members-heading">{t("historyMembersHeading")}</h4>
+        {history.length === 0 ? (
+          <p>{t("noHistoryMembers")}</p>
+        ) : (
+          <table className="w-full table-fixed text-left">
+            <thead>
+              <tr>
+                <th scope="col">{t("memberName")}</th>
+                <th scope="col">{t("memberRole")}</th>
+                <th scope="col">{t("memberLastLogin")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((member) => (
+                <tr key={member.id}>
+                  <td className="break-words">{member.nickname}</td>
+                  <td>{member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}</td>
+                  <td>
+                    <time dateTime={new Date(member.lastSeenAt).toISOString()}>
+                      {formatLastSeen(member.lastSeenAt)}
+                    </time>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+      <PermissionSummary permissions={state.permissions} />
       <ul className="room-controls-permissions">
         {(["chat", "playlist", "playback"] as const).map((key) => (
           <li key={key}>

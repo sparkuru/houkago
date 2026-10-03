@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import { useState } from "react"
 import type { RoomRuntime, RoomState } from "./room-runtime"
 

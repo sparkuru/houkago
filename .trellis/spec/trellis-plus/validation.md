@@ -20,17 +20,19 @@ when conventions change; task evidence records only that task's results.
   API `http://127.0.0.1:3000/health` and frontend `http://127.0.0.1:5173/`
   as in [development.md](development.md). No config `webServer` is defined.
   Stop the owning foreground session with Ctrl-C.
-- test location/config: current default is `packages/kyoushitsu-react/e2e/`
-  and `packages/kyoushitsu-react/playwright.config.ts`. Vue tests/config remain
-  at `packages/kyoushitsu/e2e/` and its `playwright.config.ts` for explicitly
-  relevant legacy/shared requirements; they need their own Vue server.
+- test location/config: application cases live in `packages/kyoushitsu-react/e2e/`
+  with `packages/kyoushitsu-react/playwright.config.ts`. Installed Chromium
+  extension acceptance is adapter-owned at `packages/houkago-adapter/e2e/`
+  with `packages/houkago-adapter/playwright.chromium-adapter.config.ts`.
+  M6 removed the old application and runner after parity/owner acceptance.
 - browser projects: React pairs `entry-desktop/phone`,
   `real-cookie/real-cookie-phone`, `media-desktop/phone`,
   `room-controls-desktop/phone`, `danmaku-desktop/phone`, `baidu-desktop/phone`.
   Desktop is 1280×900; phone 375×812 with `isMobile`/`hasTouch`.
-  `baidu-phone` sets an iPhone UA but runs Chromium. Room-controls projects
-  belong to existing uncommitted child work; recheck availability and do not
-  treat them as shipped acceptance.
+  The `room-layout-ipad`, `room-layout-short` (1280×640) and
+  `room-layout-tall` (1280×1200) projects run `@layout-parity` populated cases.
+  `baidu-phone` sets an iPhone UA but runs Chromium. Room controls and the mapped speed-dial
+  criteria passed automation and owner visual review at M6 cutover.
 - mobile applicability/coverage: general entry/room flows are `mobile-required`.
   Classify every changed interaction before implementation, even without CSS
   edits. Record viewport/layout/navigation/input/final-state assertions and
@@ -51,8 +53,6 @@ when conventions change; task evidence records only that task's results.
   traces `retain-on-failure`. Retain reporter logs in task evidence or `/tmp`
   and screenshots attached by tests. Universal failure screenshots and global
   console/network capture are not configured; collect them for investigation.
-  Legacy output/report paths use runner defaults; inspect actual output rather
-  than claiming a package-specific artifact directory.
 
 Focused entry desktop/mobile flow:
 
@@ -76,13 +76,17 @@ Prefix with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome` only when
 using that browser. Alternate ports require matching frontend/API variables
 and isolated service ports.
 
-Legacy full suite: `node_modules/.bin/playwright test --config
-packages/kyoushitsu/playwright.config.ts` against its own server. Its matrix
-includes entry desktop/phone, phone-375, ipad-mini, desktop-short/tall, subtitle,
-governance and danmaku desktop/phone. The separate
-`packages/kyoushitsu/playwright.chromium-adapter.config.ts` installed-adapter
-suite needs browser/certificate prerequisites; load its test before running
-and do not substitute fixture evidence for installed-adapter acceptance.
+Installed Chromium adapter suite:
+
+```sh
+./dx bun run --filter houkago-adapter build:chromium
+node_modules/.bin/playwright test --config packages/houkago-adapter/playwright.chromium-adapter.config.ts --workers=1
+```
+
+The test uses bundled Chromium and controlled HTTP/HTTPS fixtures with generated
+certificates. Inspect its actual content-script/worker/DNR assertions; a fixture
+handshake alone is not installed-extension acceptance. Historical Vue parity
+commands remain in the M6 task evidence, not the active command profile.
 
 ## Browser classification and evidence
 

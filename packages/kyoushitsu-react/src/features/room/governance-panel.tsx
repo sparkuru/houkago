@@ -3,7 +3,12 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Kengen, NyuushitsuMode } from "houkago-kousoku"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
+import {
+  KENGEN_PRESETS,
+  type KengenPresetId,
+  kengenPresetId,
+} from "houkago-kyoushitsu-core/kengen-policy"
 import { useEffect, useState } from "react"
 import type { RoomRuntime, RoomState } from "./room-runtime"
 
@@ -12,6 +17,7 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
   const [password, setPassword] = useState("")
   useEffect(() => setModeDraft(state.mode), [state.mode])
   const busy = state.command !== null
+  const selectedPreset = kengenPresetId(state.permissions)
   if (!room.isHost) return null
   return (
     <Card>
@@ -52,6 +58,24 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
           保存入室方式
         </Button>
         <h3>{t("kengenPolicyCurrent")}</h3>
+        <fieldset className="room-form">
+          <legend>{t("kengenPresetGroupAria")}</legend>
+          {KENGEN_PRESETS.map((preset) => (
+            <Button
+              key={preset.id}
+              type="button"
+              variant="secondary"
+              aria-pressed={selectedPreset === preset.id}
+              disabled={busy}
+              onClick={() => {
+                if (selectedPreset !== preset.id) room.setPermissions({ ...preset.kengen })
+              }}
+            >
+              {presetLabel(preset.id)}
+            </Button>
+          ))}
+        </fieldset>
+        {selectedPreset === null && <p>{t("kengenPolicyCustomNotice")}</p>}
         {(["chat", "playlist", "playback"] as const).map((key) => (
           <label key={key} className="room-check">
             <input
@@ -114,4 +138,25 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
       </div>
     </Card>
   )
+}
+
+export function PermissionSummary({ permissions }: { permissions: Kengen }) {
+  return (
+    <p>
+      {t("kengenPolicyCurrent")}：<strong>{presetLabel(kengenPresetId(permissions))}</strong>
+    </p>
+  )
+}
+
+function presetLabel(id: KengenPresetId | null): string {
+  switch (id) {
+    case "chat":
+      return t("kengenPresetChat")
+    case "playback":
+      return t("kengenPresetPlayback")
+    case "playlist":
+      return t("kengenPresetPlaylist")
+    default:
+      return t("kengenPresetCustom")
+  }
 }

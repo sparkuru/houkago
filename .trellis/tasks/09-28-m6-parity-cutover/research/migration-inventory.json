@@ -1,0 +1,710 @@
+{
+  "baseline_head": "68d8b398d228c9f13f0d773356c751f0b17e2d6e",
+  "rows": [
+    {
+      "source": "packages/kyoushitsu/e2e/chromium-adapter-installed.spec.ts",
+      "classification": "migrated",
+      "destination": "packages/houkago-adapter/e2e/chromium-adapter-installed.spec.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/danmaku-source.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/desktop-room.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/entry-home.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/mobile-room.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/room-governance.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/subtitle-desktop.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/subtitle-fixture.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/e2e/subtitle-phone.spec.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/env.d.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/index.html",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/openapi.json",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/openapi.json"
+    },
+    {
+      "source": "packages/kyoushitsu/package.json",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/playwright.chromium-adapter.config.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/playwright.config.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/App.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/baidu.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/danmaku.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/client.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/client.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/client/client.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/client/client.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/client/index.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/client/index.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/client/types.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/client/types.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/client/utils.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/client/utils.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/auth.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/auth.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/bodySerializer.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/bodySerializer.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/params.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/params.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/pathSerializer.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/pathSerializer.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/queryKeySerializer.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/queryKeySerializer.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/serverSentEvents.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/serverSentEvents.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/types.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/types.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/core/utils.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/core/utils.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/index.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/index.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/sdk.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/sdk.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/generated/types.gen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/generated/types.gen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/http-client.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/http-client.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/index.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/public.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/public.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/resources/http.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/resources/http.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/resources/keys.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/resources/keys.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/api/resources/policy.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/api/resources/policy.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/assets/theme.css",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/theme/theme.css"
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/baidu/BaiduConnectionDialog.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/baidu/BaiduFileDialog.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/bangumi/EnmokuComposer.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/chat/ChatPanel.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/danmaku/DanmakuOverlay.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/danmaku/FileDanmakuOverlay.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/danmaku/TimelineDanmakuSourcePanel.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/kengen/KengenPanel.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/components/player/EnmokuPlayer.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/baidu-adapter.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/use-entry-motion.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/use-interface-motion.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/use-room-motion.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/useBaiduPlayback.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/useBaiduSource.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/useEnmokuPreview.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/useShinkou.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/composables/useTimelineDanmaku.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/i18n/index.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/i18n/index.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/i18n/messages.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/i18n/messages.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-adapter-detection.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-adapter-detection.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-grant-polling.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-grant-polling.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-oauth-handoff.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-oauth-handoff.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-oauth-window.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-oauth-window.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-provider.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-provider.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/baidu-source-creation.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/baidu-source-creation.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/bangumi-actions.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/bangumi-actions.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/chat-theme.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/clock-offset.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/playback/clock-offset.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/danmaku-selection.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/danmaku/danmaku-selection.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/danmaku-track.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/danmaku/danmaku-track.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/enmoku-metadata.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/media/enmoku-metadata.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/enmoku-resolve.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/enmoku-resolve.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/file-danmaku-pref.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/danmaku/file-danmaku-pref.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/file-danmaku.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/danmaku/file-danmaku.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/houkago-adapter.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/provider/houkago-adapter.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/housou-url.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/config/housou-url.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/join-gate.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/kengen-policy.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/kengen-policy.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/kengen.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/kengen.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/local-danmaku-candidate.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/danmaku/local-danmaku-candidate.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/member-presence.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/member-presence.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/nickname.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/player.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/playback/player.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/room-id.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/room-id.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/room-session.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/room/room-session.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/seekable.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/media/seekable.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/shinkou-controller.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/playback/shinkou-controller.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/site-config-core.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/config/site-config-core.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/site-config.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/theme.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/theme/theme.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/lib/zure.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/playback/zure.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/src/main.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/router.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/stores/bushitsu.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/stores/seito.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/views/BushitsuView.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/views/HomeView.vue",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/src/ws/client.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/src/ws/client.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-adapter.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-adapter.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-grant-polling.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-grant-polling.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-oauth-handoff.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-oauth-handoff.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-oauth-window.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-oauth-window.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-provider.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-provider.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/baidu-source-creation.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/baidu-source-creation.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/bangumi-actions.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/bangumi-actions.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/bushitsu-store.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/chat-theme.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/client.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/client.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/clock-offset.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/clock-offset.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/danmaku-selection.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/danmaku-selection.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/danmaku-track.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/danmaku-track.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/enmoku-metadata.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/enmoku-metadata.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/enmoku-resolve.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/enmoku-resolve.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/file-danmaku-pref.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/file-danmaku-pref.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/file-danmaku.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/file-danmaku.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/houkago-adapter.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/houkago-adapter.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/http-contract-types.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/http-contract-types.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/http-contract.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/http-contract.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/http-media-adapters.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/http-media-adapters.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/i18n.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/i18n.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/join-gate.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/kengen-policy.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/kengen-policy.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/kengen.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/kengen.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/local-danmaku-candidate.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/local-danmaku-candidate.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/member-presence.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/member-presence.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/nickname.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/resources.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/resources.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/room-id.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/room-id.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/room-motion.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/room-session.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/room-session.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/seekable.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/seekable.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/shinkou-controller.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/shinkou-controller.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/site-config.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/site-config.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/theme.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/theme.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/test/use-shinkou.test.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/test/zure.test.ts",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/test/zure.test.ts"
+    },
+    {
+      "source": "packages/kyoushitsu/tsconfig.contract.json",
+      "classification": "migrated",
+      "destination": "packages/kyoushitsu-core/tsconfig.contract.json"
+    },
+    {
+      "source": "packages/kyoushitsu/tsconfig.json",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    },
+    {
+      "source": "packages/kyoushitsu/vite.config.ts",
+      "classification": "removed-after-owner-acceptance",
+      "destination": null
+    }
+  ]
+}

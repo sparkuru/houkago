@@ -91,3 +91,14 @@ M6 until the owner has reviewed the visual/interaction residuals above.
   `setsockopt: 不允许的操作`. The new browser assertions therefore remain
   unverified here; this is an environment/browser-launch limitation rather than
   an application assertion failure.
+
+## Final parent validation and owner acceptance — 2026-10-04
+
+The parent M6 full suite passed 60 React browser cases, including all speed-dial
+focus/dismissal/drag/resize/shared-composer cases and populated normal/cinema
+clearance at five viewport sizes. Member information and presets were restored.
+Root 496 tests, types, lint and build passed. The earlier browser-launch blocker
+is superseded by current successful host Chromium runs. See parent
+`research/parity-matrix.md` and `validation.md` for exact commands/artifacts.
+The owner accepted visuals and continuation/commits including all dirty files.
+Child A1–A6 are accepted and it is ready for normal completed-task archival.

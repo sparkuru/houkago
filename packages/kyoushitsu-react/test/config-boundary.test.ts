@@ -6,8 +6,8 @@ import {
   createRoom,
   fetchSiteConfig,
   normalizeHttpError,
-} from "houkago-kyoushitsu/http"
-import { applySiteConfigTitle, createSiteConfigLoader } from "houkago-kyoushitsu/site-config"
+} from "houkago-kyoushitsu-core/http"
+import { applySiteConfigTitle, createSiteConfigLoader } from "houkago-kyoushitsu-core/site-config"
 import { shouldFallbackConfig } from "../src/app/runtime"
 afterEach(() => configureHousouHttpClient())
 function configure(response: () => Response) {

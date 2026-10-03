@@ -8,110 +8,126 @@ removed only after the parity and human-review gates pass.
 
 ### 1. Inventory the parity baseline
 
-- [ ] Record current HEAD and the pre-existing working-tree diff, including
+- [x] Record current HEAD and the pre-existing working-tree diff, including
       preview/origin/configuration/policy work. Preserve those edits when moving
       shared modules and updating overlapping scripts; do not commit unrelated
       changes as M6 work.
-- [ ] Establish fresh pre-M6 checks on the current working tree; distinguish
+- [x] Establish fresh pre-M6 checks on the current working tree; distinguish
       existing failures from migration regressions and record the rollback base.
-- [ ] Reconcile every legacy Vue E2E case, M4/M5 acceptance item, and supported
+- [x] Reconcile every legacy Vue E2E case, M4/M5 acceptance item, and supported
       entry/room/media/provider/danmaku/layout state into a draft parity matrix.
-- [ ] Record current Vue and React coverage, required React cases, fixtures,
+- [x] Record current Vue and React coverage, required React cases, fixtures,
       viewport, authentication/admission state, and expected result per row.
-- [ ] Run the legacy suite as the comparison baseline while the old workspace
+- [x] Run the legacy suite as the comparison baseline while the old workspace
       still exists. Retain failures as baseline evidence; distinguish them from
       newly introduced React gaps.
-- [ ] Write the matrix and screenshot/review locations under the M6 task's
+- [x] Write the matrix and screenshot/review locations under the M6 task's
       `research/` directory.
 
 ### 2. Create `houkago-kyoushitsu-core`
 
-- [ ] Add `packages/kyoushitsu-core` with a framework-neutral package manifest,
+- [x] Add `packages/kyoushitsu-core` with a framework-neutral package manifest,
       exports, typecheck/test scripts, and only the dependencies needed by the
       shared client/domain modules.
-- [ ] Move React-consumed framework-neutral HTTP, room/session, WebSocket,
+- [x] Move React-consumed framework-neutral HTTP, room/session, WebSocket,
       permission, player/sync, provider, danmaku, configuration, localization,
       and theme modules. Convert internal aliases/imports to package-relative
       boundaries where needed; do not duplicate production source.
-- [ ] Move corresponding pure unit tests with the modules. Keep Vue-specific
+- [x] Move corresponding pure unit tests with the modules. Keep Vue-specific
       UI/store/composable tests in the old workspace until parity disposition.
-- [ ] Point React to core. Temporarily point the Vue app's shared consumers to
+- [x] Point React to core. Temporarily point the Vue app's shared consumers to
       core where necessary so the old app remains runnable as a comparison.
-- [ ] Add the core package to `.trellis/config.yaml`; add focused core frontend
+- [x] Add the core package to `.trellis/config.yaml`; add focused core frontend
       specs documenting package boundaries and export rules.
 
 ### 3. Relocate browser HTTP contracts
 
-- [ ] Move the browser OpenAPI subset and generated SDK/DTO files to core.
-- [ ] Update `openapi-ts.config.ts`, page OpenAPI transform/verification,
+- [x] Move the browser OpenAPI subset and generated SDK/DTO files to core.
+- [x] Update `openapi-ts.config.ts`, page OpenAPI transform/verification,
       `scripts/check-contract-drift.ts`, Housou contract tests, root test and
       Biome paths together.
-- [ ] Regenerate and review the SDK. Preserve stable operation IDs, typed
+- [x] Regenerate and review the SDK. Preserve stable operation IDs, typed
       error responses, cancellation behavior, and the 46-operation browser
       contract; keep the Housou full OpenAPI document authoritative.
-- [ ] Remove React and temporary Vue imports from the old package's exports.
+- [x] Remove React and temporary Vue imports from the old package's exports.
       Confirm no generated or runtime client imports Housou server types.
 
 ### 4. Reach React behavior and layout parity
 
-- [ ] Complete the linked speed-dial child acceptance in the React room before
+- [x] Restore active legacy permission preset shortcuts and online-duration /
+      offline-member history through shared pure helpers and the existing
+      React control dialog; test authoritative two-client state and cleanup.
+- [x] Verify state-dependent launcher clearance with populated queue and chat
+      in normal/phone-cinema layouts; preserve stored preferred coordinates
+      when automatic obstacle avoidance temporarily changes rendered position.
+- [x] Complete the linked speed-dial child acceptance in the React room before
       freezing the final parity matrix; keep the UI in React rather than core.
-- [ ] Map every speed-dial child criterion to the newer archived
+- [x] Map every speed-dial child criterion to the newer archived
       `10-01-room-layout-refinement/validation.md` evidence and identify residual
       gaps. That task's owner acceptance does not automatically close the
       independently tracked speed-dial child.
-- [ ] Use the accepted child result as the room-layout baseline in the final
+- [x] Use the accepted child result as the room-layout baseline in the final
       whole-application parity matrix.
-- [ ] Verify speed-dial and playlist behavior against the child PRD: all prior
+- [x] Verify speed-dial and playlist behavior against the child PRD: all prior
       controls remain available with unchanged permissions, and desktop,
       portrait, cinema, touch, keyboard, safe-area, and reduced-motion cases
       pass without overlap or overflow.
-- [ ] Port or add React browser cases for every parity matrix gap before
+- [x] Port or add React browser cases for every parity matrix gap before
       removing the legacy test oracle. Include legacy-only governance,
       subtitle, responsive queue/chat, and installed-Chromium adapter cases.
-- [ ] Verify host/member permission and revocation; entry/auth/room failure and
+- [x] Inventory legacy-only unit/source surfaces as well as E2E: distinguish
+      active presence/preset behavior from dormant nickname gate/chat-theme
+      helpers using actual runtime consumers and server identity labeling.
+- [x] Verify host/member permission and revocation; entry/auth/room failure and
       recovery; local MP4/HLS/DASH; subtitle/source switching; authorized guest
       playback; Baidu pairing/OAuth/grants/revoke; danmaku precedence, fallback,
       manual correction and fullscreen overlay.
-- [ ] Run desktop 1280×900, portrait 375×812 and iPad, short/tall desktop, and
+- [x] Run desktop 1280×900, portrait 375×812 and iPad, short/tall desktop, and
       cinema/fullscreen scenarios where supported. Check keyboard/focus,
       touch targets, reduced motion, and horizontal overflow.
-- [ ] Record human visual/interaction residuals with screenshots. Resolve all
+- [x] Record human visual/interaction residuals with screenshots. Resolve all
       blocking findings; record explicit acceptance for any remaining
       non-blocking difference.
-- [ ] Confirm the user-facing M6 parity summary is accepted before legacy
+- [x] Confirm the user-facing M6 parity summary is accepted before legacy
       workspace deletion.
 
 ### 5. Remove the legacy Vue workspace
 
-- [ ] Delete `packages/kyoushitsu` only after Steps 1–4 pass and cutover is
+- [x] Delete `packages/kyoushitsu` only after Steps 1–4 pass and cutover is
       approved. This includes Vue views/components/stores/composables, old-only
       helpers, obsolete tests and fixtures, Vite/TypeScript/Playwright configs,
       and the old package manifest.
-- [ ] Remove root `dev:kyoushitsu` and the old test path; preserve the current
+- [x] Remove root `dev:kyoushitsu` and the old test path; preserve the current
       `preview.sh` / `./dx preview` React entry, configurable origin/ports, and
       `dev:react`. Move any retained adapter-installed browser
       scenario to the React or adapter-owned test boundary before deleting its
       old config.
-- [ ] Remove obsolete Vue dependencies when no workspace uses them, then
+- [x] Remove obsolete Vue dependencies when no workspace uses them, then
       regenerate `bun.lock`; do not remove dependencies still used by Housou or
       another package.
-- [ ] Update `packages/houkago-adapter/README.md`, root `design.md`, active
+- [x] Update `packages/houkago-adapter/README.md`, root `design.md`, active
       `.trellis/spec` docs, package mapping, and React spec links. Keep archived
       tasks/journals as history.
 
 ### 6. Post-removal quality and cutover gate
 
-- [ ] Confirm no active source/config/test imports or paths reference
+- [x] Confirm no active source/config/test imports or paths reference
       `houkago-kyoushitsu` or `packages/kyoushitsu`; historical archive matches
       are allowed.
-- [ ] Confirm core imports neither React nor Vue, the React build graph
+- [x] Confirm core imports neither React nor Vue, the React build graph
       excludes Vue/Pinia/Eden/server modules, and browser contract output stays
       deterministic.
-- [ ] Run the full quality and browser gates below, inspect screenshots and
+- [x] Run the full quality and browser gates below, inspect screenshots and
       failures, and record validation evidence in the task.
-- [ ] Present a final cutover/rollback and residual-review summary. Do not
+- [x] Present a final cutover/rollback and residual-review summary. Do not
       deploy to production under M6.
+
+### Pre-removal checkpoint — 2026-10-04
+
+Steps 1–3 and runnable Step 4 checks passed; see [validation.md](validation.md).
+The owner subsequently accepted all remaining presentation criteria.
+Step 5 deletion and Step 6 post-removal gates passed. The pre-removal
+Git restoration rehearsal passed; repeat it for any later deletion checkpoint.
 
 ## Validation commands
 
@@ -130,7 +146,7 @@ Playwright browser suites.
 ./dx bun run --filter houkago-kyoushitsu-core typecheck
 ./dx bun run --filter houkago-kyoushitsu-core test
 ./dx bun run --filter houkago-kyoushitsu-react build
-./dx bash scripts/test-react-preview.sh
+bash scripts/test-react-preview.sh  # host-side fake Docker/Bun harness; needs Python
 git diff --check
 python3 ./.trellis/scripts/task.py validate 09-28-m6-parity-cutover
 ```

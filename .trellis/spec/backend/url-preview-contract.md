@@ -86,9 +86,9 @@ Preview rejects redirects rather than following them.
   IPv4-mapped literal targets.
 - `packages/housou/test/rest.test.ts`: a ready preview creates no queue entry;
   its response contains no source URL or headers; a private literal returns 400.
-- `packages/kyoushitsu/e2e/mobile-room.spec.ts`: a permitted member can open
-  the inline composer at 375px and iPad portrait sizes, close it, and preserve a
-  draft with Escape.
+- `packages/kyoushitsu-react/e2e/real-cookie.spec.ts`: a permitted viewer retains
+  preview drafts after failure, retries, and resets after successful source add.
+  `room-controls.spec.ts` verifies populated phone/iPad queue/composer reachability.
 
 ### 7. Wrong vs Correct
 

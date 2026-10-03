@@ -16,8 +16,8 @@
       "*.db",
       "*.sqlite",
       "packages/housou/openapi.json",
-      "packages/kyoushitsu/openapi.json",
-      "packages/kyoushitsu/src/api/generated/**"
+      "packages/kyoushitsu-core/openapi.json",
+      "packages/kyoushitsu-core/src/api/generated/**"
     ]
   },
   "organizeImports": { "enabled": true },

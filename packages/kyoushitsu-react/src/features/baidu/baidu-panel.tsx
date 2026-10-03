@@ -9,14 +9,14 @@ import {
   type BaiduRetentionMode,
   type Enmoku,
 } from "houkago-kousoku"
-import { detectBaiduAdapter } from "houkago-kyoushitsu/baidu-adapter-detection"
-import { redeemBaiduOauthHandoffWithRetry } from "houkago-kyoushitsu/baidu-oauth-handoff"
+import { detectBaiduAdapter } from "houkago-kyoushitsu-core/baidu-adapter-detection"
+import { redeemBaiduOauthHandoffWithRetry } from "houkago-kyoushitsu-core/baidu-oauth-handoff"
 import {
   type BaiduOauthWindow,
   baiduOauthWindowClosed,
   navigateBaiduOauthWindow,
   openBaiduOauthWindow,
-} from "houkago-kyoushitsu/baidu-oauth-window"
+} from "houkago-kyoushitsu-core/baidu-oauth-window"
 import {
   type BaiduBrowserState,
   type BaiduClientState,
@@ -24,14 +24,14 @@ import {
   baiduParentPath,
   formatBaiduFileSize,
   isMobileBaiduClient,
-} from "houkago-kyoushitsu/baidu-provider"
-import { permitCreatedUserHeldSource } from "houkago-kyoushitsu/baidu-source-creation"
+} from "houkago-kyoushitsu-core/baidu-provider"
+import { permitCreatedUserHeldSource } from "houkago-kyoushitsu-core/baidu-source-creation"
 import {
   AdapterBridgeError,
   adapterCapabilityReady,
   houkagoAdapter,
-} from "houkago-kyoushitsu/houkago-adapter"
-import { housouUrl } from "houkago-kyoushitsu/housou-url"
+} from "houkago-kyoushitsu-core/houkago-adapter"
+import { housouUrl } from "houkago-kyoushitsu-core/housou-url"
 import {
   createBaiduSource,
   deleteRoomEnmoku,
@@ -40,8 +40,8 @@ import {
   requestBaiduAdapterPairing,
   revokeBaiduConnection,
   startBaiduOauth,
-} from "houkago-kyoushitsu/http"
-import { t } from "houkago-kyoushitsu/i18n"
+} from "houkago-kyoushitsu-core/http"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import { useCallback, useEffect, useRef, useState } from "react"
 import "./baidu-panel.css"
 

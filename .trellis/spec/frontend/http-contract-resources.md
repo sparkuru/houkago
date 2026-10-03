@@ -3,16 +3,16 @@
 ## 1. Scope / Trigger
 
 Use this contract when adding a Housou HTTP operation, generating the browser
-SDK, or consuming framework-independent HTTP resources. M2 retains the Vue/Eden
-consumer path; M4's default local React frontend consumes explicit pure package
-subpaths for room and identity operations.
+SDK, or consuming framework-independent HTTP resources. The React frontend
+consumes explicit core package subpaths for room and identity operations;
+the old framework-specific consumer was retired by M6.
 QueryClient/identity ownership is specified in
 [react-entry-runtime.md](react-entry-runtime.md).
 
 The source of truth is runtime route registration plus canonical TypeBox schemas
 in `houkago-kousoku`. `packages/housou/openapi.json` records the full surface;
-`packages/kyoushitsu/openapi.json` is the browser JSON subset. Generated files
-under `packages/kyoushitsu/src/api/generated/` are generator-owned.
+`packages/kyoushitsu-core/openapi.json` is the browser JSON subset. Generated files
+under `packages/kyoushitsu-core/src/api/generated/` are generator-owned.
 
 ## 2. Signatures
 
@@ -24,7 +24,8 @@ Run commands serially through the repository wrapper:
 ./dx bun run typecheck
 ./dx bun run lint
 ./dx bun run test
-./dx bun run --filter houkago-kyoushitsu build
+./dx bun run --filter houkago-kyoushitsu-core typecheck
+./dx bun run --filter houkago-kyoushitsu-react build
 ```
 
 `contract:generate` exports the authoritative contract, derives the page input,
@@ -61,7 +62,7 @@ but must not redefine wire DTOs or import Housou's server `App` type.
 `ResourceKey` begins with `keyof typeof import("../generated/sdk.gen")` followed
 by string dimensions, tying key roots to generated operation IDs.
 
-The shared package exposes only explicit portable subpaths: `http` points to
+The shared `houkago-kyoushitsu-core` package exposes only explicit portable subpaths: `http` points to
 the handwritten `api/public.ts` barrel, `http/generated` to the existing
 generated tree, and `site-config` to the pure loader. `i18n`, `room-id`, `theme`,
 `theme.css`, `room-session`, `ws-client`, `kengen` and `bangumi-actions` are
@@ -87,8 +88,8 @@ new app. The HTTP URL helper uses its relative source path.
   Export-related Bun commands use `--no-env-file`; production provider,
   credential and admin environment keys are cleared before server import.
 - Runtime requests use the configured Housou origin, `credentials: include`,
-  injectable fetch and the caller's `AbortSignal`. Current Eden consumers remain
-  valid until a separate migration switches them.
+  injectable fetch and the caller's `AbortSignal`. React consumes the core generated
+  resource boundary; M6 retired the former framework-specific consumer.
 - Private keys contain a non-secret identity/session scope and all relevant
   room/source/search/path/cursor dimensions. Logout cancels private requests and
   purges private keys; public site configuration survives. Policy is a framework
@@ -175,7 +176,7 @@ their session/panel/workflow context.
   DB/no listener/no provider calls. Verification includes every legacy alias.
 - Drift tests reject stale artifacts, then prove two generations are identical;
   generated files carry their header and do not import server `App`.
-- Kyoushitsu `typecheck` also runs `tsc --noEmit -p tsconfig.contract.json`
+- Core `typecheck` also runs `tsc --noEmit -p tsconfig.contract.json`
   for generated record values and grant union discriminants. Bun runtime tests
   alone do not prove compile-time DTO fidelity.
 - Keep aggregate package tests and M1 generation/queue ordering regressions.

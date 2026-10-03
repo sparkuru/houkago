@@ -1,5 +1,6 @@
 const inputPath = process.env.HOUKAGO_OPENAPI_INPUT ?? "packages/housou/openapi.json"
-const outputPath = process.env.HOUKAGO_PAGE_OPENAPI_OUTPUT ?? "packages/kyoushitsu/openapi.json"
+const outputPath =
+  process.env.HOUKAGO_PAGE_OPENAPI_OUTPUT ?? "packages/kyoushitsu-core/openapi.json"
 const operationMethods = new Set([
   "get",
   "post",

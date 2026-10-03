@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -274,22 +275,34 @@ class PreviewTests(unittest.TestCase):
                 self.assertFalse((self.repo / "forbidden").exists())
 
     def test_isolated_fixture_extra_port_publication(self) -> None:
-        """Publish isolated defaults explicitly alongside normal manifest ports."""
-        (self.repo / "package.json").write_text('{"config":{"ports":{"backend":9998,"frontend":9999}}}')
+        """Publish requested extra ports alongside normal manifest ports."""
+        ports: list[int] = []
+        for _ in range(4):
+            reservation = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.addCleanup(reservation.close)
+            reservation.bind(("127.0.0.1", 0))
+            ports.append(reservation.getsockname()[1])
+        # Keep ports reserved without listening: dx sees connection refusal,
+        # and the Docker stub records mappings without binding real services.
+        (self.repo / "package.json").write_text(json.dumps({
+            "config": {"ports": {"backend": ports[0], "frontend": ports[1]}}
+        }))
         result = subprocess.run([str(self.repo / "dx"), "bash", "scripts/dev-react-preview.sh"],
-                                cwd=self.directory, env=self.environment | {"DX_EXTRA_PORTS": "3000,5173"},
+                                cwd=self.directory, env=self.environment | {
+                                    "DX_EXTRA_PORTS": f"{ports[2]},{ports[3]}"
+                                },
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         command = next(command for command in self.commands() if command[0] == "run")
         mappings = [command[index + 1] for index, value in enumerate(command) if value == "-p"]
-        self.assertEqual(mappings, ["0.0.0.0:9998:9998", "0.0.0.0:9999:9999", "0.0.0.0:3000:3000", "0.0.0.0:5173:5173"])
+        self.assertEqual(mappings, [f"0.0.0.0:{port}:{port}" for port in ports])
         (self.state / "commands.jsonl").unlink()
         result = subprocess.run([str(self.repo / "dx"), "bun", "--version"], cwd=self.directory,
                                 env=self.environment, capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         command = next(command for command in self.commands() if command[0] == "run")
         mappings = [command[index + 1] for index, value in enumerate(command) if value == "-p"]
-        self.assertEqual(mappings, ["0.0.0.0:9998:9998", "0.0.0.0:9999:9999"])
+        self.assertEqual(mappings, [f"0.0.0.0:{port}:{port}" for port in ports[:2]])
 
 
 class DotenvTests(unittest.TestCase):

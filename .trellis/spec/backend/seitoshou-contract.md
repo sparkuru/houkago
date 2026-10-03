@@ -32,7 +32,7 @@
   authentication service so a future administrator configuration can replace
   them without changing route or client contracts.
 - `NODE_ENV=development` with no `HOUKAGO_CORS_ORIGIN` accepts every frontend
-  Origin for local/LAN development. `./dev.sh` and the housou `dev` script use
+  Origin for local/LAN development. `./preview.sh` and the housou `dev` script use
   this mode by default. Setting `HOUKAGO_CORS_ORIGIN` always restores a single
   exact credentialed origin; non-development startup defaults to
   `http://127.0.0.1:5173`. WebSocket and state-changing REST use the same rule.
@@ -118,7 +118,7 @@ cors({ origin: true, credentials: true }) // when NODE_ENV is production
 #### Correct: open only the development startup path, or configure production
 
 ```sh
-./dev.sh # accepts all development origins
+./preview.sh # accepts all development origins
 HOUKAGO_CORS_ORIGIN=https://houkago.example.test bun run start
 ```
 

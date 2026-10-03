@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { roomIdFromInput } from "@/lib/room-id"
 import type { SiteConfig } from "houkago-kousoku"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import { useEffect, useRef, useState } from "react"
 
 export function EntryPanel({ config }: { config: SiteConfig }) {

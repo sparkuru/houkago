@@ -6,9 +6,9 @@ import { EntryPanel } from "@/features/entry/entry-panel"
 import { IdentityPanel } from "@/features/identity/identity-panel"
 import { useSearch } from "@tanstack/react-router"
 import type { SiteConfig } from "houkago-kousoku"
-import { siteConfigKey } from "houkago-kyoushitsu/http"
-import { t } from "houkago-kyoushitsu/i18n"
-import { applySiteConfigTitle } from "houkago-kyoushitsu/site-config"
+import { siteConfigKey } from "houkago-kyoushitsu-core/http"
+import { t } from "houkago-kyoushitsu-core/i18n"
+import { applySiteConfigTitle } from "houkago-kyoushitsu-core/site-config"
 import { useEffect } from "react"
 
 export function Home() {

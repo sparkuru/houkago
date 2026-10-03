@@ -9,7 +9,7 @@ import {
   fetchRoomBangumi,
   moveRoomBangumi,
   previewRoomEnmoku,
-} from "houkago-kyoushitsu/http"
+} from "houkago-kyoushitsu-core/http"
 
 afterEach(() => configureHousouHttpClient())
 

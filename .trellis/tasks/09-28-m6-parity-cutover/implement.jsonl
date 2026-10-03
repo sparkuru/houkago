@@ -16,3 +16,5 @@
 {"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/tasks/09-28-m6-parity-cutover/research/parity-matrix.md", "reason": "Current legacy-to-React behavior mapping, baseline failures and remaining parity/human gates"}
+{"file": ".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md", "reason": "Framework-neutral module/export ownership and relocated contract verification"}

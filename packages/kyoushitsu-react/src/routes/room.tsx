@@ -5,7 +5,7 @@ import { RoomContents } from "@/features/room/room-contents"
 import { RoomRuntime } from "@/features/room/room-runtime"
 import { safeRoomId } from "@/lib/room-id"
 import { useNavigate, useParams } from "@tanstack/react-router"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import { useEffect, useState } from "react"
 
 export function Room() {

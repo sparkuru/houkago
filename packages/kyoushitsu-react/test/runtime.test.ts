@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createMemoryHistory } from "@tanstack/react-router"
 import { DEFAULT_SITE_CONFIG } from "houkago-kousoku"
-import { HoukagoHttpError, identityMeKey, siteConfigKey } from "houkago-kyoushitsu/http"
+import { HoukagoHttpError, identityMeKey, siteConfigKey } from "houkago-kyoushitsu-core/http"
 import { createAppRouter } from "../src/app/router"
 import { AppRuntime, type RuntimeServices } from "../src/app/runtime"
 const account = { id: "a", username: "alice", createdAt: 1 }

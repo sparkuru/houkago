@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "houkago-kyoushitsu/theme.css";
+@import "houkago-kyoushitsu-core/theme.css";
 
 @theme inline {
   --color-background: var(--color-canvas);

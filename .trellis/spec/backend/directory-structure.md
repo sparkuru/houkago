@@ -42,7 +42,7 @@ packages import domain types from `houkago-kousoku`; they never redefine them.
 ```
 packages/housou/
 ├── src/
-│   ├── index.ts          # Elysia app composition + app.listen(); exports `type App` for Eden
+│   ├── index.ts          # Elysia app composition + app.listen(); composes runtime routes and OpenAPI export
 │   ├── ws/               # WebSocket sync hub (the only hard part — design §5)
 │   │   ├── handler.ts    # .ws('/ws', { body: TypeBox envelope, message, open, close })
 │   │   ├── shinkou.ts    # 進行制御 ShinkouSeigyo: host-authority, projected progress

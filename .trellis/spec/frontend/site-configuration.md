@@ -21,18 +21,17 @@ DEFAULT_SITE_CONFIG: DeepReadonly<SiteConfig>
 loadSiteConfig(source?: string): SiteConfig
 GET /site-config -> SiteConfig
 
-// houkago-kyoushitsu
+// houkago-kyoushitsu-core
 createSiteConfigLoader(fetcher, warn?, options?: { shouldFallbackOnFailure?: (error: unknown) => boolean }): () => Promise<SiteConfig>
 applySiteConfigTitle(config, target?): void
-useSiteConfig(): SiteConfig
 ```
 
 The REST response schema is `SiteConfigSchema` from `houkago-kousoku`. Housou
-registers it as the Elysia response schema. Vue consumes the route through Eden;
-the parallel React app uses the generated `fetchSiteConfig` resource rather
+registers it as the Elysia response schema. React uses the generated
+`fetchSiteConfig` resource rather
 than component-owned raw `fetch`. The pure loader/title/types live in
-`lib/site-config-core.ts`, exported through `houkago-kyoushitsu/site-config`.
-Vue's `lib/site-config.ts` reexports those APIs and retains Vue injection.
+`packages/kyoushitsu-core/src/config/site-config-core.ts`, exported through
+`houkago-kyoushitsu-core/site-config`.
 
 ## 3. Contracts
 
@@ -66,10 +65,10 @@ defaultBushitsuName = "新部室"
 - `GET /site-config` is unauthenticated and returns exactly `SiteConfig` with
   `Cache-Control: no-store`. Never return the raw TOML object, `process.env`, or
   an open-ended configuration record.
-- Kyoushitsu memoizes one Eden request and resolves it before mounting Vue. It
-  sets `document.title`, provides the immutable config, and lets Home consume
-  the public identity/copy/default room name without adding Pinia room state.
-- Request rejection, Eden error, or empty response uses
+- React AppRuntime memoizes the config bootstrap through its public resource
+  boundary, sets `document.title`, and exposes immutable identity/copy/default
+  room name. No component owns another request or room config store.
+- Allowed transport rejection or empty response uses
   `DEFAULT_SITE_CONFIG` and one value-free warning. A successful but invalid
   response rejects bootstrap; it must not silently fall back and hide contract
   drift.
@@ -78,7 +77,6 @@ defaultBushitsuName = "新部室"
   The resource distinguishes actual zero bytes/204 from `{}`, JSON null,
   primitives and malformed JSON before the generated parser can collapse them.
   The latter successful invalid bodies reject, and abort never becomes fallback.
-  Existing Vue callers omit the predicate and retain their original behavior.
 - Changes require a Housou restart and browser refresh. There is no polling,
   watcher, live editor, per-room branding, JSON/YAML mirror, or config-path
   override in this contract.
@@ -97,7 +95,7 @@ runtime projection so public copy changes do not require a frontend rebuild.
 | unknown/missing field or unsafe text | startup throws with source and TypeBox field path |
 | valid omitted subtitle/browser title | normalize to `null` / `site.name` |
 | secret sentinel exists in environment | serialized route contains neither name nor value |
-| request rejects, Eden returns error, or body is empty | frontend uses shared default and generic warning |
+| allowed transport rejection or actual empty body | frontend uses shared default and generic warning |
 | successful response violates schema | frontend bootstrap rejects; no fallback warning |
 | React actual zero bytes/204 | typed `EMPTY_RESPONSE`, then one default warning |
 | React literal `{}`/null/primitive/malformed successful JSON | protocol failure; no fallback |
@@ -126,10 +124,10 @@ full TOML value, environment value, response body, or transport exception text.
 - `packages/housou/test/site-config.test.ts`: tracked file, explicit fixtures,
   malformed/duplicate TOML, source/field diagnostics without value leakage,
   exact response, `no-store`, and environment-secret sentinel exclusion.
-- `packages/kyoushitsu/test/site-config.test.ts`: success normalization,
+- `packages/kyoushitsu-core/test/site-config.test.ts`: success normalization,
   one-request memoization, transport fallback and value-free warning, invalid
   successful response rejection, and browser title application.
-- `packages/kyoushitsu/e2e/entry-home.spec.ts`: default name/no subtitle/title,
+- `packages/kyoushitsu-react/e2e/entry.spec.ts`: default name/no subtitle/title,
   custom long identity and subtitle, configured entry copy/default room POST,
   desktop/375px single-line default title, and no horizontal overflow.
 - Run the full repository tests, all package type checks, lint, Kyoushitsu
@@ -151,6 +149,11 @@ const config = await rawFetch().catch(() => localDefaults)
 const siteConfig = loadSiteConfig() // strict, normalized, frozen startup value
 app.get("/site-config", () => siteConfig, { response: SiteConfigSchema })
 
-const config = await createSiteConfigLoader(() => housou["site-config"].get())()
+// AppRuntime owns the signal and typed fallback predicate.
+const config = await createSiteConfigLoader(
+  async () => ({ data: await fetchSiteConfig({ signal }), error: null }),
+  console.warn,
+  { shouldFallbackOnFailure: shouldFallbackConfig },
+)()
 // Only transport/empty-response failure defaults; invalid success rejects.
 ```

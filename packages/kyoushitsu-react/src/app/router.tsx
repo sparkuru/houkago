@@ -7,7 +7,7 @@ import {
   createRouter,
   lazyRouteComponent,
 } from "@tanstack/react-router"
-import { t } from "houkago-kyoushitsu/i18n"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import type { AppRuntime } from "./runtime"
 export function createAppRouter(runtime: AppRuntime) {
   const root = createRootRouteWithContext<{ runtime: AppRuntime }>()({

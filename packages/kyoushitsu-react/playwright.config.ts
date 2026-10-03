@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test"
+import { defineConfig, devices } from "@playwright/test"
 export default defineConfig({
   testDir: "./e2e",
   outputDir: "./test-results",
@@ -11,6 +11,24 @@ export default defineConfig({
       : undefined,
   },
   projects: [
+    {
+      name: "room-layout-ipad",
+      testMatch: /room-controls\.spec\.ts/,
+      grep: /@layout-parity/,
+      use: { ...devices["iPad Mini"], browserName: "chromium" },
+    },
+    {
+      name: "room-layout-short",
+      testMatch: /room-controls\.spec\.ts/,
+      grep: /@layout-parity/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 640 } },
+    },
+    {
+      name: "room-layout-tall",
+      testMatch: /room-controls\.spec\.ts/,
+      grep: /@layout-parity/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 1200 } },
+    },
     {
       name: "entry-desktop",
       testMatch: /entry\.spec\.ts/,

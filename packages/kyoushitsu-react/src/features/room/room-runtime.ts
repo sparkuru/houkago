@@ -19,17 +19,18 @@ import {
   fetchRoomBangumi,
   moveRoomBangumi,
   previewRoomEnmoku,
-} from "houkago-kyoushitsu/http"
-import { canDo } from "houkago-kyoushitsu/kengen"
-import type { PlayerHandle } from "houkago-kyoushitsu/player"
+} from "houkago-kyoushitsu-core/http"
+import { canDo } from "houkago-kyoushitsu-core/kengen"
+import { type BuinPresence, projectMemberPresence } from "houkago-kyoushitsu-core/member-presence"
+import type { PlayerHandle } from "houkago-kyoushitsu-core/player"
 import {
   type RoomSessionAdmission,
   type RoomSessionConnectionStatus,
   type RoomSessionTransport,
   createRoomSessionController,
-} from "houkago-kyoushitsu/room-session"
-import { createShinkouController } from "houkago-kyoushitsu/shinkou-controller"
-import { KousokuClient } from "houkago-kyoushitsu/ws-client"
+} from "houkago-kyoushitsu-core/room-session"
+import { createShinkouController } from "houkago-kyoushitsu-core/shinkou-controller"
+import { KousokuClient } from "houkago-kyoushitsu-core/ws-client"
 
 export type ChatLine = { senderId: string; content: string; ts: number; kind: "chat" | "danmaku" }
 type RoomCommandType =
@@ -64,6 +65,7 @@ export type RoomState = {
   mode: NyuushitsuMode
   pending: readonly NyuushitsuRequest[]
   members: readonly { id: string; nickname: string; yakuwari: Yakuwari }[]
+  presenceById: Readonly<Record<string, BuinPresence>>
   meibo: readonly MeiboBuin[]
   names: Readonly<Record<string, string>>
   chat: readonly ChatLine[]
@@ -87,6 +89,7 @@ const initialState: RoomState = {
   mode: "open",
   pending: [],
   members: [],
+  presenceById: {},
   meibo: [],
   names: {},
   chat: [],
@@ -290,7 +293,15 @@ export class RoomRuntime {
       case "SHUSSEKI": {
         const names = { ...this.state.names }
         for (const member of message.payload.members) names[member.id] = member.nickname
-        this.update({ members: message.payload.members, names })
+        this.update({
+          members: message.payload.members,
+          presenceById: projectMemberPresence(
+            this.state.presenceById,
+            message.payload.members,
+            message.ts,
+          ),
+          names,
+        })
         break
       }
       case "MEIBO":
@@ -415,9 +426,7 @@ export class RoomRuntime {
     )
   }
   delete(id: string) {
-    return this.command("delete", "playlist", (signal) =>
-      deleteRoomEnmoku(this.roomId, id, { signal }),
-    )
+    return this.command("delete", "host", (signal) => deleteRoomEnmoku(this.roomId, id, { signal }))
   }
   clearPending() {
     return this.command("clear", "host", (signal) =>

@@ -18,7 +18,7 @@
     "artplayer": "^5.4.0",
     "dashjs": "^5.0.3",
     "hls.js": "^1.6.0",
-    "houkago-kyoushitsu": "workspace:*",
+    "houkago-kyoushitsu-core": "workspace:*",
     "houkago-kousoku": "workspace:*",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

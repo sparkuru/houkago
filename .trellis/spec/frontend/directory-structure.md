@@ -1,73 +1,35 @@
-# Directory Structure
+# Frontend Directory Structure
 
-> How frontend code is organized in this project.
+The application is `houkago-kyoushitsu-react`, built with React, Vite,
+TanStack Router/Query, Tailwind and owned UI primitives. Framework-independent
+browser/domain code belongs to `houkago-kyoushitsu-core`; Kousoku owns protocol
+and domain schemas. The old application was removed after M6 owner acceptance.
 
----
-
-## Overview
-
-The frontend is `houkago-kyoushitsu`（教室）: **Vue 3 + Vite**, ArtPlayer +
-hls.js/dash.js for playback, Vue/CSS overlays for the P1 local-first danmaku
-validation layer, and later `weizhenye/Danmaku` (MIT canvas engine) for dense
-flying danmaku (design §8). It is one package in the Bun workspaces monorepo and depends on
-`houkago-kousoku` for all WS protocol / domain types.
-
-Vue is chosen partly so synctv-web (also Vue) can be read as a structural
-reference — `archive/refer/synctv-web/src/` — but **its code is not copied**
-(Apache: borrow ideas, keep attribution; design §3 part 3).
-
----
-
-## Directory Layout
-
-```
-packages/kyoushitsu/
-├── src/
-│   ├── main.ts            # app bootstrap (Vue + Pinia + router)
-│   ├── App.vue
-│   ├── views/             # route-level pages (BushitsuView, BrowseView)
-│   ├── components/        # presentational + feature components
-│   │   ├── player/        # ArtPlayer wrapper, subtitle/source switch UI
-│   │   ├── danmaku/       # danmaku overlays; later weizhenye/Danmaku binding
-│   │   ├── chat/          # B-station-live-style side panel
-│   │   └── bushitsu/      # room UI: member list, 番組表, host control bar
-│   ├── composables/       # useXxx state/logic (see hook-guidelines.md)
-│   ├── stores/            # Pinia stores (see state-management.md)
-│   ├── ws/                # WS client speaking houkago-kousoku protocol
-│   ├── api/               # REST client (Eden Treaty over houkago-kousoku App type)
-│   ├── lib/               # generic helpers (English names)
-│   └── assets/
-└── package.json
+```text
+packages/kyoushitsu-react/
+  src/app/                 identity/runtime, Query and router
+  src/routes/              thin entry and room routes
+  src/components/ui/       shared presentation primitives
+  src/features/            entry, identity, room, player, baidu, danmaku
+  src/styles/              application layout and token consumers
+  test/                    React runtime/presentation helpers
+  e2e/                     Chromium desktop/mobile room contracts
+packages/kyoushitsu-core/
+  src/api/                 generated SDK and handwritten resources/policies
+  src/room/ src/ws/         room/session/permission/presence and transport
+  src/playback/ src/media/  pure player port, sync and metadata
+  src/provider/ src/danmaku/ portable provider and local cue helpers
+  src/config/ src/i18n/ src/theme/
+  test/                    pure helper and contract/boundary tests
+packages/houkago-adapter/e2e/ installed extension boundary
 ```
 
----
+Use package-relative imports inside core and explicit core subpaths from apps.
+Keep app aliases inside their own package. Feature files use kebab-case and
+export PascalCase React components; hooks use `useXxx`. Domain identifiers use
+ASCII romaji from the project dictionary. Do not copy another app's source.
 
-## Module Organization
-
-- **Feature components** group under a domain folder (`player/`, `chat/`,
-  `danmaku/`, `bushitsu/`) keyed to the design's UI breakdown (design §3 教室).
-- **Logic that is reused or stateful** goes in `composables/`, not inside a
-  component. The sync client logic (echo suppression, seek catch-up, drift) is
-  the prime example — it lives in a composable / `ws/`, never inline in a `.vue`.
-- **Pinia stores** hold cross-component room/playback state; components and
-  composables read from them (synctv-web's `stores/room.ts` is the structural
-  reference, not the code).
-
----
-
-## Naming Conventions
-
-- **Components:** `PascalCase.vue`. Domain components carry the romaji term:
-  `BushitsuPanel.vue`, `BangumiList.vue`, `DanmakuOverlay.vue`.
-- **Composables:** `useXxx.ts`, camelCase file (`useShinkou.ts`, `useBushitsu.ts`).
-- **Stores:** `xxxStore` defined in `stores/xxx.ts` (`useBushitsuStore`).
-- **Identifiers romaji ASCII**, 汉字 only in comments (design §12). Domain names
-  follow the §13 dictionary; one word, one meaning across the whole stack.
-- Generic/mechanical files use English (`lib/clock.ts`, `lib/format.ts`).
-
----
-
-## Examples
-
-- Player composition reference (structure, not copy): `components/player/`
-- Sync client (the hard part): `src/ws/` + `composables/useShinkou.ts`
+Read [React entry](react-entry-runtime.md),
+[room runtime](../houkago-kyoushitsu-react/frontend/room-runtime.md),
+[media](../houkago-kyoushitsu-react/frontend/media-provider-danmaku.md) and
+[core boundaries](../houkago-kyoushitsu-core/frontend/shared-core.md).

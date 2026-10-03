@@ -288,3 +288,48 @@ test("two admitted viewers share playback authority according to room permission
     await guestContext.close()
   }
 })
+
+test("subtitle keyboard selection, off/reselect and source preservation stay local", async ({
+  page,
+  browser,
+}) => {
+  await serveMedia(page)
+  const roomId = await createAdmittedRoom(page)
+  await addAndSelect(page, roomId, "hls", {
+    url: `${mediaOrigin}/master.m3u8`,
+    sources: [{ name: "Alternate with subtitles", url: `${mediaOrigin}/master.m3u8?alt=1` }],
+    subtitles: { English: { type: "hls", url: `${mediaOrigin}/sub-en.m3u8` } },
+  })
+  const guestContext = await browser.newContext({ baseURL: new URL(page.url()).origin })
+  const guest = await guestContext.newPage()
+  try {
+    await serveMedia(guest)
+    await registerViewer(guest)
+    await guest.goto(page.url())
+    const subtitle = page.getByTestId("player-subtitle")
+    await expect(subtitle).toHaveValue("off")
+    await expect(guest.getByTestId("player-subtitle")).toHaveValue("off")
+    await subtitle.focus()
+    await expect(subtitle).toBeFocused()
+    const loaded = page.waitForRequest((request) => request.url().endsWith("sub-en.vtt"))
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+    await loaded
+    await expect(subtitle.locator("option:checked")).toHaveText("English")
+    await expect(guest.getByTestId("player-subtitle")).toHaveValue("off")
+    await page.getByTestId("player-source").selectOption({ label: "Alternate with subtitles" })
+    await expect(subtitle.locator("option:checked")).toHaveText("English")
+    await expect(guest.getByTestId("player-source")).toHaveValue("primary")
+    await expect(guest.getByTestId("player-subtitle")).toHaveValue("off")
+    await subtitle.selectOption("off")
+    await expect(subtitle).toHaveValue("off")
+    await subtitle.selectOption({ label: "English" })
+    await expect(subtitle.locator("option:checked")).toHaveText("English")
+    await page.reload()
+    await expect(page.getByTestId("player-subtitle")).toHaveValue("off")
+    await expect(page.getByTestId("player-source")).toHaveValue("primary")
+    await expect(guest.getByRole("heading", { name: "M5 hls fixture" })).toBeVisible()
+  } finally {
+    await guestContext.close()
+  }
+})

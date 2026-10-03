@@ -1,142 +1,29 @@
-# Quality Guidelines
+# Frontend Quality Guidelines
 
-> Code quality standards for frontend development.
+The active stack is React/Vite, TanStack Router/Query, Tailwind and typed core
+resources. Protocol/domain types come from Kousoku; REST DTOs are generated
+from the browser OpenAPI subset. Eden server-app imports and framework-specific
+fallbacks are forbidden in the browser boundary.
 
----
+Run Bun commands through `./dx`: lint, all workspace types, root tests, contract
+drift and React production build. Use host project-local Playwright as described
+in [validation](../trellis-plus/validation.md). The preview's configurable Docker
+lifecycle is in [development](../trellis-plus/development.md); do not add another
+wrapper or use host Bun. The fake Docker/Bun shell harness runs on the host and
+requires Python; it does not start product services.
 
-## Overview
+Inspect the real emitted module graph, not just manifests. Core imports no UI
+framework/server app. React graph excludes the retired application and
+Vue/Pinia/Eden/server dependencies. Generated DTO fidelity gets its own
+TypeScript contract check; SDK regeneration must be deterministic.
 
-Stack: **Vue 3 + Vite**, TypeScript strict, Pinia, ArtPlayer + hls.js/dash.js,
-P1 Vue/CSS danmaku overlays, and later `weizhenye/Danmaku` (MIT) for dense
-flying danmaku. Contract and domain types come from
-`houkago-kousoku`; the REST client is Eden Treaty typed against housou's `App`
-(design §8, Elysia spike). A parallel generated Hey API boundary and pure resource
-policies exist under `src/api/`; see [HTTP Contract and Resources](http-contract-resources.md).
-Existing Vue consumers retain Eden until a later migration. Quality means: the client faithfully follows
-server-authoritative state, third-party imperative objects are contained, and the
-naming dictionary is honored across the stack.
+Keep server authority, current permissions and admission in every command path.
+Dispose players/engines/timers/listeners/requests with their scopes. Verify stale
+completions, explicit gesture versus automatic echo, and browser final state.
+Use semantic labels, focus restoration, touch targets, safe insets, reduced
+motion and no horizontal overflow at supported desktop/mobile/cinema sizes.
 
-The parallel `houkago-kyoushitsu-react` app consumes generated resources through
-explicit pure subpaths, with TanStack Router/Query and owned Tailwind/shadcn
-primitives. Follow [React Entry Runtime](react-entry-runtime.md) for its identity,
-Query, handoff and preview contracts; Vue-specific bindings remain in the legacy
-app. The new entry does not start room sockets or media engines.
-
----
-
-## Build & Run + dependency pins (this project)
-
-**The host has no `bun`** — run every bun/vite/test command through the repo-root
-`./dx` wrapper (project-local `houkago-dev:playwright` container built from
-`Dockerfile.dev`, repo at `/app`, ports 3000/5173 published, uid-mapped). The
-image includes Playwright's Chromium system libraries. Two `./dx` calls can't
-run concurrently (port re-bind). Vite must
-bind `0.0.0.0` (`server.host: "0.0.0.0"`) to be reachable from the host. See
-backend quality-guidelines for the full command list.
-
-**Router: pin `vue-router` to `^4.x`** (the stable Vue 3 router). Do NOT use
-`vue-router@5.x` — that line is the experimental unplugin/data-loaders variant;
-it drags in `unplugin`/`@vue-macros`/`chokidar` and shipped a `createWebHistory`
-that self-recurses (stack overflow on navigation). 4.x and 5.x share the
-`createRouter`/`createWebHistory` API, so 4.x needs no code changes.
-
----
-
-## Forbidden Patterns
-
-- **CJK in identifiers.** romaji ASCII only; 汉字 in comments/docs (design §12).
-- **Synonym drift.** One concept, one name from §13 (`Buin`, `Enmoku`,
-  `Bushitsu`, `Shinkou`) — across components, stores, composables, and kousoku.
-- **`any` / casts to dodge the contract**; redefining kousoku types locally
-  (see type-safety.md).
-- **Client acting as playback source of truth.** The host and guests with
-  current `Kengen.playback` may send `SHINKOU`; others only follow. Last
-  accepted WS state remains authoritative.
-- **Raw `fetch` in components.** Go through the API boundary in `src/api/`;
-  current Vue consumers use Eden and future consumers use generated resources.
-- **Polling REST for realtime data** the WS already pushes (playback, presence,
-  chat, danmaku).
-- **Imperative third-party calls scattered across components** — ArtPlayer and
-  its HLS/DASH playback engines and the Danmaku engine are each owned by one
-  wrapper component/composable.
-- **Self-rolling the final dense danmaku renderer.** Use `weizhenye/Danmaku`
-  when implementing dense flying danmaku; do not reinvent it or reuse
-  synctv-web's `artplayer-plugin-danmuku` (design §8). The existing Vue/CSS
-  overlays (`DanmakuOverlay`, `FileDanmakuOverlay`) are a bounded P1
-  local-first validation layer only: keep parsing/source state independent so
-  they can be replaced by the engine later.
-- **Comment noise / commented-out code / decorative banners** (see `common`).
-
----
-
-## Required Patterns
-
-- **`<script setup lang="ts">`** + Composition API; typed `defineProps`/`defineEmits`.
-- **Stateful/reused logic in composables; shared persistent state in Pinia.**
-  Components stay thin (component-guidelines.md, state-management.md).
-- **WS client writes server state into stores** via actions; UI reads. Apply
-  remote `SHINKOU` with `tsuijuuChuu`（追従中）echo suppression.
-- **Derive projected playback time on read** from last `Shinkou` +
-  `shinkouServerTime`; don't store a ticking value (state-management.md).
-- **Contain third-party lifecycles:** create ArtPlayer and its `hls.js`/`dashjs`
-  playback engines inside `EnmokuPlayer` mount/custom-type paths and destroy
-  them through ArtPlayer/onUnmounted cleanup; create future Danmaku engines in
-  their own wrapper.
-- **Room/cinema pages are fixed-viewport layouts on desktop:** reset `html`,
-  `body`, and `#app` to `height: 100%`, `margin: 0`, and `overflow: hidden`;
-  then put scrolling only inside intentional panes such as chat logs, 番組表
-  lists, or the left `stage` when its player, room controls, and expanded
-  composer must remain reachable together. Do not restore document scrolling
-  on desktop. In that `stage` pattern, keep the player 16:9 and let
-  `room-workbench` use content height (`flex-grow: 0`); forcing it to fill the
-  remaining viewport either clips an expanded composer in a short window or
-  stretches empty panels in a tall one. At the portrait responsive breakpoint
-  (currently `max-width: 800px`), the room shell may switch to document
-  scrolling so the player stays first and the stacked controls, playlist, and
-  expandable chat remain reachable. Give the player container a definite
-  `aspect-ratio: 16 / 9` in that mode: a `min-height` alone does not resolve a
-  nested player's `height: 100%` and can leave a blank player area. A `100vh`
-  room shell plus the browser's default body margin creates a stray page
-  scrollbar and breaks desktop chat/player bottom alignment.
-- **Prefetch the room route on entry intent.** `BushitsuView` imports the
-  player stack, so leave it lazy at router startup but call the same dynamic
-  import when the user focuses a room-entry field or submits creation. This
-  overlaps the first Vite/module load with the user's input and the create
-  request. After WebSocket admission, start independent room-detail and
-  Bangumi REST reads together; preserve the existing order that establishes
-  `buchouId` before deciding whether to send `OIKAKE`.
-- **Keep danmaku source data engine-agnostic.** Local file parsing belongs in
-  `houkago-kokuban`; kyoushitsu stores only source selection, user display
-  preference, and timeline cues. The long-term priority chain is 本地文件 /
-  user-selected file > meta-derived fetch > danmubox/search; live chat danmaku
-  always overlays (design §7).
-
----
-
-## Testing Requirements
-
-- **Pure sync/drift logic is unit-tested** (`bun test` / Vitest): projected-time
-  math, drift tiers, "am I 部長" gating, echo-suppression window. Keep it pure and
-  framework-free so it tests without a DOM/player — mirrors the backend rule.
-- Component tests focus on wiring (does applying a remote `SHINKOU` set
-  `tsuijuuChuu` and seek the player?), not pixel snapshots.
-- Manual verification path for P0: two browser sessions, host drives, member
-  follows within drift tolerance.
-
----
-
-## Code Review Checklist
-
-- [ ] Identifiers romaji; domain names match §13 (no synonyms vs backend).
-- [ ] Domain/protocol types imported from `kousoku`, not redefined; no `any`/casts.
-- [ ] REST via the API boundary; realtime via WS — no live-state polling or raw component `fetch`.
-- [ ] Only the host or a currently permitted guest emits `SHINKOU`; remote
-      apply uses echo suppression.
-- [ ] Projected time derived, not stored as a ticking value.
-- [ ] ArtPlayer / Danmaku instances created and destroyed in lifecycle hooks.
-- [ ] HLS/DASH engine instances are created only by `EnmokuPlayer` custom types
-      and are destroyed with the ArtPlayer instance.
-- [ ] P1 Vue/CSS danmaku overlays keep source data engine-agnostic; dense/final
-      flying danmaku work uses `weizhenye/Danmaku` with the three-source
-      priority chain.
-- [ ] Sync-relevant logic has unit tests; comments justify *why*, no noise.
+No `any` or casts to evade contracts, no raw component fetches, no REST polling
+for WS data, no duplicated sync logic or imperative engine calls scattered
+across UI. Use the project dictionary and avoid noisy comments/copied reference
+code. The detailed executable contracts are in the React/core package indexes.

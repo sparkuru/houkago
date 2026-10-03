@@ -129,6 +129,26 @@ last known-good revision; historical layout validation is scoped evidence,
 not a validation of the current working tree. Preserve build/browser evidence
 for the rollback review.
 
+## Parity defects found during implementation
+
+The supported source inventory supplements browser cases: some active legacy
+room information and actions were not covered by the old E2E suite. Preserve
+permission preset shortcuts as well as custom checkboxes, and preserve online
+duration/offline participant history in the existing React room-information
+dialog. Retain pure preset/formatting helpers in core; derive presence projection
+from authoritative `SHUSSEKI` snapshots and timestamps, with no extra socket or
+HTTP polling. A local display clock is presentation only and cleans up with the
+dialog. These are existing room-information/control requirements, not new scope.
+
+The launcher must clear actual interactive obstacles after queue/chat changes,
+not only empty layouts. Resolve the nearest clear point within the existing
+safe-area/dock limits, preserving the stored normalized preferred position.
+Automatic content-driven correction must not overwrite localStorage. Re-evaluate
+visible obstacles on content resize/mutation, page scroll and viewport resize;
+guard observer updates against portal feedback. If no clear point exists, report
+the constraint rather than hiding the launcher or treating fallback as verified
+clearance. Browser tests retain full player/queue-control/composer bounds.
+
 ## Main risks and stop conditions
 
 - A React feature still imports a legacy export or a transitive helper is

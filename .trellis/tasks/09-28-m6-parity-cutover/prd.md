@@ -13,9 +13,10 @@ retain Vue as a fallback or migration reference.
 - The project mainline is the frontend architecture and stack migration. M4
   moved room admission, realtime queue, chat and governance to React; M5 moved
   playback, provider and danmaku flows. Both tasks are complete and archived.
-- The owner authorized M6 planning on 2026-09-28. This task is in planning;
-  implementation, cutover, and production deployment require separate review
-  and approval.
+- The owner authorized M6 planning on 2026-09-28 and approved the refreshed
+  final plan with `开始` on 2026-10-04. This task is now `in_progress`;
+  legacy deletion still waits for parity and human acceptance, and production
+  deployment remains separately authorized work.
 - On 2026-09-28, the owner selected full migration: create a framework-neutral
   shared package, relocate every required shared asset into it, then remove
   the old frontend workspace rather than retaining Vue as a fallback/reference.
@@ -92,34 +93,34 @@ retain Vue as a fallback or migration reference.
 
 ## Acceptance Criteria
 
-- [ ] A1. A parity matrix maps the supported entry, room, media/provider,
+- [x] A1. A parity matrix maps the supported entry, room, media/provider,
       danmaku, and responsive-layout behaviors from archived M4/M5 evidence and
       old browser cases to React evidence, with gaps and unsupported cases
       called out.
-- [ ] A2. Every React-required shared asset is in the new framework-neutral
+- [x] A2. Every React-required shared asset is in the new framework-neutral
       package and all imports, generators, scripts, tests, and workspace
       references point to it; the old frontend package and active
       implementation/configuration are removed after acceptance.
-- [ ] A3. Automated checks and fixtures provide reproducible evidence for all
+- [x] A3. Automated checks and fixtures provide reproducible evidence for all
       required parity behaviors; any unautomated checks have an explicit reason.
-- [ ] A4. A human review record covers visual, responsive, keyboard, and
+- [x] A4. A human review record covers visual, responsive, keyboard, and
       interaction residuals, with each item accepted, fixed, or blocking.
-- [ ] A5. A staged local cutover procedure names dependencies and stop
+- [x] A5. A staged local cutover procedure names dependencies and stop
       conditions; rollback to the last known-good Git revision is documented
       and verified before the old implementation is removed.
-- [ ] A6. Legacy frontend removal occurs only after the approved M6 plan's
+- [x] A6. Legacy frontend removal occurs only after the approved M6 plan's
       parity and human-review gates pass; production deployment is not included.
-- [ ] A7. Existing backend, HTTP/WS protocol, database, and external provider
+- [x] A7. Existing backend, HTTP/WS protocol, database, and external provider
       contracts remain unchanged.
-- [ ] A8. The React room exposes its controls through the floating speed dial;
+- [x] A8. The React room exposes its controls through the floating speed dial;
       the anime playlist uses the freed layout space without clipping or
       horizontal overflow at supported room sizes.
-- [ ] A9. Existing room information, actions, command behavior, and permission
+- [x] A9. Existing room information, actions, command behavior, and permission
       checks remain available through the new control surface.
-- [ ] A10. Opening/closing, Escape, outside/backdrop click, focus restoration,
+- [x] A10. Opening/closing, Escape, outside/backdrop click, focus restoration,
       accessible state/names, hidden-action inertness, touch targets, safe areas,
       and reduced-motion behavior meet the linked child acceptance.
-- [ ] A11. Desktop, portrait, and cinema layouts remain usable; the floating
+- [x] A11. Desktop, portrait, and cinema layouts remain usable; the floating
       control does not obstruct the player, queue, or chat.
 
 ## Out of Scope
@@ -129,3 +130,18 @@ retain Vue as a fallback or migration reference.
 - New product features outside the absorbed room-control speed dial, visual
   rebrand, or expanded mobile-provider support.
 - Deleting archived Trellis evidence; it remains historical audit material.
+
+## Pre-removal checkpoint — 2026-10-04
+
+Shared extraction, deterministic contracts, executable parity and independent
+review passed; see [validation.md](validation.md). Owner presentation and speed-dial acceptance followed, then Vue deletion and
+post-removal gates passed. See [the accepted review brief](research/human-review.md).
+
+## Owner acceptance — 2026-10-04
+
+The owner replied `视校通过；可以提交/继续；包括所有脏文件`. This accepts
+the presented visual/interaction residuals, including automatic launcher
+avoidance, member information in the control dialog and native confirmations.
+The speed-dial criteria are accepted on the mapped automated evidence and visual
+review. It authorizes remaining local cutover, all trackable dirty-file commits
+and normal completed-task closure. Production deployment is outside this scope.

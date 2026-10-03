@@ -39,7 +39,7 @@ room.dispose()
 
 `RoomRuntime` binds one `RoomSessionController` to one `KousokuClient`. Its
 immutable `RoomState` is consumed through `useSyncExternalStore`. Generated
-HTTP adapters are imported through `houkago-kyoushitsu/http`; the controller,
+HTTP adapters are imported through `houkago-kyoushitsu-core/http`; the controller,
 client and permission helper use explicit portable subpaths. The route keys a
 session to the restored identity epoch and room ID.
 
@@ -63,6 +63,18 @@ session to the restored identity epoch and room ID.
   requests, changes permissions and removes members. Password mode is a host
   setting; the backend currently admits existing members and reports closed to
   new nonmembers. Do not invent a guest password handshake.
+- Queue add/select follows playlist permission. Queue deletion, reordering and
+  clearing pending items remain host-only even when a guest may select media;
+  enforce this in both presentation and runtime command gates.
+- Permission presets call `setPermissions` with shared `KENGEN_PRESETS`; their
+  selected state and custom summary derive from server `KENGEN`, just like the
+  individual checkboxes. Guests receive the read-only summary.
+- `SHUSSEKI` projects an immutable `presenceById` through core
+  `projectMemberPresence` using server timestamps. Retain departures and their
+  names, restart arrival time on rejoin, and reset history with the session.
+  The information dialog shows online duration and departed-member last seen.
+  Its one-second display clock runs only while the dialog is open and clears
+  on close, fullscreen hiding or unmount; do not poll REST for attendance.
 - Show pending command state and failures. Do not optimistically grant access,
   permissions, queue entries or current item. A disconnected command is not
   replayed on reconnect. A revoked visitor leaves the room and sees a notice
@@ -229,12 +241,23 @@ Correct: restore identity, start one controller/socket, wait for server
   Honor `prefers-reduced-motion` for the dial and action transitions. Do not
   hide the launcher for cinema mode; only the actual fullscreen state may hide
   it.
+- Treat stored coordinates as the preferred location. After safe-area/dock
+  clamping, `findClearRoomFloatingPosition` chooses the nearest valid position
+  at least 8px from the player, queue interactive controls and whole composer.
+  Re-measure on room content mutations, observed layout resize, viewport resize
+  and captured scroll. Automatic avoidance must not overwrite the stored
+  preference; drag/nudge starts from the actual rendered location. If no clear
+  location exists, retain the safe clamped launcher rather than hiding it.
 
 ### Room Control Browser Assertions
 
 - Cover host and guest information views, host-only governance, hidden-action
   inertness, launcher labels/state, keyboard and touch opening, Escape,
   backdrop/outside dismissal, and focus entry/return.
+- Assert interior dialog padding clicks leave the dialog open; dismiss on a
+  click outside its bounding rectangle. Verify presets/custom combinations
+  through two-client server echo, and duration/departure/rejoin history without
+  removing retained chat names.
 - Measure closed-launcher overlap against the player, queue buttons/inputs/links,
   and shared chat
   composer; drag it and verify normalized localStorage persistence, keyboard

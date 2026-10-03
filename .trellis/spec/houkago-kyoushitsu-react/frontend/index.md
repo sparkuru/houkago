@@ -10,4 +10,12 @@ The React package owns the local entry and room interface. Read these contracts 
 | [HTTP Contract and Resources](../../frontend/http-contract-resources.md) | Generated SDK adapters, request errors, cancellation, and private data |
 | [Public Site Configuration](../../frontend/site-configuration.md) | Shared public identity and configuration |
 
-This index names the React package explicitly for Trellis context discovery. The Vue package guidelines still apply to shared `houkago-kyoushitsu` code, not React components.
+Shared browser/domain modules now belong to
+[`houkago-kyoushitsu-core`](../../houkago-kyoushitsu-core/frontend/index.md).
+The retired application's binding specs are historical M6 evidence. Shared
+conventions remain in [directory structure](../../frontend/directory-structure.md),
+[components](../../frontend/component-guidelines.md),
+[hooks](../../frontend/hook-guidelines.md),
+[state](../../frontend/state-management.md),
+[quality](../../frontend/quality-guidelines.md) and
+[type safety](../../frontend/type-safety.md).

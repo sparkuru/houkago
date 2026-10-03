@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "bun run --filter '*' typecheck",
-    "test": "HOUSOU_DB=:memory: bun test packages/kokuban/test packages/eisha/test packages/houkago-adapter/test packages/housou/test packages/kousoku/test packages/kyoushitsu/test packages/kyoushitsu-react/test",
+    "test": "HOUSOU_DB=:memory: bun test packages/kokuban/test packages/eisha/test packages/houkago-adapter/test packages/housou/test packages/kousoku/test packages/kyoushitsu-core/test packages/kyoushitsu-react/test",
     "lint": "biome check .",
     "format": "biome format --write .",
     "contract:export": "bun --no-env-file packages/housou/src/export-openapi.ts",
@@ -19,7 +19,6 @@
     "contract:generate": "bun --no-env-file run contract:export && bun --no-env-file run contract:page && bun --no-env-file run contract:verify && bunx openapi-ts",
     "contract:drift": "bun --no-env-file scripts/check-contract-drift.ts",
     "dev:housou": "bun run --filter houkago-housou dev",
-    "dev:kyoushitsu": "bun run --filter houkago-kyoushitsu dev",
     "start:housou": "bun run --filter houkago-housou start",
     "dev:react": "bun run --filter houkago-kyoushitsu-react dev"
   },

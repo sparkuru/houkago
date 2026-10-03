@@ -32,8 +32,8 @@ mode in [validation.md](validation.md).
 
 Root `preview.sh` forwards all commands to `dx preview`. `dx` owns the Docker
 arguments and lifecycle; `scripts/preview-services.sh` supervises each service
-inside its own detached `--init` container. `dev.sh` is deleted in the working
-tree; do not restore it or document it as an available entry. Commands below
+inside its own detached `--init` container. The former `dev.sh` entry was retired;
+do not restore it or document it as an available entry. Commands below
 are implemented, including `--origin` for start and `--help`.
 
 Ownership uses exact `houkago.repo` (resolved repository path),

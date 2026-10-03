@@ -2,8 +2,8 @@ import Artplayer from "artplayer"
 import * as dashjs from "dashjs"
 import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
-import type { PlayerHandle } from "houkago-kyoushitsu/player"
-import { canSeekTo } from "houkago-kyoushitsu/seekable"
+import type { PlayerHandle } from "houkago-kyoushitsu-core/player"
+import { canSeekTo } from "houkago-kyoushitsu-core/seekable"
 
 type MediaType = Enmoku["type"]
 

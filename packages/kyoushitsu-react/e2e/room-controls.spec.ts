@@ -506,11 +506,29 @@ test("speed dial dismissal, focus, room settings and copy feedback", async ({
   expect(dialogBox).not.toBeNull()
   expect(dialogViewport).not.toBeNull()
   expect(Math.abs((dialogBox?.x ?? 0) - expectedDialogLeft)).toBeLessThanOrEqual(1)
+  await dialog.evaluate((element) => {
+    element.style.padding = "8px"
+  })
+  expect(
+    await dialog.evaluate((element) => {
+      const { left, top } = element.getBoundingClientRect()
+      return document.elementFromPoint(left + 5, top + 90) === element
+    }),
+  ).toBe(true)
+  await dialog.click({ position: { x: 5, y: 90 } })
+  await expect(dialog).toBeVisible()
+  await dialog.evaluate((element) => element.style.removeProperty("padding"))
   await page.screenshot({
     path: test.info().outputPath("room-controls-dialog.png"),
     animations: "disabled",
   })
   await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
+  await expect(launcher).toBeFocused()
+  await launcher.click()
+  await informationAction.click()
+  await expect(dialog).toBeVisible()
+  await page.mouse.click(2, 2)
   await expect(dialog).toBeHidden()
   await expect(launcher).toBeFocused()
 
@@ -756,4 +774,74 @@ test("playlist width, viewport bounds and cinema controls stay usable", async ({
     .first()
     .evaluate((element) => getComputedStyle(element).transitionDuration)
   expect(Number.parseFloat(duration)).toBeLessThanOrEqual(0.001)
+})
+
+test("@layout-parity responsive player, queue and composer remain reachable", async ({
+  page,
+}, info) => {
+  const roomId = await createRoom(page)
+  await addCurrentItem(page, roomId)
+  const viewport = page.viewportSize()
+  if (!viewport) throw new Error("Room viewport is unavailable")
+  const launcher = page.locator(".room-speed-dial-launcher")
+  const chat = page.locator(".room-chat-form")
+  const assertReachable = async (cinema = false) => {
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true)
+    await expect(launcher).toBeVisible()
+    await chat.locator("#chat-message").fill("Responsive composer fixture")
+    await chat.getByRole("button", { name: "发送", exact: true }).click()
+    await expect(
+      page.locator(".room-feed li").filter({ hasText: "Responsive composer fixture" }).last(),
+    ).toBeVisible()
+    await expectNoSpeedDialOverlap(page, ".room-speed-dial-launcher")
+    if (!cinema) {
+      await expectNoSpeedDialOverlap(
+        page,
+        ".room-speed-dial-launcher",
+        ".room-queue button, .room-queue input, .room-queue a",
+      )
+    }
+    await expectNoSpeedDialOverlap(page, ".room-speed-dial-launcher", ".room-current .player-stage")
+    const dimensions = await page
+      .locator(".room-queue button:visible, .room-chat-form button:visible")
+      .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height))
+    expect(dimensions.every((height) => height >= 43.5)).toBe(true)
+  }
+  await assertReachable()
+  if (viewport.width >= 1200 && viewport.height >= 900) await expectChatDockGeometry(page)
+  if (viewport.width < 1200)
+    await expect(page.locator(".room-chat-rail")).toHaveCSS("position", "static")
+  await page.screenshot({
+    path: info.outputPath("responsive-room-normal.png"),
+    animations: "disabled",
+    fullPage: true,
+  })
+  await launcher.click()
+  await expectActionsWithinViewport(page)
+  await page
+    .locator(".room-speed-dial-actions")
+    .getByRole("button", { name: "房间控制", exact: true })
+    .click()
+  const controls = page.getByRole("dialog", { name: "房间控制" })
+  await expect(controls).toBeVisible()
+  const bounds = await controls.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds?.x ?? -1).toBeGreaterThanOrEqual(0)
+  expect(bounds?.y ?? -1).toBeGreaterThanOrEqual(0)
+  expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(viewport.width)
+  expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+  await controls.locator(".room-controls-dialog-header button").click()
+  await expect(launcher).toBeFocused()
+  await page.getByRole("button", { name: "剧场模式" }).click()
+  await expect(page.locator(".room-page")).toHaveClass(/room-cinema/)
+  await assertReachable(true)
+  if (viewport.width < 851)
+    await expect(page.locator(".room-chat-rail")).toHaveCSS("position", "static")
+  await page.screenshot({
+    path: info.outputPath("responsive-room-cinema.png"),
+    animations: "disabled",
+    fullPage: true,
+  })
 })

@@ -11,11 +11,11 @@
 5. 用户提供的公开播放 URL 解析与代理；不提供平台内容发现能力
 6. 全开源、自有 license
 
-### 2. 总体架构：5 个模块，控制面 / 媒体面分离
+### 2. 总体架构：6 个模块，控制面 / 媒体面分离
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  houkago-kyoushitsu (教室 · 前端)              │
+│             houkago-kyoushitsu-react (教室 · 前端)            │
 │  ArtPlayer + 弹幕 + 字幕/音轨切换 │ 聊天室 UI │ 部室/URL 入队 UI │
 └───┬─────────────────────────────┬──────────────────┬─────────┘
     │ WS(控制面)+REST              │ 媒体直连(媒体面)   │ REST
@@ -30,6 +30,7 @@
        ▼                          ▼                   ▼
     持久化                    各视频平台             各弹幕源
 
+           浏览器核心：houkago-kyoushitsu-core (HTTP/房间/同步)
            共享契约：houkago-kousoku (校則 · WS协议+类型)
 ```
 
@@ -63,13 +64,19 @@
 - 标题识别 → 源匹配；按优先级链返回
 - CORS 全在服务端解决，浏览器从不直连源站
 
-**houkago-kyoushitsu（教室 / 前端）**
+**houkago-kyoushitsu-react（教室 / React 前端）**
 - 播放器：ArtPlayer + hls.js/dash.js（字幕轨、HLS 多音轨切换）
-- 弹幕：P1 local-first 用 Vue/CSS overlay 验证本地文件机制；密集飞屏/正式统一引擎目标仍是 `weizhenye/Danmaku`（MIT, canvas）。
+- 弹幕：React/CSS overlay 保留本地文件与实时弹幕；密集飞屏/正式统一引擎目标仍是 `weizhenye/Danmaku`（MIT, canvas）。
 - 聊天室 UI（B 站直播风：右侧栏 + 视频上弹幕叠加）
 - 部室 UI：建/进房、部员列表、番組表、房主控制条
 - 房间 URL 入队 UI：预览用户提交的 URL，再显式加入或切换放映
-- WS 客户端：讲 houkago-kousoku 协议
+- React 生命周期、路由与 Query 缓存；通过核心包绑定 HTTP、房间会话与 WS。
+
+**houkago-kyoushitsu-core（教室 / 无框架浏览器核心）**
+- Housou OpenAPI 生成的浏览器 SDK、HTTP 资源、错误和取消契约。
+- 房间会话、WS 客户端、权限、出席历史与播放同步；讲 houkago-kousoku 协议。
+- 媒体元数据、百度源与适配器、弹幕选择/解析、文案、主题与公开配置。
+- 显式子路径导出；不依赖 React、Vue、Pinia、Eden 或 Housou 服务端代码。
 
 **houkago-kousoku（校則 / 共享契约）**
 - WS 协议消息类型、Enmoku 模型等 TS 类型；web 与 server 共享，一词一义。
@@ -172,16 +179,16 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 
 优先级链 本地文件 > 在线抓取 > 弹幕盒子，前端按配置选当前源；实时聊天弹幕永远叠加。
 
-> P0/P1 local-first 偏离回填：实时聊天弹幕与本地文件弹幕先实现为自有 Vue/CSS overlay（`components/danmaku/DanmakuOverlay.vue`、`FileDanmakuOverlay.vue`），用于验证开关、来源隔离和按时间渲染。canvas 飞屏弹幕引擎 `weizhenye/Danmaku` 推迟到样式化/密集弹幕切片（密集弹幕才需 canvas 性能）。
+> P0/P1 local-first 先验证了开关、来源隔离和按时间渲染。当前实现已迁移至 React 的 `features/danmaku/danmaku-feature.tsx`；无框架时间轴、文件解析与来源选择位于 `kyoushitsu-core/src/danmaku/`。canvas 飞屏弹幕引擎 `weizhenye/Danmaku` 推迟到样式化/密集弹幕切片（密集弹幕才需 canvas 性能）。
 
 ### 8. 技术选型
 
 | 层 | 选型 | 理由 |
 |----|------|------|
-| 前端 | **Vue 3 + Vite** | 与 ArtPlayer 集成示例多；synctv-web 也 Vue，便于参照 |
+| 前端 | **React 19 + TypeScript + Vite；TanStack Query/Router** | 默认本地入口；组件生命周期与 HTTP 缓存绑定独立于无框架核心 |
 | 播放器 | **ArtPlayer + hls.js/dash.js** | HLS 多音轨/字幕切换齐备 |
-| 弹幕引擎 | **P1 Vue/CSS overlay → 后续 `weizhenye/Danmaku`（MIT, canvas）** | local-first 先验证机制；密集飞屏/正式统一引擎不自研 |
-| housou | **Bun + Elysia.js**（TypeBox + Eden Treaty） | spike 实测：Bun 原生 WS pub/sub topic 天然适配房间广播；#781 非 WS 全局 publish 已验证可干净实现（详见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`）。备选 Fastify-on-Bun 未触发。|
+| 弹幕引擎 | **React/CSS overlay → 后续 `weizhenye/Danmaku`（MIT, canvas）** | local-first 先验证机制；密集飞屏/正式统一引擎不自研 |
+| housou | **Bun + Elysia.js**（TypeBox + OpenAPI） | spike 实测：Bun 原生 WS pub/sub topic 天然适配房间广播；#781 非 WS 全局 publish 已验证可干净实现（详见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`）。备选 Fastify-on-Bun 未触发。|
 | eisha | **Go**（或 Node 起步） | 代理/manifest 重写/并发拉流 Go 更稳；独立进程可后换 |
 | 传输 | WebSocket，JSON（v1）→ protobuf（后期） | |
 | 存储 | SQLite（v1, `bun:sqlite`）→ Postgres | 单文件零运维起步；Bun 内置 SQLite 驱动 |
@@ -189,7 +196,7 @@ eisha 产出此结构 → housou 存 → kyoushitsu 消费。
 
 > polyglot 取舍：eisha 用 Go 还是 Node/Bun。v1 建议先 Bun 同栈跑通，代理性能不足再单独换 Go——独立进程，替换不影响其他模块。
 >
-> **后端框架落定（spike 结论）**：housou 用 **Elysia.js on Bun**。6/6 能力探针全过，硬指标 #781（HTTP handler / `setInterval` 等非 WS 上下文全局 `publish` 到房间 topic）实测 PASS——工作模式为 handler 内 `server.publish(topic,msg)`、非请求上下文 `app.server?.publish(topic,msg)`。WS 信封用 TypeBox 校验，契约共享走 Eden Treaty（编译期）。完整实测见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`。
+> **后端框架落定（spike 结论）**：housou 用 **Elysia.js on Bun**。6/6 能力探针全过，硬指标 #781（HTTP handler / `setInterval` 等非 WS 上下文全局 `publish` 到房间 topic）实测 PASS——工作模式为 handler 内 `server.publish(topic,msg)`、非请求上下文 `app.server?.publish(topic,msg)`。WS 信封用 TypeBox 校验；当前浏览器 HTTP 契约由 Housou OpenAPI 生成至 `kyoushitsu-core`，保留独立的 WS 协议类型。完整实测见 `.trellis/tasks/06-13-elysia-js-spike-bun/research/elysia-spike-results.md`。
 
 ### 9. 仓库结构
 
@@ -198,7 +205,8 @@ houkago/
 ├── packages/
 │   ├── kousoku/      # 校則 · 共享 TS 类型（WS 协议、Enmoku 模型）
 │   ├── housou/       # 放送室 · server：Bun + Elysia.js（WS pub/sub）+ bun:sqlite
-│   ├── kyoushitsu/   # 教室 · web：Vue3 + ArtPlayer
+│   ├── kyoushitsu-react/ # 教室 · web：React + ArtPlayer
+│   ├── kyoushitsu-core/  # 无框架浏览器核心、HTTP SDK、房间与同步
 │   ├── eisha/        # 映写室 · 解析器 + 流代理（含 parsers/ 插件目录）
 │   └── kokuban/      # 黒板 · 弹幕聚合（v1 可并入 eisha 部署）
 ├── archive/refer/    # synctv & synctv-web 源码，仅本地参考；.gitignore 已排除（勿提交：AGPL）
@@ -298,7 +306,8 @@ Playwright 工作流使桌面和竖屏回归可以自动化验证。前一节是
 | server | `houkago-housou` | 放送室 | 向各教室广播=WS 中继 hub |
 | resolver+代理 | `houkago-eisha` | 映写室 | 装片放映管胶卷=解析+代理 |
 | danmaku | `houkago-kokuban` | 黒板 | 涂写浮现=弹幕 |
-| web | `houkago-kyoushitsu` | 教室 | 坐着看屏幕的地方 |
+| web | `houkago-kyoushitsu-react` | 教室 | 坐着看屏幕的地方 |
+| browser core | `houkago-kyoushitsu-core` | 教室核心 | 框架无关的 HTTP、房间与播放契约 |
 | shared | `houkago-kousoku` | 校則 | 共同遵守的契约=协议 |
 
 **领域实体**

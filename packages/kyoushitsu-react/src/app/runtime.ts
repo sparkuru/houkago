@@ -12,10 +12,10 @@ import {
   signInIdentity,
   signOutIdentity,
   siteConfigKey,
-} from "houkago-kyoushitsu/http"
-import type { IdentityMeResponse, IdentitySignInData } from "houkago-kyoushitsu/http/generated"
-import type { MessageKey } from "houkago-kyoushitsu/i18n"
-import { createSiteConfigLoader } from "houkago-kyoushitsu/site-config"
+} from "houkago-kyoushitsu-core/http"
+import type { IdentityMeResponse, IdentitySignInData } from "houkago-kyoushitsu-core/http/generated"
+import type { MessageKey } from "houkago-kyoushitsu-core/i18n"
+import { createSiteConfigLoader } from "houkago-kyoushitsu-core/site-config"
 import { createQueryClient, resourceQueryOptions } from "./query-client"
 
 export type Identity = IdentityMeResponse | null

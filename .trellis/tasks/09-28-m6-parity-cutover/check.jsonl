@@ -15,3 +15,5 @@
 {"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/tasks/09-28-m6-parity-cutover/research/parity-matrix.md", "reason": "Review every legacy behavior and residual decision against actual post-extraction evidence"}
+{"file": ".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md", "reason": "Verify source/dependency/build graph boundary and moved helper contracts"}

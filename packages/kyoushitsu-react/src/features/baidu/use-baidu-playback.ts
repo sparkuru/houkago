@@ -6,19 +6,19 @@ import {
 import {
   type BaiduAdapterDetection,
   detectBaiduAdapter,
-} from "houkago-kyoushitsu/baidu-adapter-detection"
-import { isMobileBaiduClient } from "houkago-kyoushitsu/baidu-provider"
-import { adapterCapabilityReady, houkagoAdapter } from "houkago-kyoushitsu/houkago-adapter"
-import { housouUrl } from "houkago-kyoushitsu/housou-url"
+} from "houkago-kyoushitsu-core/baidu-adapter-detection"
+import { isMobileBaiduClient } from "houkago-kyoushitsu-core/baidu-provider"
+import { adapterCapabilityReady, houkagoAdapter } from "houkago-kyoushitsu-core/houkago-adapter"
+import { housouUrl } from "houkago-kyoushitsu-core/housou-url"
 import {
   fetchBaiduAvailability,
   prepareBaiduGrant,
   requestBaiduAdapterPairing,
-} from "houkago-kyoushitsu/http"
+} from "houkago-kyoushitsu-core/http"
 import type {
   BaiduPlaybackGrantPollResponse,
   BaiduSourceAvailabilityResponse,
-} from "houkago-kyoushitsu/http/generated"
+} from "houkago-kyoushitsu-core/http/generated"
 import { useEffect, useState } from "react"
 
 export type BaiduPlaybackState =

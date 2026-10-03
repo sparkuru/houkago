@@ -1,10 +1,13 @@
 import type { Enmoku } from "houkago-kousoku"
-import type { EnmokuSourceChoice, EnmokuSubtitleChoice } from "houkago-kyoushitsu/enmoku-metadata"
+import type {
+  EnmokuSourceChoice,
+  EnmokuSubtitleChoice,
+} from "houkago-kyoushitsu-core/enmoku-metadata"
 import {
   SUBTITLE_OFF_VALUE,
   enmokuSourceChoices,
   enmokuSubtitleChoices,
-} from "houkago-kyoushitsu/enmoku-metadata"
+} from "houkago-kyoushitsu-core/enmoku-metadata"
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import type { RoomRuntime } from "../room/room-runtime"
 import { PlayerDriver } from "./player-driver"

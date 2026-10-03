@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Bushitsu, Enmoku, KousokuMessage, Shinkou } from "houkago-kousoku"
-import type { PlayerHandle } from "houkago-kyoushitsu/player"
+import { configureHousouHttpClient } from "houkago-kyoushitsu-core/http"
+import type { PlayerHandle } from "houkago-kyoushitsu-core/player"
 import { RoomRuntime, type RoomServices } from "../src/features/room/room-runtime"
 
 const room: Bushitsu = { id: "room-1", name: "Test room", buchouId: "host", createdAt: 1 }
@@ -26,6 +27,7 @@ function fixture(
   queueRequest = Promise.resolve<Enmoku[]>([]),
   identityId = "host",
   onRevoked = () => {},
+  roomId = "room-1",
 ) {
   let receive!: (message: KousokuMessage) => void
   let status!: (value: "connecting" | "open" | "closed" | "error") => void
@@ -57,11 +59,12 @@ function fixture(
       return queueRequest
     },
   }
-  const runtime = new RoomRuntime("room-1", identityId, onRevoked, services)
+  const runtime = new RoomRuntime(roomId, identityId, onRevoked, services)
   const server = <T extends KousokuMessage["type"]>(
     type: T,
     payload: Extract<KousokuMessage, { type: T }>["payload"],
-  ) => receive({ type, payload, senderId: "server", ts: Date.now() } as KousokuMessage)
+    ts = Date.now(),
+  ) => receive({ type, payload, senderId: "server", ts } as KousokuMessage)
   return {
     runtime,
     server,
@@ -85,6 +88,81 @@ function fixture(
 const entered = { mode: "open" as const, status: "entered" as const, pending: [] }
 
 describe("React room runtime", () => {
+  test("presence follows SHUSSEKI time, retains departed names and resets on session replacement", () => {
+    const f = fixture()
+    f.runtime.start()
+    f.status("open")
+    f.server("NYUUSHITSU", entered)
+    const host = { id: "host", nickname: "Owner", yakuwari: "buchou" as const }
+    const guest = { id: "guest", nickname: "Visitor", yakuwari: "kengaku" as const }
+    f.server("SHUSSEKI", { n: 1, members: [host] }, 1_000)
+    f.server("SHUSSEKI", { n: 2, members: [host, guest] }, 5_000)
+    expect(f.runtime.getSnapshot().presenceById.host?.joinedAt).toBe(1_000)
+    expect(f.runtime.getSnapshot().presenceById.guest?.joinedAt).toBe(5_000)
+    f.server("SHUSSEKI", { n: 1, members: [host] }, 10_000)
+    expect(f.runtime.getSnapshot().presenceById.guest).toMatchObject({
+      online: false,
+      lastSeenAt: 10_000,
+    })
+    expect(f.runtime.getSnapshot().names.guest).toBe("Visitor")
+    f.server("SHUSSEKI", { n: 2, members: [host, guest] }, 20_000)
+    expect(f.runtime.getSnapshot().presenceById.guest).toMatchObject({
+      joinedAt: 20_000,
+      online: true,
+    })
+    f.runtime.reconnect()
+    expect(f.runtime.getSnapshot().presenceById.guest?.joinedAt).toBe(20_000)
+    f.runtime.dispose()
+    const replacement = fixture(
+      Promise.resolve({ ...room, id: "room-2" }),
+      Promise.resolve([]),
+      "host",
+      () => {},
+      "room-2",
+    )
+    replacement.runtime.start()
+    expect(replacement.runtime.getSnapshot().presenceById).toEqual({})
+    expect(replacement.runtime.getSnapshot().names).toEqual({})
+    replacement.runtime.dispose()
+  })
+  test("playlist permission does not grant deletion; an admitted host can delete", async () => {
+    const requests: Request[] = []
+    configureHousouHttpClient({
+      baseUrl: "https://housou.test",
+      fetch: Object.assign(
+        async (input: RequestInfo | URL, init?: RequestInit) => {
+          requests.push(new Request(input, init))
+          return Response.json({ ok: true })
+        },
+        { preconnect: fetch.preconnect },
+      ),
+    })
+    const guest = fixture(Promise.resolve(room), Promise.resolve([item]), "guest")
+    const host = fixture(Promise.resolve(room), Promise.resolve([item]))
+    try {
+      for (const f of [guest, host]) {
+        f.runtime.start()
+        f.status("open")
+        f.server("NYUUSHITSU", entered)
+        f.server("KENGEN", { chat: true, playlist: true, playback: false })
+      }
+      await Bun.sleep(0)
+      expect(guest.runtime.can("playlist")).toBe(true)
+      expect(await guest.runtime.delete(item.id)).toBeUndefined()
+      expect(guest.runtime.getSnapshot().error).toBe("Action unavailable")
+      expect(requests).toHaveLength(0)
+      await host.runtime.delete(item.id)
+      expect(requests).toHaveLength(1)
+      expect(requests[0]?.method).toBe("DELETE")
+      expect(requests[0]?.url).toBe("https://housou.test/bushitsu/room-1/enmoku/item-1")
+      expect(host.runtime.getSnapshot().error).toBeNull()
+    } finally {
+      guest.runtime.dispose()
+      host.runtime.dispose()
+      configureHousouHttpClient()
+    }
+  })
+
   test("starts once and gates protected reads and commands on server admission", async () => {
     const f = fixture()
     expect(f.runtime.start()).toBe(true)

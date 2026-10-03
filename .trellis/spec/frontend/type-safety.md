@@ -8,11 +8,10 @@
 
 - TypeScript **strict** everywhere. The whole stack shares one type source:
   `houkago-kousoku`（校則）defines WS protocol envelopes, the `Enmoku` model, and
-  domain entities; both housou and kyoushitsu import from it (design §6, §13).
-- The REST surface is typed **end-to-end at compile time** via Eden Treaty:
-  the frontend's `treaty<App>()` consumes housou's exported `App` type, so a
-  backend contract change becomes a frontend compile error (Elysia spike P6 —
-  compile-time only, no runtime cost).
+  domain entities; Housou, React and core import from it (design §6, §13).
+- The browser REST surface uses generated DTOs/resources from the core OpenAPI
+  subset, with separate compile-time fidelity checks. Never import Housou's
+  application type into the client or use casts to hide drift.
 
 ---
 
@@ -64,7 +63,7 @@
 ## Forbidden Patterns
 
 - **`any`** — use `unknown` + narrowing, or fix the contract type in kousoku.
-- **Type assertions (`as`) to silence the Eden/TypeBox contract.** If the client
+- **Type assertions (`as`) to silence the generated DTO/TypeBox contract.** If the client
   call does not type-check, the contract changed; update kousoku, do not cast.
 - **Redefining shared types locally** instead of importing from `kousoku`.
 - **`@ts-ignore` / `@ts-expect-error`** to ship — fix the type. (A documented,

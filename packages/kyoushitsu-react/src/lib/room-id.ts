@@ -1,4 +1,4 @@
-import { normalizeRoomId } from "houkago-kyoushitsu/room-id"
+import { normalizeRoomId } from "houkago-kyoushitsu-core/room-id"
 export function roomIdFromInput(raw: string): string {
   if (hasControls(raw)) throw new Error("Invalid room ID")
   return safeRoomId(normalizeRoomId(raw))

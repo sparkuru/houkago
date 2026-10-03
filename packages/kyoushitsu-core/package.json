@@ -1,0 +1,54 @@
+{
+  "name": "houkago-kyoushitsu-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.contract.json",
+    "test": "bun test test"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.0",
+    "houkago-kokuban": "workspace:*",
+    "houkago-kousoku": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "typescript": "^5.6.0"
+  },
+  "exports": {
+    "./http": "./src/api/public.ts",
+    "./http/generated": "./src/api/generated/index.ts",
+    "./i18n": "./src/i18n/index.ts",
+    "./room-id": "./src/room/room-id.ts",
+    "./theme": "./src/theme/theme.ts",
+    "./theme.css": "./src/theme/theme.css",
+    "./site-config": "./src/config/site-config-core.ts",
+    "./room-session": "./src/room/room-session.ts",
+    "./ws-client": "./src/ws/client.ts",
+    "./kengen": "./src/room/kengen.ts",
+    "./kengen-policy": "./src/room/kengen-policy.ts",
+    "./member-presence": "./src/room/member-presence.ts",
+    "./bangumi-actions": "./src/room/bangumi-actions.ts",
+    "./player": "./src/playback/player.ts",
+    "./shinkou-controller": "./src/playback/shinkou-controller.ts",
+    "./enmoku-metadata": "./src/media/enmoku-metadata.ts",
+    "./seekable": "./src/media/seekable.ts",
+    "./danmaku-selection": "./src/danmaku/danmaku-selection.ts",
+    "./local-danmaku-candidate": "./src/danmaku/local-danmaku-candidate.ts",
+    "./file-danmaku-pref": "./src/danmaku/file-danmaku-pref.ts",
+    "./file-danmaku": "./src/danmaku/file-danmaku.ts",
+    "./danmaku-track": "./src/danmaku/danmaku-track.ts",
+    "./baidu-provider": "./src/provider/baidu-provider.ts",
+    "./baidu-adapter-detection": "./src/provider/baidu-adapter-detection.ts",
+    "./baidu-oauth-handoff": "./src/provider/baidu-oauth-handoff.ts",
+    "./baidu-oauth-window": "./src/provider/baidu-oauth-window.ts",
+    "./baidu-source-creation": "./src/provider/baidu-source-creation.ts",
+    "./baidu-grant-polling": "./src/provider/baidu-grant-polling.ts",
+    "./houkago-adapter": "./src/provider/houkago-adapter.ts",
+    "./housou-url": "./src/config/housou-url.ts",
+    "./clock-offset": "./src/playback/clock-offset.ts",
+    "./zure": "./src/playback/zure.ts",
+    "./enmoku-resolve": "./src/room/enmoku-resolve.ts"
+  }
+}

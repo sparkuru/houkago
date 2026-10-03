@@ -16,7 +16,7 @@ import {
   loadDanmakuOverride,
   resolveDanmakuSelection,
   saveDanmakuOverride,
-} from "houkago-kyoushitsu/danmaku-selection"
+} from "houkago-kyoushitsu-core/danmaku-selection"
 import {
   clearDanmakuRoomDefault,
   confirmDanmakuPersonalMatch,
@@ -25,9 +25,9 @@ import {
   fetchLegacyDanmakuCues,
   setDanmakuRoomDefault,
   submitDanmakuPublicProposal,
-} from "houkago-kyoushitsu/http"
-import { t } from "houkago-kyoushitsu/i18n"
-import { createLocalDanmakuCandidate } from "houkago-kyoushitsu/local-danmaku-candidate"
+} from "houkago-kyoushitsu-core/http"
+import { t } from "houkago-kyoushitsu-core/i18n"
+import { createLocalDanmakuCandidate } from "houkago-kyoushitsu-core/local-danmaku-candidate"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 const defaultPolicy: DanmakuSourcePolicy = {

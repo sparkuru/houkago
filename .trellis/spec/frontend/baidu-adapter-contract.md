@@ -219,9 +219,9 @@
   returns typed MD5 scope metadata; the server can use it as release evidence
   without ever receiving media bytes.
 - Base: an empty Chromium registry is removed and no rules are installed.
-- Bad: trust a manifest match as an origin check, expose a dlink to Vue state,
+- Bad: trust a manifest match as an origin check, expose a dlink to application state,
   apply UA to every Baidu request, or mount the player before preparation.
-- Bad: make fingerprint capability mandatory, send the raw dlink to Vue, or
+- Bad: make fingerprint capability mandatory, send the raw dlink to the application, or
   treat a fingerprint as proof of canonical episode identity.
 - Bad: rely on an in-memory map/timer after MV3 suspension, delete registry
   state before confirming DNR removal, or use a case-insensitive private-HEAD

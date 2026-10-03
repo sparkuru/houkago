@@ -1,17 +1,17 @@
 import type { DanmakuDefault, Enmoku } from "houkago-kousoku"
-import { danmakuTrackBottom } from "houkago-kyoushitsu/danmaku-track"
+import { danmakuTrackBottom } from "houkago-kyoushitsu-core/danmaku-track"
 import {
   type FileDanmakuViewport,
   type VisibleDanmakuCue,
   fileDanmakuRenderKey,
   fileDanmakuViewport,
   visibleFileDanmakuCues,
-} from "houkago-kyoushitsu/file-danmaku"
+} from "houkago-kyoushitsu-core/file-danmaku"
 import {
   loadFileDanmakuEnabled,
   saveFileDanmakuEnabled,
-} from "houkago-kyoushitsu/file-danmaku-pref"
-import { t } from "houkago-kyoushitsu/i18n"
+} from "houkago-kyoushitsu-core/file-danmaku-pref"
+import { t } from "houkago-kyoushitsu-core/i18n"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { type TimelineDanmakuInput, useTimelineDanmaku } from "./use-timeline-danmaku"

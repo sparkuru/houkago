@@ -50,8 +50,8 @@ If the OAuth variables are incomplete, Baidu integration is disabled without
 affecting ordinary Houkago sources. If only the credential key is absent,
 user-held mode remains available while server-saved mode is disabled.
 
-Start Houkago from the repository root with `./dev.sh` or the equivalent
-`./dx sh -c 'bun run dev:housou & bun run dev:kyoushitsu & wait'`. The Housou
+Start Houkago from the repository root with `./preview.sh` or `./dx preview`.
+The preview runs Housou and the React frontend with the configured ports. The Housou
 development and `bun run start:housou` scripts explicitly load the ignored
 repository-root `.env`; the frontend workspace does not receive the deployment
 credentials.
@@ -97,7 +97,7 @@ without real credentials:
 ```sh
 ./dx sh -c 'cd packages/houkago-adapter && bun run build:chromium'
 node_modules/.bin/playwright test \
-  --config packages/kyoushitsu/playwright.chromium-adapter.config.ts \
+  --config packages/houkago-adapter/playwright.chromium-adapter.config.ts \
   --project chromium-adapter-installed
 ```
 

@@ -22,7 +22,7 @@ useBaiduPlayback(roomId, enmoku): { state, grantUrl, fingerprint, retry }
 `PlayerStage` keys the driver by item ID and passes current media time to
 `DanmakuFeature`. Only the active `PlayerDriver` creates ArtPlayer and its
 HLS/DASH engine. Portable helpers are exported through explicit
-`houkago-kyoushitsu/*` subpaths; React never imports the Vue package root.
+`houkago-kyoushitsu-core/*` subpaths; React never imports the Vue package.
 
 ## 3. Contracts
 

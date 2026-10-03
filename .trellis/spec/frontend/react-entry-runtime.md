@@ -75,7 +75,7 @@ Run development and checks through the existing wrapper:
   synchronous completion subscribers cannot dispose/switch identity and still
   return a usable target. The consuming entry feature also verifies mounted,
   epoch, ready phase, no pending command and current identity before navigation.
-- Reuse exact `houkago-kyoushitsu` subpaths (`http`, `http/generated`, `i18n`,
+- Reuse exact `houkago-kyoushitsu-core` subpaths (`http`, `http/generated`, `i18n`,
   `room-id`, `theme`, `theme.css`, `site-config`). No root import or wildcard alias.
   React's `@` alias resolves only its own source. Generated files remain owned by
   the existing contract pipeline. Verify the actual build graph excludes Vue,
@@ -86,8 +86,9 @@ Run development and checks through the existing wrapper:
   `/bushitsu/:id` navigation render the React route. Route-code preload must
   never open a socket or start protected room reads.
 - React imports the existing Warm Club CSS and typed copy. Tailwind aliases map
-  shared semantic tokens without copying palettes or modifying Vue styles.
-  Controls retain visible labels/focus, pending status, 44px targets and reduced
+  shared semantic tokens without copying palettes or adding another theme source.
+  Shared copy/tokens are owned by core; React imports neither the legacy app nor
+  its framework bindings. Controls retain visible labels/focus, pending status, 44px targets and reduced
   motion; there is no new theme/storage preference.
   Use `--color-outline: var(--color-border)` with `border-outline` for cards;
   the shared `--color-border` declaration alone does not generate Tailwind's

@@ -1,6 +1,6 @@
 const fullDocumentPath = process.env.HOUKAGO_OPENAPI_INPUT ?? "packages/housou/openapi.json"
 const pageDocumentPath =
-  process.env.HOUKAGO_PAGE_OPENAPI_OUTPUT ?? "packages/kyoushitsu/openapi.json"
+  process.env.HOUKAGO_PAGE_OPENAPI_OUTPUT ?? "packages/kyoushitsu-core/openapi.json"
 
 const operationMethods = new Set([
   "get",
