@@ -308,3 +308,26 @@ Implemented and validated M5 React room playback, Baidu provider, and danmaku fl
 ### Next Steps
 
 - Continue with the next planned mainline milestone.
+
+
+## Session 76: Room layout visual acceptance and completion
+
+**Date**: 2026-10-03
+**Task**: Room layout visual acceptance and completion
+**Package**: houkago-eisha
+**Branch**: `k-on`
+
+### Summary
+
+Completed owner-approved room layout: full-height dock chat and bottom composer, return navigation in draggable fullscreen-aware + menu, separate chat/danmaku actions and unified queue sources. Root 485 tests; desktop/phone room-controls 6 and media 6 browser tests; lint, React typecheck/build and independent review passed. Corrected stale media automation paths without application changes. Archived only 10-01-room-layout-refinement (bd0a642) and recorded mainline completion (00fb248); unrelated M6, policy and preview work preserved.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3b0e7ed` | (see git log) |
+| `4db7e82` | (see git log) |
+
+### Status
+
+[OK] **Completed**
