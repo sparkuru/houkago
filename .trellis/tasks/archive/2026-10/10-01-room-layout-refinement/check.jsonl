@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Verify no room authority, permission, queue, dock-order, or responsive contract regressed."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md", "reason": "Verify fullscreen, player overlay, danmaku, and media lifecycle boundaries remain intact."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Review draggable overlay accessibility, focus behavior, stacking, fullscreen boundaries, and responsive constraints."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Apply frontend quality and test expectations during final verification."}
+{"file": ".trellis/tasks/10-01-room-layout-refinement/prd.md", "reason": "Check every screenshot-marked acceptance criterion and the resolved persistence decision."}
+{"file": ".trellis/tasks/10-01-room-layout-refinement/design.md", "reason": "Review portal, coordinate persistence, fullscreen hiding, and rollback boundaries against the implementation."}
+{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Check the revised floating control against the existing accessibility and interaction reference."}

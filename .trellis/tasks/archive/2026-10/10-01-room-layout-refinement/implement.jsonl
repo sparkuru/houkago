@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "Confirm React package ownership and frontend layer boundaries for the room layout change."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Preserve room authority, permission gates, dock order, responsive layout, and existing RoomControls contracts."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md", "reason": "Preserve player overlay portals and web/native fullscreen lifecycle while hiding the external floating control."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Apply accessibility, fullscreen boundary, responsive layout, and player integration rules."}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Avoid duplicating coordinate persistence, clamping, and existing room action logic."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Confirm the change remains presentation-only and does not cross room protocol authority boundaries."}
+{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Retain the existing accessible speed-dial, safe-area, touch-target, focus, and reduced-motion reference while changing placement."}
