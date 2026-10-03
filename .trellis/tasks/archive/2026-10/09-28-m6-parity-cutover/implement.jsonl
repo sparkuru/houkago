@@ -7,7 +7,7 @@
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Maintain boundaries among Housou contracts, shared client core, and React UI."}
 {"file": ".trellis/tasks/09-28-m6-parity-cutover/research/legacy-workspace-inventory.md", "reason": "Verified source, package, test, generator, and documentation migration inventory."}
 {"file": ".trellis/tasks/archive/2026-10/10-01-room-layout-refinement/validation.md", "reason": "Accepted room layout and newer browser evidence to map against the independently open speed-dial child before M6 parity sign-off."}
-{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Implement the absorbed React speed-dial child against its visual, interaction, accessibility, safe-area, and reduced-motion reference."}
+{"file": ".trellis/tasks/archive/2026-10/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Implement the absorbed React speed-dial child against its visual, interaction, accessibility, safe-area, and reduced-motion reference."}
 {"file": ".trellis/spec/trellis-plus/index.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/development.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}

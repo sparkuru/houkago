@@ -44,3 +44,15 @@ Use this actual baseline for the final commit-based restoration rehearsal,
 which supersedes the earlier fixture-only tree coverage. Reverting only the
 subsequent M6 cutover commit retains the original preview/policy work and skill
 records together. Keep both baseline commits when rolling back M6.
+
+## Actual cutover commit rehearsal — passed
+
+Fetched `44edc02218dc25710c53696ac61a386eb2261015` into the owned temporary
+repository, checked out that commit there, and ran `git revert --no-edit` with
+fixture-local identity/hooks settings. Baseline commit `e87044a` and the restored
+commit both have tree `f2f65aa51be8cf63af7a35cce5d860d52c0282c4`.
+This verifies the actual committed M6 deletion/import/lock/script reversal and
+preservation of all tracked baseline content, including local design-skill
+records. The real checkout was neither reverted nor reset.
+[Machine-readable result](rollback-result.json). Runtime boot after revert was
+not rerun; original app runtime evidence remains in the baseline record.

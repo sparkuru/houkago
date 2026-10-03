@@ -7,7 +7,7 @@
 {"file": ".trellis/spec/trellis-plus/index.md", "reason": "Follow project-wide mainline, validation, and cutover boundaries."}
 {"file": ".trellis/tasks/09-28-m6-parity-cutover/research/legacy-workspace-inventory.md", "reason": "Confirm every old package consumer, test surface, generator, and active doc reference was handled."}
 {"file": ".trellis/tasks/archive/2026-10/10-01-room-layout-refinement/validation.md", "reason": "Review parity against the accepted room-layout baseline without assuming acceptance of the separate speed-dial child."}
-{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Review the absorbed child acceptance against the supplied speed-dial reference and preserve the parent-child cutover gate."}
+{"file": ".trellis/tasks/archive/2026-10/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Review the absorbed child acceptance against the supplied speed-dial reference and preserve the parent-child cutover gate."}
 {"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/development.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
 {"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}

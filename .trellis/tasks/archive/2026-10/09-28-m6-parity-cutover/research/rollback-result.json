@@ -1,0 +1,8 @@
+{
+  "actual_cutover_commit": "44edc02218dc25710c53696ac61a386eb2261015",
+  "preserved_baseline_commit": "e87044a97a3bc84ceb06ca83c3834576342eee21",
+  "baseline_tree": "f2f65aa51be8cf63af7a35cce5d860d52c0282c4",
+  "restored_tree": "f2f65aa51be8cf63af7a35cce5d860d52c0282c4",
+  "fixture": "/tmp/houkago-m6-rollback-h6m213e_",
+  "scope": "actual cutover git revert; whole tracked tree equality; no restored runtime boot or live-project revert"
+}

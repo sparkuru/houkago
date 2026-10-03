@@ -228,3 +228,12 @@ Original dirty work is now preserved in baseline commits `09b47f3` and
 local skill files; their net Git diff from the original HEAD is empty, and local
 files were not changed. Final restoration uses this actual combined baseline,
 including tracked-but-locally-ignored records, rather than a fresh Git add.
+
+## Closure evidence
+
+Implementation commit: `44edc02218dc25710c53696ac61a386eb2261015`.
+The actual cutover commit was reverted only in the owned temporary repository;
+its restored Git tree equals the preserved `e87044a` baseline exactly. See
+[the final restoration result](research/rollback-result.json). All owner and
+executable criteria passed; M6 and its accepted speed-dial child are completed
+for normal archival. No production deployment/push occurred.
