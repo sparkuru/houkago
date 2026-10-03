@@ -135,3 +135,124 @@ Wrong: mount a room socket while identity restoration is pending and fetch
 
 Correct: restore identity, start one controller/socket, wait for server
 `NYUUSHITSU entered`, then let the controller start guarded HTTP bootstrap.
+
+## Room Controls Presentation
+
+- `RoomControls` and `RoomSpeedDial` own presentation state only. Build the
+  speed-dial actions from `{ id, label, icon, onActivate, selected?,
+  opensDialog? }`; callbacks continue to call the existing room/runtime
+  actions. Do not add a second socket, command owner, or optimistic room state
+  in the dial.
+- Keep room identity, connection/admission status, presence, and the read-only
+  permission summary available to every admitted viewer. Render governance
+  forms only for `room.isHost`; existing room command and `room.can(...)`
+  permission checks remain authoritative.
+- Admitted viewers access `返回楼层` from the `+` menu. Navigate with the
+  existing TanStack route to `/` and clear the `revoked` search field. Keep the
+  topbar return link only for gated viewers, whose floating menu is unavailable.
+- A closed dial action list must be both `aria-hidden` and `inert`. Its launcher
+  exposes `aria-expanded` and `aria-controls`, opens focus on the first action,
+  and restores focus to the launcher after Escape, backdrop dismissal, toggle,
+  or action activation. Give every icon-only button an accessible name and at
+  least a 44px target.
+- Use a labelled native `<dialog>` for the room information/governance sheet.
+  Open it with `showModal()`, provide an explicit close button, retain native
+  Escape behavior, dismiss only on a backdrop click, and return focus to the
+  speed-dial launcher when it closes. CSS that displays it must target
+  `dialog[open]`; keep it within safe-area-adjusted viewport bounds and center
+  it horizontally.
+- On desktop, keep `QueuePanel` in the room grid directly below the player in
+  the main column. When the room dock is fixed at the viewport edge, its
+  `.room-side` wrapper must not reserve an in-flow grid column; the main/queue
+  grid reaches the dock boundary with the defined gap, while the fixed dock
+  remains independent of the grid. At the phone breakpoint, restore normal
+  flow and stack main, sidebar, then queue, keeping the queue title above its
+  wrapping action shelf. The floating room launcher must not reserve an in-flow
+  column. Render it through a `document.body` portal so its stacking and
+  viewport position are independent of the room grid.
+- Compose the right room dock in this order: attendance roster,
+  `DanmakuFeature` source/settings, then `ChatPanel`. In normal rooms at 1200px
+  and wider, fix the whole dock to the viewport's right edge and reserve a
+  matching page lane. In cinema mode, fix it at 851px and wider. Keep the
+  attendance and danmaku sections above chat; let expanded danmaku settings
+  scroll within the dock and chat history scroll within its card. ChatPanel
+  fills the remaining vertical space below the roster and settings and its
+  composer sits at the inner bottom. A full-height outer surface with unused
+  space below a capped chat card does not satisfy this layout contract.
+  Below those breakpoints, keep the dock in the room sidebar; the unified
+  video-source controls, including the Baidu provider, belong inside `QueuePanel`'s lower
+  番组表 section rather than as a separate middle-column panel. On phones the
+  sidebar still follows the main content and precedes the queue.
+- Keep one composer in `ChatPanel` with two independent send buttons in the
+  order `弹幕`, `发送`. The first calls `room.danmaku(content)` and the second
+  calls `room.chat(content)`; both use the existing `chat` permission and
+  command gate. Apply the 500-character maximum only to the danmaku action.
+  `DanmakuFeature` continues to receive room chat events for overlays and keeps
+  its overlay portal attached to the player even though its source/settings
+  controls live in the dock.
+- The closed launcher must clear the player, queue controls, and shared composer. In
+  phone cinema, keep the composer compact enough to clear the fixed launcher
+  while retaining its accessible labels and 44px controls. When the action
+  menu is open it is a deliberate overlay: its backdrop blocks pointer access
+  to the page until the menu closes, so open menu actions may cover content.
+- In normal, non-cinema room layouts at 1200px and wider, let the shared header
+  and grid use the full content width left after the fixed dock lane; the
+  grid-to-dock gap is 16px and must not leave the old centered 1320px blank
+  lane. Below that breakpoint, retain the responsive room-grid cap/flow. Give
+  an empty waiting stage a 16:9 ratio and vertically center its content so it
+  matches the active player's screen. Cinema keeps its viewport row; the
+  active player's screen continues to use the player component's 16:9 ratio.
+- The room launcher stores a normalized `{ x, y }` viewport position under
+  `houkago.kyoushitsu.room-floating-position.v1`. Convert it to pixels using
+  the current viewport and launcher size, clamp it inside 16px safe insets and
+  the fixed dock boundary, and re-clamp it on resize. Pointer drag supports
+  mouse and touch; a drag must not accidentally toggle the menu. Arrow keys
+  nudge the focused launcher (Shift doubles the step) and the accessible hint
+  explains the movement. Keep the launcher visible in ordinary and cinema
+  modes; remove it from the visual/accessibility tree only while the player
+  reports web or native fullscreen.
+- On desktop/cinema, keep the fixed room dock 16px from the right safe-area
+  edge, size it with `clamp(280px, 24vw, 400px)`, and reserve enough room to
+  clear the player/queue and speed dial. The dock's outer surface fills the
+  viewport-height span between its top and bottom insets. Use a flex-column
+  dock with chat `flex: 1 0 240px`, feed `flex: 1 1 0; min-height: 0` and
+  internal `overflow-y: auto`; do not apply the old 60vh/560px chat cap.
+  Attendance/settings may shrink and scroll independently; the outer dock
+  can scroll at very short heights to keep the minimum chat/composer reachable.
+  At intermediate fixed-dock widths, if the
+  launcher remains in the dock lane, open menu actions must be offset to the
+  dock's left edge so they do not cover the chat composer. At the phone cinema
+  breakpoint, the dock returns to flow and its chat feed may shrink while
+  scrolling internally so the composer stays clear of the fixed launcher.
+- Reserve a clear placement for the closed launcher in normal desktop and
+  cinema layouts, and add `env(safe-area-inset-*)` to viewport-edge spacing.
+  Honor `prefers-reduced-motion` for the dial and action transitions. Do not
+  hide the launcher for cinema mode; only the actual fullscreen state may hide
+  it.
+
+### Room Control Browser Assertions
+
+- Cover host and guest information views, host-only governance, hidden-action
+  inertness, launcher labels/state, keyboard and touch opening, Escape,
+  backdrop/outside dismissal, and focus entry/return.
+- Measure closed-launcher overlap against the player, queue buttons/inputs/links,
+  and shared chat
+  composer; drag it and verify normalized localStorage persistence, keyboard
+  nudges, resize clamping, and open actions against the viewport. Verify
+  backdrop pointer blocking, queue alignment below the main column/title
+  wrapping, the 16px dock gap without a blank workspace lane, horizontal
+  overflow, dock order/pinning/flow, composer routing and length mode, phone
+  cinema clearance, actual-fullscreen hiding, and reduced motion. Open menu
+  actions may overlap content because the active backdrop prevents interaction
+  underneath. Wait for dial transitions to settle before recording screenshots.
+- Assert ChatPanel's bottom equals the fixed rail's inner bottom, and the
+  composer's bottom equals ChatPanel's inner bottom, within 1px after padding
+  and border adjustment. Cover ordinary/cinema tall and normal desktop sizes;
+  outer-rail height alone cannot detect unused space beneath chat. Test the
+  menu return action and gated return link through actual home navigation.
+- Exercise playback permission through `+` → room-control dialog. Click the
+  server-controlled checkbox and wait for its echoed checked state before
+  testing guest authority; an immediate `check()` postcondition can precede
+  the WebSocket update. Exit native fullscreen through the player toggle and
+  assert `document.fullscreenElement === null` before checking launcher
+  restoration; synthetic Escape alone is not proof of browser fullscreen exit.

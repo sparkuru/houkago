@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { BaiduPanel } from "@/features/baidu/baidu-panel"
 import { t } from "houkago-kyoushitsu/i18n"
 import { useState } from "react"
 import type { RoomRuntime, RoomState } from "./room-runtime"
@@ -19,64 +20,68 @@ export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomStat
       <h2>
         {t("bangumiHeading")} · {state.queue.length}
       </h2>
-      {canQueue && (
-        <form
-          className="room-form"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void room
-              .preview(url.trim(), title.trim() || undefined)
-              .then((result) => setPreview(result?.title ?? null))
-          }}
-        >
-          <Label htmlFor="source-url">{t("sourceUrlLabel")}</Label>
-          <Input
-            id="source-url"
-            type="url"
-            required
-            disabled={busy}
-            value={url}
-            onChange={(event) => {
-              setUrl(event.target.value)
-              setPreview(null)
+      <section className="room-source-section" aria-labelledby="room-source-heading">
+        <h3 id="room-source-heading">视频来源</h3>
+        {canQueue && (
+          <form
+            className="room-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void room
+                .preview(url.trim(), title.trim() || undefined)
+                .then((result) => setPreview(result?.title ?? null))
             }}
-            placeholder={t("sourceUrlPlaceholder")}
-          />
-          <Label htmlFor="source-title">{t("sourceTitleLabel")}</Label>
-          <Input
-            id="source-title"
-            disabled={busy}
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value)
-              setPreview(null)
-            }}
-          />
-          <Button type="submit" disabled={busy || !url.trim()}>
-            {t("sourceResolve")}
-          </Button>
-          {preview && (
-            <output className="room-preview">
-              <strong>{preview}</strong>
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  void room.add(url.trim(), title.trim() || undefined).then((result) => {
-                    if (result) {
-                      setUrl("")
-                      setTitle("")
-                      setPreview(null)
-                    }
-                  })
-                }
-              >
-                {t("sourceAddQueue")}
-              </Button>
-            </output>
-          )}
-        </form>
-      )}
+          >
+            <Label htmlFor="source-url">{t("sourceUrlLabel")}</Label>
+            <Input
+              id="source-url"
+              type="url"
+              required
+              disabled={busy}
+              value={url}
+              onChange={(event) => {
+                setUrl(event.target.value)
+                setPreview(null)
+              }}
+              placeholder={t("sourceUrlPlaceholder")}
+            />
+            <Label htmlFor="source-title">{t("sourceTitleLabel")}</Label>
+            <Input
+              id="source-title"
+              disabled={busy}
+              value={title}
+              onChange={(event) => {
+                setTitle(event.target.value)
+                setPreview(null)
+              }}
+            />
+            <Button type="submit" disabled={busy || !url.trim()}>
+              {t("sourceResolve")}
+            </Button>
+            {preview && (
+              <output className="room-preview">
+                <strong>{preview}</strong>
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void room.add(url.trim(), title.trim() || undefined).then((result) => {
+                      if (result) {
+                        setUrl("")
+                        setTitle("")
+                        setPreview(null)
+                      }
+                    })
+                  }
+                >
+                  {t("sourceAddQueue")}
+                </Button>
+              </output>
+            )}
+          </form>
+        )}
+        <BaiduPanel roomId={room.roomId} canPlaylist={canQueue} />
+      </section>
       <ul className="room-list">
         {state.queue.map((item, index) => (
           <li key={item.id} className="room-row">

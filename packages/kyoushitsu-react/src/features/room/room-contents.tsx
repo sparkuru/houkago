@@ -1,14 +1,13 @@
 import { Alert, Status } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { BaiduPanel } from "@/features/baidu/baidu-panel"
 import { useBaiduPlayback } from "@/features/baidu/use-baidu-playback"
 import { DanmakuFeature } from "@/features/danmaku/danmaku-feature"
 import { PlayerStage } from "@/features/player/player-stage"
+import { RoomControls } from "@/features/room/room-controls"
 import { t } from "houkago-kyoushitsu/i18n"
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { ChatPanel } from "./chat-panel"
-import { GovernancePanel } from "./governance-panel"
 import { QueuePanel } from "./queue-panel"
 import type { RoomRuntime } from "./room-runtime"
 
@@ -16,6 +15,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
   const state = useSyncExternalStore(room.subscribe, room.getSnapshot)
   const [copied, setCopied] = useState(false)
   const [cinemaMode, setCinemaMode] = useState(false)
+  const [playerFullscreen, setPlayerFullscreen] = useState(false)
   const [mediaTime, setMediaTime] = useState(0)
   const [overlayContainer, setOverlayContainer] = useState<HTMLElement | null>(null)
   const entered = state.admission === "entered"
@@ -60,25 +60,30 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
     <main className={`room-page${cinemaMode ? " room-cinema" : ""}`}>
       <header className="room-topbar">
         <div>
-          <span className="card-kicker">放課後 · 部室</span>
           <h1>{state.room?.name ?? t("enteringBushitsu")}</h1>
           <p>
             {t("roomInfoStatus")}:{" "}
             {state.connection === "open" ? t("roomStatusNormal") : t("roomStatusConnecting")}
           </p>
         </div>
-        <div className="room-actions">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              void navigator.clipboard.writeText(location.href).then(() => setCopied(true))
-            }
-          >
-            {copied ? "已复制" : t("copyRoomLinkAria")}
-          </Button>
-          <a href="/">{t("backHome")}</a>
-        </div>
+        {!entered && (
+          <div className="room-actions">
+            <a href="/">{t("backHome")}</a>
+          </div>
+        )}
       </header>
+      {entered && (
+        <RoomControls
+          room={room}
+          state={state}
+          copied={copied}
+          cinemaMode={cinemaMode}
+          hidden={playerFullscreen}
+          onCopyRoomLink={() =>
+            void navigator.clipboard.writeText(location.href).then(() => setCopied(true))
+          }
+        />
+      )}
       {state.error && <Alert>{state.error}</Alert>}
       {state.notice && <Alert>{state.notice}</Alert>}
       {!entered ? (
@@ -102,7 +107,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
       ) : (
         <div className="room-grid">
           <div className="room-main">
-            <Card className="room-current">
+            <Card className={current ? "room-current" : "room-current room-current-empty"}>
               <span className="card-kicker">{t("current")}</span>
               <h2>{current?.title ?? t("waitingBuchouJouei")}</h2>
               {current && (!isBaidu || baidu.state === "ready") && (
@@ -115,6 +120,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                   onOverlayContainerChange={setOverlayContainer}
                   cinemaMode={cinemaMode}
                   onCinemaChange={setCinemaMode}
+                  onFullscreenChange={setPlayerFullscreen}
                 />
               )}
               {current && isBaidu && baidu.state !== "ready" && (
@@ -140,43 +146,41 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                 </Button>
               )}
             </Card>
-            <DanmakuFeature
-              roomId={room.roomId}
-              identityId={room.identityId}
-              current={current}
-              roomDefaults={state.danmakuDefaults}
-              defaultsAuthoritative={state.danmakuDefaultsAuthoritative}
-              isHost={room.isHost}
-              canManageRoomDefault={room.isHost && room.can("playlist")}
-              canChat={room.can("chat")}
-              chat={state.chat}
-              names={state.names}
-              sendLive={(content) => room.danmaku(content)}
-              mediaTime={mediaTime}
-              overlayContainer={overlayContainer}
-              fingerprint={fingerprint}
-            />
-            <QueuePanel room={room} state={state} />
           </div>
           <div className="room-side">
-            <BaiduPanel roomId={room.roomId} canPlaylist={canQueue} />
-            <Card>
-              <h2>
-                {t("shusseki")} · {state.members.length}
-              </h2>
-              <ul className="room-list">
-                {state.members.map((member) => (
-                  <li key={member.id}>
-                    {member.nickname} ·{" "}
-                    {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-            <div className="room-chat-rail">
+            <div className="room-chat-rail room-dock">
+              <Card className="room-dock-attendance">
+                <h2>
+                  {t("shusseki")} · {state.members.length}
+                </h2>
+                <ul className="room-list">
+                  {state.members.map((member) => (
+                    <li key={member.id}>
+                      {member.nickname} ·{" "}
+                      {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+              <DanmakuFeature
+                roomId={room.roomId}
+                identityId={room.identityId}
+                current={current}
+                roomDefaults={state.danmakuDefaults}
+                defaultsAuthoritative={state.danmakuDefaultsAuthoritative}
+                isHost={room.isHost}
+                canManageRoomDefault={room.isHost && room.can("playlist")}
+                chat={state.chat}
+                names={state.names}
+                mediaTime={mediaTime}
+                overlayContainer={overlayContainer}
+                fingerprint={fingerprint}
+              />
               <ChatPanel room={room} state={state} />
             </div>
-            <GovernancePanel room={room} state={state} />
+          </div>
+          <div className="room-queue">
+            <QueuePanel room={room} state={state} />
           </div>
         </div>
       )}

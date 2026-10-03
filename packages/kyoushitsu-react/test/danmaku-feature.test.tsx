@@ -32,10 +32,8 @@ test("danmaku controls expose source and display settings without starting room 
         defaultsAuthoritative={false}
         isHost={false}
         canManageRoomDefault={false}
-        canChat={false}
         chat={[]}
         names={{}}
-        sendLive={() => false}
         mediaTime={0}
         overlayContainer={null}
       />,
@@ -43,8 +41,7 @@ test("danmaku controls expose source and display settings without starting room 
     expect(reads).toBe(0)
     expect(html).toContain("时间轴弹幕来源")
     expect(html).toContain("弹幕设置")
-    expect(html).toContain('id="room-live-danmaku"')
-    expect(html).toContain('disabled=""')
+    expect(html).not.toContain('id="room-live-danmaku"')
     expect(html).not.toContain("手动搜索与修正")
   } finally {
     globalThis.fetch = originalFetch

@@ -18,7 +18,8 @@ import { type TimelineDanmakuInput, useTimelineDanmaku } from "./use-timeline-da
 import "./danmaku-feature.css"
 
 type ChatLine = { senderId: string; content: string; ts: number; kind: "chat" | "danmaku" }
-type Bubble = { id: number; senderId: string; content: string }
+type Bubble = { id: number; senderId: string; content: string; lane: number }
+type ChatNotification = { id: number; senderId: string; content: string }
 
 export type DanmakuFeatureProps = {
   roomId: string
@@ -28,10 +29,8 @@ export type DanmakuFeatureProps = {
   defaultsAuthoritative: boolean
   isHost: boolean
   canManageRoomDefault: boolean
-  canChat: boolean
   chat: readonly ChatLine[]
   names: Readonly<Record<string, string>>
-  sendLive: (content: string) => boolean
   mediaTime: number
   overlayContainer: HTMLElement | null
   controlsShown?: boolean
@@ -145,18 +144,20 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
     }
   })
   const [liveEnabled, setLiveEnabled] = useState(true)
-  const [liveText, setLiveText] = useState("")
-  const [liveError, setLiveError] = useState("")
   const [size, setSize] = useState(1)
   const [opacity, setOpacity] = useState(1)
   const [speed, setSpeed] = useState(1)
   const [timeOffset, setTimeOffset] = useState(0)
   const [bubbles, setBubbles] = useState<Bubble[]>([])
+  const [chatNotifications, setChatNotifications] = useState<ChatNotification[]>([])
   const lastLine = useRef<ChatLine | null>(null)
+  const lastChatLine = useRef<ChatLine | null>(null)
   const seenInitialLines = useRef(false)
+  const seenInitialChatLines = useRef(false)
   const liveScope = `${props.roomId}\0${props.identityId}`
   const previousLiveScope = useRef<string | null>(null)
   const bubbleId = useRef(0)
+  const notificationId = useRef(0)
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
   const viewport = useViewport(props.overlayContainer)
   const visible = useMemo(
@@ -171,8 +172,11 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
     for (const timer of timers.current) clearTimeout(timer)
     timers.current.clear()
     setBubbles([])
+    setChatNotifications([])
     lastLine.current = null
+    lastChatLine.current = null
     seenInitialLines.current = false
+    seenInitialChatLines.current = false
   }, [liveScope])
 
   useEffect(() => {
@@ -189,7 +193,7 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
     for (const line of additions) {
       const id = ++bubbleId.current
       setBubbles((items) =>
-        [...items, { id, senderId: line.senderId, content: line.content }].slice(-5),
+        [...items, { id, senderId: line.senderId, content: line.content, lane: id % 4 }].slice(-5),
       )
       const timer = setTimeout(() => {
         setBubbles((items) => items.filter((item) => item.id !== id))
@@ -198,6 +202,29 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
       timers.current.add(timer)
     }
   }, [props.chat, liveEnabled])
+
+  useEffect(() => {
+    const lines = props.chat.filter((line) => line.kind === "chat")
+    if (!seenInitialChatLines.current) {
+      seenInitialChatLines.current = true
+      lastChatLine.current = lines.at(-1) ?? null
+      return
+    }
+    const previous = lastChatLine.current ? lines.indexOf(lastChatLine.current) : -1
+    const additions = previous < 0 ? lines.slice(-1) : lines.slice(previous + 1)
+    lastChatLine.current = lines.at(-1) ?? null
+    for (const line of additions) {
+      const id = ++notificationId.current
+      setChatNotifications((items) =>
+        [...items, { id, senderId: line.senderId, content: line.content }].slice(-3),
+      )
+      const timer = setTimeout(() => {
+        setChatNotifications((items) => items.filter((item) => item.id !== id))
+        timers.current.delete(timer)
+      }, 5600)
+      timers.current.add(timer)
+    }
+  }, [props.chat])
 
   useEffect(
     () => () => {
@@ -217,18 +244,6 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
       }
       return next
     })
-  }
-
-  function sendLive(event: React.FormEvent) {
-    event.preventDefault()
-    const text = liveText.trim()
-    if (!text || !props.canChat) return
-    if (!props.sendLive(text)) {
-      setLiveError("房间连接不可用，请重试。")
-      return
-    }
-    setLiveText("")
-    setLiveError("")
   }
 
   const overlays =
@@ -279,17 +294,31 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
             {t(liveEnabled ? "danmakuOn" : "danmakuOff")}
           </button>
           {liveEnabled && (
-            <ul
-              className="danmaku-live-track"
-              style={{ bottom: danmakuTrackBottom(props.controlsShown ?? true) }}
-            >
+            <ul className="danmaku-live-track" aria-label="实时弹幕">
               {bubbles.map((bubble) => (
-                <li key={bubble.id} className="danmaku-live-bubble">
+                <li
+                  key={bubble.id}
+                  className="danmaku-live-bubble"
+                  style={{ top: `${8 + bubble.lane * 18}%` }}
+                >
                   <span>{props.names[bubble.senderId] ?? bubble.senderId}</span> · {bubble.content}
                 </li>
               ))}
             </ul>
           )}
+          <ul
+            className="danmaku-chat-live-track"
+            aria-label="聊天室通知"
+            aria-live="polite"
+            style={{ bottom: danmakuTrackBottom(props.controlsShown ?? true) }}
+          >
+            {chatNotifications.map((notification) => (
+              <li key={notification.id} className="danmaku-chat-live-notification">
+                {props.names[notification.senderId] ?? notification.senderId}：
+                {notification.content}
+              </li>
+            ))}
+          </ul>
         </div>
       </>,
       props.overlayContainer,
@@ -298,23 +327,6 @@ export function DanmakuFeature(props: DanmakuFeatureProps) {
   return (
     <section className="danmaku-feature" aria-label={t("danmakuSettings")}>
       {overlays}
-      <form className="danmaku-live-form" onSubmit={sendLive}>
-        <label htmlFor="room-live-danmaku">实时弹幕</label>
-        <div className="danmaku-live-form-row">
-          <input
-            id="room-live-danmaku"
-            value={liveText}
-            maxLength={500}
-            onChange={(event) => setLiveText(event.target.value)}
-            disabled={!props.canChat}
-            placeholder={props.canChat ? "发送到房间" : "当前无发送权限"}
-          />
-          <button type="submit" disabled={!props.canChat || !liveText.trim()}>
-            发送
-          </button>
-        </div>
-        {liveError && <p role="alert">{liveError}</p>}
-      </form>
       <details className="danmaku-source-panel">
         <summary>
           {t("danmakuSourcePanel")} · {timeline.selection.candidate?.name ?? t("danmakuNone")}

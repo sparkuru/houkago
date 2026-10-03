@@ -32,7 +32,6 @@
   outline-offset: 2px;
 }
 
-.danmaku-live-form,
 .danmaku-source-body,
 .danmaku-manual-search,
 .danmaku-display-settings {
@@ -40,14 +39,12 @@
   gap: var(--space-2);
 }
 
-.danmaku-live-form-row,
 .danmaku-manual-search > div {
   display: flex;
   gap: var(--space-2);
   min-width: 0;
 }
 
-.danmaku-live-form input,
 .danmaku-manual-search input {
   flex: 1 1 14rem;
   min-width: 0;
@@ -211,17 +208,17 @@
 
 .danmaku-live-track {
   position: absolute;
-  left: 12px;
-  display: grid;
-  gap: 4px;
-  max-width: 60%;
+  inset: 12% 0 28%;
   margin: 0;
   padding: 0;
   list-style: none;
-  transition: bottom 0.2s ease;
+  overflow: hidden;
 }
 
 .danmaku-live-bubble {
+  position: absolute;
+  left: 0;
+  max-width: 80%;
   padding: 2px 8px;
   color: rgb(255 255 255 / 90%);
   background: rgb(0 0 0 / 48%);
@@ -229,10 +226,63 @@
   font-size: 12px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+  white-space: nowrap;
+  animation: danmaku-live-fly 5.6s linear forwards;
+  will-change: transform, opacity;
+}
+
+.danmaku-chat-live-track {
+  position: absolute;
+  right: 12px;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  max-width: min(60%, 28rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.danmaku-chat-live-notification {
+  max-width: 100%;
+  padding: 4px 10px;
+  color: rgb(255 255 255 / 94%);
+  background: rgb(0 0 0 / 62%);
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+  animation: danmaku-chat-notification-in 180ms ease-out;
+}
+
+@keyframes danmaku-live-fly {
+  from {
+    transform: translate3d(100vw, 0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes danmaku-chat-notification-in {
+  from {
+    opacity: 0;
+    transform: translate3d(16px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 @media (max-width: 520px) {
-  .danmaku-live-form-row,
   .danmaku-manual-search > div,
   .danmaku-match-section li,
   .danmaku-manual-search li {
@@ -247,7 +297,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .danmaku-live-track {
-    transition: none;
+  .danmaku-live-bubble,
+  .danmaku-chat-live-notification {
+    animation: none;
   }
 }

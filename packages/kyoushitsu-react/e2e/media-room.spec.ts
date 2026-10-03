@@ -160,13 +160,18 @@ test("source, subtitle, seek, rate, cinema and fullscreen controls stay in the p
   await expect(page.locator(".room-page")).toHaveClass(/room-cinema/)
   await page.getByTestId("player-web-fullscreen").click()
   await expect(page.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
+  await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
   await expect(page.locator(".room-page")).not.toHaveClass(/room-cinema/)
   await page.getByTestId("player-web-fullscreen").click()
+  await expect(page.locator(".room-speed-dial-launcher")).toBeVisible()
   await page.getByTestId("player-native-fullscreen").click()
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.classList.contains("player-stage")))
     .toBe(true)
-  await page.keyboard.press("Escape")
+  await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
+  await page.getByTestId("player-native-fullscreen").click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true)
+  await expect(page.locator(".room-speed-dial-launcher")).toBeVisible()
 
   const alternateRequest = page.waitForRequest((request) => request.url().includes("alt=1"))
   await page.getByTestId("player-source").selectOption({ label: "Alternate" })
@@ -211,7 +216,18 @@ test("two admitted viewers share playback authority according to room permission
         guest.locator(".player-screen video").evaluate((video: HTMLVideoElement) => video.paused),
       )
       .toBe(false)
-    await page.getByLabel("播放控制").check()
+    await page.locator(".room-speed-dial-launcher").click()
+    await page
+      .locator(".room-speed-dial-actions")
+      .getByRole("button", { name: "房间控制", exact: true })
+      .click()
+    const roomControls = page.getByRole("dialog", { name: "房间控制" })
+    const playbackPermission = roomControls.getByLabel("播放控制")
+    await expect(playbackPermission).not.toBeChecked()
+    await playbackPermission.click()
+    await expect(playbackPermission).toBeChecked()
+    await roomControls.locator(".room-controls-dialog-header button").click()
+    await expect(roomControls).toBeHidden()
     await expect(guest.getByTestId("player-play-toggle")).toBeEnabled()
     await guest.getByTestId("player-play-toggle").click()
     await expect
@@ -246,12 +262,28 @@ test("two admitted viewers share playback authority according to room permission
         page.locator(".player-screen video").evaluate((video: HTMLVideoElement) => video.paused),
       )
       .toBe(false)
-    await page.getByLabel("实时弹幕").fill("M5 live cue")
-    await page.getByLabel("弹幕设置").getByRole("button", { name: "发送" }).click()
-    await expect(guest.locator(".player-screen .danmaku-live-overlay")).toContainText("M5 live cue")
+    const chatInput = page.locator("#chat-message")
+    const chatForm = page.locator(".room-chat-form")
+    await chatInput.fill("M5 chat cue")
+    await chatForm.getByRole("button", { name: "发送", exact: true }).click()
+    const echoedChat = page.locator(".room-feed li").filter({ hasText: "M5 chat cue" })
+    await expect(echoedChat).toBeVisible()
+    const sender = await echoedChat.locator("strong").textContent()
+    await expect(guest.locator(".room-feed li").filter({ hasText: "M5 chat cue" })).toContainText(
+      "M5 chat cue",
+    )
+    await expect(guest.locator(".player-screen .danmaku-chat-live-notification")).toContainText(
+      `${sender}：M5 chat cue`,
+    )
+
+    await chatInput.fill("M5 live cue")
+    await chatForm.getByRole("button", { name: "弹幕", exact: true }).click()
+    const echoedDanmaku = page.locator(".room-feed li").filter({ hasText: "M5 live cue" })
+    await expect(echoedDanmaku.locator("small")).toContainText("[弹幕]")
+    await expect(guest.locator(".player-screen .danmaku-live-bubble")).toContainText("M5 live cue")
     await guest.getByTestId("player-web-fullscreen").click()
     await expect(guest.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
-    await expect(guest.locator(".player-stage .danmaku-live-overlay")).toContainText("M5 live cue")
+    await expect(guest.locator(".player-stage .danmaku-live-bubble")).toContainText("M5 live cue")
   } finally {
     await guestContext.close()
   }

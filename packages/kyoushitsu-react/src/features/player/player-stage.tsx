@@ -26,6 +26,7 @@ export type PlayerStageProps = {
   overlay?: ReactNode
   cinemaMode?: boolean
   onCinemaChange?: (enabled: boolean) => void
+  onFullscreenChange?: (enabled: boolean) => void
   controlLocked?: boolean
   showJoinGate?: boolean
 }
@@ -46,6 +47,7 @@ export function PlayerStage({
   overlay,
   cinemaMode,
   onCinemaChange,
+  onFullscreenChange,
   controlLocked,
   showJoinGate,
 }: PlayerStageProps) {
@@ -159,9 +161,14 @@ export function PlayerStage({
   useEffect(() => {
     if (!stageNode) return
     const onFullscreen = () => setNativeFullscreen(document.fullscreenElement === stageNode)
+    onFullscreen()
     document.addEventListener("fullscreenchange", onFullscreen)
     return () => document.removeEventListener("fullscreenchange", onFullscreen)
   }, [stageNode])
+
+  useEffect(() => {
+    onFullscreenChange?.(webFullscreen || nativeFullscreen)
+  }, [nativeFullscreen, onFullscreenChange, webFullscreen])
 
   useEffect(() => {
     if (!webFullscreen) return

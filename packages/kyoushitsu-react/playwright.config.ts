@@ -57,6 +57,21 @@ export default defineConfig({
       },
     },
     {
+      name: "room-controls-desktop",
+      testMatch: /room-controls\.spec\.ts/,
+      use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },
+    },
+    {
+      name: "room-controls-phone",
+      testMatch: /room-controls\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 812 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
       name: "danmaku-desktop",
       testMatch: /danmaku-room\.spec\.ts/,
       use: { browserName: "chromium", viewport: { width: 1280, height: 900 } },

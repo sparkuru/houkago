@@ -102,7 +102,12 @@ describe("React room runtime", () => {
     await Bun.sleep(0)
     expect(f.runtime.getSnapshot().room?.name).toBe("Test room")
     expect(f.runtime.chat("hello")).toBe(true)
-    expect(f.sent.some((message) => message.type === "OSHABERI")).toBe(true)
+    expect(f.sent.at(-1)).toMatchObject({ type: "OSHABERI", payload: { content: "hello" } })
+    f.server("OSHABERI", { content: "hello" })
+    expect(f.runtime.getSnapshot().chat.at(-1)).toMatchObject({
+      content: "hello",
+      kind: "chat",
+    })
     f.runtime.dispose()
     f.runtime.dispose()
     expect(f.closes).toBe(1)
@@ -294,7 +299,12 @@ describe("React room runtime", () => {
       danmakuDefaultsAuthoritative: true,
     })
     expect(f.runtime.danmaku("live line")).toBe(true)
-    expect(f.sent.some((message) => message.type === "DANMAKU")).toBe(true)
+    expect(f.sent.at(-1)).toMatchObject({ type: "DANMAKU", payload: { content: "live line" } })
+    f.server("DANMAKU", { content: "live line" })
+    expect(f.runtime.getSnapshot().chat.at(-1)).toMatchObject({
+      content: "live line",
+      kind: "danmaku",
+    })
     f.server("JOUEI", { enmokuId: "item-2" })
     expect(f.runtime.getSnapshot().playback).toEqual({
       isPlaying: false,
