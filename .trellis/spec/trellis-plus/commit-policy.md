@@ -73,3 +73,15 @@ commit only intended journal/index files. Do not repeat the archive trailer.
 Recent M4/M5 archives and journals have no trailer; older visual-work commits
 carry the old placement. Preserve them. This update applies prospectively and
 does not archive, stage, commit or change task statuses itself.
+
+## Git restoration fixture fidelity
+
+A fresh fixture `git init` followed by `git add -A` can omit files that were
+tracked in the source repository but match local ignore rules. Do not use that
+fixture's file list to stage or remove paths in the real repository. Read tracked
+membership from `git ls-tree -r <base>` and compare the complete intended tree,
+including tracked local platform files, before treating it as a baseline.
+Prefer fetching the actual committed checkpoint into an owned temporary
+repository and reverting it there. Preserve the real checkout, original local
+files/index flags and identity; no reset or history rewrite is implied.
+M6 verified actual cutover `44edc02` against preserved baseline `e87044a`.

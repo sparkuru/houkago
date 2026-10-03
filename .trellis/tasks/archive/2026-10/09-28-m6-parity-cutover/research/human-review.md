@@ -44,15 +44,15 @@ identical focused-run states). No visual clipping or obstructed control was
 found. Diagnostic screenshots are not an approved pixel baseline. Media is a
 local color-bar fixture; these images do not show private upstream accounts.
 
-## Approved next action if accepted
+## Approved continuation — completed
 
-Record the specific acceptance in the parent and child, remove the old Vue
-workspace/configs/tests and obsolete dependencies, update active references,
-then repeat the post-removal static, contract, browser and restoration gates.
+Owner acceptance was recorded in the parent and child. The old Vue workspace,
+configs/tests and obsolete dependencies were removed, active references updated,
+and post-removal static, contract, browser and restoration gates passed.
 Acceptance permits that local cutover work. The same owner reply authorizes all dirty-file commits and normal task closure.
 Production deployment remains outside scope.
 
-The required gate comes from [project validation policy](../../../spec/trellis-plus/validation.md):
+The required gate comes from [project validation policy](../../../../../spec/trellis-plus/validation.md):
 “Complete runnable automation first and ask only about the remaining concern.”
 It classifies migration/deletion and subjective visual/product acceptance as
 human-required. The approved implementation plan additionally requires the
