@@ -133,3 +133,15 @@ separate authorization and checks.
 - Remaining standalone dialog/chat polish remains outside the migration scope.
   Preserve shipped UI behavior during migration. The mobile provider companion
   remains paused; no new mobile-provider work is authorized.
+
+## Room Layout Completion — 2026-10-03
+
+- `10-01-room-layout-refinement` passed owner visual acceptance and is archived
+  at [room-layout-refinement](tasks/archive/2026-10/10-01-room-layout-refinement/validation.md).
+- Work commits: `3b0e7ed` (container browser runtime) and `4db7e82` (room UI and
+  regression contracts); archive commit: `bd0a642`.
+- Evidence: 485 root tests, 6 room-control and 6 media desktop/phone browser
+  tests, lint, React typecheck/build and independent review passed. The dock's
+  chat contents fill its remaining height; return navigation lives in `+`.
+- This closes only the layout task. M6 planning/cutover, the separate speed-dial
+  task and unrelated preview/policy changes keep their existing scope/status.
