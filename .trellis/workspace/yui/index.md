@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 76
-- **Last Active**: 2026-10-03
+- **Total Sessions**: 77
+- **Last Active**: 2026-10-04
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~333 | Active |
+| `journal-2.md` | ~371 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 77 | 2026-10-04 | Complete M6 React cutover and preview delivery | `09b47f3`, `e87044a`, `44edc02` | `k-on` |
 | 76 | 2026-10-03 | Room layout visual acceptance and completion | `3b0e7ed`, `4db7e82` | `k-on` |
 | 75 | 2026-09-28 | Complete M5 React room media and danmaku migration | `e6c9535`, `b8bc7e9`, `34d239c` | `k-on` |
 | 74 | 2026-09-28 | M4 React room migration | `7908b61`, `7c6b4fa` | `k-on` |

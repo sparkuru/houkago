@@ -331,3 +331,41 @@ Completed owner-approved room layout: full-height dock chat and bottom composer,
 ### Status
 
 [OK] **Completed**
+
+
+## Session 77: Complete M6 React cutover and preview delivery
+
+**Date**: 2026-10-04
+**Task**: Complete M6 React cutover and preview delivery
+**Package**: houkago-kyoushitsu-react
+**Branch**: `k-on`
+
+### Summary
+
+Owner accepted visuals and all dirty-file commits. Extracted neutral core and browser SDK; retired Vue; preserved configurable preview and workflow changes; completed and archived M6 plus speed-dial child.
+
+### Main Changes
+
+- Shared core, deterministic46-operation browser SDK and React-only local runtime; accepted room controls, presets, member history and obstacle clearance.
+- Existing preview/origin/configuration/policy work committed separately; tracked local design skills preserved with no net content change.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `09b47f3` | (see git log) |
+| `e87044a` | (see git log) |
+| `44edc02` | (see git log) |
+
+### Testing
+
+- [OK] Post-removal:459 unit tests;60 React browser cases;1 installed adapter;93 shell checks;11 preview fixture cases;all7workspace types,lint,build and contractdrift passed.
+- [OK] Actual44edc02 revert in isolated Git repository restored preservede87044a tree exactly; no live-project reset or restored-runtime boot claimed.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- M0-M6 local migration complete; production deployment is outside this scope.
