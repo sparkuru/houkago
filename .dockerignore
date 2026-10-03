@@ -1,0 +1,14 @@
+.git
+.devhome
+node_modules
+**/node_modules
+dist
+**/dist
+test-results
+**/test-results
+playwright-report
+**/playwright-report
+*.log
+.env
+.env.*
+!.env.example

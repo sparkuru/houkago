@@ -16,8 +16,9 @@ of truth, the sync core is correct, and the control plane never touches media.
 ## Build & Run (this project)
 
 **The host has no `bun`.** All bun/bunx/test/dev commands run inside the
-`oven/bun:1` container via the repo-root `./dx` wrapper (repo mounted at `/app`,
-uid-mapped so artifacts stay owned by you):
+project-local `houkago-dev:playwright` container via the repo-root `./dx` wrapper
+(built from `Dockerfile.dev`, repo mounted at `/app`, uid-mapped so artifacts
+stay owned by you):
 
 ```
 ./dx bun install

@@ -27,8 +27,10 @@ app. The new entry does not start room sockets or media engines.
 ## Build & Run + dependency pins (this project)
 
 **The host has no `bun`** — run every bun/vite/test command through the repo-root
-`./dx` wrapper (`oven/bun:1` container, repo at `/app`, ports 3000/5173 published,
-uid-mapped). Two `./dx` calls can't run concurrently (port re-bind). Vite must
+`./dx` wrapper (project-local `houkago-dev:playwright` container built from
+`Dockerfile.dev`, repo at `/app`, ports 3000/5173 published, uid-mapped). The
+image includes Playwright's Chromium system libraries. Two `./dx` calls can't
+run concurrently (port re-bind). Vite must
 bind `0.0.0.0` (`server.host: "0.0.0.0"`) to be reachable from the host. See
 backend quality-guidelines for the full command list.
 

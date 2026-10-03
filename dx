@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly IMAGE="oven/bun:1"
+readonly IMAGE="${DX_IMAGE:-houkago-dev:playwright}"
 
 usage() {
 	printf 'Usage: [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]\n' >&2
@@ -13,6 +13,23 @@ usage() {
 die() {
 	printf 'dx: %s\n' "$*" >&2
 	exit 1
+}
+
+ensure_image() {
+	local repo_root=$1
+
+	case "${DX_REBUILD_IMAGE:-0}" in
+	0 | 1) ;;
+	*) die "DX_REBUILD_IMAGE must be 0 or 1" ;;
+	esac
+
+	if [[ "${DX_REBUILD_IMAGE:-0}" == 0 ]] && docker image inspect "$IMAGE" >/dev/null 2>&1; then
+		return 0
+	fi
+
+	[[ -f "${repo_root}/Dockerfile.dev" ]] || die "missing development image definition: ${repo_root}/Dockerfile.dev"
+	printf 'dx: building %s from Dockerfile.dev\n' "$IMAGE" >&2
+	docker build --file "${repo_root}/Dockerfile.dev" --tag "$IMAGE" "$repo_root"
 }
 
 main() {
@@ -44,6 +61,7 @@ main() {
 	repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 	devhome="${repo_root}/.devhome"
 	mkdir -p -- "$devhome"
+	ensure_image "$repo_root"
 
 	[[ ! -t 0 ]] || tty_flags+=(-i)
 	[[ ! -t 0 || ! -t 1 ]] || tty_flags+=(-t)
