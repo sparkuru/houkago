@@ -134,7 +134,8 @@ export class RoomRuntime {
     services: RoomServices = {
       transport: (onMessage, onStatus) =>
         new KousokuClient(
-          import.meta.env.VITE_HOUSOU_URL ?? `http://${location.hostname}:3000`,
+          import.meta.env.VITE_HOUSOU_URL ??
+            `http://${location.hostname}:${import.meta.env.VITE_HOUSOU_PORT ?? 3000}`,
           onMessage,
           onStatus,
         ),

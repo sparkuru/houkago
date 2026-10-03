@@ -1,0 +1,17 @@
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "Check the final package boundaries against the current React frontend contract."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Review preserved room/session and authority contracts across parity cases."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md", "reason": "Review player/provider/danmaku lifecycle and permissions during final parity checks."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Review responsive layout, accessibility, and component behavior in parity coverage."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Apply frontend quality and verification conventions to the final React/core state."}
+{"file": ".trellis/spec/frontend/http-contract-resources.md", "reason": "Verify generated contract paths, API fidelity, error behavior, and cancellation."}
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Follow project-wide mainline, validation, and cutover boundaries."}
+{"file": ".trellis/tasks/09-28-m6-parity-cutover/research/legacy-workspace-inventory.md", "reason": "Confirm every old package consumer, test surface, generator, and active doc reference was handled."}
+{"file": ".trellis/tasks/archive/2026-10/10-01-room-layout-refinement/validation.md", "reason": "Review parity against the accepted room-layout baseline without assuming acceptance of the separate speed-dial child."}
+{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Review the absorbed child acceptance against the supplied speed-dial reference and preserve the parent-child cutover gate."}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}

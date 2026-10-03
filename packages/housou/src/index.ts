@@ -73,8 +73,7 @@ export type App = typeof app
 
 if (import.meta.main) {
   const port = Number(process.env.PORT ?? 3000)
-  // Bind 0.0.0.0 so the container service is reachable from the host (dx).
-  app.listen({ hostname: "0.0.0.0", port })
+  app.listen({ hostname: process.env.HOST ?? "0.0.0.0", port })
   // 点呼: authority-clock heartbeat, only in the running server (not tests, which
   // start it explicitly with a stop handle to avoid leaking the timer).
   startTenko(app)

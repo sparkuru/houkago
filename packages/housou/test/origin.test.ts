@@ -27,3 +27,12 @@ test("development without an explicit origin accepts every frontend origin", () 
   expect(isTrustedOrigin("http://192.168.9.4:5173")).toBe(true)
   expect(isTrustedOrigin("https://another-dev-host.test")).toBe(true)
 })
+
+test("an empty optional origin retains the restricted production default", () => {
+  process.env.NODE_ENV = "production"
+  process.env.HOUKAGO_CORS_ORIGIN = ""
+
+  expect(corsOrigin()).toBe("http://127.0.0.1:5173")
+  expect(isTrustedOrigin("http://127.0.0.1:5173")).toBe(true)
+  expect(isTrustedOrigin("https://untrusted.example.test")).toBe(false)
+})

@@ -3,7 +3,7 @@ import { Forbidden } from "./errors"
 const DEFAULT_ORIGIN = "http://127.0.0.1:5173"
 
 export function allowedOrigin(): string {
-  return process.env.HOUKAGO_CORS_ORIGIN ?? DEFAULT_ORIGIN
+  return process.env.HOUKAGO_CORS_ORIGIN || DEFAULT_ORIGIN
 }
 
 export function isOpenDevelopmentOrigin(): boolean {

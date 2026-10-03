@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Keep room control authority and permission checks intact when presenting React room controls through the speed dial."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md", "reason": "Preserve DanmakuFeature overlay and source-selection behavior while moving its controls into the room dock and consolidating the live composer."}
+{"file": ".trellis/tasks/09-28-room-control-speed-dial/research/firefly-speed-dial-component-reference.md", "reason": "Apply the supplied speed-dial visual, interaction, accessibility, safe-area, and reduced-motion reference."}
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}
+{"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Load project-owned Trellis Plus rules and verified command/approval boundaries"}

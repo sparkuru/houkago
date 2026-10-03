@@ -2,6 +2,12 @@
   "name": "houkago",
   "private": true,
   "workspaces": ["packages/*"],
+  "config": {
+    "ports": {
+      "backend": 9998,
+      "frontend": 9999
+    }
+  },
   "scripts": {
     "typecheck": "bun run --filter '*' typecheck",
     "test": "HOUSOU_DB=:memory: bun test packages/kokuban/test packages/eisha/test packages/houkago-adapter/test packages/housou/test packages/kousoku/test packages/kyoushitsu/test packages/kyoushitsu-react/test",
