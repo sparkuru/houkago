@@ -403,3 +403,39 @@ Completed real HTTP/WS/media, physical Android and live Baidu lifecycle acceptan
 ### Next Steps
 
 - Testing task archived; guest UI delete visibility remains a recorded observation for separately scoped product work.
+
+
+## Session 79: Visual craft refinement completion
+
+**Date**: 2026-10-04
+**Task**: Visual craft refinement completion
+**Package**: houkago-kyoushitsu-react
+**Branch**: `k-on`
+
+### Summary
+
+Refined entry and room typography, composition, original classroom art, hierarchy, motion and responsive behavior. Owner accepted visuals and authorized submission; final independent check passed. Archived completed task in 180aea2 and reconciled mainline. Owned fixture stopped.
+
+### Main Changes
+
+- Entry and room visual refinement; core theme/dictionary; long identity, touch and reduced-motion browser regression.
+- Recorded accepted visual evidence and reusable watched-generation/animation-settling verification gotchas.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b700989` | (see git log) |
+
+### Testing
+
+- [OK] Lint and seven-workspace types; 459 unit tests; React build, 18 byte-stable generated files and emitted module boundaries passed.
+- [OK] 62 full-suite browser passes with 3 existing applicability skips; 37 final affected-layout regressions passed. Chromium/fixture and measurement limitations retained.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No remaining implementation or visual review. Further product scope requires owner selection.
