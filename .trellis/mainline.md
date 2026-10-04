@@ -87,8 +87,9 @@ browsers, remote fixtures, private profiles/configuration and credential inputs
 were cleaned up. Android task tabs could not be safely identified at cleanup;
 the owner-operated Firefox temporary extension is removed by browser restart.
 The task is archived as completed after the owner's `可以继续提交；` approval.
-Work commit: `f9ec774`. No product repair was performed. Frontend spec and acceptance reports now
-follow this owner-confirmed permission rule, without changing the backend.
+Work commit: `f9ec774`; archive commit: `8b1997b`. No product repair was
+performed. Frontend spec and acceptance reports now follow this owner-confirmed
+permission rule, without changing the backend.
 
 Both historical parent tasks and their completed children are archived. M3
 evidence is retained at `archive/2026-09/09-26-react-shell-ui-foundation`.

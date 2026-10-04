@@ -369,3 +369,37 @@ Owner accepted visuals and all dirty-file commits. Extracted neutral core and br
 ### Next Steps
 
 - M0-M6 local migration complete; production deployment is outside this scope.
+
+
+## Session 78: Real-environment acceptance and permission clarification
+
+**Date**: 2026-10-04
+**Task**: Real-environment acceptance and permission clarification
+**Package**: houkago-kyoushitsu-react
+**Branch**: `k-on`
+
+### Summary
+
+Completed real HTTP/WS/media, physical Android and live Baidu lifecycle acceptance; corrected the mistaken host-only single-delete premise without changing product code.
+
+### Main Changes
+
+- Added opt-in real-environment tests and sanitized evidence; aligned spec and tests with playlist-authorized deletion.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f9ec774` | (see git log) |
+
+### Testing
+
+- [OK] 459 root tests and 60 React regressions passed; seven current desktop cases have passing evidence across two batches, with physical Android and live Chromium Baidu observations separately scoped.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Testing task archived; guest UI delete visibility remains a recorded observation for separately scoped product work.
