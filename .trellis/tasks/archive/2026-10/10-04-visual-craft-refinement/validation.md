@@ -4,11 +4,16 @@
 
 Implementation and runnable verification are complete. The owner explicitly
 accepted the subjective visual gate with `视觉通过` on 2026-10-04. No award outcome
-is claimed. The task remains uncommitted/unarchived; no push or deployment was
-performed. The final read-only Trellis check passed: current source, diagnostic
+is claimed. The implementation is committed as `b700989`; normal task closure
+is proceeding under owner approval. No push or deployment was performed.
+The final read-only Trellis check passed: current source, diagnostic
 screenshots and authoritative logs support all eight dimensions, with no concrete
 remaining defect. The product goal is achieved. The owner subsequently authorized
 submission and normal task closure with `可以提交` on 2026-10-04.
+
+Closure: work commit `b700989` contains the accepted implementation, tests and
+evidence. This task is archived as completed; no implementation or human review
+remains open. Mainline records the subsequent archive commit.
 
 The preceding goal turn had no available progress evidence in this session;
 this turn establishes current-state evidence, creates the scoped task, implements

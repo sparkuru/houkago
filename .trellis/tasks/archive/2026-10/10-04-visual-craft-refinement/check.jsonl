@@ -11,6 +11,6 @@
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
 {"file":".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
 {"file":".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
-{"file":".trellis/tasks/10-04-visual-craft-refinement/design.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
-{"file":".trellis/tasks/10-04-visual-craft-refinement/implement.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
-{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Approved submission, archive attribution and exact staging"}
+{"file":".trellis/tasks/archive/2026-10/10-04-visual-craft-refinement/design.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
+{"file":".trellis/tasks/archive/2026-10/10-04-visual-craft-refinement/implement.md","reason":"Visual craft scope, preserved runtime and browser quality contract"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Verify approved submission, archive attribution and exact staging"}
