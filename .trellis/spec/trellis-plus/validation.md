@@ -1,5 +1,19 @@
 # Validation and Submit-Ready Review
 
+## Visual quality gate
+
+For user-visible work, apply [visual-experience.md](visual-experience.md) to the
+final source: typography, whitespace, hierarchy, color, motion,
+microinteractions, responsiveness and originality. Record concrete observations,
+fixes and recheck evidence in existing task validation (or `/tmp` and the final
+report for authorized no-task work). Fix each obvious in-scope issue, rerun
+affected desktop/mobile checks, then repeat the eight-dimension whole-page
+review after the last change. Static/build passes and self-assigned scores do
+not establish visual acceptance. Recheck both entry and room when shared theme
+or components change; retain runtime/config behavior and current mental model.
+Use the detailed matrix and completion conditions in that contract without
+creating another checklist or parallel design source.
+
 ## Trellis Plus: Playwright Validation Profile
 
 Read this profile before external documentation. Reconcile with manifests/configs

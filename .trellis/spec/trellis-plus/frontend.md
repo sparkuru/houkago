@@ -6,6 +6,19 @@ M6 retired the old application after owner acceptance. Dependencies and actual
 sources prove UI applicability.
 A backend-only change does not need design generation.
 
+## Shared visual and interaction contract
+
+Read [visual-experience.md](visual-experience.md) before every user-visible
+change, including copy-only and interaction-only work. It is the shared source
+for Warm Club identity, entry/room mental model, token usage and the owner's
+Awwwards/Webby/FWA quality requirement. Inspect typography, whitespace,
+hierarchy, color, motion, microinteractions, responsiveness and originality;
+fix obvious issues and repeat the final review after the last change.
+Research and task designs must derive from this contract and the latest
+accepted UI. UUPM output does not replace it or create a second visual system.
+Register this contract explicitly in both implement/check contexts; for an
+authorized no-task change, read it directly without creating a task.
+
 ## Initialization
 
 Codex's project-local entry is `.codex/skills/ui-ux-pro-max/SKILL.md`; its
@@ -44,7 +57,8 @@ material; missing notices are not resolved by package metadata.
 3. Register specs, approved design and research/decision evidence in both
    manifests using [loading.md](loading.md). Preserve supplied decisions;
    record constraint-driven changes and update both contexts.
-4. Implement through the real component/runtime path. Check user flows,
+4. Implement through the real component/runtime path. Apply the visual contract's
+   eight-dimension review and iteration gate. Check user flows,
    contrast, names, focus, touch targets, responsive states, motion, image/list
    performance and chart non-color cues when relevant. Run focused desktop
    and mobile browser checks; static checks alone do not validate UI. Ask only

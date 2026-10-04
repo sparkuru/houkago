@@ -15,6 +15,7 @@ It supplements the installed Trellis workflow without modifying its runtime.
 | [Development principles](development-principles.md) | Every development task | Preserve user work, limit scope and verify actual behavior |
 | [Development and environment](development.md) | Before development, preview or configuration changes | Reuse `dx`; enforce the preview lifecycle, root `.env`, mandatory unified console/address-discovery and verification contract |
 | [Frontend integration](frontend.md) | User-visible UI planning, implementation or review | Use project-local UUPM and approved task decisions; classify mobile coverage |
+| [Visual and experience contract](visual-experience.md) | Every user-visible page, component, copy, theme, motion or interaction change | Preserve Warm Club identity and shared mental model; inspect all eight quality dimensions and iterate until no obvious improvement remains |
 | [Validation and human review](validation.md) | Planning checks and reaching submit-ready | Run desktop/mobile checks before requesting residual human review |
 | [Commit and archive policy](commit-policy.md) | Commit planning, archive or journal recording | Attribute each Codex-assisted task once on its archive commit |
 | [Mainline continuity](continuity.md) | Task lifecycle, status or next-work requests | Reconcile sources/evidence and respect guided/serial/paused authority |
@@ -56,6 +57,16 @@ Read [preview-console.md](preview-console.md) for the mandatory format and host
 address enumeration; register that detail alongside development.md for preview tasks.
 Future-task implement/check loading still needs explicit detail registration.
 No protected template was changed and no backup recovery was needed.
+
+## Visual contract context registration
+
+For user-visible work, read `visual-experience.md` with `frontend.md` and
+`validation.md`, and register all three explicitly in both implement/check
+manifests. This includes changes to copy and interactions without CSS edits.
+The visual contract owns the award-level quality requirement, project identity,
+mental model, token conventions and eight-dimension iteration gate; package
+runtime/config specs retain their concrete behavior contracts. Explicitly
+authorized no-task work reads the same files directly without creating a task.
 
 ## Preview contract context registration
 

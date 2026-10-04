@@ -49,6 +49,13 @@ manifest files. Confirm resolved content rather than assuming Markdown details
 were loaded. For a session intentionally skipping tasks, read applicable files
 directly and do not create a task merely to obtain context.
 
+For every user-visible change, also register
+`.trellis/spec/trellis-plus/visual-experience.md` explicitly in **both**
+implement/check manifests, alongside frontend and validation policy. Its
+Markdown links do not load its contents or the linked runtime contracts.
+Read the relevant runtime/config details separately. No-task spec or UI work
+uses the same direct-reading rule and leaves task pointers/status unchanged.
+
 ## Start → check → archive walkthrough
 
 For the room-control child, read approval/criteria and existing design/research;
