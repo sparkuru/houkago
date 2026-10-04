@@ -100,12 +100,25 @@ formatting or other watched-source writes concurrently with browser acceptance.
 If this happened, retain the failure evidence and rerun the affected cases on
 the unchanged final source; do not weaken their assertions.
 
-For entry geometry measurements, await
-`station.getAnimations({ subtree: true }).map(animation => animation.finished)`
-with `Promise.all` before reading bounding boxes. The short reveal's transform
+For entry geometry measurements and settled diagnostic screenshots, await
+`homeShell.getAnimations({ subtree: true }).map(animation => animation.finished)`
+with `Promise.all` before reading bounding boxes, where `homeShell` is the
+`.home-shell` element. Both the invitation and station can reveal independently;
+waiting only for the station can leave the invitation mid-animation. The short reveal's transform
 can otherwise produce fractional bounds just below the 44px control height.
 Keep the >=44px requirement; reduced-motion and active-transition behavior need
 their own assertions rather than measurement of an unsettled frame.
+
+Use Playwright screenshot `animations: "disabled"` for static diagnostic
+artifacts so finite reveals are fast-forwarded to their final state. A full-page
+capture can restart a finished reveal when it changes the captured viewport;
+geometry waits alone may still produce a pale intermediate screenshot. Verify
+normal and reduced-motion behavior separately without suppressing animations.
+
+Root `scrollWidth` alone does not establish long-copy readability when the page
+uses `overflow-x: clip`. For schema-permitted unbroken public-config strings,
+assert the relevant element and DOM Range text bounds stay inside the viewport.
+Home privacy copy wraps with `overflow-wrap: anywhere` and `min-width: 0`.
 
 Use `playwright-required` for locally reproducible changed UI acceptance;
 extend the smallest meaningful test with semantic locators, controlled states

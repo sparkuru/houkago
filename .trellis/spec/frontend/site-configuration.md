@@ -46,7 +46,7 @@ name = "社团活动室"
 [entry]
 floorCode = "2F"
 floorLabel = "社团活动楼层"
-hint = "沿着安静的走廊，前往你已经约好的教室。"
+hint = "灯光已留好，等你和同伴入座。"
 privacyNote = "这里不会展示其他教室。请使用收到的教室号码或邀请链接。"
 defaultBushitsuName = "新部室"
 ```
@@ -68,6 +68,11 @@ defaultBushitsuName = "新部室"
 - React AppRuntime memoizes the config bootstrap through its public resource
   boundary, sets `document.title`, and exposes immutable identity/copy/default
   room name. No component owns another request or room config store.
+- Home renders `site.name` once as the masthead's semantic h1, with the compact
+  masthead type scale and wrapping for long configured names. The lower
+  intro retains the optional subtitle without a duplicate site name.
+- Home renders `entry.hint` once as the classroom figure caption. Do not repeat
+  this configurable hint below the invitation or as a footer closing line.
 - Allowed transport rejection or empty response uses
   `DEFAULT_SITE_CONFIG` and one value-free warning. A successful but invalid
   response rejects bootstrap; it must not silently fall back and hide contract

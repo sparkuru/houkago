@@ -24,10 +24,8 @@ function protectedActivity(page: Page) {
   return activity
 }
 async function checkLayout(page: Page) {
-  await page.locator(".entry-station").evaluate(async (station) => {
-    await Promise.all(
-      station.getAnimations({ subtree: true }).map((animation) => animation.finished),
-    )
+  await page.locator(".home-shell").evaluate(async (shell) => {
+    await Promise.all(shell.getAnimations({ subtree: true }).map((animation) => animation.finished))
   })
   expect(
     await page.evaluate(
@@ -110,8 +108,32 @@ test("one delayed restore, anonymous form, keyboard and reduced-motion layout", 
   const background = luminance(colors.background)
   const contrast = (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05)
   expect(contrast).toBeGreaterThanOrEqual(4.5)
+  const placeholderColors = await page.getByLabel("密码", { exact: true }).evaluate((element) => {
+    const placeholder = getComputedStyle(element, "::placeholder")
+    return {
+      text: placeholder.color,
+      opacity: placeholder.opacity,
+      background: getComputedStyle(element).backgroundColor,
+    }
+  })
+  expect(placeholderColors.opacity).toBe("1")
+  expect(placeholderColors.text).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/u)
+  const placeholderText = luminance(placeholderColors.text)
+  const placeholderBackground = luminance(placeholderColors.background)
+  const placeholderContrast =
+    (Math.max(placeholderText, placeholderBackground) + 0.05) /
+    (Math.min(placeholderText, placeholderBackground) + 0.05)
+  expect(placeholderContrast).toBeGreaterThanOrEqual(4.5)
   await info.attach("layout-measurements", {
-    body: JSON.stringify({ colors, contrast, motion, reads, viewport: page.viewportSize() }),
+    body: JSON.stringify({
+      colors,
+      contrast,
+      placeholderColors,
+      placeholderContrast,
+      motion,
+      reads,
+      viewport: page.viewportSize(),
+    }),
     contentType: "application/json",
   })
   await page.setViewportSize({ width: 812, height: 375 })
@@ -274,12 +296,17 @@ test("persisted pageshow reloads a disposed entry and restores current cookie id
 
 test("configured name/title create body enters the direct React room", async ({ page }, info) => {
   await identity(page, true)
+  const configuredHint = "窗边的座位已备好，等周末的同伴。"
   await page.route("**/site-config", (route) =>
     route.fulfill({
       json: {
         ...DEFAULT_SITE_CONFIG,
         site: { name: "周末社团活动室", subtitle: "Houkago", browserTitle: "周末放映" },
-        entry: { ...DEFAULT_SITE_CONFIG.entry, defaultBushitsuName: "周末新教室" },
+        entry: {
+          ...DEFAULT_SITE_CONFIG.entry,
+          hint: configuredHint,
+          defaultBushitsuName: "周末新教室",
+        },
       },
     }),
   )
@@ -294,6 +321,23 @@ test("configured name/title create body enters the direct React room", async ({ 
   })
   await page.goto("/")
   await expect(page).toHaveTitle("周末放映")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("周末社团活动室")
+  await expect(page.locator(".home-masthead h1")).toHaveText("周末社团活动室")
+  await expect(page.getByText("周末社团活动室", { exact: true })).toHaveCount(1)
+  await expect(
+    page.locator(".scene-caption-mark, .home-wordmark, #join-heading, .floor-hint, .home-closing"),
+  ).toHaveCount(0)
+  await expect(page.locator(".home-scene figcaption")).toHaveText(configuredHint)
+  await expect(page.getByText(configuredHint, { exact: true })).toHaveCount(1)
+  await expect(page.locator('label[for="room-id"]')).toHaveCount(0)
+  await expect(page.getByRole("textbox", { name: "部室 id", exact: true })).toBeVisible()
+  await expect(page.locator(".entry-create-card .card-kicker")).toHaveCount(0)
+  await expect(page.locator('label[for="room-name"]')).toHaveCount(0)
+  await expect(page.getByRole("textbox", { name: "部室名", exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("region", { name: "输入部室 ID 或 URL", exact: true }).locator(".card-kicker"),
+  ).toHaveText("输入部室 ID 或 URL")
+  await expect(page.getByText("输入部室 ID 或 URL", { exact: true })).toHaveCount(1)
   await expect(page.getByLabel("部室名")).toHaveAttribute("placeholder", "周末新教室")
   await checkLayout(page)
   await page.screenshot({ path: info.outputPath("signed-in.png"), fullPage: true })
@@ -309,7 +353,7 @@ test("join invite opens encoded React room ID without search/hash", async ({ pag
   await page.goto("/")
   await expect(page.getByRole("button", { name: "入部", exact: true })).toBeDisabled()
   await page
-    .getByLabel("部室 id")
+    .getByRole("textbox", { name: "部室 id", exact: true })
     .fill("https://invite.test/bushitsu/%E6%95%99%E5%AE%A4?secret=x#hash")
   await expect(page.getByRole("button", { name: "入部", exact: true })).toBeEnabled()
   await expect(page).toHaveURL(`${frontendUrl}/`)
@@ -348,11 +392,11 @@ test("logout failure reconciles account; successful logout clears entry drafts",
     return route.fulfill({ json: { ok: true } })
   })
   await page.goto("/")
-  await page.getByLabel("部室 id").fill("old-draft")
+  await page.getByRole("textbox", { name: "部室 id", exact: true }).fill("old-draft")
   await page.getByRole("button", { name: "退出登录" }).click()
   await expect(page.getByRole("alert")).toContainText("退出登录未能确认")
   await expect(page.getByText("Mika", { exact: true })).toBeVisible()
-  await expect(page.getByLabel("部室 id")).toHaveValue("")
+  await expect(page.getByRole("textbox", { name: "部室 id", exact: true })).toHaveValue("")
   await page.getByRole("button", { name: "退出登录" }).click()
   await expect(page.getByLabel("用户名")).toBeVisible()
   expect(signouts).toBe(2)
@@ -362,7 +406,7 @@ test("invalid path/room input and revoked notice are accessible", async ({ page 
   await identity(page, true)
   await page.goto("/?revoked=1")
   await expect(page.getByRole("alert")).toContainText("你已被移出该部室")
-  await page.getByLabel("部室 id").fill("%2F")
+  await page.getByRole("textbox", { name: "部室 id", exact: true }).fill("%2F")
   await page.getByRole("button", { name: "入部", exact: true }).click()
   await expect(page.getByRole("alert").last()).toContainText("无法打开教室")
   await page.goto("/unknown")
@@ -379,87 +423,129 @@ test("invalid successful config blocks bootstrap rather than silently defaulting
   await expect(page.getByLabel("用户名")).toHaveCount(0)
 })
 
-test("editorial entry keeps configured identity and usable forms at narrow, tablet and wide sizes", async ({
-  page,
-}, info) => {
-  await identity(page)
-  const name = "周末的电影与音乐交流活动室"
-  await page.route("**/site-config", (route) =>
-    route.fulfill({
-      json: {
-        ...DEFAULT_SITE_CONFIG,
-        site: { name, subtitle: "After school, together", browserTitle: name },
-        entry: {
-          ...DEFAULT_SITE_CONFIG.entry,
-          floorLabel: "电影与音乐交流社团的活动楼层",
-        },
-      },
-    }),
-  )
-  await page.goto("/")
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(name)
-  await expect(page.getByText("After school, together", { exact: true })).toBeVisible()
-  const floorCodeHeight = await page.locator(".floor-code").evaluate((code) => {
-    const style = getComputedStyle(code)
-    return {
-      height: code.getBoundingClientRect().height,
-      singleLine:
-        Number.parseFloat(style.lineHeight) +
-        Number.parseFloat(style.paddingTop) +
-        Number.parseFloat(style.paddingBottom) +
-        Number.parseFloat(style.borderTopWidth) +
-        Number.parseFloat(style.borderBottomWidth),
-    }
-  })
-  expect(floorCodeHeight.height).toBeCloseTo(floorCodeHeight.singleLine, 0)
-  const widths = info.project.name === "entry-phone" ? [320, 375] : [768, 812, 1280, 1440]
-  for (const width of widths) {
-    await page.setViewportSize({ width, height: width === 812 ? 375 : 900 })
-    await checkLayout(page)
-    const positions = await page.locator(".home-shell").evaluate((shell) => {
-      const rect = (selector: string) => {
-        const element = shell.querySelector(selector)
-        if (!element) throw new Error(`Missing entry element: ${selector}`)
-        const { left, right, top, bottom } = element.getBoundingClientRect()
-        return { left, right, top, bottom }
-      }
-      return {
-        intro: rect(".floor-sign"),
-        desk: rect(".entry-station"),
-        scene: rect(".home-scene"),
-        controls: Array.from(shell.querySelectorAll("input, button, .floor-marker")).map(
-          (element) => {
-            const { left, right } = element.getBoundingClientRect()
-            return { left, right }
+for (const signedIn of [false, true]) {
+  test(`editorial entry keeps configured identity and usable ${signedIn ? "signed-in" : "anonymous"} forms at narrow, tablet and wide sizes`, async ({
+    page,
+  }, info) => {
+    await page.route("**/seitoshou/me", (route) =>
+      route.fulfill({
+        status: signedIn ? 200 : 401,
+        json: signedIn ? { ...account, username: "a-very-long-club-member-name" } : anonymous,
+      }),
+    )
+    const name = "周末的电影与音乐交流活动室"
+    const privacyNote = "a".repeat(256)
+    await page.route("**/site-config", (route) =>
+      route.fulfill({
+        json: {
+          ...DEFAULT_SITE_CONFIG,
+          site: { name, subtitle: "After school, together", browserTitle: name },
+          entry: {
+            ...DEFAULT_SITE_CONFIG.entry,
+            floorLabel: "电影与音乐交流社团的活动楼层",
+            privacyNote,
           },
-        ),
+        },
+      }),
+    )
+    await page.goto("/")
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(name)
+    await expect(page.getByText("After school, together", { exact: true })).toBeVisible()
+    await expect(page.locator(".floor-privacy")).toHaveText(privacyNote)
+    const floorCodeHeight = await page.locator(".floor-code").evaluate((code) => {
+      const style = getComputedStyle(code)
+      return {
+        height: code.getBoundingClientRect().height,
+        singleLine:
+          Number.parseFloat(style.lineHeight) +
+          Number.parseFloat(style.paddingTop) +
+          Number.parseFloat(style.paddingBottom) +
+          Number.parseFloat(style.borderTopWidth) +
+          Number.parseFloat(style.borderBottomWidth),
       }
     })
-    for (const control of positions.controls) {
-      expect(control.left).toBeGreaterThanOrEqual(0)
-      expect(control.right).toBeLessThanOrEqual(width)
+    expect(floorCodeHeight.height).toBeCloseTo(floorCodeHeight.singleLine, 0)
+    const widths = info.project.name === "entry-phone" ? [320, 375] : [768, 812, 1024, 1280, 1440]
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: width === 812 ? 375 : 900 })
+      await checkLayout(page)
+      const positions = await page.locator(".home-shell").evaluate((shell) => {
+        const rect = (selector: string) => {
+          const element = shell.querySelector(selector)
+          if (!element) throw new Error(`Missing entry element: ${selector}`)
+          const { left, right, top, bottom } = element.getBoundingClientRect()
+          return { left, right, top, bottom }
+        }
+        return {
+          intro: rect(".floor-sign"),
+          desk: rect(".entry-station"),
+          scene: rect(".home-scene"),
+          controls: Array.from(shell.querySelectorAll("input, button, .floor-marker")).map(
+            (element) => {
+              const { left, right } = element.getBoundingClientRect()
+              return { left, right }
+            },
+          ),
+        }
+      })
+      for (const control of positions.controls) {
+        expect(control.left).toBeGreaterThanOrEqual(0)
+        expect(control.right).toBeLessThanOrEqual(width)
+      }
+      const privacyText = await page.locator(".floor-privacy").evaluate((element) => {
+        const range = document.createRange()
+        range.selectNodeContents(element)
+        const { left, right } = range.getBoundingClientRect()
+        return { left, right }
+      })
+      expect(privacyText.left).toBeGreaterThanOrEqual(0)
+      expect(privacyText.right).toBeLessThanOrEqual(width)
+      if (width < 960) {
+        expect(positions.desk.top).toBeGreaterThanOrEqual(positions.intro.bottom)
+        expect(positions.scene.top).toBeGreaterThanOrEqual(positions.desk.bottom)
+      } else {
+        expect(positions.desk.left).toBeGreaterThan(positions.intro.right)
+      }
     }
-    if (width <= 800) {
-      expect(positions.desk.top).toBeGreaterThanOrEqual(positions.intro.bottom)
-      expect(positions.scene.top).toBeGreaterThanOrEqual(positions.desk.bottom)
-    } else {
-      expect(positions.desk.left).toBeGreaterThan(positions.intro.right)
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%"
+    })
+    await checkLayout(page)
+    const input = page.getByLabel(signedIn ? "部室 id" : "用户名", { exact: true })
+    await input.focus()
+    await expect(input).toBeFocused()
+    await expect(input).toHaveCSS("outline-style", "solid")
+    await expect(input).toHaveCSS("outline-width", "3px")
+    const feedback = await input.evaluate((element) => {
+      const style = getComputedStyle(element)
+      const reference = document.createElement("span")
+      reference.style.color = "var(--color-focus-ring)"
+      document.body.append(reference)
+      const focus = getComputedStyle(reference).color
+      reference.remove()
+      return { border: style.borderTopColor, outline: style.outlineColor, focus }
+    })
+    expect(feedback.border).toBe(feedback.focus)
+    expect(feedback.outline).toBe(feedback.focus)
+    if (signedIn) {
+      await expect(page.getByRole("button", { name: "入部", exact: true })).toBeDisabled()
+      await input.fill("club-room")
+      await expect(page.getByRole("button", { name: "入部", exact: true })).toBeEnabled()
+      await expect(page.locator(".entry-choices")).toHaveCSS("animation-name", "none")
+      await page.screenshot({ path: info.outputPath("long-signed-in.png"), fullPage: true })
+      return
     }
-  }
-  await page.emulateMedia({ reducedMotion: "reduce" })
-  await page.evaluate(() => {
-    document.documentElement.style.fontSize = "200%"
+    await page.getByLabel("用户名").fill("visual-user")
+    await page.getByLabel("密码", { exact: true }).fill("visual-password")
+    await page.getByRole("button", { name: "没有账号？注册" }).click()
+    await expect(page.getByRole("heading", { name: "登记一个新账号" })).toBeVisible()
+    await expect(page.getByLabel("用户名")).toBeFocused()
+    await expect(page.getByLabel("密码", { exact: true })).toHaveValue("")
+    await expect(page.locator(".entry-station > [data-slot=card]")).toHaveCSS(
+      "animation-name",
+      "none",
+    )
+    await page.screenshot({ path: info.outputPath("long-identity.png"), fullPage: true })
   })
-  await checkLayout(page)
-  await page.getByLabel("用户名").fill("visual-user")
-  await page.getByLabel("密码", { exact: true }).fill("visual-password")
-  await page.getByRole("button", { name: "没有账号？注册" }).click()
-  await expect(page.getByRole("heading", { name: "登记一个新账号" })).toBeVisible()
-  await expect(page.getByLabel("用户名")).toBeFocused()
-  await expect(page.getByLabel("密码", { exact: true })).toHaveValue("")
-  await expect(page.locator(".entry-station > [data-slot=card]")).toHaveCSS(
-    "animation-name",
-    "none",
-  )
-  await page.screenshot({ path: info.outputPath("long-identity.png"), fullPage: true })
-})
+}

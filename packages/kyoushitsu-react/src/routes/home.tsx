@@ -25,28 +25,42 @@ export function Home() {
       <div className="home-architecture" aria-hidden="true" />
       <div className="home-shell">
         <div className="home-masthead">
-          <p className="home-wordmark">{t("entryClubLabel")}</p>
           {config?.data && (
-            <div className="floor-marker">
-              <span className="floor-code">{config.data.entry.floorCode}</span>
-              <span>{config.data.entry.floorLabel}</span>
-            </div>
+            <>
+              <h1>{config.data.site.name}</h1>
+              <div className="floor-marker">
+                <span className="floor-code">{config.data.entry.floorCode}</span>
+                <span>{config.data.entry.floorLabel}</span>
+              </div>
+            </>
           )}
         </div>
-        {config?.data ? (
-          <header className="floor-sign">
-            <p className="floor-overline">{t("entryOverline")}</p>
-            <h1>{config.data.site.name}</h1>
-            {config.data.site.subtitle && (
-              <p className="brand-romanized">{config.data.site.subtitle}</p>
-            )}
-            <p className="floor-hint">{config.data.entry.hint}</p>
-          </header>
-        ) : (
-          <header className="floor-sign">
-            <Status>{t(configError ? "siteConfigFailed" : "loadingSiteConfig")}</Status>
-          </header>
-        )}
+        <div className="home-invitation">
+          {config?.data ? (
+            <header className="floor-sign">
+              <p className="floor-overline">
+                {t("entryOverline")
+                  .split(/(?<=，)/u)
+                  .map((phrase) => (
+                    <span key={phrase}>{phrase}</span>
+                  ))}
+              </p>
+              {config.data.site.subtitle && (
+                <p className="brand-romanized">{config.data.site.subtitle}</p>
+              )}
+            </header>
+          ) : (
+            <header className="floor-sign">
+              <Status>{t(configError ? "siteConfigFailed" : "loadingSiteConfig")}</Status>
+            </header>
+          )}
+          {config?.data && (
+            <figure className="home-scene">
+              <ClassroomScene />
+              <figcaption>{config.data.entry.hint}</figcaption>
+            </figure>
+          )}
+        </div>
         <div className="entry-station" aria-busy={state.phase === "restoring" || !!state.command}>
           {search.revoked === 1 && <Alert>{t("membershipRevoked")}</Alert>}
           {state.feedback && <Alert>{t(state.feedback)}</Alert>}
@@ -74,21 +88,9 @@ export function Home() {
           )}
         </div>
         {config?.data && (
-          <>
-            <figure className="home-scene">
-              <ClassroomScene />
-              <figcaption>
-                <span className="scene-caption-mark" aria-hidden="true">
-                  ↳
-                </span>
-                {t("entrySceneCaption")}
-              </figcaption>
-            </figure>
-            <footer className="home-footer">
-              <p className="floor-privacy">{config.data.entry.privacyNote}</p>
-              <p className="home-closing">{t("entryClosing")}</p>
-            </footer>
-          </>
+          <footer className="home-footer">
+            <p className="floor-privacy">{config.data.entry.privacyNote}</p>
+          </footer>
         )}
       </div>
     </main>

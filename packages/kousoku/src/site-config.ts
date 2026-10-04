@@ -103,7 +103,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = normalizeSiteConfig({
   entry: {
     floorCode: "2F",
     floorLabel: "社团活动楼层",
-    hint: "沿着安静的走廊，前往你已经约好的教室。",
+    hint: "灯光已留好，等你和同伴入座。",
     privacyNote: "这里不会展示其他教室。请使用收到的教室号码或邀请链接。",
     defaultBushitsuName: "新部室",
   },

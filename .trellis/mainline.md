@@ -58,6 +58,49 @@
 
 ## Ordered Work
 
+### Current task — entry copy cleanup (2026-10-05)
+
+Owner requested task creation and five small homepage text changes in this
+turn. [Entry copy cleanup](tasks/10-05-entry-copy-cleanup/prd.md) covers
+the scene caption mark, masthead site name, visible room-name label, join
+heading and join kicker. Implementation and scoped desktop/phone validation
+are authorized; commit/archive/deployment/push remain outside this request.
+Preserve the four pre-existing dirty files. No migration scope is reopened.
+Implementation and independent review passed: 26/26 entry browser tests
+(13 desktop + 13 phone), lint, all seven workspace types, frontend build and
+byte-stable contracts. The existing behavioral unit suite passed 459 tests.
+See [validation](tasks/10-05-entry-copy-cleanup/validation.md). Task remains
+active with uncommitted work; submission/archive authority is still pending.
+
+The owner subsequently requested homepage-only visual refinement to
+Awwwards/Webby/FWA quality across eight design dimensions, including autonomous
+self-review iterations. This extends the same active task while preserving the
+five copy changes. Updated PRD/design/implementation artifacts authorize the
+homepage refinement and desktop/phone verification; commit/archive remain
+pending. Previous 26-pass evidence belongs to the copy-only checkpoint.
+Homepage refinement is implemented and iterated with independent eight-dimension
+review: natural phrase wrapping, responsive form-first composition, original SVG
+lighting, focus/hover/press feedback and long configured-copy handling are verified.
+The scoped entry/real-cookie desktop/phone suite passed 38/38, followed by 2/2
+affected contrast cases after the final placeholder fix; 459 unit tests, lint,
+workspace types, final build and byte-stable contracts passed. Final screenshots
+and the eight-dimension record are linked in task validation. No known product
+finding remains; subjective owner visual acceptance and commit/archive authority
+are pending. Preserve the user's original preview and prior dirty edits.
+The owner then requested removing the visible room-ID label, the create-card
+kicker and repeated invitation text. These refinements are implemented: ID
+accessibility remains, `entry.hint` appears only in the figure caption, and
+unused presentation rules are removed. Independent review, scoped lint/React
+types and 28/28 entry desktop/phone regressions passed; latest diagnostic
+screenshots are in `/tmp/houkago-entry-simplify-final/`. This adds no commit or
+archive authority and preserves existing configuration and concurrent copy edits.
+Owner acceptance and submission authorization followed with `不错；可以提交`,
+then `脏文件一起提交` authorized all current trackable dirty files. Subjective
+visual acceptance is resolved. Final submit checks passed: 276-file lint, seven
+workspace types, 459/459 unit tests and production build. Work submission and
+normal Trellis archive/journal closure are now authorized; push/deployment are
+still outside scope. Earlier pending-approval statements above are historical.
+
 ### Completed initiative — visual craft refinement (2026-10-04)
 
 The current thread goal authorizes implementation and iterative visual review

@@ -1,0 +1,19 @@
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/development-principles.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/development.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/frontend.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/validation.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/continuity.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/loading.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/trellis-plus/preview-console.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/index.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/frontend/site-configuration.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/spec/guides/index.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file":".trellis/tasks/10-05-entry-copy-cleanup/design.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file": ".trellis/tasks/10-05-entry-copy-cleanup/implement.md", "reason": "Homepage refinement execution and gates"}
+{"file": ".trellis/tasks/10-05-entry-copy-cleanup/research/homepage-polish.md", "reason": "Homepage visual/interaction acceptance and CSS boundaries"}

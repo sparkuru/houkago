@@ -3,7 +3,6 @@ import { Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { roomIdFromInput } from "@/lib/room-id"
 import type { SiteConfig } from "houkago-kousoku"
 import { t } from "houkago-kyoushitsu-core/i18n"
@@ -62,9 +61,9 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
         </Button>
       </div>
       {error && <Alert>{t("roomHandoffFailed")}</Alert>}
-      <Card aria-labelledby="join-heading">
+      <Card className="entry-join-card" aria-labelledby="join-instructions">
         <form
-          className="grid gap-5"
+          className="entry-form grid gap-5"
           aria-busy={pending}
           onSubmit={(e) => {
             e.preventDefault()
@@ -79,14 +78,14 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
           }}
         >
           <header className="card-heading">
-            <p className="card-kicker">{t("knownClassroomLabel")}</p>
-            <h2 id="join-heading">{t("knownClassroomHeading")}</h2>
-            <p>{t("knownClassroomHint")}</p>
+            <p id="join-instructions" className="card-kicker">
+              {t("knownClassroomHint")}
+            </p>
           </header>
           <div className="grid gap-2">
-            <Label htmlFor="room-id">{t("bushitsuIdLabel")}</Label>
             <Input
               id="room-id"
+              aria-label={t("bushitsuIdLabel")}
               ref={joinInput}
               required
               value={room}
@@ -96,14 +95,14 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
               placeholder={t("bushitsuIdPlaceholder")}
             />
           </div>
-          <Button type="submit" disabled={pending || !room.trim()}>
+          <Button className="entry-primary-action" type="submit" disabled={pending || !room.trim()}>
             {t("joinBushitsu")}
           </Button>
         </form>
       </Card>
-      <Card className="secondary-card" aria-labelledby="create-heading">
+      <Card className="secondary-card entry-create-card" aria-labelledby="create-heading">
         <form
-          className="grid gap-5"
+          className="entry-form grid gap-5"
           aria-busy={pending}
           onSubmit={(e) => {
             e.preventDefault()
@@ -117,14 +116,13 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
           }}
         >
           <header className="card-heading">
-            <p className="card-kicker">{t("newClassroomLabel")}</p>
             <h2 id="create-heading">{t("newClassroomHeading")}</h2>
             <p>{t("newClassroomHint")}</p>
           </header>
           <div className="grid gap-2">
-            <Label htmlFor="room-name">{t("bushitsuNameLabel")}</Label>
             <Input
               id="room-name"
+              aria-label={t("bushitsuNameLabel")}
               maxLength={256}
               value={name}
               disabled={pending}

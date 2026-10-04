@@ -18,9 +18,9 @@ export function IdentityPanel() {
     if (state.phase === "ready" && !pending) input.current?.focus()
   }, [state.phase, pending])
   return (
-    <Card aria-labelledby="auth-heading">
+    <Card className="entry-auth-card" aria-labelledby="auth-heading">
       <form
-        className="grid gap-5"
+        className="entry-form grid gap-5"
         aria-busy={pending}
         onSubmit={(event) => {
           event.preventDefault()
@@ -76,7 +76,7 @@ export function IdentityPanel() {
             </Button>
           </div>
         </div>
-        <Button type="submit" disabled={pending}>
+        <Button className="entry-primary-action" type="submit" disabled={pending}>
           {t(
             pending ? "authProcessing" : registering ? "registerAndContinue" : "signInAndContinue",
           )}
