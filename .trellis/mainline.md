@@ -62,15 +62,16 @@
 
 The owner approved creating a testing task using configuration A from
 `/home/wkyuu/cargo/try/try.txt`, explicitly excluding Safari. The new scoped task
-is [real-environment acceptance](tasks/10-04-real-environment-acceptance/prd.md),
-currently `in_progress`; the owner approved the final plan with `开始测试`.
+is [real-environment acceptance](tasks/archive/2026-10/10-04-real-environment-acceptance/prd.md),
+now archived as completed; the owner approved testing with `开始测试` and
+submission/normal closure with `可以继续提交；`.
 It covers unmocked multi-client HTTP/WS/media, a connected Android
 device and live desktop Baidu where its dedicated account prerequisites can be
 met. M0–M6 remain complete; this is additional acceptance, not reopened migration
 or production deployment authority. Mode remains guided.
 
 Acceptance checkpoint: desktop and physical Android evidence is recorded in
-the task [validation](tasks/10-04-real-environment-acceptance/validation.md).
+the task [validation](tasks/archive/2026-10/10-04-real-environment-acceptance/validation.md).
 The initial host-only single-delete assumption was corrected by the owner:
 a playlist-enabled guest may delete host-added entries. DELETE200 is intended
 backend behavior; its defect verdict is withdrawn and the corrected acceptance
@@ -85,8 +86,8 @@ A3 input and Firefox playback are not claimed. All owned services, dedicated
 browsers, remote fixtures, private profiles/configuration and credential inputs
 were cleaned up. Android task tabs could not be safely identified at cleanup;
 the owner-operated Firefox temporary extension is removed by browser restart.
-Task is entering normal closure after the owner's `可以继续提交；` approval;
-no product repair was performed. Frontend spec and acceptance reports now
+The task is archived as completed after the owner's `可以继续提交；` approval.
+Work commit: `f9ec774`. No product repair was performed. Frontend spec and acceptance reports now
 follow this owner-confirmed permission rule, without changing the backend.
 
 Both historical parent tasks and their completed children are archived. M3

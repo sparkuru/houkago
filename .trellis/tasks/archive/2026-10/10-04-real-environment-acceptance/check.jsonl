@@ -13,8 +13,8 @@
 {"file":".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md","reason":"Playback synchronization, provider and overlays"}
 {"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Real identities, cookies and entry lifecycle"}
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Actual final-state tests and required validation commands"}
-{"file":".trellis/tasks/10-04-real-environment-acceptance/research/environment.md","reason":"Configuration A discovery, runner reuse and exact gaps"}
-{"file":".trellis/tasks/10-04-real-environment-acceptance/design.md","reason":"Task topology, account/device preservation and evidence design"}
-{"file":".trellis/tasks/10-04-real-environment-acceptance/implement.md","reason":"Approved-on-review execution order and stop conditions"}
-{"file": ".trellis/spec/backend/seitoshou-contract.md", "reason": "Owner-confirmed playlist single-delete permission, distinct from host placement"}
-{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Guest deletion success and authoritative queue broadcast expectations"}
+{"file":".trellis/tasks/archive/2026-10/10-04-real-environment-acceptance/research/environment.md","reason":"Configuration A discovery, runner reuse and exact gaps"}
+{"file":".trellis/tasks/archive/2026-10/10-04-real-environment-acceptance/design.md","reason":"Task topology, account/device preservation and evidence design"}
+{"file":".trellis/tasks/archive/2026-10/10-04-real-environment-acceptance/implement.md","reason":"Approved-on-review execution order and stop conditions"}
+{"file":".trellis/spec/backend/seitoshou-contract.md","reason":"Owner-confirmed playlist single-delete permission, distinct from host placement"}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Guest deletion success and authoritative queue broadcast expectations"}

@@ -121,6 +121,8 @@ node_modules/.bin/playwright test \
 - [x] Commit/archive requires the normal owner authorization and project policy.
   Owner approved continuation with `可以继续提交；`; submit verified changes,
   then archive and journal through the normal workflow.
+  Work commit `f9ec774` is recorded; task archive metadata is completed and
+  context references resolve at the archive destination.
 
 ## Rollback and stop conditions
 

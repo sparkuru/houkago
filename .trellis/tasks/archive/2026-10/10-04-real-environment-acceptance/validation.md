@@ -11,6 +11,10 @@ This is an acceptance task only: no product repair, production deployment or
 Safari run was performed. Work submission and task bookkeeping follow this
 verified checkpoint.
 
+Work commit: `f9ec774`. Task archived as completed on 2026-10-04. Closure
+preserves the observed coverage limits; it does not add a Firefox/native-input
+or guest UI-delete claim. No remote push or deployment was performed.
+
 | Criterion | Current outcome | Evidence |
 | --- | --- | --- |
 | A1 — independent room identities, admission, queue, permissions and reconnect | **Passed for recorded scenarios**: DELETE 403 without playlist permission and 200 after permission; both clients receive removal. Guest reorder/bulk-clear remain 403. Earlier host-only single-delete expectation was erroneous. Guest delete-button visibility is recorded separately, not claimed as a passing UI action. | [Desktop execution](research/desktop-results.md), [independent review](research/check-results.md), [corrected observations](research/desktop-queue-permissions.json) |
