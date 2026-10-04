@@ -39,11 +39,10 @@ and stop conditions; it authorizes only listed ready work and does not waive
 planning, checks, review or commit/archive decisions. Stop for dirty overlaps,
 missing dependencies, ambiguous choices, risk or scope changes.
 
-Existing mainline preserves M6 planning-only approval and the independent
-in-progress room-control child. Read current records rather than treating this
-update as approval for M6 execution, legacy removal or deployment. Requirements
-are already imported; no new scope is promoted by this reconciliation and
-existing dirty mainline content remains untouched.
+M6 and its room-control child are now archived with recorded acceptance and
+work/archive evidence. Read the current mainline instead of stale planning-only
+snapshots. This policy reconciliation authorizes no additional product scope,
+deployment or serial continuation, and preserves all existing task state.
 
 The main session owns task/phase choices, dispatch, commits, archive and mainline.
 Workers receive a bounded authorized task and return changes, checks and open

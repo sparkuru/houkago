@@ -17,10 +17,11 @@ frontend_id=""
 runtime_state=""
 runtime_hash=""
 published_port=""
+preview_verbose=false
 
 usage() {
 	printf 'Usage: [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]\n' >&2
-	printf '       ./preview.sh [start|stop|down|status|build] [--origin http://HOST:PORT]\n' >&2
+	printf '       ./preview.sh [start|stop|down|status|build] [--origin http://HOST:PORT] [--verbose]\n' >&2
 	printf '\nSetup (repository root): cp .env.example .env; ./dx bun install\n' >&2
 	printf 'First use: ./preview.sh build; ./preview.sh start\n' >&2
 	printf 'Start returns after owned Housou /health and React / readiness; no implicit build/install.\n' >&2
@@ -29,6 +30,7 @@ usage() {
 	printf 'PORT/PREVIEW_FRONTEND_PORT: container; PREVIEW_BACKEND_PORT/PREVIEW_FRONTEND_PUBLISHED_PORT: host (0=dynamic).\n' >&2
 	printf 'DX_IMAGE, DX_BIND_HOST, HOST, PREVIEW_FRONTEND_HOST, PREVIEW_READY_TIMEOUT, PREVIEW_LAN_HOST configure preview.\n' >&2
 	printf 'Changed runtime settings: stop then start. Changed Dockerfile.dev: build then restart.\n' >&2
+	printf 'Wildcard publishing requires host ip -br a; --verbose shows transient readiness diagnostics.\n' >&2
 	printf 'Ordinary dx reuses/builds its image and skips busy optional port publications.\n' >&2
 }
 
@@ -186,8 +188,9 @@ create_service() {
 }
 
 start_preview() {
-	local origin=$1 name_prefix deadline
+	local origin=$1 name_prefix deadline probe_output
 	load_config preview "$origin"
+	python3 "$config_path" discovery "$repo_root" "$DX_BIND_HOST" || die 'host address discovery failed before startup; correct the reported prerequisite'
 	find_owned
 	if [[ ${#owned_ids[@]} -gt 0 ]]; then
 		[[ -n "$backend_id" && -n "$frontend_id" ]] || die 'incomplete owned preview; run ./preview.sh stop then start'
@@ -209,12 +212,22 @@ start_preview() {
 	[[ -n "$published_port" ]] || die 'backend has no published endpoint; run ./preview.sh status'
 	export VITE_HOUSOU_PORT=$published_port
 	create_service kyoushitsu-react "$PREVIEW_FRONTEND_PORT" "$PREVIEW_FRONTEND_HOST" "$PREVIEW_FRONTEND_PUBLISHED_PORT" "${name_prefix}-react"
-	while ! python3 "$config_path" probe "$repo_root" "$backend_id" "$frontend_id"; do
+	while ! probe_output=$(python3 "$config_path" probe "$repo_root" "$backend_id" "$frontend_id" 2>&1); do
+		[[ "$preview_verbose" != true ]] || printf '%s\n' "$probe_output" >&2
 		read_runtime "$backend_id" housou || die 'backend disappeared during startup'
-		[[ "$runtime_state" == running ]] || die 'housou exited before readiness; run ./dx bun run dev:housou to inspect startup errors'
+		if [[ "$runtime_state" != running ]]; then
+			printf '%s\n' "$probe_output" >&2
+			die 'housou exited before readiness; run ./dx bun run dev:housou to inspect startup errors'
+		fi
 		read_runtime "$frontend_id" kyoushitsu-react || die 'frontend disappeared during startup'
-		[[ "$runtime_state" == running ]] || die 'kyoushitsu-react exited before readiness; run ./dx bun run dev:react to inspect startup errors'
-		((SECONDS < deadline)) || die 'readiness timed out; check configuration and dependencies; failed attempt containers removed'
+		if [[ "$runtime_state" != running ]]; then
+			printf '%s\n' "$probe_output" >&2
+			die 'kyoushitsu-react exited before readiness; run ./dx bun run dev:react to inspect startup errors'
+		fi
+		if ((SECONDS >= deadline)); then
+			printf '%s\n' "$probe_output" >&2
+			die 'readiness timed out; check configuration and dependencies; failed attempt containers removed'
+		fi
 		sleep 1
 	done
 	python3 "$config_path" report "$repo_root" "$backend_id" "$frontend_id"
@@ -229,6 +242,10 @@ preview_command() {
 	fi
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
+		--verbose)
+			preview_verbose=true
+			shift
+			;;
 		--origin)
 			[[ $# -ge 2 && -n "$2" ]] || die '--origin requires a nonempty http(s) origin'
 			origin=$2

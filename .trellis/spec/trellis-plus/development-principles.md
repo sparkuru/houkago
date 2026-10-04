@@ -14,7 +14,7 @@ implementation drift does not change approved scope.
 - Preserve established room URLs, identity/admission, HTTP/WS authority,
   permissions, provider credentials, local subtitle/preferences and Warm Club
   behavior unless the task explicitly changes them. React is the local default;
-  legacy-workspace removal belongs to M6's separately approved execution scope.
+  M6 legacy-workspace removal has completed under its recorded approval.
   These are affected-surface constraints, not a general compatibility gate.
 - Do not delete unknown SQLite data or credentials. Only the isolated
   `HOUSOU_DB=:memory:` preview is demonstrably disposable; normal startup uses

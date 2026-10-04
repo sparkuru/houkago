@@ -24,3 +24,12 @@ every dependency. `dx`, isolated preview scripts and the new thin
 `preview.sh` remain ordinary project scripts; no tool implementation was copied
 into them here. Recheck notices when retained versions/assets change, preserving
 applicable older entries and verifying collected bytes.
+
+## Local asset comparison during policy reconciliation
+
+The retained search.py, core.py, design_system.py and ux-guidelines.csv are
+byte-identical to the corresponding installed ui-ux-pro-max-cli 2.10.2 assets.
+This narrows their package source but does not establish the entire platform
+template version or supply an exact applicable LICENSE/NOTICE. Keep the
+license-notice-needed status before sharing affected material; no local
+integration files or new raw UUPM output are added by this reconciliation.

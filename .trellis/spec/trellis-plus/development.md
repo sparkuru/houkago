@@ -34,7 +34,7 @@ Root `preview.sh` forwards all commands to `dx preview`. `dx` owns the Docker
 arguments and lifecycle; `scripts/preview-services.sh` supervises each service
 inside its own detached `--init` container. The former `dev.sh` entry was retired;
 do not restore it or document it as an available entry. Commands below
-are implemented, including `--origin` for start and `--help`.
+are implemented, including `--origin` for start, `--verbose` and `--help`.
 
 Ownership uses exact `houkago.repo` (resolved repository path),
 `houkago.scope=preview` and `houkago.service` labels. Repository-derived names
@@ -118,33 +118,14 @@ README edits require an explicit request.
 
 ### Required readiness and access summary
 
-Probe Housou's `/health` and React's `/` using effective configured/published
-endpoints and verify they belong to the owned runtime. Emit `System is ready.`
-only after both pass; otherwise return nonzero with the failing service,
-actionable diagnostics and no success banner. Readiness does not establish
-room/media feature acceptance or OAuth availability.
-
-Print every active preview listener, labeled `housou` or `kyoushitsu-react`,
-including the container host:port/protocol and internal-only designation when
-applicable. Separately print Docker's effective host-to-container mappings;
-inspect actual mappings, including dynamically allocated ports. A mapping is
-not proof of an active listener: label an absent or unverified listener and
-do not advertise it as a working website.
-
-Print directly openable `Website` and `API` HTTP URLs through the actual host
-entry points, including localhost when reachable. `0.0.0.0` and `[::]` belong
-only in listener/mapping lines. Include admin/docs URLs only after verifying
-the real application routes; never assume example paths or protocols.
-
-Trusted-LAN development normally uses all-interface service and host binds;
-honor any explicit loopback/network-only constraint and do not change firewall
-rules or expose additional ports. LAN URLs need explicit configuration or
-relevant host-network evidence, not an arbitrary first interface, Docker
-bridge or VPN address. Label an untested address as a candidate; when none is
-known, tell the user to use their reachable host address. Do not claim physical
-device access from localhost probes. For Docker-network-only operation, show
-internal endpoints and the verified Docker network probe command without
-publishing ports. Never include credentials or tokens in output/URLs.
+Read and enforce the mandatory [preview console contract](preview-console.md).
+Probe both owned Housou and React listeners and their inspected host publications
+before reporting readiness. Use its fixed sections and one complete URL per
+line for every entry; enumerate all eligible host addresses via `ip -br a`
+for wildcard publishing. `PREVIEW_LAN_HOST` adds a candidate and cannot replace
+enumeration. Hide transient failed polls in normal startup; `--verbose` makes
+them visible. Terminal failures remain nonzero with service-specific diagnostics.
+Physical-device and provider acceptance are not implied by readiness.
 
 ### Preview verification requirements
 
@@ -295,3 +276,13 @@ Root `.env` is ignored; `.env.example` is trackable. Local setup appends only
 missing safe preview keys, never overwriting existing secrets, custom values or
 empty entries. Keep local settings/permissions local; no new allow rules are
 implied. Docker execution remains subject to the active sandbox/approval policy.
+
+## Current console dependency and loading contract
+
+Read `preview-console.md` before preview changes or checks. Wildcard publication
+requires host `ip` (iproute2) and a discoverable local Docker endpoint; dependency
+or enumeration failures are actionable failures, never a localhost-only success.
+Specific/loopback bindings retain their narrower access boundary. `--verbose`
+controls safe startup diagnostics. Root `AGENTS.md` directs policy loading from
+a project-owned section outside the unchanged Trellis-managed block. This
+reconciliation requires no new task and changes no product acceptance state.

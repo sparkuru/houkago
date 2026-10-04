@@ -19,10 +19,9 @@ This supersedes the old substantial-contribution/work-commit placement rule.
 
 `python3 .trellis/scripts/task.py archive --help` exposes `--no-commit` and no
 custom message option. Default archival auto-commits unless disabled, using
-`chore(task): archive TASK-ID`. Its helper stages the entire
-`.trellis/tasks/archive/` subtree plus modified child task directories, removes
-tracked source entries from the index, then commits the index. That can include
-unrelated archive edits/pre-staged files. Use the supported explicit route:
+`chore(task): archive TASK-ID`. Its current helper stages the task-specific archive and modified child paths,
+removes tracked source entries, then commits the index. Pre-staged unrelated
+work can still be included. Use the supported explicit route:
 
 1. Read this policy, mainline, task criteria, validation and work commits; finish
    required review. Inspect `git status --short`, `git diff --name-only` and

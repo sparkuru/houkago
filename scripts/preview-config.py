@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 from typing import Iterator
@@ -228,8 +229,11 @@ def probe(runtime: dict) -> None:
     script += f'const r=await fetch(`http://${{h}}:${{p}}{path}`,{{signal:AbortSignal.timeout(1000)}}); if(!r.ok)process.exit(1);'
     if backend:
         script += 'if((await r.json()).ok!==true)process.exit(1);'
-    result = subprocess.run(["docker", "exec", runtime["id"], "bun", "--no-env-file", "-e", script],
-                            capture_output=True, timeout=3, check=False)
+    try:
+        result = subprocess.run(["docker", "exec", runtime["id"], "bun", "--no-env-file", "-e", script],
+                                capture_output=True, timeout=3, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ConfigError(f"{name}: owned container HTTP probe failed or timed out; inspect ./preview.sh status") from error
     if result.returncode:
         raise ConfigError(f"{name}: owned container HTTP listener is not ready")
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -242,30 +246,145 @@ def probe(runtime: dict) -> None:
             raise ConfigError(f"{name}: published HTTP endpoint is not ready") from error
 
 
+def require_local_daemon() -> None:
+    """Reject remote Docker discovery instead of advertising caller addresses."""
+    context = os.environ.get("DOCKER_CONTEXT", "")
+    endpoint = os.environ.get("DOCKER_HOST", "") if not context else ""
+    if not endpoint:
+        if not context:
+            result = subprocess.run(["docker", "context", "show"], capture_output=True, text=True,
+                                    timeout=5, check=False)
+            if result.returncode or not result.stdout.strip():
+                raise ConfigError("cannot determine Docker context; select a local Docker context before preview")
+            context = result.stdout.strip()
+        result = subprocess.run(["docker", "context", "inspect", context], capture_output=True,
+                                text=True, timeout=5, check=False)
+        if result.returncode:
+            raise ConfigError("cannot inspect Docker context; select a local Docker context before preview")
+        try:
+            endpoint = json.loads(result.stdout)[0]["Endpoints"]["docker"]["Host"]
+        except (ValueError, KeyError, IndexError, TypeError) as error:
+            raise ConfigError("Docker context has no inspectable daemon endpoint") from error
+    if not isinstance(endpoint, str) or not endpoint.startswith("unix:///"):
+        raise ConfigError("remote Docker daemon host address discovery is unavailable; select a local context or provide an authorized daemon-host discovery route and explicit host-address configuration")
+
+
+def discover_addresses(bind_hosts: list[str]) -> tuple[dict[int, list[str]], list[str]]:
+    """Enumerate all host interface addresses for effective wildcard families."""
+    families = {ipaddress.ip_address(host or "0.0.0.0").version for host in bind_hosts
+                if ipaddress.ip_address(host or "0.0.0.0").is_unspecified}
+    addresses: dict[int, list[str]] = {4: [], 6: []}
+    notes: list[str] = []
+    require_local_daemon()
+    if not families:
+        return addresses, notes
+    if shutil.which("ip") is None:
+        raise ConfigError("required command not found: ip; install iproute2 on the preview host before wildcard startup")
+    try:
+        result = subprocess.run(["ip", "-br", "a"], capture_output=True, text=True, timeout=5, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ConfigError("host address discovery failed or timed out: ip -br a; check iproute2 and host interface access") from error
+    if result.returncode:
+        raise ConfigError("host address discovery failed: ip -br a; check iproute2 and host interface access")
+    omitted_link_local = False
+    for row in result.stdout.splitlines():
+        fields = row.split()
+        if len(fields) < 3 or fields[1] not in ("UP", "UNKNOWN"):
+            continue
+        for field in fields[2:]:
+            try:
+                address = ipaddress.ip_interface(field).ip
+            except ValueError:
+                continue
+            if address.version not in families or address.is_unspecified or address.is_loopback:
+                continue
+            if address.version == 6 and address.is_link_local:
+                omitted_link_local = True
+                continue
+            value = str(address)
+            if value not in addresses[address.version]:
+                addresses[address.version].append(value)
+    notes.append("Host addresses enumerated with ip -br a; access from other devices is unverified.")
+    if not any(addresses[family] for family in families):
+        notes.append("No non-loopback host address found.")
+    if omitted_link_local:
+        notes.append("Link-local IPv6 addresses omitted because device-specific zone identifiers are required.")
+    return addresses, notes
+
+
+def configured_candidate(host: str, bind: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    """Limit literal hints to the actual publishing family or bound address."""
+    if not host or bind.is_loopback:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return True
+    if address.is_loopback or address.is_unspecified or (address.version == 6 and address.is_link_local):
+        return False
+    return address.version == bind.version if bind.is_unspecified else address == bind
+
+
+def entry_urls(runtime: dict, addresses: dict[int, list[str]]) -> tuple[list[str], list[str]]:
+    """Separate remote candidates from preview-host loopback browser entries."""
+    remote: list[str] = []
+    local: list[str] = []
+    for mapping in runtime["mappings"]:
+        bind = ipaddress.ip_address(mapping["HostIp"] or "0.0.0.0")
+        hosts = addresses[bind.version][:] if bind.is_unspecified else ([] if bind.is_loopback else [str(bind)])
+        if configured_candidate(runtime["lan"], bind) and runtime["lan"] not in hosts:
+            hosts.append(runtime["lan"])
+        remote.extend(f"http://{url_host(host)}:{mapping['HostPort']}" for host in hosts)
+        if bind.is_unspecified or bind.is_loopback:
+            local.append(mapping_url(mapping))
+    return list(dict.fromkeys(remote)), list(dict.fromkeys(local))
+
+
+def render_section(title: str, lines: list[str]) -> None:
+    """Render nonempty mandatory sections with directly copyable URL lines."""
+    if lines:
+        print(CLIStyle.color(f"\n{title}:"))
+        for line in lines:
+            print(CLIStyle.color(line))
+
+
 def report(runtimes: list[dict], ready: bool) -> None:
-    """Report verified listeners separately from effective Docker mappings."""
+    """Print the shared browser-first contract after discovery has succeeded."""
+    remote_entries: list[str] = []
+    local_entries: list[str] = []
+    notes: list[str] = []
     if ready:
+        bind_hosts = [mapping["HostIp"] for runtime in runtimes for mapping in runtime["mappings"]]
+        addresses, notes = discover_addresses(bind_hosts)
+        for runtime in runtimes:
+            remote, local = entry_urls(runtime, addresses)
+            label = "API" if runtime["service"] == "housou" else "Website"
+            entry = f"{label} ({runtime['service']}):"
+            if remote:
+                remote_entries.extend([entry, *remote])
+            if local:
+                local_entries.extend([entry, *local])
+        if remote_entries and not notes:
+            notes.append("Access from other devices is unverified.")
         print(CLIStyle.color("System is ready."))
-    for runtime in runtimes:
-        name = runtime["service"]
-        mark = "container; HTTP" if ready else "container; HTTP listener unverified"
-        print(CLIStyle.color(f"Listening {name}: {url_host(runtime['host'])}:{runtime['port']} ({mark})"))
-        for mapping in runtime["mappings"]:
-            print(CLIStyle.color(f"Published {name}: {url_host(mapping['HostIp'])}:{mapping['HostPort']} -> {url_host(runtime['host'])}:{runtime['port']}"))
-            if ready:
-                label = "API" if name == "housou" else "Website"
-                print(CLIStyle.color(f"{label}: {mapping_url(mapping)}"))
-                if mapping["HostIp"] in ("0.0.0.0", "::", "") and runtime["lan"]:
-                    print(CLIStyle.color(f"Host/LAN {label} (candidate, untested): http://{url_host(runtime['lan'])}:{mapping['HostPort']}"))
-    if ready and not any(runtime["lan"] for runtime in runtimes):
-        print(CLIStyle.color("LAN access: use your reachable host address; cross-device reachability is unverified."))
+    render_section("Open", remote_entries)
+    render_section("Local only (preview host)", local_entries)
+    listeners = [f"Listening {runtime['service']}: {url_host(runtime['host'])}:{runtime['port']} "
+                 f"(container; HTTP{' listener unverified' if not ready else ''})" for runtime in runtimes]
+    published = [f"Published {runtime['service']}: {url_host(mapping['HostIp'])}:{mapping['HostPort']} -> "
+                 f"{url_host(runtime['host'])}:{runtime['port']} "
+                 f"({'active listener' if ready else 'listener unverified'})"
+                 for runtime in runtimes for mapping in runtime["mappings"]]
+    render_section("Listeners", listeners)
+    render_section("Published", published)
+    render_section("Notes", notes)
 
 
 def main() -> int:
     """Dispatch config loading or read-only preview inspection."""
     parser = ColoredArgumentParser(description="Internal preview configuration/runtime helper",
                                    epilog="Example: python3 scripts/preview-config.py load . dx")
-    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status"))
+    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status", "discovery"))
     parser.add_argument("root", type=Path)
     parser.add_argument("arguments", nargs="*")
     parser.add_argument("--origin")
@@ -274,6 +393,9 @@ def main() -> int:
     root = args.root.resolve()
     runtimes: list[dict] = []
     try:
+        if args.action == "discovery":
+            discover_addresses(args.arguments)
+            return 0
         if args.action == "load":
             emit_values(load_config(root, args.arguments[0], args.origin))
             return 0
@@ -293,7 +415,6 @@ def main() -> int:
         for runtime in runtimes:
             probe(runtime)
         if args.action == "status":
-            print(CLIStyle.color("Preview status: ready"))
             report(runtimes, True)
         return 0
     except ConfigError as error:

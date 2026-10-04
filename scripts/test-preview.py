@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """Check preview configuration and lifecycle using isolated HTTP/Docker fixtures."""
 
+import contextlib
 import http.server
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -14,6 +16,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest import mock
 
 sys.dont_write_bytecode = True
 
@@ -40,6 +43,15 @@ def docker_stub() -> int:
     with (root / "commands.jsonl").open("a") as output:
         output.write(json.dumps(args) + "\n")
     operation = args[0]
+    if operation == "context":
+        if args[1] == "show":
+            print("default")
+        elif args[1] == "inspect":
+            endpoint = "ssh://fixture-daemon" if args[2] == "remote" else "unix:///fixture/docker.sock"
+            print(json.dumps([{"Endpoints": {"docker": {"Host": endpoint}}}]))
+        else:
+            return 2
+        return 0
     if operation == "image":
         return 1 if (root / "missing-image").exists() else 0
     if operation == "build":
@@ -57,6 +69,9 @@ def docker_stub() -> int:
         print(json.dumps([state[args[1]]]))
         return 0
     if operation == "exec":
+        if (root / "transient-fail").exists():
+            (root / "transient-fail").unlink()
+            return 1
         return 1 if (root / "internal-fail").exists() else 0
     if operation == "create":
         labels, environment, mappings = {}, {}, {}
@@ -77,6 +92,7 @@ def docker_stub() -> int:
                 environment[key] = item if "=" in value else os.environ.get(key, "")
             elif option == "-p":
                 host, published, port = value.rsplit(":", 2)
+                host = host.strip("[]")
                 if published == "0":
                     published = os.environ["TEST_BACKEND_PORT" if labels["houkago.service"] == "housou" else "TEST_FRONTEND_PORT"]
                 mappings[f"{port}/tcp"] = [{"HostIp": host, "HostPort": published}]
@@ -105,6 +121,17 @@ def docker_stub() -> int:
     else:
         return 2
     path.write_text(json.dumps(state))
+    return 0
+
+
+def ip_stub() -> int:
+    """Provide deterministic host interfaces without inspecting real networking."""
+    root = Path(os.environ["TEST_DOCKER_STATE"])
+    with (root / "ip-calls").open("a") as output:
+        output.write(" ".join(sys.argv[2:]) + "\n")
+    if sys.argv[2:] != ["-br", "a"] or (root / "ip-fail").exists():
+        return 1
+    print((root / "ip-output").read_text(), end="")
     return 0
 
 
@@ -138,7 +165,21 @@ class PreviewTests(unittest.TestCase):
         stub = self.bin / "docker"
         stub.write_text(f"#!/bin/sh\nexec {shutil.which('python3')} '{Path(__file__).resolve()}' --docker-stub \"$@\"\n")
         stub.chmod(0o755)
-        self.environment = {key: value for key, value in os.environ.items() if not key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_", "DX_")) and key not in ("HOST", "PORT", "HOUSOU_DB")}
+        stub = self.bin / "ip"
+        stub.write_text(f"#!/bin/sh\nexec {shutil.which('python3')} '{Path(__file__).resolve()}' --ip-stub \"$@\"\n")
+        stub.chmod(0o755)
+        for command in ("bash", "dirname", "python3", "id", "mkdir", "mktemp", "rm", "sleep"):
+            (self.bin / command).symlink_to(shutil.which(command))
+        (self.state / "ip-output").write_text(
+            "lo UNKNOWN 127.0.0.1/8 ::1/128\n"
+            "eth0 UP 192.0.2.10/24 192.0.2.11/24 2001:db8::10/64 fe80::1/64\n"
+            "eth1 UP 198.51.100.20/24 192.0.2.10/24\n"
+            "bridge0 UP 172.18.0.1/16\n"
+            "tun0 UNKNOWN 203.0.113.7/32\n"
+            "eth2 DOWN 198.51.100.99/24\n"
+            "invalid UP nonsense 0.0.0.0/0\n"
+        )
+        self.environment = {key: value for key, value in os.environ.items() if not key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_", "DX_", "DOCKER_")) and key not in ("HOST", "PORT", "HOUSOU_DB")}
         self.environment.update(PATH=f"{self.bin}:{os.environ['PATH']}", TEST_DOCKER_STATE=str(self.state))
         self.servers = []
         for key in ("TEST_BACKEND_PORT", "TEST_FRONTEND_PORT"):
@@ -175,13 +216,14 @@ class PreviewTests(unittest.TestCase):
         """Inspect actual mapping, reuse only healthy ownership and preserve data."""
         result = self.run_preview("start", overrides={"DX_REBUILD_IMAGE": "1"})
         self.assertIn("System is ready.", result.stdout)
-        self.assertIn(f"API: http://127.0.0.1:{self.environment['TEST_BACKEND_PORT']}", result.stdout)
-        self.assertIn(f"Website: http://127.0.0.1:{self.environment['TEST_FRONTEND_PORT']}", result.stdout)
+        self.assertIn(f"API (housou):\nhttp://127.0.0.1:{self.environment['TEST_BACKEND_PORT']}", result.stdout)
+        self.assertIn(f"Website (kyoushitsu-react):\nhttp://127.0.0.1:{self.environment['TEST_FRONTEND_PORT']}", result.stdout)
+        self.assertEqual(result.stderr, "")
         state = self.records()
         self.assertEqual(state["owned-frontend"]["Config"]["Env"]["VITE_HOUSOU_PORT"], self.environment["TEST_BACKEND_PORT"])
         self.assertNotIn("HOUKAGO_BAIDU_CLIENT_SECRET", state["owned-frontend"]["Config"]["Env"])
-        self.run_preview("start")
-        self.run_preview("status")
+        self.assertEqual(self.run_preview("start").stdout, result.stdout)
+        self.assertEqual(self.run_preview("status").stdout, result.stdout)
         self.assertEqual(sum(command[0] == "create" for command in self.commands()), 2)
         self.assertFalse(any(command[0] in ("build", "run") for command in self.commands()))
         self.assertNotIn("literal $(never)", json.dumps(self.commands()))
@@ -189,6 +231,127 @@ class PreviewTests(unittest.TestCase):
         self.run_preview("down")
         self.assertEqual(set(self.records()), {"unrelated"})
         self.assertEqual((self.repo / "persistence-marker").read_text(), "retain")
+
+    def test_all_host_addresses_and_sections(self) -> None:
+        """Enumerate secondary, bridge and tunnel candidates per browser entry."""
+        result = self.run_preview("start", overrides={"PREVIEW_LAN_HOST": "preview.example.test"})
+        labels = ("Open:", "Local only (preview host):", "Listeners:", "Published:", "Notes:")
+        positions = [result.stdout.index(label) for label in labels]
+        self.assertEqual(positions, sorted(positions))
+        opened = result.stdout.split("Open:\n", 1)[1].split("\nLocal only", 1)[0]
+        for label, key in (("API (housou):", "TEST_BACKEND_PORT"), ("Website (kyoushitsu-react):", "TEST_FRONTEND_PORT")):
+            expected = label + "\n" + "\n".join(f"http://{host}:{self.environment[key]}" for host in (
+                "192.0.2.10", "192.0.2.11", "198.51.100.20", "172.18.0.1", "203.0.113.7", "preview.example.test"))
+            self.assertIn(expected, opened)
+        self.assertNotIn("127.0.0.1", opened)
+        self.assertNotIn("198.51.100.99", opened)
+        self.assertNotIn("2001:db8", opened)
+        self.assertNotIn("http://0.0.0.0", result.stdout)
+        self.assertEqual((self.state / "ip-calls").read_text().splitlines(), ["-br a", "-br a"])
+        (self.state / "ip-output").write_text("eth9 UP 192.0.2.55/24\n")
+        self.assertIn("http://192.0.2.55:", self.run_preview("status").stdout)
+
+    def test_loopback_needs_no_ip_and_has_no_remote_urls(self) -> None:
+        """Keep loopback publishing local even with a configured remote hint."""
+        (self.bin / "ip").unlink()
+        result = self.run_preview("start", overrides={"DX_BIND_HOST": "127.0.0.1", "PREVIEW_LAN_HOST": "preview.example.test", "PATH": str(self.bin)})
+        self.assertNotIn("Open:", result.stdout)
+        self.assertIn("Local only (preview host):", result.stdout)
+        self.assertNotIn("preview.example.test", result.stdout)
+        self.assertFalse((self.state / "ip-calls").exists())
+
+    def test_discovery_errors_before_container_creation(self) -> None:
+        """Missing/failing host discovery never starts containers or claims ready."""
+        (self.state / "ip-fail").touch()
+        self.assertIn("ip -br a", self.run_preview("start", success=False).stderr)
+        (self.state / "ip-fail").unlink()
+        (self.bin / "ip").unlink()
+        self.assertIn("required command not found: ip", self.run_preview("start", success=False, overrides={"PATH": str(self.bin)}).stderr)
+        self.assertFalse(any(command[0] in ("create", "start") for command in self.commands()))
+
+    def test_remote_daemon_does_not_enumerate_caller(self) -> None:
+        """Inspect effective host/context and refuse unavailable remote discovery."""
+        for overrides in ({"DOCKER_HOST": "tcp://fixture-daemon:2375"}, {"DOCKER_CONTEXT": "remote", "DOCKER_HOST": "unix:///ignored.sock"}):
+            with self.subTest(overrides=overrides):
+                result = self.run_preview("start", success=False, overrides=overrides)
+                self.assertIn("remote Docker daemon host address discovery is unavailable", result.stderr)
+        self.assertFalse((self.state / "ip-calls").exists())
+        self.assertFalse(any(command[0] in ("create", "start") for command in self.commands()))
+        self.run_preview("start", overrides={"DOCKER_CONTEXT": "default", "DOCKER_HOST": "tcp://ignored-daemon:2375"})
+
+    def test_status_discovery_failure_preserves_services(self) -> None:
+        """A failed fresh status enumeration cannot reuse previously printed URLs."""
+        self.run_preview("start")
+        (self.state / "ip-fail").touch()
+        result = self.run_preview("status", success=False)
+        self.assertIn("ip -br a", result.stderr)
+        self.assertNotIn("Open:", result.stdout)
+        self.assertNotIn("http://", result.stdout)
+        self.assertEqual(len(self.records()), 3)
+
+    def test_no_eligible_address_keeps_local_summary(self) -> None:
+        """An empty candidate set gives the required note and working local URLs."""
+        (self.state / "ip-output").write_text("lo UNKNOWN 127.0.0.1/8 ::1/128\neth0 DOWN 192.0.2.10/24\n")
+        result = self.run_preview("start")
+        self.assertNotIn("Open:", result.stdout)
+        self.assertIn("No non-loopback host address found.", result.stdout)
+        self.assertIn("Local only (preview host):", result.stdout)
+
+    def test_transient_failures_quiet_unless_verbose(self) -> None:
+        """Healthy startup hides retry errors unless the user requests diagnostics."""
+        for arguments, verbose in (((), False), (("--verbose",), True)):
+            with self.subTest(verbose=verbose):
+                (self.state / "transient-fail").touch()
+                result = self.run_preview("start", *arguments, overrides={"PREVIEW_READY_TIMEOUT": "5"})
+                if verbose:
+                    self.assertIn("housou: owned container HTTP listener is not ready", result.stderr)
+                else:
+                    self.assertEqual(result.stderr, "")
+                self.run_preview("stop")
+
+    def test_terminal_readiness_retains_named_diagnostics(self) -> None:
+        """A permanently unready required service exits without browser URLs."""
+        (self.state / "internal-fail").touch()
+        result = self.run_preview("start", success=False)
+        self.assertIn("housou: owned container HTTP listener is not ready", result.stderr)
+        self.assertIn("readiness timed out", result.stderr)
+        self.assertNotIn("Open:", result.stdout)
+        self.assertNotIn("http://", result.stdout)
+        self.assertEqual(set(self.records()), {"unrelated"})
+
+    def render_runtime(self, host: str, lan: str = "", ready: bool = True) -> str:
+        """Exercise unmapped-to-loopback families without network side effects."""
+        spec = importlib.util.spec_from_file_location("preview_config", self.repo / "scripts/preview-config.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        runtime = {"service": "kyoushitsu-react", "host": "0.0.0.0", "port": "5173", "lan": lan,
+                   "mappings": [{"HostIp": host, "HostPort": "7081"}]}
+        output = io.StringIO()
+        with mock.patch.dict(os.environ, self.environment, clear=True), contextlib.redirect_stdout(output):
+            module.report([runtime], ready)
+        return output.getvalue()
+
+    def test_specific_bind_and_unverified_mapping(self) -> None:
+        """Specific binds advertise one address; unknown listeners have no URLs."""
+        rendered = self.render_runtime("192.0.2.77", "192.0.2.88")
+        self.assertIn("Open:\nWebsite (kyoushitsu-react):\nhttp://192.0.2.77:7081", rendered)
+        self.assertNotIn("192.0.2.88", rendered)
+        self.assertNotIn("Local only", rendered)
+        self.assertFalse((self.state / "ip-calls").exists())
+        rendered = self.render_runtime("0.0.0.0", ready=False)
+        self.assertIn("listener unverified", rendered)
+        self.assertNotIn("System is ready.", rendered)
+        self.assertNotIn("http://", rendered)
+
+    def test_ipv6_publication_excludes_ipv4_and_link_local(self) -> None:
+        """IPv6 wildcard mappings bracket global addresses and separate ::1."""
+        rendered = self.render_runtime("::")
+        self.assertIn("http://[2001:db8::10]:7081", rendered)
+        self.assertIn("http://[::1]:7081", rendered)
+        self.assertNotIn("http://192.0.2", rendered)
+        self.assertNotIn("http://[fe80", rendered)
+        self.assertIn("Link-local IPv6 addresses omitted", rendered)
+        self.assertNotIn("http://[::]:", rendered)
 
     def test_build_status_help_do_not_start(self) -> None:
         """Read-only/status and explicit image preparation have no implicit startup."""
@@ -328,11 +491,32 @@ class DotenvTests(unittest.TestCase):
             with self.assertRaisesRegex(module.ConfigError, "duplicate key KEY"):
                 module.parse_dotenv(path)
 
+    def test_probe_timeout_names_service(self) -> None:
+        """Timeout diagnostics retain the required service name without secrets."""
+        spec = importlib.util.spec_from_file_location("preview_config", Path(__file__).with_name("preview-config.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        runtime = {"service": "kyoushitsu-react", "state": "running", "id": "fixture", "mappings": [{"HostIp": "0.0.0.0", "HostPort": "9999"}]}
+        with mock.patch.object(module.subprocess, "run", side_effect=subprocess.TimeoutExpired("fixture", 3)):
+            with self.assertRaisesRegex(module.ConfigError, "kyoushitsu-react: owned container HTTP probe failed or timed out"):
+                module.probe(runtime)
+
+    def test_discovery_timeout_is_actionable(self) -> None:
+        """Address discovery timeouts name the failing host command."""
+        spec = importlib.util.spec_from_file_location("preview_config", Path(__file__).with_name("preview-config.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with mock.patch.object(module, "require_local_daemon"), mock.patch.object(module.shutil, "which", return_value="/fixture/ip"), mock.patch.object(module.subprocess, "run", side_effect=subprocess.TimeoutExpired("fixture", 5)):
+            with self.assertRaisesRegex(module.ConfigError, "host address discovery failed or timed out: ip -br a"):
+                module.discover_addresses(["0.0.0.0"])
+
 
 def main() -> int:
     """Run the bounded suite, or serve as its Docker stub executable."""
     if len(sys.argv) > 1 and sys.argv[1] == "--docker-stub":
         return docker_stub()
+    if len(sys.argv) > 1 and sys.argv[1] == "--ip-stub":
+        return ip_stub()
     suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
     return 0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1
 

@@ -13,7 +13,7 @@ It supplements the installed Trellis workflow without modifying its runtime.
 | Policy | Load when | Required action |
 | --- | --- | --- |
 | [Development principles](development-principles.md) | Every development task | Preserve user work, limit scope and verify actual behavior |
-| [Development and environment](development.md) | Before development, preview or configuration changes | Reuse `dx`; enforce the preview lifecycle, root `.env`, readiness/endpoint summary and verification contract |
+| [Development and environment](development.md) | Before development, preview or configuration changes | Reuse `dx`; enforce the preview lifecycle, root `.env`, mandatory unified console/address-discovery and verification contract |
 | [Frontend integration](frontend.md) | User-visible UI planning, implementation or review | Use project-local UUPM and approved task decisions; classify mobile coverage |
 | [Validation and human review](validation.md) | Planning checks and reaching submit-ready | Run desktop/mobile checks before requesting residual human review |
 | [Commit and archive policy](commit-policy.md) | Commit planning, archive or journal recording | Attribute each Codex-assisted task once on its archive commit |
@@ -45,10 +45,23 @@ lifecycle changes; preserve its current user edits.
 
 The installed Trellis version is `0.6.14`. Its available exact LICENSE is
 collected; UUPM notice/provenance remains `license-notice-needed`.
-Current task manifests explicitly load this policy and applicable details.
+Existing task/archive manifests explicitly reference this policy and applicable
+details; this update has no task and does not claim live hook injection.
 Future-task loading needs the manual steps in [loading.md](loading.md):
-the package-context command does not load this namespace automatically.
+the package-context command does not load this namespace automatically. Root
+AGENTS now supplies a project-owned read directive outside its managed block.
 The preview contract in `development.md` is required for preview implementation;
 its runtime section records the implemented Docker commands and constraints.
-Future-task policy loading still needs explicit context registration.
+Read [preview-console.md](preview-console.md) for the mandatory format and host
+address enumeration; register that detail alongside development.md for preview tasks.
+Future-task implement/check loading still needs explicit detail registration.
 No protected template was changed and no backup recovery was needed.
+
+## Preview contract context registration
+
+For normal preview tasks, register `index.md`, `development.md` and
+`preview-console.md` explicitly in both implement/check manifests; loaders do
+not recursively follow Markdown links. Root AGENTS supplies the portable main
+session read directive. An explicitly authorized no-task change reads the same
+files directly and must not create a task or change existing task status merely
+for this policy reconciliation.
