@@ -44,8 +44,8 @@ export function EntryPanel({ config }: { config: SiteConfig }) {
     void import("@/routes/room")
   }
   return (
-    <div className="grid gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-outline bg-card p-4">
+    <div className="entry-choices">
+      <div className="entry-account">
         <p>
           {t("signedInAs")} <strong>{identity?.username}</strong>
         </p>

@@ -24,6 +24,11 @@ function protectedActivity(page: Page) {
   return activity
 }
 async function checkLayout(page: Page) {
+  await page.locator(".entry-station").evaluate(async (station) => {
+    await Promise.all(
+      station.getAnimations({ subtree: true }).map((animation) => animation.finished),
+    )
+  })
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
@@ -372,4 +377,89 @@ test("invalid successful config blocks bootstrap rather than silently defaulting
   await page.goto("/")
   await expect(page.getByRole("alert")).toContainText("楼层信息暂时无法读取")
   await expect(page.getByLabel("用户名")).toHaveCount(0)
+})
+
+test("editorial entry keeps configured identity and usable forms at narrow, tablet and wide sizes", async ({
+  page,
+}, info) => {
+  await identity(page)
+  const name = "周末的电影与音乐交流活动室"
+  await page.route("**/site-config", (route) =>
+    route.fulfill({
+      json: {
+        ...DEFAULT_SITE_CONFIG,
+        site: { name, subtitle: "After school, together", browserTitle: name },
+        entry: {
+          ...DEFAULT_SITE_CONFIG.entry,
+          floorLabel: "电影与音乐交流社团的活动楼层",
+        },
+      },
+    }),
+  )
+  await page.goto("/")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(name)
+  await expect(page.getByText("After school, together", { exact: true })).toBeVisible()
+  const floorCodeHeight = await page.locator(".floor-code").evaluate((code) => {
+    const style = getComputedStyle(code)
+    return {
+      height: code.getBoundingClientRect().height,
+      singleLine:
+        Number.parseFloat(style.lineHeight) +
+        Number.parseFloat(style.paddingTop) +
+        Number.parseFloat(style.paddingBottom) +
+        Number.parseFloat(style.borderTopWidth) +
+        Number.parseFloat(style.borderBottomWidth),
+    }
+  })
+  expect(floorCodeHeight.height).toBeCloseTo(floorCodeHeight.singleLine, 0)
+  const widths = info.project.name === "entry-phone" ? [320, 375] : [768, 812, 1280, 1440]
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: width === 812 ? 375 : 900 })
+    await checkLayout(page)
+    const positions = await page.locator(".home-shell").evaluate((shell) => {
+      const rect = (selector: string) => {
+        const element = shell.querySelector(selector)
+        if (!element) throw new Error(`Missing entry element: ${selector}`)
+        const { left, right, top, bottom } = element.getBoundingClientRect()
+        return { left, right, top, bottom }
+      }
+      return {
+        intro: rect(".floor-sign"),
+        desk: rect(".entry-station"),
+        scene: rect(".home-scene"),
+        controls: Array.from(shell.querySelectorAll("input, button, .floor-marker")).map(
+          (element) => {
+            const { left, right } = element.getBoundingClientRect()
+            return { left, right }
+          },
+        ),
+      }
+    })
+    for (const control of positions.controls) {
+      expect(control.left).toBeGreaterThanOrEqual(0)
+      expect(control.right).toBeLessThanOrEqual(width)
+    }
+    if (width <= 800) {
+      expect(positions.desk.top).toBeGreaterThanOrEqual(positions.intro.bottom)
+      expect(positions.scene.top).toBeGreaterThanOrEqual(positions.desk.bottom)
+    } else {
+      expect(positions.desk.left).toBeGreaterThan(positions.intro.right)
+    }
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "200%"
+  })
+  await checkLayout(page)
+  await page.getByLabel("用户名").fill("visual-user")
+  await page.getByLabel("密码", { exact: true }).fill("visual-password")
+  await page.getByRole("button", { name: "没有账号？注册" }).click()
+  await expect(page.getByRole("heading", { name: "登记一个新账号" })).toBeVisible()
+  await expect(page.getByLabel("用户名")).toBeFocused()
+  await expect(page.getByLabel("密码", { exact: true })).toHaveValue("")
+  await expect(page.locator(".entry-station > [data-slot=card]")).toHaveCSS(
+    "animation-name",
+    "none",
+  )
+  await page.screenshot({ path: info.outputPath("long-identity.png"), fullPage: true })
 })

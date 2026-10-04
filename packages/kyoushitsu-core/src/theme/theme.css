@@ -42,7 +42,8 @@
   --primitive-space-7: 48px;
   --primitive-space-8: 64px;
   --primitive-control-height: 44px;
-  --primitive-font-display: ui-serif, "Yu Mincho", "Hiragino Mincho ProN", Georgia, serif;
+  --primitive-font-display: "Noto Serif CJK SC", "Songti SC", "Yu Mincho", "Hiragino Mincho ProN",
+    Georgia, serif;
   --primitive-font-body: ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans CJK SC",
     "Microsoft YaHei", system-ui, sans-serif;
   --primitive-type-display: clamp(34px, 5vw, 56px);

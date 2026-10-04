@@ -90,6 +90,23 @@ commands remain in the M6 task evidence, not the active command profile.
 
 ## Browser classification and evidence
 
+### Watched artifacts and settled geometry
+
+Run `./dx bun run contract:drift` before browser verification. The drift command
+regenerates `packages/kyoushitsu-core/src/api/generated/` twice, even when all
+output bytes remain unchanged. A running Vite watcher can reload entry/room
+documents and invalidate focus or session assertions. Do not run generation,
+formatting or other watched-source writes concurrently with browser acceptance.
+If this happened, retain the failure evidence and rerun the affected cases on
+the unchanged final source; do not weaken their assertions.
+
+For entry geometry measurements, await
+`station.getAnimations({ subtree: true }).map(animation => animation.finished)`
+with `Promise.all` before reading bounding boxes. The short reveal's transform
+can otherwise produce fractional bounds just below the 44px control height.
+Keep the >=44px requirement; reduced-motion and active-transition behavior need
+their own assertions rather than measurement of an unsettled frame.
+
 Use `playwright-required` for locally reproducible changed UI acceptance;
 extend the smallest meaningful test with semantic locators, controlled states
 and final-state assertions. Reuse an existing equivalent runner as

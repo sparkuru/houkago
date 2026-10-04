@@ -60,8 +60,9 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
     <main className={`room-page${cinemaMode ? " room-cinema" : ""}`}>
       <header className="room-topbar">
         <div>
+          <span className="room-overline">{t("roomOverline")}</span>
           <h1>{state.room?.name ?? t("enteringBushitsu")}</h1>
-          <p>
+          <p className={`room-connection${state.connection === "open" ? " is-connected" : ""}`}>
             {t("roomInfoStatus")}:{" "}
             {state.connection === "open" ? t("roomStatusNormal") : t("roomStatusConnecting")}
           </p>
@@ -108,8 +109,29 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
         <div className="room-grid">
           <div className="room-main">
             <Card className={current ? "room-current" : "room-current room-current-empty"}>
+              {!current && (
+                <svg
+                  className="room-projection-mark"
+                  viewBox="0 0 80 64"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M8 10h64v40H8Zm-4-4h72M40 50v8m-12 0h24"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="m34 23 16 8-16 8Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
               <span className="card-kicker">{t("current")}</span>
               <h2>{current?.title ?? t("waitingBuchouJouei")}</h2>
+              {!current && <p className="room-waiting-hint">{t("roomWaitingHint")}</p>}
               {current && (!isBaidu || baidu.state === "ready") && (
                 <PlayerStage
                   key={current.id}
@@ -156,8 +178,10 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                 <ul className="room-list">
                   {state.members.map((member) => (
                     <li key={member.id}>
-                      {member.nickname} ·{" "}
-                      {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
+                      <span className="room-member-name">{member.nickname}</span>
+                      <span className="room-member-role">
+                        {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
+                      </span>
                     </li>
                   ))}
                 </ul>

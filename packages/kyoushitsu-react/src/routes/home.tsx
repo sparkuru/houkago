@@ -2,6 +2,7 @@ import { useIdentity, useResourceState } from "@/app/context"
 import { Alert, Status } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ClassroomScene } from "@/features/entry/classroom-scene"
 import { EntryPanel } from "@/features/entry/entry-panel"
 import { IdentityPanel } from "@/features/identity/identity-panel"
 import { useSearch } from "@tanstack/react-router"
@@ -23,18 +24,23 @@ export function Home() {
     <main className="home">
       <div className="home-architecture" aria-hidden="true" />
       <div className="home-shell">
-        {config?.data ? (
-          <header className="floor-sign">
+        <div className="home-masthead">
+          <p className="home-wordmark">{t("entryClubLabel")}</p>
+          {config?.data && (
             <div className="floor-marker">
               <span className="floor-code">{config.data.entry.floorCode}</span>
               <span>{config.data.entry.floorLabel}</span>
             </div>
+          )}
+        </div>
+        {config?.data ? (
+          <header className="floor-sign">
+            <p className="floor-overline">{t("entryOverline")}</p>
             <h1>{config.data.site.name}</h1>
             {config.data.site.subtitle && (
               <p className="brand-romanized">{config.data.site.subtitle}</p>
             )}
             <p className="floor-hint">{config.data.entry.hint}</p>
-            <p className="floor-privacy">{config.data.entry.privacyNote}</p>
           </header>
         ) : (
           <header className="floor-sign">
@@ -47,13 +53,15 @@ export function Home() {
           {configError ? (
             <Alert>{t("siteConfigFailed")}</Alert>
           ) : !config?.data ? (
-            <Status>{t("loadingSiteConfig")}</Status>
+            <Card className="entry-loading-card">
+              <Status>{t("loadingSiteConfig")}</Status>
+            </Card>
           ) : state.phase === "error" ? (
             <Card>
               <Button onClick={() => void runtime.restore()}>{t("retry")}</Button>
             </Card>
           ) : state.phase === "restoring" && !state.command ? (
-            <Card>
+            <Card className="entry-loading-card">
               <Status>
                 <h2>{t("restoringSession")}</h2>
                 <p>{t("restoringSessionHint")}</p>
@@ -65,6 +73,23 @@ export function Home() {
             <IdentityPanel />
           )}
         </div>
+        {config?.data && (
+          <>
+            <figure className="home-scene">
+              <ClassroomScene />
+              <figcaption>
+                <span className="scene-caption-mark" aria-hidden="true">
+                  ↳
+                </span>
+                {t("entrySceneCaption")}
+              </figcaption>
+            </figure>
+            <footer className="home-footer">
+              <p className="floor-privacy">{config.data.entry.privacyNote}</p>
+              <p className="home-closing">{t("entryClosing")}</p>
+            </footer>
+          </>
+        )}
       </div>
     </main>
   )

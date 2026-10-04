@@ -2,6 +2,12 @@ export const DEFAULT_LOCALE = "zh-CN" as const
 
 export const messages = {
   "zh-CN": {
+    entryClubLabel: "放课后 · 同步放映",
+    entryOverline: "留一点时间，给彼此。",
+    entrySceneCaption: "灯光已留好，等你和同伴入座。",
+    entryClosing: "好故事，一起看。",
+    roomOverline: "放课后的放映时间",
+    roomWaitingHint: "节目开始前，先和同伴聊聊吧。",
     loadingSiteConfig: "正在读取楼层信息…",
     siteConfigFailed: "楼层信息暂时无法读取。",
     signOutFailed: "退出登录未能确认，请核对当前账号后重试。",

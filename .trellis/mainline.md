@@ -58,6 +58,26 @@
 
 ## Ordered Work
 
+### Active initiative — visual craft refinement (2026-10-04)
+
+The current thread goal authorizes implementation and iterative visual review
+against Awwwards/Webby/FWA quality standards. The scoped task is
+[visual craft refinement](tasks/10-04-visual-craft-refinement/prd.md), covering
+entry and room presentation across the eight requested design dimensions.
+Warm Club identity and all runtime/provider/permission contracts are preserved.
+This is additional presentation work after completed acceptance and migration.
+The owner subsequently authorized submission and normal task closure with
+`可以提交` on 2026-10-04. No deployment or push is authorized.
+Implementation and self-review evidence are recorded in the task
+[validation](tasks/10-04-visual-craft-refinement/validation.md): 459 unit tests,
+62 full-suite browser passes with 3 existing applicability skips, then 37
+affected-layout regressions after the last visual fixes. Lint, seven workspace
+types, build, module boundary and byte-stable contract checks passed. The task
+remains in_progress until the now-authorized commit/archive completes. The owner accepted
+visuals with `视觉通过` on 2026-10-04 and the final independent Trellis check
+passed, resolving the product goal. Submission is authorized; the owned
+memory fixture is stopped. No implementation or visual acceptance remains open.
+
 ### Next initiative — real-environment acceptance (2026-10-04)
 
 The owner approved creating a testing task using configuration A from
