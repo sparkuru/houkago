@@ -1,0 +1,48 @@
+[
+  {
+    "source": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "browser": "149.0.7827.55",
+    "boundary": "actual public HTTP provider through backend preview and media proxy"
+  },
+  {
+    "action": "public URL preview",
+    "status": 200
+  },
+  {
+    "action": "actual media decoded progression",
+    "state": {
+      "time": 0.829786,
+      "paused": false,
+      "readyState": 4,
+      "error": null,
+      "rate": 1
+    },
+    "deliveries": [
+      {
+        "status": 206,
+        "bytes": 1128375,
+        "contentType": "video/mp4"
+      },
+      {
+        "status": 206,
+        "bytes": 0,
+        "contentType": "video/mp4"
+      }
+    ]
+  },
+  {
+    "action": "HTTP responses observed",
+    "deliveries": [
+      {
+        "status": 206,
+        "bytes": 1128375,
+        "contentType": "video/mp4"
+      },
+      {
+        "status": 206,
+        "bytes": 0,
+        "contentType": "video/mp4"
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "criterion": "A1",
+    "action": "approval",
+    "independentIdentities": true,
+    "protectedReadsAfterAdmission": 2,
+    "admissionEvents": [
+      "waiting",
+      "waiting",
+      "entered",
+      "entered"
+    ]
+  },
+  {
+    "criterion": "A1",
+    "action": "document reload reconnect",
+    "identityPreserved": true,
+    "actualSocketClosures": 1,
+    "freshAdmissions": [
+      "entered"
+    ],
+    "duplicateChatEvents": false,
+    "queueCount": 2,
+    "currentTitle": "Acceptance pending"
+  }
+]

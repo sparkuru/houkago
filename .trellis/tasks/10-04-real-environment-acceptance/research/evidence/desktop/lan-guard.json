@@ -1,0 +1,8 @@
+[
+  {
+    "action": "public preview LAN guard",
+    "status": 400,
+    "expectedMessage": "private and local upstream URLs are not supported",
+    "queueCount": 0
+  }
+]

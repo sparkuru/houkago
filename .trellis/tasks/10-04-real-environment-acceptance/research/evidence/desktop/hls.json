@@ -1,0 +1,463 @@
+[
+  {
+    "criterion": "A2",
+    "format": "hls",
+    "action": "host play and viewer join",
+    "samples": [
+      {
+        "host": {
+          "time": 1.021411,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.014068,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0073430000000000994
+      },
+      {
+        "host": {
+          "time": 1.410328,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.501536,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.09120799999999996
+      },
+      {
+        "host": {
+          "time": 1.77925,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.77841,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0008399999999999519
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "host pause",
+    "samples": [
+      {
+        "host": {
+          "time": 2.070743,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 2.069682,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0010609999999999786
+      },
+      {
+        "host": {
+          "time": 2.070743,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 2.069682,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0010609999999999786
+      },
+      {
+        "host": {
+          "time": 2.070743,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 2.069682,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0010609999999999786
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "host seek 4",
+    "samples": [
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "permitted viewer seek 2 and rate 1.5",
+    "samples": [
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "English subtitle",
+    "activeCue": "Acceptance English subtitle",
+    "guestSubtitle": "off"
+  },
+  {
+    "format": "hls",
+    "action": "permitted viewer resumes",
+    "samples": [
+      {
+        "host": {
+          "time": 3.038976,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.043937,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.004961000000000215
+      },
+      {
+        "host": {
+          "time": 3.428507,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.430743,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0022359999999999047
+      },
+      {
+        "host": {
+          "time": 3.813495,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.818421,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.004925999999999764
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "server-echoed danmaku and web fullscreen",
+    "guestOverlayObserved": true
+  },
+  {
+    "format": "hls",
+    "action": "viewer pause",
+    "samples": [
+      {
+        "host": {
+          "time": 4.514594,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 4.518102,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0035080000000000666
+      },
+      {
+        "host": {
+          "time": 4.514594,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 4.518102,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0035080000000000666
+      },
+      {
+        "host": {
+          "time": 4.514594,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 4.518102,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0035080000000000666
+      }
+    ]
+  },
+  {
+    "format": "hls",
+    "action": "actual HTTP delivery",
+    "deliveries": [
+      {
+        "client": "guest",
+        "file": "master.m3u8",
+        "status": 200,
+        "bytes": 204
+      },
+      {
+        "client": "guest",
+        "file": "clip.m3u8",
+        "status": 200,
+        "bytes": 124
+      },
+      {
+        "client": "guest",
+        "file": "segment0.mpegts",
+        "status": 200,
+        "bytes": 91932
+      },
+      {
+        "client": "host",
+        "file": "master.m3u8",
+        "status": 200,
+        "bytes": 204
+      },
+      {
+        "client": "host",
+        "file": "clip.m3u8",
+        "status": 200,
+        "bytes": 124
+      },
+      {
+        "client": "host",
+        "file": "segment0.mpegts",
+        "status": 200,
+        "bytes": 91932
+      },
+      {
+        "client": "host",
+        "file": "sub-en.m3u8",
+        "status": 200,
+        "bytes": 88
+      },
+      {
+        "client": "host",
+        "file": "sub-en.vtt",
+        "status": 200,
+        "bytes": 60
+      }
+    ]
+  },
+  {
+    "action": "HTTP responses observed",
+    "deliveries": [
+      {
+        "client": "guest",
+        "file": "master.m3u8",
+        "status": 200,
+        "bytes": 204
+      },
+      {
+        "client": "guest",
+        "file": "clip.m3u8",
+        "status": 200,
+        "bytes": 124
+      },
+      {
+        "client": "guest",
+        "file": "segment0.mpegts",
+        "status": 200,
+        "bytes": 91932
+      },
+      {
+        "client": "host",
+        "file": "master.m3u8",
+        "status": 200,
+        "bytes": 204
+      },
+      {
+        "client": "host",
+        "file": "clip.m3u8",
+        "status": 200,
+        "bytes": 124
+      },
+      {
+        "client": "host",
+        "file": "segment0.mpegts",
+        "status": 200,
+        "bytes": 91932
+      },
+      {
+        "client": "host",
+        "file": "sub-en.m3u8",
+        "status": 200,
+        "bytes": 88
+      },
+      {
+        "client": "host",
+        "file": "sub-en.vtt",
+        "status": 200,
+        "bytes": 60
+      }
+    ]
+  }
+]

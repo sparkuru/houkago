@@ -1,0 +1,247 @@
+{
+  "startedAt": "2026-10-04T12:22:24.658Z",
+  "privacy": "sanitized numeric/status facts only",
+  "setup": "existing authenticated real HTTP room POST; UI create issue retained separately",
+  "browserVersion": "149.0.7827.55",
+  "nativeUiInput": "DOM HTMLElement.click on real buttons invokes existing UI handlers; native CDP input delivery is unverified for A3",
+  "ownedBrowser": {
+    "session": 20328,
+    "cdp": "http://127.0.0.1:18945",
+    "profile": "/tmp/houkago-acceptance.nJ2AJ79D/provider-browser-fresh"
+  },
+  "authenticatedIntendedAccount": true,
+  "initialConnection": {
+    "http": 200,
+    "connected": true,
+    "retentionMode": "server-saved",
+    "reason": null,
+    "adaptorOnline": true
+  },
+  "roomUrl": "http://192.168.9.4:15944/bushitsu/fb072a97-b1e9-473c-a776-ef8e1dad87ce",
+  "roomCreateHttp": 200,
+  "actualWsEntered": true,
+  "websocketOrigins": [
+    {
+      "origin": "ws://192.168.9.4:15944",
+      "pathClass": "development HMR"
+    },
+    {
+      "origin": "ws://192.168.9.4:3000",
+      "pathClass": "backend room"
+    }
+  ],
+  "roomUiAdmitted": true,
+  "helloOk": true,
+  "helloErrorCode": null,
+  "adapter": {
+    "browser": "chromium",
+    "protocolVersion": 1,
+    "headersReady": true,
+    "pairingHttp": 200,
+    "accountPaired": true
+  },
+  "mediaHttp": [
+    {
+      "providerOrigin": "baidu",
+      "status": 206,
+      "contentLength": 408453350,
+      "contentRange": "bytes 0-408453349/408453350",
+      "requestRange": null
+    },
+    {
+      "providerOrigin": "baidu",
+      "status": 206,
+      "contentLength": 32998,
+      "contentRange": "bytes 408420352-408453349/408453350",
+      "requestRange": "bytes=408420352-"
+    },
+    {
+      "providerOrigin": "baidu",
+      "status": 206,
+      "contentLength": 408420582,
+      "contentRange": "bytes 32768-408453349/408453350",
+      "requestRange": "bytes=32768-"
+    }
+  ],
+  "providerHttp": [
+    {
+      "operation": "directory-list",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "directory-list",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "directory-list",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "directory-list",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "directory-list",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "source-add",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "availability",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "operation": "provider-other",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "media-grant",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "provider-other",
+      "method": "GET",
+      "status": 307
+    },
+    {
+      "operation": "media-grant",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "operation": "provider-other",
+      "method": "GET",
+      "status": 307
+    },
+    {
+      "operation": "provider-other",
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "operation": "provider-other",
+      "method": "POST",
+      "status": 200
+    }
+  ],
+  "lastDirectoryStatus": 200,
+  "lastDirectoryState": null,
+  "scopedFolderReached": true,
+  "scopedDirectoriesVisited": 2,
+  "onlyOneScopedVideoSelected": true,
+  "sourceAddHttp": 200,
+  "metadata": {
+    "duration": 1419.97,
+    "readyState": 4,
+    "errorCode": null
+  },
+  "play": {
+    "firstSeconds": 1.770556,
+    "secondSeconds": 3.267858,
+    "deltaSeconds": 1.497302
+  },
+  "pause": {
+    "firstSeconds": 3.280877,
+    "secondSeconds": 3.280877,
+    "driftSeconds": 0
+  },
+  "seek": {
+    "targetSeconds": 15,
+    "actualSeconds": 15
+  },
+  "playbackPass": true,
+  "bridgeFacts": [
+    {
+      "type": "ERROR",
+      "ok": false,
+      "errorCode": "ADAPTER_ERROR"
+    },
+    {
+      "type": "RESULT",
+      "ok": true,
+      "errorCode": null
+    }
+  ],
+  "extensionRulesBeforeRevoke": {
+    "media": 4,
+    "privateExchange": 0
+  },
+  "unclaimedGrantBeforeRevoke": {
+    "http": 200,
+    "state": "ready"
+  },
+  "revokeHttp": 200,
+  "postRevokeAvailability": {
+    "http": 200,
+    "playable": false,
+    "reason": "connection-revoked"
+  },
+  "newGrantAfterRevoke": {
+    "http": 409,
+    "reason": null
+  },
+  "oldUnclaimedGrantAfterRevoke": {
+    "ok": false,
+    "errorCode": "ADAPTER_ERROR"
+  },
+  "extensionRulesAfterRevoke": {
+    "media": 0,
+    "privateExchange": 0
+  },
+  "revokePass": true,
+  "status": "PASS",
+  "readOnlyFinalMediaCheck": {
+    "finalMediaState": {
+      "currentTime": 15,
+      "readyState": 4,
+      "errorCode": null,
+      "seeking": false
+    },
+    "resourceByteEvidence": [
+      {
+        "encodedBodySize": 0,
+        "decodedBodySize": 0,
+        "transferSize": 0,
+        "durationMs": 146.30000000447035
+      },
+      {
+        "encodedBodySize": 0,
+        "decodedBodySize": 0,
+        "transferSize": 0,
+        "durationMs": 123.79999999701977
+      },
+      {
+        "encodedBodySize": 0,
+        "decodedBodySize": 0,
+        "transferSize": 0,
+        "durationMs": 4438.39999999851
+      }
+    ]
+  },
+  "finalAssertions": {
+    "intendedAccount": true,
+    "actualAdmission": true,
+    "adapter": true,
+    "actualMedia": true,
+    "decodedPlay": true,
+    "pause": true,
+    "seek": true,
+    "localRevoke": true,
+    "newGrantDenied": true,
+    "oldUnclaimedGrantInvalidated": true,
+    "extensionCleanup": true
+  },
+  "fingerprintOutcome": "UNVERIFIED: initial adapter ERROR then RESULT; request correlation absent; no fingerprint success claimed",
+  "byteBoundary": "Content-Length is advertised response length; resource-timing byte sizes zero; no transferred-total claim"
+}

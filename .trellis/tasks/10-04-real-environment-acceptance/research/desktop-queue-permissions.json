@@ -1,0 +1,57 @@
+[
+  {
+    "criterion": "A1",
+    "action": "guest without playlist permission cannot delete an owner's queued item",
+    "guestAdmitted": true,
+    "guestPlaylistGranted": false,
+    "deleteStatus": 403,
+    "expectedStatus": 403,
+    "beforeTitles": [
+      "Owner managed pending",
+      "Owner retained pending"
+    ],
+    "afterTitles": [
+      "Owner managed pending",
+      "Owner retained pending"
+    ]
+  },
+  {
+    "criterion": "A1",
+    "action": "playlist permission preserves host-only reorder and pending clear",
+    "guestPlaylistGranted": true,
+    "guestDeleteButtonCount": 0,
+    "deleteButtonVisibilityIsObservationOnly": true,
+    "moveStatus": 403,
+    "clearStatus": 403,
+    "afterTitles": [
+      "Owner managed pending",
+      "Owner retained pending"
+    ]
+  },
+  {
+    "criterion": "A1",
+    "action": "playlist-enabled guest may delete another member's queued item",
+    "guestPlaylistGranted": true,
+    "deleteStatus": 200,
+    "expectedStatus": 200,
+    "beforeTitles": [
+      "Owner managed pending",
+      "Owner retained pending"
+    ],
+    "afterTitles": [
+      "Owner retained pending"
+    ]
+  },
+  {
+    "criterion": "A1",
+    "action": "both real clients apply the final authoritative queue broadcast",
+    "hostWsQueueTitles": [
+      "Owner retained pending"
+    ],
+    "guestWsQueueTitles": [
+      "Owner retained pending"
+    ],
+    "pendingMediaRequests": 0,
+    "mediaScope": "queue-only pending items; no media selected or downloaded"
+  }
+]

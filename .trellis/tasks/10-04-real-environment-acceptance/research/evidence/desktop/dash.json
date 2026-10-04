@@ -1,0 +1,428 @@
+[
+  {
+    "criterion": "A2",
+    "format": "dash",
+    "action": "host play and viewer join",
+    "samples": [
+      {
+        "host": {
+          "time": 0.994792,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 0.986031,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.008761000000000019
+      },
+      {
+        "host": {
+          "time": 1.253659,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.253134,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0005250000000001087
+      },
+      {
+        "host": {
+          "time": 1.51153,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.511028,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0005020000000000024
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "host pause",
+    "samples": [
+      {
+        "host": {
+          "time": 1.801428,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.802222,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0007939999999999614
+      },
+      {
+        "host": {
+          "time": 1.801428,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.802222,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0007939999999999614
+      },
+      {
+        "host": {
+          "time": 1.801428,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 1.802222,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0.0007939999999999614
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "host seek 4",
+    "samples": [
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "guest": {
+          "time": 4,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1
+        },
+        "drift": 0
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "permitted viewer seek 2 and rate 1.5",
+    "samples": [
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      },
+      {
+        "host": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "permitted viewer resumes",
+    "samples": [
+      {
+        "host": {
+          "time": 2.624672,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 2.633168,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.008496000000000059
+      },
+      {
+        "host": {
+          "time": 3.018708,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.021818,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.003109999999999946
+      },
+      {
+        "host": {
+          "time": 3.40823,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.409632,
+          "paused": false,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0014020000000001254
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "viewer pause",
+    "samples": [
+      {
+        "host": {
+          "time": 3.858776,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.858567,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0002090000000003478
+      },
+      {
+        "host": {
+          "time": 3.858776,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.858567,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0002090000000003478
+      },
+      {
+        "host": {
+          "time": 3.858776,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "guest": {
+          "time": 3.858567,
+          "paused": true,
+          "readyState": 4,
+          "error": null,
+          "rate": 1.5
+        },
+        "drift": 0.0002090000000003478
+      }
+    ]
+  },
+  {
+    "format": "dash",
+    "action": "actual HTTP delivery",
+    "deliveries": [
+      {
+        "client": "guest",
+        "file": "clip.mpd",
+        "status": 200,
+        "bytes": 1234
+      },
+      {
+        "client": "guest",
+        "file": "init-stream0.m4s",
+        "status": 200,
+        "bytes": 827
+      },
+      {
+        "client": "guest",
+        "file": "chunk-stream0-00001.m4s",
+        "status": 200,
+        "bytes": 82914
+      },
+      {
+        "client": "host",
+        "file": "clip.mpd",
+        "status": 200,
+        "bytes": 1234
+      },
+      {
+        "client": "host",
+        "file": "init-stream0.m4s",
+        "status": 200,
+        "bytes": 827
+      },
+      {
+        "client": "host",
+        "file": "chunk-stream0-00001.m4s",
+        "status": 200,
+        "bytes": 82914
+      }
+    ]
+  },
+  {
+    "action": "HTTP responses observed",
+    "deliveries": [
+      {
+        "client": "guest",
+        "file": "clip.mpd",
+        "status": 200,
+        "bytes": 1234
+      },
+      {
+        "client": "guest",
+        "file": "init-stream0.m4s",
+        "status": 200,
+        "bytes": 827
+      },
+      {
+        "client": "guest",
+        "file": "chunk-stream0-00001.m4s",
+        "status": 200,
+        "bytes": 82914
+      },
+      {
+        "client": "host",
+        "file": "clip.mpd",
+        "status": 200,
+        "bytes": 1234
+      },
+      {
+        "client": "host",
+        "file": "init-stream0.m4s",
+        "status": 200,
+        "bytes": 827
+      },
+      {
+        "client": "host",
+        "file": "chunk-stream0-00001.m4s",
+        "status": 200,
+        "bytes": 82914
+      }
+    ]
+  }
+]

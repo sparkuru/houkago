@@ -1,0 +1,20 @@
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Project policy and conditional loading"}
+{"file":".trellis/spec/trellis-plus/development-principles.md","reason":"Scope, real-path validation and preservation"}
+{"file":".trellis/spec/trellis-plus/development.md","reason":"Existing dx and isolated preview/environment lifecycle"}
+{"file":".trellis/spec/trellis-plus/preview-console.md","reason":"Mandatory readiness and runtime address summary"}
+{"file":".trellis/spec/trellis-plus/frontend.md","reason":"Existing accepted UI; no redesign; physical mobile coverage"}
+{"file":".trellis/spec/trellis-plus/validation.md","reason":"Playwright runners, evidence boundaries and residual review"}
+{"file":".trellis/spec/trellis-plus/continuity.md","reason":"Approved testing scope and task/mainline authority"}
+{"file":".trellis/spec/trellis-plus/loading.md","reason":"Explicit native injection and child-side fallback"}
+{"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"Completion/archive authorization and attribution"}
+{"file":".trellis/spec/guides/index.md","reason":"Shared thinking triggers"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/index.md","reason":"React package contracts"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md","reason":"Admission, permissions and HTTP/WS authority"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md","reason":"Playback synchronization, provider and overlays"}
+{"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Real identities, cookies and entry lifecycle"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Actual final-state tests and required validation commands"}
+{"file":".trellis/tasks/10-04-real-environment-acceptance/research/environment.md","reason":"Configuration A discovery, runner reuse and exact gaps"}
+{"file":".trellis/tasks/10-04-real-environment-acceptance/design.md","reason":"Task topology, account/device preservation and evidence design"}
+{"file":".trellis/tasks/10-04-real-environment-acceptance/implement.md","reason":"Approved-on-review execution order and stop conditions"}
+{"file": ".trellis/spec/backend/seitoshou-contract.md", "reason": "Owner-confirmed playlist single-delete permission, distinct from host placement"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Guest deletion success and authoritative queue broadcast expectations"}

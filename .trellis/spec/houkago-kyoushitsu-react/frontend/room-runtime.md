@@ -63,9 +63,14 @@ session to the restored identity epoch and room ID.
   requests, changes permissions and removes members. Password mode is a host
   setting; the backend currently admits existing members and reports closed to
   new nonmembers. Do not invent a guest password handshake.
-- Queue add/select follows playlist permission. Queue deletion, reordering and
-  clearing pending items remain host-only even when a guest may select media;
-  enforce this in both presentation and runtime command gates.
+- Queue add/select and single-item deletion follow playlist permission. An
+  admitted guest with `canPlaylist` may delete an item added by the host or
+  another member; item authorship adds no restriction. Queue reordering and
+  clearing all pending items remain host-only. Apply the same permission split
+  in presentation, runtime commands and backend authorization. The owner
+  clarified this existing rule during real-environment acceptance on 2026-10-04;
+  the previous host-only single-delete wording was erroneous. See backend
+  [session authority](../../backend/seitoshou-contract.md).
 - Permission presets call `setPermissions` with shared `KENGEN_PRESETS`; their
   selected state and custom summary derive from server `KENGEN`, just like the
   individual checkboxes. Guests receive the read-only summary.
@@ -102,6 +107,9 @@ session to the restored identity epoch and room ID.
 | Identity epoch changes with the same account ID | Old room view is gated immediately; a fresh session owns later state |
 | WS disconnect | Controls stop sending; reconnect requires fresh admission |
 | Guest without playback permission | Control inputs disabled; remote playback still applies |
+| Admitted guest without playlist permission deletes an item through HTTP | HTTP 403; authoritative queue unchanged |
+| Admitted guest with playlist permission deletes a host-added item through HTTP | HTTP 200; item removed and `BANGUMI` reaches both clients |
+| Playlist-enabled guest reorders or clears all pending items | HTTP 403; those placement operations remain host-only |
 | Manual control within remote echo-suppression window | `userPlayback` sends a permitted gesture; automatic player events remain suppressed |
 | `KEIHOU` or HTTP command error | Pending state clears and an actionable error is shown |
 | Server revokes membership | Socket and pending reads close; home receives `revoked=1` |
@@ -112,6 +120,8 @@ session to the restored identity epoch and room ID.
 - Good: an approval visitor waits while the host receives the pending request;
   after approval, both clients see chat and queue broadcasts. Host removal
   redirects the visitor with a revocation notice.
+- Good: a playlist-enabled guest deletes a host-added item and both clients
+  receive the updated authoritative queue; authorship does not change permission.
 - Base: a restored host opens a direct room URL, receives `entered`, reads
   room/queue once and uses WS controls. A selected item mounts one player.
 - Bad: fetch the queue before admission, seed queue from a mutation response,
@@ -131,6 +141,9 @@ session to the restored identity epoch and room ID.
   with mocked admission alone. A deterministic preview response fixture may
   replace the external video's Range request; keep the actual add mutation and
   resulting WS `BANGUMI` broadcast on real Housou.
+- Assert single-item DELETE is 403 before playlist permission, then 200 after
+  permission, with unchanged/removed queue respectively and both clients
+  receiving the removal. Keep guest move and pending-clear expectations at 403.
 - Run React typecheck/build, package and root lint/tests, contract drift,
   module graph inspection and the local preview shell harness.
 
@@ -147,6 +160,12 @@ Wrong: mount a room socket while identity restoration is pending and fetch
 
 Correct: restore identity, start one controller/socket, wait for server
 `NYUUSHITSU entered`, then let the controller start guarded HTTP bootstrap.
+
+Wrong: infer that single-item deletion is host-only from the host-only rules
+for reorder/clear, or treat a hidden guest button as backend permission policy.
+
+Correct: use `host || canPlaylist` for single-item deletion, regardless of
+`addedBy`; retain exact host authority for reorder/clear.
 
 ## Room Controls Presentation
 

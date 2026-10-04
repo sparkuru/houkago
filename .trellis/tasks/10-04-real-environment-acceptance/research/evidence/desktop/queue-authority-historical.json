@@ -1,0 +1,15 @@
+[
+  {
+    "criterion": "A1",
+    "action": "host-only API queue governance",
+    "guestPlaylistGranted": true,
+    "moveStatus": 403,
+    "clearStatus": 403,
+    "deleteStatus": 200,
+    "expectedStatus": 403,
+    "beforeTitles": [
+      "Owner managed pending"
+    ],
+    "afterTitles": []
+  }
+]
