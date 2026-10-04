@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 79
-- **Last Active**: 2026-10-04
+- **Total Sessions**: 80
+- **Last Active**: 2026-10-05
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~441 | Active |
+| `journal-2.md` | ~475 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 80 | 2026-10-05 | Homepage copy and presentation refinement | `353ff18` | `k-on` |
 | 79 | 2026-10-04 | Visual craft refinement completion | `b700989` | `k-on` |
 | 78 | 2026-10-04 | Real-environment acceptance and permission clarification | `f9ec774` | `k-on` |
 | 77 | 2026-10-04 | Complete M6 React cutover and preview delivery | `09b47f3`, `e87044a`, `44edc02` | `k-on` |

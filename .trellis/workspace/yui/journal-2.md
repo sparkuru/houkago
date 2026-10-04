@@ -439,3 +439,37 @@ Refined entry and room typography, composition, original classroom art, hierarch
 ### Next Steps
 
 - No remaining implementation or visual review. Further product scope requires owner selection.
+
+
+## Session 80: Homepage copy and presentation refinement
+
+**Date**: 2026-10-05
+**Task**: Homepage copy and presentation refinement
+**Package**: houkago-kyoushitsu-react
+**Branch**: `k-on`
+
+### Summary
+
+Completed accepted homepage copy cleanup and Warm Club refinement; owner approved all dirty files. Independent review, 28 final entry browser cases, 459 unit tests, seven workspace types, lint and build passed. Task archived in 6d2d9ce; owned memory fixtures stopped, existing preview preserved; no push or deployment.
+
+### Main Changes
+
+- Simplified entry labels and copy, preserved accessible inputs and single configurable scene caption, refined responsive layout and original SVG lighting.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `353ff18` | (see git log) |
+
+### Testing
+
+- [OK] Final submit: lint 276 files, seven workspace types, 459 unit tests, production build; final entry desktop/phone 28/28; preceding entry/real-cookie 38/38 and two contrast cases.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No remaining authorized product work; wait for a new scope request.

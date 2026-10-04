@@ -58,48 +58,31 @@
 
 ## Ordered Work
 
-### Current task — entry copy cleanup (2026-10-05)
+### Completed task — homepage copy and presentation (2026-10-05)
 
-Owner requested task creation and five small homepage text changes in this
-turn. [Entry copy cleanup](tasks/10-05-entry-copy-cleanup/prd.md) covers
-the scene caption mark, masthead site name, visible room-name label, join
-heading and join kicker. Implementation and scoped desktop/phone validation
-are authorized; commit/archive/deployment/push remain outside this request.
-Preserve the four pre-existing dirty files. No migration scope is reopened.
-Implementation and independent review passed: 26/26 entry browser tests
-(13 desktop + 13 phone), lint, all seven workspace types, frontend build and
-byte-stable contracts. The existing behavioral unit suite passed 459 tests.
-See [validation](tasks/10-05-entry-copy-cleanup/validation.md). Task remains
-active with uncommitted work; submission/archive authority is still pending.
+The owner requested five entry-copy changes, then homepage-only refinement
+against eight design dimensions and further label/copy deduplication. The
+[archived task](tasks/archive/2026-10/10-05-entry-copy-cleanup/prd.md) records
+all rounds and approvals. Warm Club styling, original classroom SVG,
+form/navigation behavior and existing configuration edits are preserved;
+`entry.hint` now appears only in the figure caption, and ID/name inputs retain
+their accessible names after visible labels were removed. No migration scope
+was reopened.
 
-The owner subsequently requested homepage-only visual refinement to
-Awwwards/Webby/FWA quality across eight design dimensions, including autonomous
-self-review iterations. This extends the same active task while preserving the
-five copy changes. Updated PRD/design/implementation artifacts authorize the
-homepage refinement and desktop/phone verification; commit/archive remain
-pending. Previous 26-pass evidence belongs to the copy-only checkpoint.
-Homepage refinement is implemented and iterated with independent eight-dimension
-review: natural phrase wrapping, responsive form-first composition, original SVG
-lighting, focus/hover/press feedback and long configured-copy handling are verified.
-The scoped entry/real-cookie desktop/phone suite passed 38/38, followed by 2/2
-affected contrast cases after the final placeholder fix; 459 unit tests, lint,
-workspace types, final build and byte-stable contracts passed. Final screenshots
-and the eight-dimension record are linked in task validation. No known product
-finding remains; subjective owner visual acceptance and commit/archive authority
-are pending. Preserve the user's original preview and prior dirty edits.
-The owner then requested removing the visible room-ID label, the create-card
-kicker and repeated invitation text. These refinements are implemented: ID
-accessibility remains, `entry.hint` appears only in the figure caption, and
-unused presentation rules are removed. Independent review, scoped lint/React
-types and 28/28 entry desktop/phone regressions passed; latest diagnostic
-screenshots are in `/tmp/houkago-entry-simplify-final/`. This adds no commit or
-archive authority and preserves existing configuration and concurrent copy edits.
-Owner acceptance and submission authorization followed with `不错；可以提交`,
-then `脏文件一起提交` authorized all current trackable dirty files. Subjective
-visual acceptance is resolved. Final submit checks passed: 276-file lint, seven
-workspace types, 459/459 unit tests and production build. Work submission and
-normal Trellis archive/journal closure are now authorized; push/deployment are
-still outside scope. Earlier pending-approval statements above are historical.
+The owner accepted the final visuals and authorized submission with
+`不错；可以提交`, followed by `脏文件一起提交` for all current trackable dirty
+files. Work commit: `353ff18`. Independent review and final 28/28 entry
+desktop/phone regressions passed; the preceding visual checkpoint also passed
+38 entry/real-cookie cases and 2 contrast cases. Final submit checks passed:
+276-file lint, seven workspace types, 459/459 unit tests and production build;
+generated contracts were verified byte-stable. Detailed timing and fixture
+boundaries remain in [validation](tasks/archive/2026-10/10-05-entry-copy-cleanup/validation.md).
+
+The task is archived as completed in `6d2d9ce`. Visual acceptance and authorized work are
+resolved; task-owned memory fixtures are stopped and the owner's original
+preview is preserved. Latest diagnostic screenshots:
+`/tmp/houkago-entry-simplify-final/`. No push or production deployment was
+performed; no subsequent product task is authorized by this closure.
 
 ### Completed initiative — visual craft refinement (2026-10-04)
 
