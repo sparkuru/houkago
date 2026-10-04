@@ -129,3 +129,9 @@ preview remains running.
 最终源码在提交前完成项目检查：`./dx bun run lint` 通过（276 files）、`./dx bun run typecheck` 七工作区全部通过、`./dx bun run test` **459 pass / 0 fail**（10.37s）、React 生产构建通过。日志分别为 `/tmp/houkago-entry-copy-submit-{lint,types,unit,build}.log`。构建仍仅有既有 dashjs 模块警告。最终 28 项 entry 桌面/手机检查点、此前 real-cookie/对比度和 byte-stable contract 检查适用，不为仅有文档/提交动作重复运行浏览器或生成契约。独立 review 没有未解决的产品发现。
 
 具体文件与正常闭环顺序见 [commit-plan.md](commit-plan.md)。
+
+## 完成与归档
+
+工作提交：`353ff18`（`feat(ui): refine homepage layout and simplify entry copy`），包含所有已授权可追踪脏文件。任务通过 `archive --no-commit` 移至 `.trellis/tasks/archive/2026-10/10-05-entry-copy-cleanup/`，status/completedAt 已确认；活跃 task 指针已清除。归档 context 路径已同步并验证。
+
+主观视觉接受及提交等待已解决，没有未完成的已授权工作、已知产品缺陷或提交范围外残留。保留用户预览；未进行 push、生产部署或新产品任务。

@@ -14,6 +14,6 @@
 {"file":".trellis/spec/frontend/react-entry-runtime.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
 {"file":".trellis/spec/frontend/site-configuration.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
 {"file":".trellis/spec/guides/index.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
-{"file":".trellis/tasks/10-05-entry-copy-cleanup/design.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
-{"file": ".trellis/tasks/10-05-entry-copy-cleanup/implement.md", "reason": "Homepage refinement execution and gates"}
-{"file": ".trellis/tasks/10-05-entry-copy-cleanup/research/homepage-polish.md", "reason": "Homepage visual/interaction acceptance and CSS boundaries"}
+{"file":".trellis/tasks/archive/2026-10/10-05-entry-copy-cleanup/design.md","reason":"Scoped entry copy, public configuration, accessibility and validation policy"}
+{"file": ".trellis/tasks/archive/2026-10/10-05-entry-copy-cleanup/implement.md", "reason": "Homepage refinement execution and gates"}
+{"file": ".trellis/tasks/archive/2026-10/10-05-entry-copy-cleanup/research/homepage-polish.md", "reason": "Source-backed homepage refinements and CSS risks"}
