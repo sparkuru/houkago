@@ -16,8 +16,8 @@ interactive targets. Closed menus are inert; native dialogs open with
 and restore launcher focus. Keep theme values in core semantic tokens and
 application CSS; honor safe insets and reduced motion.
 
-The room grid, dock, shared chat/danmaku composer, launcher portal and automatic
-obstacle clearance follow the executable
+The room grid, dock, shared chat/danmaku composer, launcher portal and free
+viewport placement follow the executable
 [room presentation contract](../houkago-kyoushitsu-react/frontend/room-runtime.md).
 Do not recreate old layouts or confirmation components during unrelated work.
 Native confirmations were accepted at M6 review.

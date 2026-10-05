@@ -4,10 +4,8 @@ import { createPortal } from "react-dom"
 import {
   ROOM_FLOATING_POSITION_INSET,
   type RoomFloatingBounds,
-  type RoomFloatingObstacle,
   type RoomFloatingPosition,
   clampRoomFloatingPosition,
-  findClearRoomFloatingPosition,
   loadRoomFloatingPosition,
   roomFloatingPositionFromPixels,
   roomFloatingPositionToPixels,
@@ -47,10 +45,6 @@ const DRAG_KEY_STEP = 16
 const DRAG_CLICK_SUPPRESSION_MS = 250
 const MENU_GAP = 12
 const MENU_MIN_HEIGHT = 52
-const OBSTACLE_SELECTOR =
-  ".room-current .player-stage, .room-queue button, .room-queue input, .room-queue a, .room-chat-form"
-const OBSERVED_LAYOUT_SELECTOR =
-  ".room-page, .room-queue, .room-chat-rail, .room-current .player-stage, .room-chat-form"
 
 function initialBounds(): RoomFloatingBounds {
   return {
@@ -66,10 +60,6 @@ function parseInset(value: string | undefined): number {
   return Number.isFinite(parsed) ? parsed : ROOM_FLOATING_POSITION_INSET
 }
 
-function isFixedDock(element: Element | null): element is HTMLElement {
-  return Boolean(element && getComputedStyle(element).position === "fixed")
-}
-
 export function RoomSpeedDial({
   actions,
   launcherRef,
@@ -82,11 +72,10 @@ export function RoomSpeedDial({
   const [dragging, setDragging] = useState(false)
   const [position, setPosition] = useState<RoomFloatingPosition>(() => loadRoomFloatingPosition())
   const [bounds, setBounds] = useState<RoomFloatingBounds>(initialBounds)
-  const [obstacles, setObstacles] = useState<RoomFloatingObstacle[]>([])
   const [menuPlacement, setMenuPlacement] = useState<"above" | "below">(() =>
     position.y < 0.45 ? "below" : "above",
   )
-  const [menuDockOffset, setMenuDockOffset] = useState(0)
+  const [menuLeftOffset, setMenuLeftOffset] = useState(0)
   const [menuMaxHeight, setMenuMaxHeight] = useState<number | null>(null)
   const actionsId = useId()
   const dragHintId = useId()
@@ -120,12 +109,6 @@ export function RoomSpeedDial({
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const launcherRect = launcher.getBoundingClientRect()
-    const dock = document.querySelector<HTMLElement>(".room-chat-rail")
-    const dockRect = dock?.getBoundingClientRect()
-    const dockRightInset =
-      isFixedDock(dock) && dockRect && dockRect.width > 0
-        ? Math.max(ROOM_FLOATING_POSITION_INSET, viewportWidth - dockRect.left + 32)
-        : ROOM_FLOATING_POSITION_INSET
 
     const nextBounds: RoomFloatingBounds = {
       viewportWidth,
@@ -134,7 +117,7 @@ export function RoomSpeedDial({
       elementHeight: launcherRect.height || LAUNCHER_SIZE,
       safeArea: {
         top: parseInset(layerStyle?.paddingTop),
-        right: Math.max(parseInset(layerStyle?.paddingRight), dockRightInset),
+        right: parseInset(layerStyle?.paddingRight),
         bottom: parseInset(layerStyle?.paddingBottom),
         left: parseInset(layerStyle?.paddingLeft),
       },
@@ -143,19 +126,9 @@ export function RoomSpeedDial({
     setBounds((previous) =>
       JSON.stringify(previous) === JSON.stringify(nextBounds) ? previous : nextBounds,
     )
-    const nextObstacles = [...document.querySelectorAll<HTMLElement>(OBSTACLE_SELECTOR)]
-      .filter((element) => getComputedStyle(element).visibility !== "hidden")
-      .map((element) => {
-        const { left, top, width, height } = element.getBoundingClientRect()
-        return { left, top, width, height }
-      })
-      .filter(({ width, height }) => width > 0 && height > 0)
-    setObstacles((previous) =>
-      JSON.stringify(previous) === JSON.stringify(nextObstacles) ? previous : nextObstacles,
-    )
   }, [launcherRef])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: cinema changes the dock from static to fixed through CSS, so re-measure after the class update.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure viewport insets after mode changes.
   useLayoutEffect(() => {
     if (hidden) return
     measureViewport()
@@ -168,67 +141,39 @@ export function RoomSpeedDial({
       })
     }
     window.addEventListener("resize", onViewportResize)
-    window.addEventListener("scroll", onViewportResize, true)
     window.visualViewport?.addEventListener("resize", onViewportResize)
     const observer =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onViewportResize)
-    const observed = new Set<Element>()
-    const observeLayout = () => {
-      const targets = new Set(document.querySelectorAll(OBSERVED_LAYOUT_SELECTOR))
-      for (const element of observed) {
-        if (!targets.has(element)) {
-          observer?.unobserve(element)
-          observed.delete(element)
-        }
-      }
-      for (const element of targets) {
-        observer?.observe(element)
-        observed.add(element)
-      }
-    }
     if (observer && layerRef.current) observer.observe(layerRef.current)
-    observeLayout()
-    const mutations = new MutationObserver(() => {
-      observeLayout()
-      onViewportResize()
-    })
-    const roomPage = document.querySelector(".room-page")
-    if (roomPage)
-      mutations.observe(roomPage, { childList: true, subtree: true, characterData: true })
     return () => {
       if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
       window.removeEventListener("resize", onViewportResize)
-      window.removeEventListener("scroll", onViewportResize, true)
       window.visualViewport?.removeEventListener("resize", onViewportResize)
       observer?.disconnect()
-      mutations.disconnect()
     }
   }, [cinemaMode, hidden, measureViewport])
 
-  const pixels = useMemo(
-    () =>
-      findClearRoomFloatingPosition(position, bounds, obstacles) ??
-      roomFloatingPositionToPixels(position, bounds),
-    [bounds, obstacles, position],
-  )
+  const pixels = useMemo(() => roomFloatingPositionToPixels(position, bounds), [bounds, position])
   const effectivePosition = roomFloatingPositionFromPixels(pixels, bounds)
 
   useLayoutEffect(() => {
     if (hidden || typeof window === "undefined") {
-      setMenuDockOffset(0)
+      setMenuLeftOffset(0)
       return
     }
     const speedDial = speedDialRef.current
     if (!speedDial) return
-    const launcher = launcherRef.current
-    const dock = document.querySelector<HTMLElement>(".room-chat-rail")
-    const launcherRect = launcher?.getBoundingClientRect()
-    const dockRect = dock?.getBoundingClientRect()
-    const menuDockOffset =
-      isFixedDock(dock) && launcherRect && dockRect && launcherRect.right > dockRect.left
-        ? Math.max(0, launcherRect.right - dockRect.left + 8)
-        : 0
-    setMenuDockOffset(menuDockOffset)
+    const menu = speedDial.querySelector<HTMLElement>(".room-speed-dial-actions")
+    const menuWidth = menu?.getBoundingClientRect().width ?? 0
+    const leftInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.left ?? 0)
+    const rightInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.right ?? 0)
+    const preferredLeft =
+      effectivePosition.x < 0.3 ? pixels.left : pixels.left + bounds.elementWidth - menuWidth
+    const menuLeft = Math.max(
+      leftInset,
+      Math.min(preferredLeft, bounds.viewportWidth - rightInset - menuWidth),
+    )
+    setMenuLeftOffset(menuLeft - pixels.left)
     const topInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.top ?? 0)
     const bottomInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.bottom ?? 0)
     const aboveAvailable = Math.max(0, pixels.top - topInset - MENU_GAP)
@@ -251,7 +196,7 @@ export function RoomSpeedDial({
     setMenuMaxHeight(
       Math.max(MENU_MIN_HEIGHT, placement === "above" ? aboveAvailable : belowAvailable),
     )
-  }, [bounds, hidden, launcherRef, effectivePosition.y, pixels])
+  })
 
   useEffect(() => {
     if (!hidden) return
@@ -386,7 +331,7 @@ export function RoomSpeedDial({
     "--room-speed-dial-hide-delay": visibilityDelay,
     "--room-speed-dial-action-max-height":
       menuMaxHeight === null ? undefined : `${menuMaxHeight}px`,
-    "--room-speed-dial-menu-right-offset": `${menuDockOffset}px`,
+    "--room-speed-dial-menu-left-offset": `${menuLeftOffset}px`,
   } as CSSProperties
 
   if (hidden || typeof document === "undefined" || !document.body) return null

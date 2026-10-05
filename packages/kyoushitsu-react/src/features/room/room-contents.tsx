@@ -9,6 +9,7 @@ import { t } from "houkago-kyoushitsu-core/i18n"
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 import { ChatPanel } from "./chat-panel"
 import { QueuePanel } from "./queue-panel"
+import { roomConnectionLabel } from "./room-connection-label"
 import type { RoomRuntime } from "./room-runtime"
 
 export function RoomContents({ room }: { room: RoomRuntime }) {
@@ -59,12 +60,10 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
   return (
     <main className={`room-page${cinemaMode ? " room-cinema" : ""}`}>
       <header className="room-topbar">
-        <div>
-          <span className="room-overline">{t("roomOverline")}</span>
+        <div className="room-heading">
           <h1>{state.room?.name ?? t("enteringBushitsu")}</h1>
           <p className={`room-connection${state.connection === "open" ? " is-connected" : ""}`}>
-            {t("roomInfoStatus")}:{" "}
-            {state.connection === "open" ? t("roomStatusNormal") : t("roomStatusConnecting")}
+            {t("roomInfoStatus")}: {roomConnectionLabel(state.connection)}
           </p>
         </div>
         {!entered && (
@@ -99,7 +98,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                   : t("enteringBushitsu")}
           </Status>
           <p>
-            {t("roomInfoStatus")}: {state.connection}
+            {t("roomInfoStatus")}: {roomConnectionLabel(state.connection)}
           </p>
           <Button variant="secondary" onClick={() => room.reconnect()}>
             {t("retry")}
@@ -129,8 +128,8 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                   />
                 </svg>
               )}
-              <span className="card-kicker">{t("current")}</span>
-              <h2>{current?.title ?? t("waitingBuchouJouei")}</h2>
+              {current && <span className="card-kicker">{t("joueiChuu")}</span>}
+              <h2>{current?.title ?? t("roomProgrammeWaiting")}</h2>
               {!current && <p className="room-waiting-hint">{t("roomWaitingHint")}</p>}
               {current && (!isBaidu || baidu.state === "ready") && (
                 <PlayerStage
@@ -164,7 +163,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                   disabled={state.command !== null}
                   onClick={() => room.select(null)}
                 >
-                  取消当前节目
+                  {t("cancelCurrentProgramme")}
                 </Button>
               )}
             </Card>

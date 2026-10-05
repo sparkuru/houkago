@@ -270,6 +270,7 @@ test("desktop pairing, retention, OAuth, file permit and revoke states", async (
   await installProviderRoutes(page, state)
   const roomId = await createRoom(page)
   await expect.poll(() => state.pairingBodies.length).toBeGreaterThan(0)
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("baidu")
   const panel = page.locator(".baidu-panel")
   const manage = panel.getByRole("button", { name: "管理连接" })
   await expect(manage).toBeVisible()
@@ -304,6 +305,21 @@ test("desktop pairing, retention, OAuth, file permit and revoke states", async (
   await panel.getByRole("button", { name: "选择网盘视频" }).click()
   const files = page.getByRole("dialog", { name: "选择网盘视频" })
   await files.getByRole("button", { name: /动画/ }).last().click()
+  await expect(
+    files
+      .getByRole("navigation", { name: "当前网盘目录" })
+      .getByRole("button", { name: "动画", exact: true }),
+  ).toBeDisabled()
+  await files.getByRole("button", { name: "关闭" }).click()
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("link")
+  await expect(panel).toBeHidden()
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("baidu")
+  await panel.getByRole("button", { name: "选择网盘视频" }).click()
+  await expect(
+    files
+      .getByRole("navigation", { name: "当前网盘目录" })
+      .getByRole("button", { name: "动画", exact: true }),
+  ).toBeDisabled()
   await files.getByRole("button", { name: /测试影片\.mp4/ }).click()
   await files.getByRole("button", { name: "加入所选视频" }).click()
   await expect(files).toContainText("视频已加入番组表")
@@ -324,6 +340,10 @@ test("desktop pairing, retention, OAuth, file permit and revoke states", async (
     ),
   ).toBe(true)
   await files.getByRole("button", { name: "关闭" }).click()
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("link")
+  await expect(panel).toBeHidden()
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("baidu")
+  await expect(panel).toContainText("已连接")
 
   state.revokeFails = true
   await manage.click()
@@ -449,10 +469,12 @@ test("phone explains desktop-only Baidu and keeps ordinary room controls", async
   const state = initialFixture()
   await installProviderRoutes(page, state)
   await createRoom(page)
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("baidu")
   const panel = page.locator(".baidu-panel")
   await expect(panel).toContainText("仅支持安装 houkago-adapter 的桌面浏览器")
   await expect(panel.getByRole("button", { name: "管理连接" })).toBeVisible()
   await expect(panel.getByRole("button", { name: "选择网盘视频" })).toBeDisabled()
+  await page.getByRole("combobox", { name: "选择来源" }).selectOption("link")
   await expect(page.getByLabel("视频链接")).toBeVisible()
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

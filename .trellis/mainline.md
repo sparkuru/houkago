@@ -58,6 +58,53 @@
 
 ## Ordered Work
 
+### Current task — room interface refinement (2026-10-05, accepted for submission)
+
+The owner requested room refinement against the shared spec, approved task
+creation with `建 task`, and approved implementation with `开始实现`.
+[Room interface refinement](tasks/10-05-room-interface-refinement/prd.md)
+retains the reviewed design/plan and both explicit 22-entry contexts. The owner
+then requested full-viewport launcher dragging, including the chat dock, and
+source presentation that scales as providers grow; R7/R8 continued within the
+same task without treating that feedback as visual acceptance or commit authority.
+
+Delivered: compact four-state header, desktop/phone 16:9 waiting stage,
+queue-before-source hierarchy, quieter dock, accessible settings and existing
+playlist-enabled guest single-delete behavior. The launcher can now stay in
+any viewport-safe position, including attendance/composer content, without
+automatic content displacement; source
+presentation uses one native picker and one visible flow. Link draft/preview
+and Baidu connection/visited directory survive switching. Reopened browsing
+refreshes that directory; permission/connection revoke resets protected state.
+Sorting/clear remain host-only, and runtime/provider/WS ownership is preserved.
+
+Final technical acceptance passed: 460 root tests; full 13-project browser
+checkpoint 40 passes/3 applicability skips, then the final two-line Baidu
+folder correction passed its pair with 3 passes/3 applicability skips and
+55 React unit tests. Lint (279 files), seven workspace types, 18-file byte-stable
+contracts, production build, 489-module boundary check and independent final
+mouse/touch/200% source/menu probes passed. Evidence and iteration failures are
+preserved in [validation](tasks/10-05-room-interface-refinement/validation.md)
+and [check review](tasks/10-05-room-interface-refinement/check-review.md).
+
+The subsequent screenshot clarified that attendance/composer content must also
+be valid placement. R7 is now viewport/safe-area only: content obstacle logic,
+its helper and five obsolete policy unit cases were retired. Valid version-1
+stored positions persist; fresh users start at right-side y=0.65. Exact
+2048px mouse and 375px touch landing, release/scroll/content/reload stability,
+keyboard/menu/focus and fresh/moved-away real chat passed independent review.
+Final repair evidence: 455 root tests, 50 React tests, 29 affected browser cases
+and four final danmaku regressions, 279-file lint, seven workspace types,
+production build and 489-module boundary check passed. Previous broad/provider
+checkpoints above remain historical evidence for unchanged areas.
+
+A1–A10 are accepted under the final clarified R7. After runnable evidence and
+independent review, the owner accepted the final result and authorized submission
+and normal task closure with `可以提交` on 2026-10-05. Work commit and archive
+are the next authorized bookkeeping steps; push and deployment remain unapproved.
+All task-owned memory fixtures are stopped, and the owner's original 9998/9999
+preview/configuration is preserved. M0–M6 and homepage delivery remain complete.
+
 ### Completed task — homepage copy and presentation (2026-10-05)
 
 The owner requested five entry-copy changes, then homepage-only refinement

@@ -480,21 +480,24 @@ a {
   flex-wrap: wrap;
 }
 .room-topbar {
-  margin: 0 auto var(--space-5);
+  margin: 0 auto var(--space-4);
   max-width: var(--room-workspace-max);
 }
+.room-heading {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  flex-wrap: wrap;
+}
 .room-topbar h1 {
-  margin: var(--space-2) 0;
-  font-size: clamp(26px, 4vw, 40px);
+  margin: 0;
+  font-size: var(--type-title-size);
+  overflow-wrap: anywhere;
 }
 .room-topbar p {
   margin: 0;
   color: var(--color-text-muted);
-}
-.room-overline {
-  color: var(--color-accent);
-  font-size: var(--type-label-size);
-  letter-spacing: 0.08em;
 }
 .room-topbar h1 {
   font-weight: 500;
@@ -520,22 +523,22 @@ a {
   border-color: var(--color-focus-ring);
 }
 .room-projection-mark {
-  width: 64px;
-  height: 52px;
-  margin: 0 auto var(--space-5);
-  color: var(--color-border-strong);
+  width: 52px;
+  height: 42px;
+  margin: 0 auto var(--space-2);
+  color: var(--color-overlay-muted);
 }
-.room-current-empty {
+.room-main .room-current-empty {
+  display: grid;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  align-content: center;
   text-align: center;
   justify-items: center;
 }
-.room-current-empty .card-kicker {
-  color: var(--color-overlay-muted);
-  font-size: var(--type-label-size);
-  letter-spacing: 0.12em;
-}
 .room-main .room-current-empty h2 {
-  margin: var(--space-3) 0;
+  margin: 0 0 var(--space-2);
+  font-size: clamp(16px, 2vw, 22px);
   font-weight: 500;
 }
 .room-current-empty .room-waiting-hint {
@@ -580,6 +583,20 @@ a {
   background: var(--color-media-surface);
   color: var(--color-on-media);
 }
+.room-current > h2 {
+  overflow-wrap: anywhere;
+}
+.room-current > button {
+  min-height: 44px;
+  border-color: var(--color-overlay-muted);
+  background: transparent;
+  color: var(--color-overlay-muted);
+  font-size: var(--type-label-size);
+}
+.room-current > button:hover {
+  background: var(--color-tooltip-surface);
+  color: var(--color-on-media);
+}
 .room-current-empty {
   background: radial-gradient(
     ellipse at center,
@@ -587,41 +604,81 @@ a {
     var(--color-media-surface) 75%
   );
 }
-@media (min-width: 851px) {
-  .room-page:not(.room-cinema) .room-current-empty {
-    display: grid;
-    min-height: 0;
-    aspect-ratio: 16 / 9;
-    align-content: center;
-  }
-}
 .room-current p {
   color: var(--color-overlay-muted);
 }
 .room-current > .card-kicker {
-  color: var(--color-border-strong);
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-overlay-muted);
+  font-size: var(--type-label-size);
+}
+.room-queue-panel > h2 {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  font-weight: 500;
+}
+.room-queue-empty {
+  margin: 0;
+  padding-block: var(--space-3);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+.room-queue .room-row {
+  padding: var(--space-3) 0;
+  gap: var(--space-3);
+  align-items: start;
+}
+.room-queue .room-row > div:first-child {
+  flex-basis: min(24rem, 100%);
+}
+.room-queue .room-row.is-current {
+  border-left: 3px solid var(--room-queue-current-border);
+  padding-left: var(--space-3);
+}
+.room-queue .room-actions {
+  gap: var(--space-2);
+}
+.room-danger-action {
+  color: var(--color-danger);
+}
+.room-danger-action:hover {
+  background: var(--room-queue-danger-surface);
+}
+.room-queue-clear {
+  margin-top: var(--space-3);
 }
 .room-source-section {
   display: grid;
   gap: var(--space-2);
   min-width: 0;
-  margin: var(--space-3) 0 var(--space-4);
-  padding: var(--space-3);
-  background: var(--color-surface-muted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
 }
 .room-source-section h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--type-label-size);
+  font-size: var(--type-body-size);
 }
 .room-source-section .room-form {
   margin: 0;
 }
-.room-source-section > .baidu-panel {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
+.room-source-picker select {
+  width: 100%;
+  min-width: 0;
+  font-size: var(--type-body-size);
+  border-color: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-accent));
+}
+.room-source-picker select:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.room-source-hint {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
 }
 .room-current .player-stage {
   margin: var(--space-4) 0;
@@ -641,6 +698,9 @@ a {
   align-content: start;
   gap: var(--space-3);
   min-width: 0;
+  border: 1px solid var(--room-panel-border);
+  border-radius: var(--room-panel-radius);
+  background: var(--room-panel-muted-surface);
 }
 .room-dock-attendance {
   padding: var(--space-4);
@@ -668,6 +728,37 @@ a {
 .room-chat-panel {
   min-width: 0;
 }
+.room-dock [data-slot="card"],
+.room-dock .danmaku-source-panel {
+  padding: var(--space-4);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.room-dock .room-chat-panel,
+.room-dock .danmaku-feature {
+  border-top: 1px solid var(--color-border);
+}
+.room-dock .danmaku-source-panel {
+  padding: 0;
+}
+.room-dock .danmaku-source-panel summary {
+  padding: var(--space-3) var(--space-4);
+}
+.room-dock .danmaku-source-body {
+  padding: 0 var(--space-4) var(--space-4);
+}
+.room-dock h2 {
+  font-size: var(--type-body-size);
+  font-weight: 600;
+}
+.room-dock .danmaku-source-panel summary:focus-visible,
+.room-dock .danmaku-feature button:focus-visible,
+.room-dock .danmaku-feature input:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
 .room-chat-actions {
   display: flex;
   justify-content: flex-end;
@@ -676,6 +767,32 @@ a {
 .room-chat-send-error {
   margin: 0;
   color: var(--color-danger);
+}
+.room-source-section input,
+.room-source-section .baidu-panel button,
+.room-chat-form input,
+.room-queue-panel button[class*="border-input"],
+.room-dock .danmaku-feature button,
+.room-dock .danmaku-manual-search input {
+  border-color: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-accent));
+}
+.room-dock .danmaku-feature button {
+  min-width: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.room-source-section input::placeholder,
+.room-chat-form input::placeholder,
+.room-dock .danmaku-manual-search input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+.room-dock .danmaku-display-settings label,
+.room-dock .danmaku-display-settings input {
+  min-height: 44px;
+}
+.room-dock .danmaku-display-settings input {
+  accent-color: var(--color-focus-ring);
 }
 .room-cinema {
   height: 100dvh;
@@ -755,7 +872,7 @@ a {
 }
 .room-speed-dial-actions {
   position: absolute;
-  right: var(--room-speed-dial-menu-right-offset, 0px);
+  left: var(--room-speed-dial-menu-left-offset, 0px);
   bottom: 64px;
   display: flex;
   max-width: calc(100vw - 32px);
@@ -786,8 +903,6 @@ a {
   flex-direction: column;
 }
 .room-speed-dial[data-menu-side="right"] .room-speed-dial-actions {
-  right: auto;
-  left: 0;
   align-items: flex-start;
 }
 .room-speed-dial[data-menu-side="right"] .room-speed-dial-action {
@@ -1147,11 +1262,6 @@ a {
     max-height: none;
     flex: 1 1 0;
     overflow-y: auto;
-  }
-}
-@media (min-width: 1200px) and (max-width: 1599px) {
-  .room-page:not(.room-cinema) .room-topbar h1 {
-    font-size: clamp(26px, 2.4vw, 34px);
   }
 }
 @media (min-width: 851px) {

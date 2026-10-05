@@ -10,6 +10,7 @@ import {
 } from "houkago-kyoushitsu-core/member-presence"
 import { useEffect, useRef, useState } from "react"
 import { GovernancePanel, PermissionSummary } from "./governance-panel"
+import { roomConnectionLabel } from "./room-connection-label"
 import type { RoomRuntime, RoomState } from "./room-runtime"
 import { RoomSpeedDial } from "./room-speed-dial"
 import type { RoomSpeedDialAction } from "./room-speed-dial"
@@ -142,14 +143,6 @@ function RoomInformation({
   }, [active])
   const online = onlineMembers(state.presenceById)
   const history = historicalMembers(state.presenceById)
-  const connectionLabel =
-    state.connection === "open"
-      ? t("roomStatusNormal")
-      : state.connection === "closed"
-        ? t("roomStatusClosed")
-        : state.connection === "error"
-          ? t("roomStatusError")
-          : t("roomStatusConnecting")
   const modeLabel = {
     open: t("nyuushitsuModeOpen"),
     approval: t("nyuushitsuModeApproval"),
@@ -167,7 +160,7 @@ function RoomInformation({
         </div>
         <div>
           <dt>{t("roomInfoStatus")}</dt>
-          <dd>{connectionLabel}</dd>
+          <dd>{roomConnectionLabel(state.connection)}</dd>
         </div>
         <div>
           <dt>{t("roomInfoAdmissionMode")}</dt>

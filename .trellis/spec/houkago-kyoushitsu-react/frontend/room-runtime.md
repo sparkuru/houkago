@@ -71,6 +71,12 @@ session to the restored identity epoch and room ID.
   clarified this existing rule during real-environment acceptance on 2026-10-04;
   the previous host-only single-delete wording was erroneous. See backend
   [session authority](../../backend/seitoshou-contract.md).
+- `RoomRuntime.delete(id)` uses `command("delete", "playlist", ...)` and the
+  existing generated DELETE adapter. The queue shows confirmed single-delete
+  actions only when `room.can("playlist")` and the item is non-current;
+  busy disables the action. Keep the current-item UI protection and native
+  confirmation separate from backend permission. Mutation acknowledgements
+  never remove a local item before `BANGUMI`.
 - Permission presets call `setPermissions` with shared `KENGEN_PRESETS`; their
   selected state and custom summary derive from server `KENGEN`, just like the
   individual checkboxes. Guests receive the read-only summary.
@@ -106,6 +112,7 @@ session to the restored identity epoch and room ID.
 | HTTP completion after newer `BANGUMI` or disposal | No stale queue or disposed state revival |
 | Identity epoch changes with the same account ID | Old room view is gated immediately; a fresh session owns later state |
 | WS disconnect | Controls stop sending; reconnect requires fresh admission |
+| Connecting/open/closed/error displayed in header, gate or information sheet | Shared `roomConnectionLabel` renders 连接中/正常/断开/异常; no raw enum or false connecting state |
 | Guest without playback permission | Control inputs disabled; remote playback still applies |
 | Admitted guest without playlist permission deletes an item through HTTP | HTTP 403; authoritative queue unchanged |
 | Admitted guest with playlist permission deletes a host-added item through HTTP | HTTP 200; item removed and `BANGUMI` reaches both clients |
@@ -143,7 +150,10 @@ session to the restored identity epoch and room ID.
   resulting WS `BANGUMI` broadcast on real Housou.
 - Assert single-item DELETE is 403 before playlist permission, then 200 after
   permission, with unchanged/removed queue respectively and both clients
-  receiving the removal. Keep guest move and pending-clear expectations at 403.
+  receiving the removal. Exercise the authorized member's visible delete
+  button, native-confirm cancellation/acceptance and host-added items. Assert
+  runtime sends no request after permission revocation, disconnect, pending
+  command or lost admission; keep guest move and pending-clear at 403.
 - Run React typecheck/build, package and root lint/tests, contract drift,
   module graph inspection and the local preview shell harness.
 
@@ -168,6 +178,42 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
 `addedBy`; retain exact host authority for reorder/clear.
 
 ## Room Controls Presentation
+
+- The topbar has one compact room-name h1 with the connection status beside it
+  or wrapped below; avoid a competing decorative overline. Waiting stages use
+  a role-neutral programme status, the original projection SVG and one useful
+  hint. Preserve a centered 16:9 waiting stage at phone widths as well as
+  desktop; text magnification must remain readable without clipping.
+- `QueuePanel` presents title/count, programme list/current state, host batch
+  actions, then `RoomSources` in the lower video-source section. Keep parsing, preview and add
+  as distinct steps with pending feedback. Empty copy must remain useful for
+  viewers without playlist permission. Source labels and necessary feedback
+  remain accessible; quieter surfaces do not justify deleting them.
+- `RoomSources({ room, state })` uses a small typed source-description list
+  and labelled native select; show one active flow instead of stacking every
+  provider form or expanding a horizontal tab strip. Current choices are
+  `link` (existing Bilibili/MP4/HLS/DASH parser) and `baidu` (personal
+  connection, authorization and file browsing). New actual flows extend this
+  list and their local panel, not a new plugin framework or duplicate queue.
+  Keep the selector >=44px and the supported-link hint persistent; the URL
+  placeholder can remain short.
+- Keep link draft/parsed preview in the source component and keep BaiduPanel
+  mounted under a `hidden` inactive wrapper so switching does not lose
+  connection/browse state or require new authorization. Reopening file browsing
+  refreshes the last visited directory rather than unconditionally returning
+  to `/`; playlist revocation and successful connection revoke reset the
+  directory along with protected list/selection state. Inactive panels must
+  leave layout and keyboard focus. With no playlist
+  permission, the effective source and available option are `baidu`; the
+  personal connection remains accessible while link/add/file actions retain
+  their original permission gates. Disable the picker during room commands.
+- Dock sections share an outer surface and use separators for attendance,
+  danmaku settings and chat. Room-scoped placeholders use the full-opacity
+  muted semantic color; effective text contrast must be at least 4.5:1.
+  Room-scoped source/composer/provider boundaries target 3:1 against the
+  actual surface. Expanded danmaku range and time-offset inputs, their labels,
+  and ordinary actions retain at least 44px touch heights; keep keyboard
+  behavior and theme focus tokens.
 
 - `RoomControls` and `RoomSpeedDial` own presentation state only. Build the
   speed-dial actions from `{ id, label, icon, onActivate, selected?,
@@ -221,11 +267,13 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   `DanmakuFeature` continues to receive room chat events for overlays and keeps
   its overlay portal attached to the player even though its source/settings
   controls live in the dock.
-- The closed launcher must clear the player, queue controls, and shared composer. In
-  phone cinema, keep the composer compact enough to clear the fixed launcher
-  while retaining its accessible labels and 44px controls. When the action
-  menu is open it is a deliberate overlay: its backdrop blocks pointer access
-  to the page until the menu closes, so open menu actions may cover content.
+- The launcher has free placement over page content. The owner clarified the
+  full-viewport requirement with the attendance/composer screenshot on
+  2026-10-05: headings, messages, players, queue controls and chat inputs/actions
+  must not form drag exclusions. User-chosen overlap is intentional; moving
+  the launcher away restores normal access to underlying controls. Keep the
+  composer labels and 44px controls. An open menu remains a deliberate overlay
+  whose backdrop blocks underlying pointer access until it closes.
 - In normal, non-cinema room layouts at 1200px and wider, let the shared header
   and grid use the full content width left after the fixed dock lane; the
   grid-to-dock gap is 16px and must not leave the old centered 1320px blank
@@ -235,8 +283,12 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   active player's screen continues to use the player component's 16:9 ratio.
 - The room launcher stores a normalized `{ x, y }` viewport position under
   `houkago.kyoushitsu.room-floating-position.v1`. Convert it to pixels using
-  the current viewport and launcher size, clamp it inside 16px safe insets and
-  the fixed dock boundary, and re-clamp it on resize. Pointer drag supports
+  the current viewport and launcher size, clamp it inside 16px safe insets,
+  and re-clamp it on resize. The entire viewport is available, including the
+  fixed/flow attendance and composer controls; do not derive bounds from dock
+  width or room content. With no valid stored preference, initialize at
+  `{ x: 1, y: 0.65 }`; existing version-1 coordinates remain unchanged.
+  Pointer drag supports
   mouse and touch; a drag must not accidentally toggle the menu. Arrow keys
   nudge the focused launcher (Shift doubles the step) and the accessible hint
   explains the movement. Keep the launcher visible in ordinary and cinema
@@ -244,31 +296,55 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   reports web or native fullscreen.
 - On desktop/cinema, keep the fixed room dock 16px from the right safe-area
   edge, size it with `clamp(280px, 24vw, 400px)`, and reserve enough room to
-  clear the player/queue and speed dial. The dock's outer surface fills the
+  separate the dock from the player/queue. The dock's outer surface fills the
   viewport-height span between its top and bottom insets. Use a flex-column
   dock with chat `flex: 1 0 240px`, feed `flex: 1 1 0; min-height: 0` and
   internal `overflow-y: auto`; do not apply the old 60vh/560px chat cap.
   Attendance/settings may shrink and scroll independently; the outer dock
   can scroll at very short heights to keep the minimum chat/composer reachable.
-  At intermediate fixed-dock widths, if the
-  launcher remains in the dock lane, open menu actions must be offset to the
-  dock's left edge so they do not cover the chat composer. At the phone cinema
+  Open menu actions use their actual measured width and viewport safe insets
+  for horizontal clamping, and available space above/below for vertical
+  placement; re-measure after rendering when labels or viewport change. Open
+  menus deliberately overlay content under their active backdrop rather than
+  forcing actions to the fixed dock's left edge. At the phone cinema
   breakpoint, the dock returns to flow and its chat feed may shrink while
-  scrolling internally so the composer stays clear of the fixed launcher.
-- Reserve a clear placement for the closed launcher in normal desktop and
-  cinema layouts, and add `env(safe-area-inset-*)` to viewport-edge spacing.
+  scrolling internally to keep the composer reachable.
+- Add `env(safe-area-inset-*)` to viewport-edge spacing in normal desktop and
+  cinema layouts.
   Honor `prefers-reduced-motion` for the dial and action transitions. Do not
   hide the launcher for cinema mode; only the actual fullscreen state may hide
   it.
-- Treat stored coordinates as the preferred location. After safe-area/dock
-  clamping, `findClearRoomFloatingPosition` chooses the nearest valid position
-  at least 8px from the player, queue interactive controls and whole composer.
-  Re-measure on room content mutations, observed layout resize, viewport resize
-  and captured scroll. Automatic avoidance must not overwrite the stored
-  preference; drag/nudge starts from the actual rendered location. If no clear
-  location exists, retain the safe clamped launcher rather than hiding it.
+- Convert stored coordinates directly with `roomFloatingPositionToPixels`
+  after viewport safe-area clamping. Scroll, chat changes and details/source
+  toggles must not move a chosen position. Observe viewport/visualViewport
+  resize and portal safe insets; do not measure room content, maintain obstacle
+  selectors or call a nearest-clear finder. The former automatic avoidance
+  path and its unused helper/type have been retired. Resize must not overwrite
+  the normalized preference; drag/nudge starts from the rendered position.
 
 ### Room Control Browser Assertions
+
+- Cover queue-before-source reading order, role-neutral empty state, all
+  connection labels and actual disconnected gate/composer unmounting. At
+  320/375px and both sides of 851/1200px breakpoints, check long titles and
+  200% text through DOM Range bounds and enabled control geometry; root
+  scrollWidth alone cannot detect text hidden by overflow clipping. Measure
+  settings inputs/labels >=44px and retain their keyboard/focus checks.
+- Cover the native source picker with desktop keyboard and phone touch;
+  assert only the active panel is visible/focusable, drafts and parsed preview
+  survive switching, and Baidu connection and the visited directory survive
+  closing/switching/reopening (with a fresh listing of that directory). Unprivileged
+  guests must reach personal connection controls without link/file/add access;
+  permission revocation still removes protected actions. Provider acceptance
+  selects the Baidu flow explicitly and returns to links for ordinary media.
+- Drag with mouse and real Chromium touch onto attendance headings, composer
+  inputs and send buttons at 375px and desktop/fixed-dock widths, including the
+  screenshot's approximately 2048px view and cinema. Assert exact targets remain
+  after release, scroll, content changes and details toggles. Cover keyboard,
+  reload/storage, viewport resize/safe insets and menu bounds/focus. Move the
+  button away and actually send chat. Fresh initialization must also allow
+  normal chat without a preliminary move. Do not preserve former grid/dock-left
+  or content-no-overlap assertions after the owner's clarified requirement.
 
 - Cover host and guest information views, host-only governance, hidden-action
   inertness, launcher labels/state, keyboard and touch opening, Escape,
@@ -277,14 +353,12 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   click outside its bounding rectangle. Verify presets/custom combinations
   through two-client server echo, and duration/departure/rejoin history without
   removing retained chat names.
-- Measure closed-launcher overlap against the player, queue buttons/inputs/links,
-  and shared chat
-  composer; drag it and verify normalized localStorage persistence, keyboard
+- Verify launcher viewport bounds, normalized localStorage persistence, keyboard
   nudges, resize clamping, and open actions against the viewport. Verify
   backdrop pointer blocking, queue alignment below the main column/title
   wrapping, the 16px dock gap without a blank workspace lane, horizontal
   overflow, dock order/pinning/flow, composer routing and length mode, phone
-  cinema clearance, actual-fullscreen hiding, and reduced motion. Open menu
+  cinema placement, actual-fullscreen hiding, and reduced motion. Open menu
   actions may overlap content because the active backdrop prevents interaction
   underneath. Wait for dial transitions to settle before recording screenshots.
 - Assert ChatPanel's bottom equals the fixed rail's inner bottom, and the

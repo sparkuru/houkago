@@ -426,7 +426,9 @@ export class RoomRuntime {
     )
   }
   delete(id: string) {
-    return this.command("delete", "host", (signal) => deleteRoomEnmoku(this.roomId, id, { signal }))
+    return this.command("delete", "playlist", (signal) =>
+      deleteRoomEnmoku(this.roomId, id, { signal }),
+    )
   }
   clearPending() {
     return this.command("clear", "host", (signal) =>

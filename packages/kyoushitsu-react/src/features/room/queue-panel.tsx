@@ -1,90 +1,26 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { BaiduPanel } from "@/features/baidu/baidu-panel"
 import { t } from "houkago-kyoushitsu-core/i18n"
-import { useState } from "react"
 import type { RoomRuntime, RoomState } from "./room-runtime"
+import { RoomSources } from "./room-sources"
 
 export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomState }) {
-  const [url, setUrl] = useState("")
-  const [title, setTitle] = useState("")
-  const [preview, setPreview] = useState<string | null>(null)
   const canQueue = room.can("playlist")
   const host = room.isHost
   const busy = state.command !== null
   const pendingCount = state.queue.filter((item) => item.id !== state.currentId).length
   return (
-    <Card>
+    <Card className="room-queue-panel">
       <h2>
         {t("bangumiHeading")} · {state.queue.length}
       </h2>
-      <section className="room-source-section" aria-labelledby="room-source-heading">
-        <h3 id="room-source-heading">视频来源</h3>
-        {canQueue && (
-          <form
-            className="room-form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void room
-                .preview(url.trim(), title.trim() || undefined)
-                .then((result) => setPreview(result?.title ?? null))
-            }}
-          >
-            <Label htmlFor="source-url">{t("sourceUrlLabel")}</Label>
-            <Input
-              id="source-url"
-              type="url"
-              required
-              disabled={busy}
-              value={url}
-              onChange={(event) => {
-                setUrl(event.target.value)
-                setPreview(null)
-              }}
-              placeholder={t("sourceUrlPlaceholder")}
-            />
-            <Label htmlFor="source-title">{t("sourceTitleLabel")}</Label>
-            <Input
-              id="source-title"
-              disabled={busy}
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value)
-                setPreview(null)
-              }}
-            />
-            <Button type="submit" disabled={busy || !url.trim()}>
-              {t("sourceResolve")}
-            </Button>
-            {preview && (
-              <output className="room-preview">
-                <strong>{preview}</strong>
-                <Button
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void room.add(url.trim(), title.trim() || undefined).then((result) => {
-                      if (result) {
-                        setUrl("")
-                        setTitle("")
-                        setPreview(null)
-                      }
-                    })
-                  }
-                >
-                  {t("sourceAddQueue")}
-                </Button>
-              </output>
-            )}
-          </form>
-        )}
-        <BaiduPanel roomId={room.roomId} canPlaylist={canQueue} />
-      </section>
-      <ul className="room-list">
+      {state.queue.length === 0 && <p className="room-queue-empty">{t("roomQueueEmpty")}</p>}
+      <ul className="room-list" aria-label={t("bangumiHeading")}>
         {state.queue.map((item, index) => (
-          <li key={item.id} className="room-row">
+          <li
+            key={item.id}
+            className={`room-row${item.id === state.currentId ? " is-current" : ""}`}
+          >
             <div>
               <strong>{item.title}</strong>
               <small>
@@ -98,7 +34,7 @@ export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomStat
                   disabled={busy || item.id === state.currentId}
                   onClick={() => room.select(item.id)}
                 >
-                  设为当前
+                  {t("selectCurrentProgramme")}
                 </Button>
               )}
               {host && (
@@ -119,12 +55,14 @@ export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomStat
                   </Button>
                 </>
               )}
-              {host && item.id !== state.currentId && (
+              {canQueue && item.id !== state.currentId && (
                 <Button
                   variant="ghost"
+                  className="room-danger-action"
                   disabled={busy}
                   onClick={() => {
-                    if (window.confirm(`删除「${item.title}」？`)) void room.delete(item.id)
+                    if (window.confirm(`${t("deleteProgrammeConfirm")}\n${item.title}`))
+                      void room.delete(item.id)
                   }}
                 >
                   {t("delete")}
@@ -136,7 +74,8 @@ export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomStat
       </ul>
       {host && pendingCount > 0 && (
         <Button
-          variant="secondary"
+          variant="ghost"
+          className="room-danger-action room-queue-clear"
           disabled={busy}
           onClick={() => {
             if (window.confirm(t("clearPendingTitle"))) void room.clearPending()
@@ -145,6 +84,7 @@ export function QueuePanel({ room, state }: { room: RoomRuntime; state: RoomStat
           {t("clearPending")}
         </Button>
       )}
+      <RoomSources room={room} state={state} />
     </Card>
   )
 }

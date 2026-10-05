@@ -155,6 +155,14 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
     await guest.locator(".room-chat-form").getByRole("button", { name: "发送" }).click()
     await expect(page.getByText("Hello from guest")).toBeVisible()
     await expect(guest.getByLabel("视频链接")).toHaveCount(0)
+    await expect(guest.getByRole("combobox", { name: "选择来源" })).toHaveValue("baidu")
+    await expect(guest.getByRole("combobox", { name: "选择来源" }).locator("option")).toHaveCount(1)
+    await expect(
+      guest.locator(".baidu-panel").getByRole("button", { name: "管理连接" }),
+    ).toBeVisible()
+    await expect(
+      guest.locator(".baidu-panel").getByRole("button", { name: "选择网盘视频" }),
+    ).toHaveCount(0)
     const denied = await guestContext.request.post(`${housouUrl}/bushitsu/${roomId}/enmoku`, {
       headers: { origin: frontendUrl },
       data: { title: "Denied", type: "direct", url: "https://example.com/denied.mp4" },
@@ -210,7 +218,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
   }
 })
 
-test("@real-cookie owner manages pending queue while permitted members can only select", async ({
+test("@real-cookie members delete with playlist permission while owner retains reorder and clear", async ({
   page,
   browser,
 }) => {
@@ -242,6 +250,20 @@ test("@real-cookie owner manages pending queue while permitted members can only 
     }
     const rows = page.locator(".room-queue .room-row")
     const guestRows = guest.locator(".room-queue .room-row")
+    await expect(rows).toHaveCount(4)
+    await expect(guestRows).toHaveCount(4)
+    const queueResponse = await page
+      .context()
+      .request.get(`${housouUrl}/bushitsu/${roomId}/bangumi`)
+    const queueItems: { id: string; title: string }[] = await queueResponse.json()
+    const deletingId = queueItems.find((item) => item.title === "Delete me")?.id
+    expect(deletingId).toBeTruthy()
+    await expect(guest.getByRole("button", { name: "删除", exact: true })).toHaveCount(0)
+    const guestDelete = () =>
+      guestContext.request.delete(`${housouUrl}/bushitsu/${roomId}/enmoku/${deletingId}`, {
+        headers: { origin: frontendUrl },
+      })
+    expect((await guestDelete()).status()).toBe(403)
     await expect(rows).toHaveCount(4)
     await expect(rows.first().getByRole("button", { name: "上移" })).toBeDisabled()
     await expect(rows.last().getByRole("button", { name: "下移" })).toBeDisabled()
@@ -299,26 +321,83 @@ test("@real-cookie owner manages pending queue while permitted members can only 
     }
     await closeControls(guest, "房间信息")
     await expect(guest.getByLabel("视频链接")).toBeVisible()
+    await guestContext.setOffline(true)
+    await expect(guest.locator(".room-connection")).toContainText("断开")
+    await expect(guest.getByRole("button", { name: "删除", exact: true })).toHaveCount(0)
+    await expect(guest.locator("#chat-message")).toHaveCount(0)
+    await expect(guest.locator(".room-gate")).toContainText("断开")
+    await guestContext.setOffline(false)
+    await expect(guest.locator(".room-connection")).toContainText("正常")
+    await expect(guest.getByLabel("视频链接")).toBeVisible()
     await expect(
       guestRows.filter({ hasText: "First" }).getByRole("button", { name: "设为当前" }),
     ).toBeEnabled()
     await expect(
       guestRows.filter({ hasText: "Current" }).getByRole("button", { name: "设为当前" }),
     ).toBeDisabled()
-    for (const name of ["上移", "下移", "删除", "清空待播"]) {
+    for (const name of ["上移", "下移", "清空待播"]) {
       await expect(guest.getByRole("button", { name, exact: true })).toHaveCount(0)
     }
+    expect(
+      (
+        await guestContext.request.post(
+          `${housouUrl}/bushitsu/${roomId}/bangumi/${deletingId}/move`,
+          {
+            headers: { origin: frontendUrl },
+            data: { direction: "up" },
+          },
+        )
+      ).status(),
+    ).toBe(403)
+    expect(
+      (
+        await guestContext.request.delete(`${housouUrl}/bushitsu/${roomId}/bangumi/pending`, {
+          headers: { origin: frontendUrl },
+        })
+      ).status(),
+    ).toBe(403)
     await expect(current.getByRole("button", { name: "删除", exact: true })).toHaveCount(0)
-    const deleting = rows
+    await expect(
+      guestRows.filter({ hasText: "Current" }).getByRole("button", { name: "删除", exact: true }),
+    ).toHaveCount(0)
+    const deleting = guestRows
       .filter({ hasText: "Delete me" })
       .getByRole("button", { name: "删除", exact: true })
-    page.once("dialog", (dialog) => dialog.dismiss())
+    guest.once("dialog", (dialog) => dialog.dismiss())
     await deleting.click()
     await expect(rows).toHaveCount(4)
-    page.once("dialog", (dialog) => dialog.accept())
+    const deleted = guest.waitForResponse(
+      (response) =>
+        response.request().method() === "DELETE" &&
+        response.url().endsWith(`/enmoku/${deletingId}`),
+    )
+    guest.once("dialog", (dialog) => dialog.accept())
     await deleting.click()
+    expect((await deleted).status()).toBe(200)
     await expect(rows).toHaveCount(3)
     await expect(guestRows).toHaveCount(3)
+    await openControls(page)
+    await controls.getByRole("button", { name: "仅聊天", exact: true }).click()
+    await expect(controls.getByRole("button", { name: "仅聊天", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+    await expect(guest.getByRole("button", { name: "删除", exact: true })).toHaveCount(0)
+    const remainingId = queueItems.find((item) => item.title === "First")?.id
+    expect(
+      (
+        await guestContext.request.delete(`${housouUrl}/bushitsu/${roomId}/enmoku/${remainingId}`, {
+          headers: { origin: frontendUrl },
+        })
+      ).status(),
+    ).toBe(403)
+    await expect(rows).toHaveCount(3)
+    await expect(guestRows).toHaveCount(3)
+    await controls.getByRole("button", { name: "共同选片", exact: true }).click()
+    await expect(
+      guestRows.filter({ hasText: "First" }).getByRole("button", { name: "删除", exact: true }),
+    ).toBeVisible()
+    await closeControls(page)
     page.once("dialog", (dialog) => dialog.dismiss())
     await page.getByRole("button", { name: "清空待播" }).click()
     await expect(rows).toHaveCount(3)
@@ -336,6 +415,15 @@ test("@real-cookie owner manages pending queue while permitted members can only 
       "true",
     )
     await expect(guest.getByLabel("视频链接")).toHaveCount(0)
+    await expect(guest.getByRole("combobox", { name: "选择来源" })).toHaveValue("baidu")
+    await expect(guest.getByRole("combobox", { name: "选择来源" }).locator("option")).toHaveCount(1)
+    await expect(
+      guest.locator(".baidu-panel").getByRole("button", { name: "管理连接" }),
+    ).toBeVisible()
+    await expect(
+      guest.locator(".baidu-panel").getByRole("button", { name: "选择网盘视频" }),
+    ).toHaveCount(0)
+    await expect(guest.getByRole("button", { name: "删除", exact: true })).toHaveCount(0)
     await expect(guest.getByTestId("player-play-toggle")).toBeDisabled()
   } finally {
     await guestContext.close()

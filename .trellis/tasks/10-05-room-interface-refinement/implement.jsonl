@@ -1,0 +1,22 @@
+{"file":".trellis/spec/trellis-plus/index.md","reason":"Shared policy loading and scope"}
+{"file":".trellis/spec/trellis-plus/development-principles.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/development.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/preview-console.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/frontend.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/visual-experience.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/validation.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/continuity.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/loading.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/trellis-plus/commit-policy.md","reason":"Applicable project policy; read the full detail"}
+{"file":".trellis/spec/guides/index.md","reason":"Thinking guide routing"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"Reuse state labels, tokens and existing controls"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"UI/runtime/backend permission and authority boundary"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/index.md","reason":"React frontend contract map"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md","reason":"Admission, command gates, deletion permission, dock and launcher contract"}
+{"file":".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md","reason":"Preserve player/provider/danmaku boundaries"}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Existing primitives and semantic interaction"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Engineering and behavior gates"}
+{"file":".trellis/spec/houkago-kyoushitsu-core/frontend/index.md","reason":"Shared dictionary/theme ownership"}
+{"file":".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md","reason":"Framework-neutral core and boundary constraints"}
+{"file":".trellis/tasks/10-05-room-interface-refinement/design.md","reason":"Approved room design including user R7/R8 follow-up; refresh before work"}
+{"file":".trellis/tasks/10-05-room-interface-refinement/research/room-review.md","reason":"Static source findings and original UUPM decision summary"}

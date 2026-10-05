@@ -43,6 +43,12 @@ HLS/DASH engine. Portable helpers are exported through explicit
 - Baidu connection/status and file browsing use generated HTTP adapters with
   cookie credentials and abort signals. Any admitted member may manage a
   personal connection; browsing/source creation require playlist permission.
+  The room source picker keeps the provider panel mounted while inactive.
+  Reopening file browsing calls the existing directory loader with the last
+  visited path, refreshing that directory rather than resetting every open to
+  `/`. Playlist revocation and successful connection revoke clear protected
+  file/selection state and reset the path to `/`; old completions remain gated
+  by the existing browse sequence and room generation.
   One-use playback grants stay in memory. On optional fingerprint failure,
   request one fresh grant before playback. Abort or ignore old grants when
   room/item scope changes. Failed revoke retains local authority; successful
@@ -89,6 +95,10 @@ HLS/DASH engine. Portable helpers are exported through explicit
   375px; local MP4/HLS/DASH fixtures; live danmaku echo and fullscreen subtree;
   existing room admission/queue/chat/governance regressions. Use fixture
   adapter and candidate data for provider/danmaku interaction states.
+  Provider source switching must keep the connected account; exercise a
+  non-root directory, close the file dialog, switch away/back and reopen it,
+  then assert the refreshed listing still belongs to that directory. Retain
+  playlist-revocation and connection-revoke cleanup/negative tests.
 - Gate: root lint/typecheck/tests and `contract:drift`, React production build
   and `dist/module-graph.json` inspection. Record browser launch restrictions
   separately from application failures.

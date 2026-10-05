@@ -132,6 +132,7 @@ export function BaiduPanel({
     browseRequest.current += 1
     setPage(null)
     setSelected(null)
+    setPath("/")
     fileDialog.current?.close()
   }, [canPlaylist])
 
@@ -457,7 +458,7 @@ export function BaiduPanel({
             disabled={clientState === "mobile"}
             onClick={() => {
               openDialog("files")
-              void loadDirectory("/")
+              void loadDirectory(path)
             }}
           >
             {t("baiduFileBrowserTitle")}
