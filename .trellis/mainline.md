@@ -58,11 +58,11 @@
 
 ## Ordered Work
 
-### Current task — room interface refinement (2026-10-05, accepted for submission)
+### Completed task — room interface refinement (2026-10-05)
 
 The owner requested room refinement against the shared spec, approved task
 creation with `建 task`, and approved implementation with `开始实现`.
-[Room interface refinement](tasks/10-05-room-interface-refinement/prd.md)
+[Room interface refinement](tasks/archive/2026-10/10-05-room-interface-refinement/prd.md)
 retains the reviewed design/plan and both explicit 22-entry contexts. The owner
 then requested full-viewport launcher dragging, including the chat dock, and
 source presentation that scales as providers grow; R7/R8 continued within the
@@ -84,8 +84,8 @@ folder correction passed its pair with 3 passes/3 applicability skips and
 55 React unit tests. Lint (279 files), seven workspace types, 18-file byte-stable
 contracts, production build, 489-module boundary check and independent final
 mouse/touch/200% source/menu probes passed. Evidence and iteration failures are
-preserved in [validation](tasks/10-05-room-interface-refinement/validation.md)
-and [check review](tasks/10-05-room-interface-refinement/check-review.md).
+preserved in [validation](tasks/archive/2026-10/10-05-room-interface-refinement/validation.md)
+and [check review](tasks/archive/2026-10/10-05-room-interface-refinement/check-review.md).
 
 The subsequent screenshot clarified that attendance/composer content must also
 be valid placement. R7 is now viewport/safe-area only: content obstacle logic,
@@ -100,8 +100,8 @@ checkpoints above remain historical evidence for unchanged areas.
 
 A1–A10 are accepted under the final clarified R7. After runnable evidence and
 independent review, the owner accepted the final result and authorized submission
-and normal task closure with `可以提交` on 2026-10-05. Work commit and archive
-are the next authorized bookkeeping steps; push and deployment remain unapproved.
+and normal task closure with `可以提交` on 2026-10-05. Work commit: `62810c5`.
+The task is archived as completed; push and deployment remain unapproved.
 All task-owned memory fixtures are stopped, and the owner's original 9998/9999
 preview/configuration is preserved. M0–M6 and homepage delivery remain complete.
 
