@@ -101,7 +101,7 @@ checkpoints above remain historical evidence for unchanged areas.
 A1–A10 are accepted under the final clarified R7. After runnable evidence and
 independent review, the owner accepted the final result and authorized submission
 and normal task closure with `可以提交` on 2026-10-05. Work commit: `62810c5`.
-The task is archived as completed; push and deployment remain unapproved.
+The task is archived as completed in `6fc3fc6`; push and deployment remain unapproved.
 All task-owned memory fixtures are stopped, and the owner's original 9998/9999
 preview/configuration is preserved. M0–M6 and homepage delivery remain complete.
 

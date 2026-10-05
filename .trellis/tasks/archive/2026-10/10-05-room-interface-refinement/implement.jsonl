@@ -18,5 +18,5 @@
 {"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Engineering and behavior gates"}
 {"file":".trellis/spec/houkago-kyoushitsu-core/frontend/index.md","reason":"Shared dictionary/theme ownership"}
 {"file":".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md","reason":"Framework-neutral core and boundary constraints"}
-{"file":".trellis/tasks/10-05-room-interface-refinement/design.md","reason":"Approved room design including user R7/R8 follow-up; refresh before work"}
-{"file":".trellis/tasks/10-05-room-interface-refinement/research/room-review.md","reason":"Static source findings and original UUPM decision summary"}
+{"file":".trellis/tasks/archive/2026-10/10-05-room-interface-refinement/design.md","reason":"Approved room design including user R7/R8 follow-up; refresh before work"}
+{"file":".trellis/tasks/archive/2026-10/10-05-room-interface-refinement/research/room-review.md","reason":"Static source findings and original UUPM decision summary"}

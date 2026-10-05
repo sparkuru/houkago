@@ -473,3 +473,38 @@ Completed accepted homepage copy cleanup and Warm Club refinement; owner approve
 ### Next Steps
 
 - No remaining authorized product work; wait for a new scope request.
+
+
+## Session 81: Room refinement and viewport launcher closure
+
+**Date**: 2026-10-05
+**Task**: Room refinement and viewport launcher closure
+**Package**: houkago-kyoushitsu-react
+**Branch**: `k-on`
+
+### Summary
+
+Owner accepted the final result with 可以提交. Delivered room hierarchy, connection labels, playlist-member deletion, scalable source picker and viewport-only launcher placement. Task archived as completed; original preview preserved; no push/deployment.
+
+### Main Changes
+
+- Consolidated video sources while retaining drafts, preview and Baidu directory; aligned existing playlist deletion permission.
+- Allowed exact launcher placement over attendance and composer with mouse/touch/keyboard, persistence and viewport-safe menus.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `62810c5` | (see git log) |
+
+### Testing
+
+- [OK] 455 root tests, 50 React tests, 29 affected browser cases and four final danmaku regressions; lint, seven workspace types, build, boundary and independent review passed.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No new product scope authorized; preserve the original running preview.
