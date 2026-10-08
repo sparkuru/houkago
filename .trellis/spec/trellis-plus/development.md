@@ -84,17 +84,23 @@ production-preview semantics.
 
 | Command | Required behavior |
 | --- | --- |
-| `./preview.sh` / `./preview.sh start` | Start both development services in the background, wait for readiness, print the summary and return control; reuse a healthy owned instance without duplicates |
+| `./preview.sh` / `./preview.sh start` | Build a missing development image and install missing dependencies, then start both development services in the background, wait for readiness, print the summary and return control; reuse a healthy owned instance without duplicates |
 | `./preview.sh stop` / `./preview.sh down` | Stop only this repository's owned preview services; succeed when already stopped; preserve database files, caches and persistent volumes |
 | `./preview.sh status` | Inspect actual owned service state and health without starting/building anything; distinguish stopped, starting, ready and unhealthy |
 | `./preview.sh build` | Explicitly build the configured development image through the same runtime; do not start services |
 | `./preview.sh --help` | Explain setup, build/start/status/stop, configuration and data-preserving teardown without starting services |
 
-Ordinary `start` reuses prepared images and installed dependencies. If either
-is missing, fail with the actual setup/build command; do not install, build or
-run tests implicitly on every start. `dx` currently builds a missing image;
-preview startup must check prerequisites before reaching that behavior.
-Keep general verification commands usable alongside the preview.
+Ordinary `start` reuses prepared images and installed dependencies. When no owned
+services exist, build the configured image if missing and install dependencies
+if Housou's Elysia or React's Vite entry is missing. Install through the configured
+Docker image with uid/gid mapping, no published ports and
+`bun --no-env-file install --frozen-lockfile`; do not inject backend configuration
+into setup or change the lockfile. Missing/invalid `.env` and discovery failures
+block preparation. Show setup progress on stderr, capture routine build/install
+output, and expose it on failure or with `--verbose`. Preparation failures must
+return nonzero before creating services; retries reuse successfully prepared
+resources. Never run tests implicitly. Keep general verification commands usable
+alongside the preview. Explicit `build` remains available for image rebuilds.
 
 Use deterministic repository-scoped ownership (for example exact container
 labels); inspect it before reuse or teardown. Never kill by port/process name
@@ -103,11 +109,12 @@ than silently omitting a mapping. Bound readiness waits, detect early service
 exit, propagate failures and signals, and clean up only resources created by
 the failed attempt. Preserve existing healthy services and persistent data.
 
-After environment/dependency setup, the required first-use sequence is:
+With Docker, an accessible daemon, Python 3 and host iproute2 installed, the
+first-use sequence is:
 
 ```sh
-./preview.sh build
-./preview.sh start
+cp .env.example .env  # only when .env is absent; fill in desired settings
+./preview.sh         # prepares missing image/dependencies and starts services
 ./preview.sh status
 ./preview.sh stop  # or down; preserves persistent data
 ```
@@ -127,6 +134,14 @@ enumeration. Hide transient failed polls in normal startup; `--verbose` makes
 them visible. Terminal failures remain nonzero with service-specific diagnostics.
 Physical-device and provider acceptance are not implied by readiness.
 
+Before removing containers from a failed startup attempt, print their bounded
+startup logs with exact ownership checks and redaction of injected secrets,
+authenticated URLs and bearer tokens. Log retrieval failure must not prevent
+cleanup or replace the startup exit status. A Bun watch process can remain
+running after an application import error; inspect these logs rather than
+treating running state as successful startup. Never automatically reset or
+delete the configured database to recover from a startup error.
+
 ### Preview verification requirements
 
 Validate changed shell scripts with `bash -n`, ShellCheck and the project's
@@ -134,14 +149,16 @@ shell formatting convention. Exercise the command contract using free test
 ports and a temporary `.env` fixture, preserving the user's configuration and
 existing services. Verify:
 
-- `build` and `status` do not start services; ordinary `start` does not build,
-  install or run tests; help and invocation from another directory work.
+- `build` and `status` do not start services; first `start` prepares missing
+  image/dependencies, subsequent starts reuse them and never run tests; help and
+  invocation from another directory work. Build/install failures show diagnostics
+  without creating services, changing `.env`/lockfiles or publishing setup ports.
 - Both services reach readiness; the summary lists all listeners/mappings;
   printed localhost browser URLs actually respond.
 - Repeated start reuses ownership; stop/down and repeated stop affect only the
   owned instance and retain a persistence marker/database and unrelated service.
-- Missing image/dependency/config, conflicting ports, early service exit and
-  readiness timeout fail actionably without the success banner.
+- Missing config, failed image/dependency preparation, conflicting ports, early
+  service exit and readiness timeout fail actionably without the success banner.
 - Changing listening/published hosts and ports in the fixture changes the
   actual runtime, React's API connection and reported endpoints consistently.
 - Existing custom/empty local values survive configuration updates; rerunning
@@ -160,6 +177,8 @@ loopback HTTP probes; execution needs permission to bind local test sockets.
 It does not start real containers. Use an isolated source/configuration copy
 and disposable test data for real Docker smoke checks; never launch the user's
 provider credentials merely to verify the preview lifecycle.
+Include a fresh persistent SQLite database in first-use validation as well as
+memory fixtures; verify generated database files are ignored and untracked.
 
 Report stub lifecycle checks, syntax/lint/format checks and real Docker checks
 separately. Record unavailable Docker/network/browser execution explicitly;
@@ -278,6 +297,11 @@ empty entries. Keep local settings/permissions local; no new allow rules are
 implied. Docker execution remains subject to the active sandbox/approval policy.
 
 ## Current console dependency and loading contract
+
+Resolve the effective local Docker endpoint with `DOCKER_CONTEXT` taking
+precedence over `DOCKER_HOST`, or `docker context inspect` with no context name.
+Do not require `docker context show`, which Docker 20.10 does not provide.
+Refuse remote daemon discovery rather than advertising the caller's addresses.
 
 Read `preview-console.md` before preview changes or checks. Wildcard publication
 requires host `ip` (iproute2) and a discoverable local Docker endpoint; dependency

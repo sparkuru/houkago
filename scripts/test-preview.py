@@ -44,10 +44,10 @@ def docker_stub() -> int:
         output.write(json.dumps(args) + "\n")
     operation = args[0]
     if operation == "context":
-        if args[1] == "show":
-            print("default")
-        elif args[1] == "inspect":
-            endpoint = "ssh://fixture-daemon" if args[2] == "remote" else "unix:///fixture/docker.sock"
+        if args[1] == "inspect":
+            current = (root / "current-context").read_text() if (root / "current-context").exists() else "default"
+            context = args[2] if len(args) > 2 else current
+            endpoint = "ssh://fixture-daemon" if context == "remote" else "unix:///fixture/docker.sock"
             print(json.dumps([{"Endpoints": {"docker": {"Host": endpoint}}}]))
         else:
             return 2
@@ -55,6 +55,11 @@ def docker_stub() -> int:
     if operation == "image":
         return 1 if (root / "missing-image").exists() else 0
     if operation == "build":
+        print("fixture build output")
+        if (root / "build-fail").exists():
+            print("fixture image build failed", file=sys.stderr)
+            return 1
+        (root / "missing-image").unlink(missing_ok=True)
         return 0
     if operation == "ps":
         filters = [args[index + 1][6:] for index, value in enumerate(args) if value == "--filter"]
@@ -66,13 +71,26 @@ def docker_stub() -> int:
     if operation == "inspect":
         if args[1] not in state:
             return 1
-        print(json.dumps([state[args[1]]]))
+        inspected = json.loads(json.dumps(state[args[1]]))
+        environment = inspected["Config"].get("Env", {})
+        if isinstance(environment, dict):
+            inspected["Config"]["Env"] = [f"{key}={value}" for key, value in environment.items()]
+        print(json.dumps([inspected]))
+        return 0
+    if operation == "logs":
+        if args[-1] not in state or (root / "logs-fail").exists():
+            return 1
+        print("fixture startup logs")
+        if args[-1] == "owned-backend" and (root / "legacy-failure").exists():
+            print("error: legacy UUID room data detected; reset HOUSOU_DB before starting authenticated Houkago", file=sys.stderr)
+            print(state[args[-1]]["Config"]["Env"].get("HOUKAGO_BAIDU_CLIENT_SECRET", ""), file=sys.stderr)
+            print("https://fixture-user:fixture-password@example.test Bearer fixture-token", file=sys.stderr)
         return 0
     if operation == "exec":
         if (root / "transient-fail").exists():
             (root / "transient-fail").unlink()
             return 1
-        return 1 if (root / "internal-fail").exists() else 0
+        return 1 if any((root / flag).exists() for flag in ("internal-fail", "legacy-failure")) else 0
     if operation == "create":
         labels, environment, mappings = {}, {}, {}
         index = 1
@@ -117,6 +135,17 @@ def docker_stub() -> int:
             if container != "-f":
                 state.pop(container, None)
     elif operation == "run":
+        if args[-4:] == ["bun", "--no-env-file", "install", "--frozen-lockfile"]:
+            print("fixture install output")
+            if (root / "install-fail").exists():
+                print("fixture dependency install failed", file=sys.stderr)
+                return 1
+            if not (root / "install-incomplete").exists():
+                repo = Path(args[args.index("-v") + 1].removesuffix(":/app"))
+                (repo / "packages/housou/node_modules/elysia").mkdir(parents=True, exist_ok=True)
+                entry = repo / "packages/kyoushitsu-react/node_modules/vite/bin/vite.js"
+                entry.parent.mkdir(parents=True, exist_ok=True)
+                entry.touch()
         return 0
     else:
         return 2
@@ -168,7 +197,7 @@ class PreviewTests(unittest.TestCase):
         stub = self.bin / "ip"
         stub.write_text(f"#!/bin/sh\nexec {shutil.which('python3')} '{Path(__file__).resolve()}' --ip-stub \"$@\"\n")
         stub.chmod(0o755)
-        for command in ("bash", "dirname", "python3", "id", "mkdir", "mktemp", "rm", "sleep"):
+        for command in ("bash", "dirname", "python3", "id", "mkdir", "mktemp", "rm", "sleep", "cat"):
             (self.bin / command).symlink_to(shutil.which(command))
         (self.state / "ip-output").write_text(
             "lo UNKNOWN 127.0.0.1/8 ::1/128\n"
@@ -226,6 +255,7 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(self.run_preview("status").stdout, result.stdout)
         self.assertEqual(sum(command[0] == "create" for command in self.commands()), 2)
         self.assertFalse(any(command[0] in ("build", "run") for command in self.commands()))
+        self.assertFalse(any(command[0] == "logs" for command in self.commands()))
         self.assertNotIn("literal $(never)", json.dumps(self.commands()))
         self.run_preview("stop")
         self.run_preview("down")
@@ -279,6 +309,16 @@ class PreviewTests(unittest.TestCase):
         self.assertFalse(any(command[0] in ("create", "start") for command in self.commands()))
         self.run_preview("start", overrides={"DOCKER_CONTEXT": "default", "DOCKER_HOST": "tcp://ignored-daemon:2375"})
 
+    def test_active_context_on_older_docker(self) -> None:
+        """Resolve current contexts without the unsupported context show command."""
+        (self.state / "current-context").write_text("remote")
+        self.assertIn("remote Docker daemon", self.run_preview("start", success=False).stderr)
+        self.assertFalse((self.state / "ip-calls").exists())
+        (self.state / "current-context").write_text("default")
+        self.run_preview("start")
+        self.assertIn(["context", "inspect"], self.commands())
+        self.assertNotIn(["context", "show"], self.commands())
+
     def test_status_discovery_failure_preserves_services(self) -> None:
         """A failed fresh status enumeration cannot reuse previously printed URLs."""
         self.run_preview("start")
@@ -319,6 +359,30 @@ class PreviewTests(unittest.TestCase):
         self.assertNotIn("http://", result.stdout)
         self.assertEqual(set(self.records()), {"unrelated"})
 
+    def test_startup_logs_survive_failed_attempt_cleanup(self) -> None:
+        """Watch-mode startup failures retain their cause without leaking secrets."""
+        (self.state / "legacy-failure").touch()
+        result = self.run_preview("start", success=False)
+        self.assertIn("Startup diagnostics (housou; container running)", result.stderr)
+        self.assertIn("legacy UUID room data detected", result.stderr)
+        self.assertIn("explicitly choose a new HOUSOU_DB path", result.stderr)
+        self.assertIn("<redacted>", result.stderr)
+        for private in ("fixture-user", "fixture-password", "fixture-token"):
+            self.assertNotIn(private, result.stdout + result.stderr)
+        commands = self.commands()
+        log_indices = [index for index, command in enumerate(commands) if command[0] == "logs"]
+        removal = next(index for index, command in enumerate(commands) if command[0] == "rm")
+        self.assertEqual(len(log_indices), 2)
+        self.assertTrue(all(index < removal for index in log_indices))
+        self.assertEqual(set(self.records()), {"unrelated"})
+
+    def test_unavailable_logs_do_not_block_cleanup(self) -> None:
+        """Diagnostic failure preserves nonzero startup and owned-only teardown."""
+        (self.state / "internal-fail").touch()
+        (self.state / "logs-fail").touch()
+        self.assertIn("cannot read startup logs", self.run_preview("start", success=False).stderr)
+        self.assertEqual(set(self.records()), {"unrelated"})
+
     def render_runtime(self, host: str, lan: str = "", ready: bool = True) -> str:
         """Exercise unmapped-to-loopback families without network side effects."""
         spec = importlib.util.spec_from_file_location("preview_config", self.repo / "scripts/preview-config.py")
@@ -355,6 +419,8 @@ class PreviewTests(unittest.TestCase):
 
     def test_build_status_help_do_not_start(self) -> None:
         """Read-only/status and explicit image preparation have no implicit startup."""
+        (self.state / "missing-image").touch()
+        shutil.rmtree(self.repo / "packages/kyoushitsu-react/node_modules")
         self.run_preview("--help")
         self.assertEqual(self.commands(), [])
         self.run_preview("status")
@@ -407,17 +473,66 @@ class PreviewTests(unittest.TestCase):
                 self.assertEqual(set(self.records()), {"unrelated"})
                 (self.state / flag).unlink()
 
-    def test_missing_prerequisites(self) -> None:
-        """Missing image, dependencies or .env fail before creating a container."""
+    def test_first_start_prepares_missing_image_and_dependencies(self) -> None:
+        """A clone with only .env starts and reuses its preparation next time."""
+        original_env = self.env_path.read_bytes()
+        lock = self.repo / "bun.lock"
+        lock.write_text("fixture lockfile\n")
         (self.state / "missing-image").touch()
-        self.assertIn("preview.sh build", self.run_preview("start", success=False).stderr)
-        (self.state / "missing-image").unlink()
-        shutil.rmtree(self.repo / "packages/housou/node_modules/elysia")
-        self.assertIn("dx bun install", self.run_preview("start", success=False).stderr)
+        for package in ("housou", "kyoushitsu-react"):
+            shutil.rmtree(self.repo / f"packages/{package}/node_modules")
+        result = self.run_preview()
+        self.assertIn("System is ready.", result.stdout)
+        self.assertIn("Building development image", result.stderr)
+        self.assertIn("Installing workspace dependencies", result.stderr)
+        self.assertNotIn("fixture build output", result.stdout + result.stderr)
+        self.assertNotIn("fixture install output", result.stdout + result.stderr)
+        commands = self.commands()
+        build = next(index for index, command in enumerate(commands) if command[0] == "build")
+        install = next(index for index, command in enumerate(commands) if command[0] == "run")
+        create = next(index for index, command in enumerate(commands) if command[0] == "create")
+        self.assertLess(build, install)
+        self.assertLess(install, create)
+        self.assertEqual(commands[install][-4:], ["bun", "--no-env-file", "install", "--frozen-lockfile"])
+        self.assertNotIn("-p", commands[install])
+        self.assertEqual([commands[install][index + 1] for index, arg in enumerate(commands[install]) if arg == "-e"], ["HOME=/app/.devhome"])
+        self.assertEqual(self.env_path.read_bytes(), original_env)
+        self.assertEqual(lock.read_text(), "fixture lockfile\n")
+        self.run_preview("stop")
+        self.run_preview("start")
+        self.assertEqual(sum(command[0] == "build" for command in self.commands()), 1)
+        self.assertEqual(sum(command[0] == "run" for command in self.commands()), 1)
+
+    def test_preparation_failure_does_not_start_services(self) -> None:
+        """Build/install failures retain diagnostics and permit a later retry."""
+        for flag, message in (("build-fail", "image build failed"), ("install-fail", "dependency install failed"), ("install-incomplete", "installation incomplete")):
+            with self.subTest(flag=flag):
+                if flag == "build-fail":
+                    (self.state / "missing-image").touch()
+                (self.repo / "packages/kyoushitsu-react/node_modules/vite/bin/vite.js").unlink(missing_ok=True)
+                (self.state / flag).touch()
+                self.assertIn(message, self.run_preview("start", success=False).stderr)
+                self.assertEqual(set(self.records()), {"unrelated"})
+                self.assertFalse(any(command[0] == "create" for command in self.commands()))
+                (self.state / flag).unlink()
+                (self.state / "missing-image").unlink(missing_ok=True)
+        result = self.run_preview("start", "--verbose")
+        self.assertIn("fixture install output", result.stderr)
+
+    def test_missing_dockerfile_keeps_diagnostics(self) -> None:
+        """A missing build input remains visible despite captured setup output."""
+        (self.state / "missing-image").touch()
+        (self.repo / "Dockerfile.dev").unlink()
+        self.assertIn("missing Dockerfile.dev", self.run_preview("start", success=False).stderr)
+        self.assertFalse(any(command[0] in ("build", "run", "create") for command in self.commands()))
+
+    def test_missing_config_does_not_prepare(self) -> None:
+        """Missing .env blocks setup with instructions and no Docker mutation."""
+        (self.state / "missing-image").touch()
         self.env_path.unlink()
         for command in ("start", "build"):
             self.assertIn("cp .env.example .env", self.run_preview(command, success=False).stderr)
-        self.assertFalse(any(command[0] == "create" for command in self.commands()))
+        self.assertEqual(self.commands(), [])
 
     def test_origin_override_and_public_frontend_inputs(self) -> None:
         """Explicit CLI origin wins; process config wins over root dotenv."""

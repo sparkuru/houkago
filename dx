@@ -8,6 +8,7 @@ set -Eeuo pipefail
 repo_root=""
 config_path=""
 config_tmp=""
+setup_log=""
 created_ids=()
 config_keys=()
 docker_args=()
@@ -22,9 +23,10 @@ preview_verbose=false
 usage() {
 	printf 'Usage: [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]\n' >&2
 	printf '       ./preview.sh [start|stop|down|status|build] [--origin http://HOST:PORT] [--verbose]\n' >&2
-	printf '\nSetup (repository root): cp .env.example .env; ./dx bun install\n' >&2
-	printf 'First use: ./preview.sh build; ./preview.sh start\n' >&2
-	printf 'Start returns after owned Housou /health and React / readiness; no implicit build/install.\n' >&2
+	printf '\nSetup (repository root): cp .env.example .env, then fill in .env.\n' >&2
+	printf 'First use: ./preview.sh (automatically builds a missing image and installs missing dependencies).\n' >&2
+	printf 'Requires Docker with an accessible daemon, Python 3 and iproute2 for wildcard publishing.\n' >&2
+	printf 'Start reuses prepared resources and returns after owned Housou /health and React / readiness.\n' >&2
 	printf 'Status reads actual Docker state; stop/down preserve databases and caches.\n' >&2
 	printf 'Root .env -> explicit process environment -> --origin overrides.\n' >&2
 	printf 'PORT/PREVIEW_FRONTEND_PORT: container; PREVIEW_BACKEND_PORT/PREVIEW_FRONTEND_PUBLISHED_PORT: host (0=dynamic).\n' >&2
@@ -43,6 +45,12 @@ cleanup() {
 	local status=$? container
 	trap - EXIT INT TERM
 	[[ -z "$config_tmp" ]] || rm -f -- "$config_tmp"
+	[[ -z "$setup_log" ]] || rm -f -- "$setup_log"
+	if ((status != 0)); then
+		for container in "${created_ids[@]}"; do
+			python3 "$config_path" diagnostics "$repo_root" "$container" || printf 'dx: startup diagnostics unavailable for an owned attempt container\n' >&2
+		done
+	fi
 	for container in "${created_ids[@]}"; do
 		docker rm -f "$container" >/dev/null 2>&1 || printf 'dx: cleanup failed for owned attempt container %s; run ./preview.sh stop\n' "$container" >&2
 	done
@@ -80,9 +88,42 @@ ensure_image() {
 }
 
 build_image() {
-	[[ -f "${repo_root}/Dockerfile.dev" ]] || die 'missing Dockerfile.dev'
+	if [[ ! -f "${repo_root}/Dockerfile.dev" ]]; then
+		printf 'dx: missing Dockerfile.dev\n' >&2
+		return 1
+	fi
 	printf 'dx: building %s from Dockerfile.dev\n' "$DX_IMAGE" >&2
 	docker build --file "${repo_root}/Dockerfile.dev" --tag "$DX_IMAGE" "$repo_root"
+}
+
+setup_step() {
+	local description=$1
+	shift
+	printf 'dx: %s\n' "$description" >&2
+	setup_log=$(mktemp "${TMPDIR:-/tmp}/houkago-preview-setup.XXXXXXXXXX")
+	if "$@" >"$setup_log" 2>&1; then
+		[[ "$preview_verbose" != true ]] || cat -- "$setup_log" >&2
+	else
+		cat -- "$setup_log" >&2
+		die "$description failed; correct the reported error and retry ./preview.sh"
+	fi
+	rm -f -- "$setup_log"
+	setup_log=""
+}
+
+dependencies_ready() {
+	[[ -d "${repo_root}/packages/housou/node_modules/elysia" && -f "${repo_root}/packages/kyoushitsu-react/node_modules/vite/bin/vite.js" ]]
+}
+
+prepare_preview() {
+	if ! docker image inspect "$DX_IMAGE" >/dev/null 2>&1; then
+		setup_step 'Building development image (first use may take a few minutes)' build_image
+	fi
+	if ! dependencies_ready; then
+		common_arguments
+		setup_step 'Installing workspace dependencies' docker run --rm "${docker_args[@]}" "$DX_IMAGE" bun --no-env-file install --frozen-lockfile
+		dependencies_ready || die 'dependency installation incomplete; run ./dx bun install --frozen-lockfile to inspect'
+	fi
 }
 
 common_arguments() {
@@ -202,8 +243,7 @@ start_preview() {
 		python3 "$config_path" report "$repo_root" "$backend_id" "$frontend_id"
 		return 0
 	fi
-	docker image inspect "$DX_IMAGE" >/dev/null 2>&1 || die 'development image missing; run ./preview.sh build'
-	[[ -d "${repo_root}/packages/housou/node_modules/elysia" && -f "${repo_root}/packages/kyoushitsu-react/node_modules/vite/bin/vite.js" ]] || die 'dependencies missing; run ./dx bun install'
+	prepare_preview
 	name_prefix=$(python3 -c 'import hashlib,sys; print("houkago-preview-"+hashlib.sha256(sys.argv[1].encode()).hexdigest()[:20])' "$repo_root")
 	deadline=$((SECONDS + PREVIEW_READY_TIMEOUT))
 	# shellcheck disable=SC2153 # PORT/HOST are validated/exported by load_config.
@@ -319,7 +359,7 @@ main() {
 			esac
 		done
 	fi
-	for command in dirname python3 docker id mkdir mktemp rm; do
+	for command in dirname python3 docker id mkdir mktemp rm cat; do
 		command -v "$command" >/dev/null 2>&1 || die "required command not found: $command"
 	done
 	repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)

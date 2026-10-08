@@ -204,6 +204,46 @@ def owned_runtime(root: Path, container: str, service: str) -> dict:
             "started": data["State"].get("StartedAt", ""), "timeout": labels.get("houkago.timeout", "60")}
 
 
+def redact_diagnostics(output: str, environment: list[str]) -> str:
+    """Hide injected secrets and authenticated URLs in captured service logs."""
+    secrets: set[str] = set()
+    for entry in environment:
+        key, _, value = entry.partition("=")
+        if not value:
+            continue
+        if re.search(r"SECRET|PASSWORD|TOKEN|CREDENTIAL_KEY$", key, re.IGNORECASE):
+            secrets.update((value, json.dumps(value)[1:-1]))
+        if key == "HOUKAGO_KOMON_USERNAMES":
+            secrets.update(item.strip() for item in value.split(",") if item.strip())
+    for secret in sorted(secrets, key=len, reverse=True):
+        output = output.replace(secret, "<redacted>")
+    output = re.sub(r"(https?://)[^\s/@]+:[^\s/@]+@", r"\1<redacted>@", output)
+    return re.sub(r"(?i)(Bearer\s+)\S+", r"\1<redacted>", output)
+
+
+def startup_diagnostics(root: Path, container: str) -> None:
+    """Print bounded owned-container logs before a failed attempt is removed."""
+    data = docker_json(container)
+    labels = data.get("Config", {}).get("Labels", {})
+    service = labels.get("houkago.service")
+    if service not in ("housou", "kyoushitsu-react") or any(labels.get(key) != value for key, value in {
+        "houkago.repo": str(root), "houkago.scope": "preview",
+    }.items()):
+        raise ConfigError("container ownership mismatch; refusing startup diagnostics")
+    print(CLIStyle.color(f"Startup diagnostics ({service}; container {data['State']['Status']}):"), file=sys.stderr)
+    result = subprocess.run(["docker", "logs", "--tail", "80", container], capture_output=True,
+                            text=True, timeout=5, check=False)
+    if result.returncode:
+        raise ConfigError(f"{service}: cannot read startup logs")
+    output = redact_diagnostics(result.stdout + result.stderr, data["Config"].get("Env", []))
+    if output.strip():
+        print(CLIStyle.color(output.rstrip()), file=sys.stderr)
+    else:
+        print(CLIStyle.color("No startup logs available."), file=sys.stderr)
+    if service == "housou" and "legacy UUID room data detected" in output:
+        print(CLIStyle.color("preview: Housou rejected legacy room data. Preserve the existing database and explicitly choose a new HOUSOU_DB path for preview, or migrate the old data. No database was deleted.", "error"), file=sys.stderr)
+
+
 def url_host(host: str) -> str:
     """Bracket IPv6 hosts in directly openable URLs."""
     return f"[{host}]" if ":" in host else host
@@ -251,13 +291,11 @@ def require_local_daemon() -> None:
     context = os.environ.get("DOCKER_CONTEXT", "")
     endpoint = os.environ.get("DOCKER_HOST", "") if not context else ""
     if not endpoint:
-        if not context:
-            result = subprocess.run(["docker", "context", "show"], capture_output=True, text=True,
-                                    timeout=5, check=False)
-            if result.returncode or not result.stdout.strip():
-                raise ConfigError("cannot determine Docker context; select a local Docker context before preview")
-            context = result.stdout.strip()
-        result = subprocess.run(["docker", "context", "inspect", context], capture_output=True,
+        # Inspect without a name resolves the active context even on Docker 20.10.
+        command = ["docker", "context", "inspect"]
+        if context:
+            command.append(context)
+        result = subprocess.run(command, capture_output=True,
                                 text=True, timeout=5, check=False)
         if result.returncode:
             raise ConfigError("cannot inspect Docker context; select a local Docker context before preview")
@@ -384,7 +422,7 @@ def main() -> int:
     """Dispatch config loading or read-only preview inspection."""
     parser = ColoredArgumentParser(description="Internal preview configuration/runtime helper",
                                    epilog="Example: python3 scripts/preview-config.py load . dx")
-    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status", "discovery"))
+    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status", "discovery", "diagnostics"))
     parser.add_argument("root", type=Path)
     parser.add_argument("arguments", nargs="*")
     parser.add_argument("--origin")
@@ -393,6 +431,9 @@ def main() -> int:
     root = args.root.resolve()
     runtimes: list[dict] = []
     try:
+        if args.action == "diagnostics":
+            startup_diagnostics(root, args.arguments[0])
+            return 0
         if args.action == "discovery":
             discover_addresses(args.arguments)
             return 0
