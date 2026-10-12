@@ -63,6 +63,14 @@ session to the restored identity epoch and room ID.
   requests, changes permissions and removes members. Password mode is a host
   setting; the backend currently admits existing members and reports closed to
   new nonmembers. Do not invent a guest password handshake.
+- `ChatPanel` owns one draft/error state and one shared composer with the ordered
+  actions 弹幕 / 发送. Normal/cinema render it in the dock; actual player fullscreen
+  portals that same form into the player communication panel. Enter/exit and
+  item removal preserve its draft without creating another runtime or input.
+  Composition Enter must not submit; reset composition state when the physical
+  input relocates. The 500-character limit applies only to danmaku, and WS echo
+  remains the display authority. Background room controls are inert in actual
+  fullscreen; cinema keeps the dock and freely positioned `+` launcher.
 - Queue add/select and single-item deletion follow playlist permission. An
   admitted guest with `canPlaylist` may delete an item added by the host or
   another member; item authorship adds no restriction. Queue reordering and
@@ -266,7 +274,8 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   command gate. Apply the 500-character maximum only to the danmaku action.
   `DanmakuFeature` continues to receive room chat events for overlays and keeps
   its overlay portal attached to the player even though its source/settings
-  controls live in the dock.
+  controls live in the dock for normal/cinema and move to the player settings
+  panel in actual fullscreen.
 - The launcher has free placement over page content. The owner clarified the
   full-viewport requirement with the attendance/composer screenshot on
   2026-10-05: headings, messages, players, queue controls and chat inputs/actions

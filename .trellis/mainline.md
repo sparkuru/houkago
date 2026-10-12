@@ -58,6 +58,33 @@
 
 ## Ordered Work
 
+### In-progress task — room player experience (2026-10-12)
+
+The owner requested `建 task` and screenshot-led diagnosis of post-migration
+room playback, fullscreen and danmaku experience, using YouTube/bilibili as
+interaction references within existing specs. The new
+[room player experience task](tasks/10-12-room-player-experience/prd.md)
+is in progress after the owner reviewed the plan and requested `开始实现`.
+Twelve desktop/phone diagnostic screenshots reproduce duplicate
+controls, webpage-fullscreen margin/clipping, overlapping exit/danmaku actions,
+small touch targets and inaccessible fullscreen communication. Evidence and
+fixture limits are in [research](tasks/10-12-room-player-experience/research/player-review.md).
+Implementation and validation are approved; the owner subsequently accepted
+the visuals and authorized this work commit with `不错；效果可以；先提交一版`.
+Archive, push and deployment remain unapproved. M0–M6 and
+previous accepted room/home work remain complete; mode remains guided.
+
+Implementation checkpoint: a single player toolbar, fullscreen communication
+with retained draft, local danmaku settings, native-caption avoidance and
+viewport-safe panels are delivered. Final evidence: 459 unit tests, seven
+workspace types, lint/build and byte-stable contracts; 76 full React browser
+passes with three existing applicability skips, then 35 affected room passes
+and two height-resize subtitle passes after final fixes. Forty-four final
+desktop/phone screenshots and eight-dimension self-review are indexed in
+[validation](tasks/10-12-room-player-experience/validation.md). Subjective
+visual acceptance is resolved; this checkpoint commits the implementation,
+tests and specs while retaining the active task for a later archive decision.
+
 ### Completed task — room interface refinement (2026-10-05)
 
 The owner requested room refinement against the shared spec, approved task

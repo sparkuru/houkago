@@ -1,9 +1,16 @@
+.player-stage {
+  position: relative;
+  color: var(--color-on-media);
+  background: var(--color-media-surface);
+  min-width: 0;
+}
+
 .player-screen {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #000;
+  background: var(--color-cinema-canvas);
 }
 
 .player-mount,
@@ -12,8 +19,41 @@
   height: 100%;
 }
 
+/* PlayerStage owns gestures and controls; the engine retains decoding/loading. */
+.player-mount {
+  pointer-events: none;
+}
+
+.player-mount .art-bottom,
+.player-mount .art-mask,
+.player-mount .art-notice {
+  display: none !important;
+}
+
+.player-mount .art-subtitle {
+  bottom: max(var(--space-2), var(--player-controls-inset, 0px));
+}
+
+.player-screen-target {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.player-screen-target:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-focus-ring);
+  outline-offset: calc(-1 * var(--focus-outline-width));
+  box-shadow: inset 0 0 0 calc(2 * var(--focus-outline-width)) var(--color-media-surface);
+}
+
 .player-overlay {
   position: absolute;
+  z-index: 2;
   inset: 0;
   pointer-events: none;
 }
@@ -27,71 +67,292 @@
   inset: 0;
   z-index: 20;
   width: 100%;
-  background: rgb(0 0 0 / 55%);
-  color: #fff;
-  font-size: 1.25rem;
+  color: var(--color-on-media);
+  background: var(--color-overlay);
+  font: inherit;
   cursor: pointer;
 }
 
-.player-control-locked .art-bottom,
-.player-control-locked .art-mask {
-  display: none !important;
-}
-
-.player-control-locked .art-video {
-  pointer-events: none;
-}
-
-.player-web-fullscreen {
+.room-current .player-stage:is(:fullscreen, .player-web-fullscreen) {
   position: fixed;
   z-index: 1000;
   inset: 0;
-  width: 100vw;
+  width: 100%;
   height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: #000;
-}
-
-.player-stage:fullscreen {
-  display: flex;
-  flex-direction: column;
-  background: #000;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-cinema-canvas);
 }
 
 .player-stage:is(:fullscreen, .player-web-fullscreen) .player-screen {
-  width: 100%;
-  height: auto;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   aspect-ratio: auto;
 }
 
-.player-web-exit {
+.player-tools {
+  position: relative;
+  z-index: 70;
+  color: var(--color-on-media);
+}
+
+.player-stage:is(:fullscreen, .player-web-fullscreen) .player-tools {
   position: absolute;
-  z-index: 30;
-  top: 1rem;
-  right: 1rem;
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  background: rgb(0 0 0 / 70%);
-  color: #fff;
+  inset: auto 0 0;
+  padding-top: var(--space-5);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  background: linear-gradient(transparent, var(--color-overlay-strong) var(--space-5));
+  transition: opacity var(--duration-fast) var(--ease-standard), visibility var(--duration-fast);
+}
+
+.player-tools[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .player-controls {
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.player-progress {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--control-height);
+}
+
+.player-progress input,
+.player-panel input[type="range"] {
+  width: 100%;
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  margin: 0;
+  accent-color: var(--color-on-media);
+  cursor: pointer;
+}
+
+.player-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
-.player-controls > button,
-.player-controls select {
-  min-height: 44px;
-}
-
-.player-controls label {
+.player-icon-button,
+.player-danmaku-control .danmaku-live-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  color: var(--color-on-media);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.player-icon-button:hover,
+.player-danmaku-control .danmaku-live-toggle:hover,
+.player-icon-button[aria-pressed="true"],
+.player-danmaku-control .danmaku-live-toggle[aria-pressed="true"],
+.player-icon-button[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--color-on-media) 14%, transparent);
+}
+
+.player-toolbar-spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.player-time {
+  flex: 0 0 auto;
+  color: var(--color-overlay-muted);
+  font-size: var(--type-label-size);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player-stage button:disabled,
+.player-stage input:disabled,
+.player-stage select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.player-stage[data-compact="true"] .player-time {
+  display: flex;
+  flex-direction: column;
+  min-width: 5ch;
+}
+
+.player-stage[data-compact="true"] .player-time-divider {
+  display: none;
+}
+
+.player-tools :is(button, input, select, summary):focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+  box-shadow: 0 0 0 calc(var(--focus-outline-width) + var(--focus-outline-offset))
+    var(--color-media-surface);
+}
+
+.player-panel {
+  position: fixed;
+  z-index: 2;
+  display: grid;
+  gap: var(--space-2);
+  width: min(360px, calc(100vw - var(--space-6)));
+  max-height: min(
+    480px,
+    calc(100dvh - var(--space-6) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+  );
+  padding: var(--space-3);
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--color-on-media);
+  background: var(--color-media-surface);
+  border: 1px solid var(--color-overlay-muted);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-floating);
+}
+
+.player-panel[hidden] {
+  display: none;
+}
+
+.player-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.player-panel-heading strong {
+  overflow-wrap: anywhere;
+}
+
+.player-panel-close,
+.player-panel-mute {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  color: inherit;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.player-panel :is(select, input:not([type="range"])) {
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  color: var(--color-on-media);
+  background: var(--color-tooltip-surface);
+  border: 1px solid var(--color-overlay-muted);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.player-panel > label {
+  display: grid;
+  grid-template-columns: 3em minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.player-view-modes {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) 0 0;
+  border: 0;
+}
+
+.player-view-modes .player-icon-button {
+  justify-content: flex-start;
+}
+
+.player-communication-panel {
+  width: min(640px, calc(100vw - var(--space-6)));
+}
+
+.player-communication-panel .room-chat-form {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.player-communication-panel .room-chat-form label {
+  color: var(--color-overlay-muted);
+}
+
+.player-communication-panel .room-chat-actions button {
+  color: var(--color-on-media);
+  border: 1px solid var(--color-overlay-muted);
+  background: var(--color-tooltip-surface);
+}
+
+.player-communication-panel .room-chat-actions button[type="submit"] {
+  color: var(--color-on-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.player-communication-panel input::placeholder {
+  color: var(--color-overlay-muted);
+}
+
+.player-danmaku-panel {
+  --color-text: var(--color-on-media);
+  --color-text-muted: var(--color-overlay-muted);
+  --color-surface: var(--color-media-surface);
+  --color-surface-raised: var(--color-tooltip-surface);
+  --color-border: var(--color-overlay-muted);
+}
+
+.player-danmaku-panel .danmaku-source-body :is(input, button),
+.player-danmaku-panel .danmaku-display-settings :is(input, label) {
+  min-height: var(--control-height);
+}
+
+.player-error {
+  position: relative;
+  z-index: 80;
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--color-on-media);
+  background: var(--color-media-surface);
+  overflow-wrap: anywhere;
+}
+
+.player-stage:is(:fullscreen, .player-web-fullscreen) .player-error {
+  position: absolute;
+  inset: calc(env(safe-area-inset-top, 0px) + var(--space-3)) var(--space-3) auto;
+}
+
+@media (max-width: 400px) {
+  .player-stage:is(:fullscreen, .player-web-fullscreen) .player-time > span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-tools,
+  .player-icon-button {
+    transition: none;
+  }
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { writeFile } from "node:fs/promises"
 import { type Page, type TestInfo, expect, test } from "@playwright/test"
+import { closePlayerSettings, revealPlayerControl } from "./helpers/player-controls"
 
 const frontendUrl = process.env.PLAYWRIGHT_BASE_URL ?? ""
 const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? ""
@@ -609,7 +610,9 @@ for (const format of ["mp4", "hls", "dash"] as const) {
       await expect(dialog.getByLabel("播放控制", { exact: true })).toBeChecked()
       await closeControls(host)
       await expect(guest.getByTestId("player-play-toggle")).toBeEnabled()
+      await revealPlayerControl(guest, guest.getByTestId("player-rate"))
       await guest.getByTestId("player-rate").selectOption("1.5")
+      await closePlayerSettings(guest)
       await expect.poll(async () => (await videoState(host)).rate).toBe(1.5)
       await guest.getByTestId("player-seek").fill("2")
       await expect.poll(async () => Math.abs((await videoState(host)).time - 2)).toBeLessThan(0.5)
@@ -619,8 +622,10 @@ for (const format of ["mp4", "hls", "dash"] as const) {
         samples: await settledPair(host, guest, true),
       })
       if (format === "hls") {
+        await revealPlayerControl(host, host.getByTestId("player-subtitle"))
         await expect(host.getByTestId("player-subtitle")).toBeVisible()
         await host.getByTestId("player-subtitle").selectOption({ label: "English" })
+        await closePlayerSettings(host)
         await expect
           .poll(() =>
             host

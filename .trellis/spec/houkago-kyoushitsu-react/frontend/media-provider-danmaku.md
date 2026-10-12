@@ -40,6 +40,33 @@ HLS/DASH engine. Portable helpers are exported through explicit
   still receive remote `SHINKOU`. A new item, room, identity or route disposes
   the old driver and invalidates its callbacks. Source changes stay local to
   the same programme; subtitle, cinema and web fullscreen are local choices.
+- `PlayerStage` owns one accessible toolbar and its pointer/keyboard gestures.
+  Hide the engine's duplicate bottom controls, gesture mask and transport notice;
+  retain decoding/loading and scoped media errors. Progress targets and buttons
+  are at least 44px. Rate/source/subtitle/local volume live in a viewport-clamped
+  settings panel; volume/mute never enter `Shinkou`.
+- Web and native fullscreen cover the viewport with zero inherited stage margin.
+  The fullscreen subtree owns controls, communication and danmaku settings.
+  Compact stages put secondary viewing modes/settings in the panel, while the
+  current fullscreen exit remains directly available. Panels follow viewport
+  resize/scroll and `visualViewport` changes, close through Escape or the screen,
+  and return focus to a visible trigger (compact fallback: player settings).
+  Web mode restores body overflow on exit/unmount. Native system exit and
+  current-item removal clear fullscreen state and restore the external launcher.
+- Playing fullscreen controls idle after 2500ms; mouse movement/click and
+  keyboard wake them, touch toggles them. Paused/error/join/open-panel/focused
+  controls remain available. Hidden tools are `inert` and `aria-hidden`; renewed
+  activity restarts the timer. Reduced motion removes control transitions.
+- The measured visible fullscreen toolbar height plus 8px supplies
+  `--player-controls-inset`; chat notifications and bottom timeline cues clear
+  that area. `PlayerDriver.setControlsInset(inset)` moves only automatic native
+  VTT cues to a percentage line above it, using the video element box including
+  letterboxing. Restore the original line/snap/alignment when controls hide or
+  fullscreen ends; preserve explicitly authored positions. Remove caption track
+  listeners on track removal and driver disposal; observe CSS video dimensions
+  as well as intrinsic resize so height-only viewport changes recompute cue lines.
+  Do not shrink/crop the video
+  or assume the old ArtPlayer toolbar height.
 - Baidu connection/status and file browsing use generated HTTP adapters with
   cookie credentials and abort signals. Any admitted member may manage a
   personal connection; browsing/source creation require playlist permission.
@@ -73,6 +100,8 @@ HLS/DASH engine. Portable helpers are exported through explicit
 | Remote apply followed by immediate permitted manual control | Manual command is sent; automatic echo remains suppressed |
 | Stale grant, cue, default or file response after scope change | Ignore result and keep current item/room state |
 | Media or subtitle load failure | Visible scoped feedback without mutating room authority |
+| Closed/fullscreen-idle controls | No invisible Tab targets; keyboard/touch can reveal controls |
+| Fullscreen item removed | Composer returns to dock; body scrolling, launcher and room focusability recover |
 
 ## 5. Good / Base / Bad Cases
 
@@ -95,6 +124,12 @@ HLS/DASH engine. Portable helpers are exported through explicit
   375px; local MP4/HLS/DASH fixtures; live danmaku echo and fullscreen subtree;
   existing room admission/queue/chat/governance regressions. Use fixture
   adapter and candidate data for provider/danmaku interaction states.
+  Check both fullscreen types for viewport bounds, one toolbar, shared two-client
+  chat/live echo, retained draft/preferences, local guest volume and reachable
+  settings. Include 200% text, short/narrow viewports, normal/reduced motion,
+  idle/keyboard/touch/focus behavior, IME Enter and current-item removal. Verify
+  selected HLS captions actually have active cues and inspect their final
+  fullscreen rendering; a requested VTT file alone does not prove visibility.
   Provider source switching must keep the connected account; exercise a
   non-root directory, close the file dialog, switch away/back and reopen it,
   then assert the refreshed listing still belongs to that directory. Retain

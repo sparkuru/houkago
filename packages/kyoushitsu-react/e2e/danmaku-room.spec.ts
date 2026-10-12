@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { type Page, expect, test } from "@playwright/test"
+import { clickPlayerControl } from "./helpers/player-controls"
 
 const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
 const mediaUrl = "https://media.example.test/m5/clip.mp4"
@@ -220,7 +221,7 @@ test("timeline precedence, local XML overlay, proposal and manual correction", a
   await panel.getByRole("button", { name: "弹幕 OFF" }).click()
   await page.getByTestId("player-play-toggle").click()
   await expect(page.locator(".player-screen .danmaku-timeline-overlay")).toContainText("local cue")
-  await page.getByTestId("player-web-fullscreen").click()
+  await clickPlayerControl(page, page.getByTestId("player-web-fullscreen"))
   await expect(page.locator(".player-stage .danmaku-timeline-overlay")).toContainText("local cue")
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

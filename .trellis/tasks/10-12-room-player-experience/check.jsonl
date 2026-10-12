@@ -1,0 +1,23 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Project policy and loading conditions"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Preserve room behavior and user work"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Existing Docker and preview runtime"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Preview readiness and address contract"}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Local UUPM and approved UI decisions"}
+{"file": ".trellis/spec/trellis-plus/visual-experience.md", "reason": "Warm Club and eight-dimension experience gate"}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Desktop/mobile browser and residual review gate"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Planning authorization and mainline continuity"}
+{"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Explicit detail registration"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Submission and archive authority"}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "React package boundaries"}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Dock single composer permission and fullscreen contract"}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/media-provider-danmaku.md", "reason": "Player lifecycle sync authority and overlay subtree"}
+{"file": ".trellis/tasks/10-12-room-player-experience/design.md", "reason": "Owner-approved player and fullscreen communication design, with verified implementation details"}
+{"file": ".trellis/tasks/10-12-room-player-experience/research/player-review.md", "reason": "Screenshot diagnosis measurements fixtures and reference limits"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "React presentation, single composer and accessible primitives"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Scope cleanup for player refs timers and callbacks"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Local UI state versus room WS authority"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Strict types and shared dictionary"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Engineering and browser gates"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Local player and e2e helper ownership"}
+{"file": ".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md", "reason": "Shared typed copy and package boundary"}
+{"file": ".trellis/spec/houkago-housou/backend/quality-guidelines.md", "reason": "Verify unchanged CORS assertions and restored environment"}

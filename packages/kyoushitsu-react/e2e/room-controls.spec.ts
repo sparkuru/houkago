@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { expect, test } from "@playwright/test"
+import { clickPlayerControl } from "./helpers/player-controls"
 
 const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
 const mediaUrl = "https://media.example.test/room-controls/clip.mp4"
@@ -397,6 +398,7 @@ async function expectChatDockGeometry(page: import("@playwright/test").Page, cin
   expect(geometry.railBackground).not.toBe("rgba(0, 0, 0, 0)")
   expect(geometry.railBorderTop).toBe("1px")
   expect(geometry.rail.x - geometry.grid.right).toBeGreaterThanOrEqual(8)
+  expect(geometry.rail.x - geometry.grid.right).toBeLessThanOrEqual(20)
   expect(geometry.attendance.y).toBeGreaterThanOrEqual(geometry.rail.y)
   expect(geometry.danmaku.y).toBeGreaterThanOrEqual(geometry.attendance.bottom)
   expect(geometry.chat.y).toBeGreaterThanOrEqual(geometry.danmaku.bottom)
@@ -775,7 +777,7 @@ test("playlist width, viewport bounds and cinema controls stay usable", async ({
     animations: "disabled",
   })
 
-  await page.getByRole("button", { name: "剧场模式" }).click()
+  await clickPlayerControl(page, page.getByRole("button", { name: "剧场模式" }))
   await expect(page.locator(".room-page")).toHaveClass(/room-cinema/)
   if (info.project.name !== "room-controls-phone") {
     await expectChatDockGeometry(page, true)
@@ -949,7 +951,7 @@ test("@layout-parity responsive player, queue and composer remain reachable", as
   expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
   await controls.locator(".room-controls-dialog-header button").click()
   await expect(launcher).toBeFocused()
-  await page.getByRole("button", { name: "剧场模式" }).click()
+  await clickPlayerControl(page, page.getByRole("button", { name: "剧场模式" }))
   await expect(page.locator(".room-page")).toHaveClass(/room-cinema/)
   await assertReachable()
   if (viewport.width < 851)
@@ -1041,7 +1043,7 @@ test("free launcher placement preserves attendance and composer targets", async 
       ]) {
     await resizeViewport(page, viewport)
     for (const cinema of [false, true]) {
-      if (cinema) await page.getByRole("button", { name: "剧场模式" }).click()
+      if (cinema) await clickPlayerControl(page, page.getByRole("button", { name: "剧场模式" }))
       for (const selector of [
         ".room-dock-attendance h2",
         "#chat-message",
@@ -1090,7 +1092,7 @@ test("free launcher placement preserves attendance and composer targets", async 
       await expect(page.locator(".room-feed")).toContainText(
         `Moved away ${viewport.width} ${cinema}`,
       )
-      if (cinema) await page.getByRole("button", { name: "剧场模式" }).click()
+      if (cinema) await clickPlayerControl(page, page.getByRole("button", { name: "剧场模式" }))
     }
   }
   await resizeViewport(page, { width: 1280, height: 900 })

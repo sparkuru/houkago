@@ -2,6 +2,11 @@ import { randomUUID } from "node:crypto"
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { type Page, expect, test } from "@playwright/test"
+import {
+  clickPlayerControl,
+  closePlayerSettings,
+  revealPlayerControl,
+} from "./helpers/player-controls"
 
 const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
 const mediaOrigin = "https://media.example.test/m5"
@@ -28,7 +33,8 @@ async function serveMedia(page: Page): Promise<void> {
         '#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",LANGUAGE="en",DEFAULT=NO,AUTOSELECT=YES,URI="sub-en.m3u8"\n#EXT-X-STREAM-INF:BANDWIDTH=500000,SUBTITLES="subs"\nclip.m3u8\n',
       "sub-en.m3u8":
         "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:12\n#EXTINF:12,\nsub-en.vtt\n#EXT-X-ENDLIST\n",
-      "sub-en.vtt": "WEBVTT\n\n00:00.000 --> 00:12.000\nM5 English subtitle\n",
+      "sub-en.vtt":
+        "WEBVTT\n\n00:00.000 --> 00:12.000\nM5 English subtitle\n\n00:00.000 --> 00:12.000 line:10%\nAuthored caption position\n",
     }
     if (fixtureText[name]) {
       return route.fulfill({
@@ -115,7 +121,10 @@ test("local MP4, HLS and DASH fixtures play in the React room", async ({ page })
     await expect
       .poll(() => video.evaluate((element: HTMLVideoElement) => element.readyState))
       .toBeGreaterThanOrEqual(2)
-    await page.locator(".player-controls").getByRole("button", { name: "播放" }).click()
+    await page
+      .locator(".player-controls")
+      .getByRole("button", { name: "播放", exact: true })
+      .click()
     await expect
       .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime))
       .toBeGreaterThan(0)
@@ -144,9 +153,11 @@ test("source, subtitle, seek, rate, cinema and fullscreen controls stay in the p
   await expect.poll(() => video.evaluate((element: HTMLVideoElement) => element.paused)).toBe(false)
 
   const subtitleRequest = page.waitForRequest((request) => request.url().includes("sub-en.m3u8"))
+  await revealPlayerControl(page, page.getByTestId("player-subtitle"))
   await page.getByTestId("player-subtitle").selectOption({ label: "English" })
   await subtitleRequest
   await page.getByTestId("player-rate").selectOption("1.5")
+  await closePlayerSettings(page)
   await expect
     .poll(() => video.evaluate((element: HTMLVideoElement) => element.playbackRate))
     .toBe(1.5)
@@ -156,9 +167,9 @@ test("source, subtitle, seek, rate, cinema and fullscreen controls stay in the p
   await expect
     .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime))
     .toBeGreaterThan(3.5)
-  await page.getByRole("button", { name: "剧场模式" }).click()
+  await clickPlayerControl(page, page.getByRole("button", { name: "剧场模式" }))
   await expect(page.locator(".room-page")).toHaveClass(/room-cinema/)
-  await page.getByTestId("player-web-fullscreen").click()
+  await clickPlayerControl(page, page.getByTestId("player-web-fullscreen"))
   await expect(page.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
   await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
   await expect(page.locator(".room-page")).not.toHaveClass(/room-cinema/)
@@ -174,6 +185,7 @@ test("source, subtitle, seek, rate, cinema and fullscreen controls stay in the p
   await expect(page.locator(".room-speed-dial-launcher")).toBeVisible()
 
   const alternateRequest = page.waitForRequest((request) => request.url().includes("alt=1"))
+  await revealPlayerControl(page, page.getByTestId("player-source"))
   await page.getByTestId("player-source").selectOption({ label: "Alternate" })
   await alternateRequest
   await expect
@@ -240,7 +252,9 @@ test("two admitted viewers share playback authority according to room permission
         page.locator(".player-screen video").evaluate((video: HTMLVideoElement) => video.paused),
       )
       .toBe(true)
+    await revealPlayerControl(guest, guest.getByTestId("player-rate"))
     await guest.getByTestId("player-rate").selectOption("1.5")
+    await closePlayerSettings(guest)
     await expect
       .poll(() =>
         page
@@ -281,7 +295,7 @@ test("two admitted viewers share playback authority according to room permission
     const echoedDanmaku = page.locator(".room-feed li").filter({ hasText: "M5 live cue" })
     await expect(echoedDanmaku.locator("small")).toContainText("[弹幕]")
     await expect(guest.locator(".player-screen .danmaku-live-bubble")).toContainText("M5 live cue")
-    await guest.getByTestId("player-web-fullscreen").click()
+    await clickPlayerControl(guest, guest.getByTestId("player-web-fullscreen"))
     await expect(guest.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
     await expect(guest.locator(".player-stage .danmaku-live-bubble")).toContainText("M5 live cue")
   } finally {
@@ -292,7 +306,7 @@ test("two admitted viewers share playback authority according to room permission
 test("subtitle keyboard selection, off/reselect and source preservation stay local", async ({
   page,
   browser,
-}) => {
+}, info) => {
   await serveMedia(page)
   const roomId = await createAdmittedRoom(page)
   await addAndSelect(page, roomId, "hls", {
@@ -309,6 +323,7 @@ test("subtitle keyboard selection, off/reselect and source preservation stay loc
     const subtitle = page.getByTestId("player-subtitle")
     await expect(subtitle).toHaveValue("off")
     await expect(guest.getByTestId("player-subtitle")).toHaveValue("off")
+    await revealPlayerControl(page, subtitle)
     await subtitle.focus()
     await expect(subtitle).toBeFocused()
     const loaded = page.waitForRequest((request) => request.url().endsWith("sub-en.vtt"))
@@ -325,11 +340,384 @@ test("subtitle keyboard selection, off/reselect and source preservation stay loc
     await expect(subtitle).toHaveValue("off")
     await subtitle.selectOption({ label: "English" })
     await expect(subtitle.locator("option:checked")).toHaveText("English")
+    await closePlayerSettings(page)
+    await page.getByTestId("player-play-toggle").click()
+    await expect
+      .poll(() => page.locator("video").evaluate((video: HTMLVideoElement) => video.currentTime))
+      .toBeGreaterThan(0.5)
+    await page.getByTestId("player-play-toggle").click()
+    await expect
+      .poll(() =>
+        page
+          .locator("video")
+          .evaluate((video: HTMLVideoElement) =>
+            Array.from(video.textTracks).some(
+              (track) => track.mode === "showing" && (track.activeCues?.length ?? 0) > 0,
+            ),
+          ),
+      )
+      .toBe(true)
+    for (const mode of ["web", "native"] as const) {
+      const control = page.getByTestId(
+        mode === "web" ? "player-web-fullscreen" : "player-native-fullscreen",
+      )
+      await clickPlayerControl(page, control)
+      await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
+      await expect
+        .poll(() =>
+          page.locator("video").evaluate((video: HTMLVideoElement) => {
+            const cues = Array.from(video.textTracks).flatMap((track) =>
+              Array.from(track.activeCues ?? []),
+            )
+            const automatic = cues.find(
+              (cue) => cue instanceof VTTCue && cue.text === "M5 English subtitle",
+            )
+            const authored = cues.find(
+              (cue) => cue instanceof VTTCue && cue.text === "Authored caption position",
+            )
+            return (
+              automatic instanceof VTTCue &&
+              typeof automatic.line === "number" &&
+              automatic.line < 100 &&
+              authored instanceof VTTCue &&
+              authored.line === 10
+            )
+          }),
+        )
+        .toBe(true)
+      const viewport = page.viewportSize()
+      if (!viewport) throw new Error("Subtitle viewport is unavailable")
+      // Chromium forbids resizing its native fullscreen window; emulate viewport metrics instead.
+      const metrics = mode === "native" ? await page.context().newCDPSession(page) : null
+      const resize = async (height: number) => {
+        if (metrics)
+          await metrics.send("Emulation.setDeviceMetricsOverride", {
+            width: viewport.width,
+            height,
+            deviceScaleFactor: info.project.use.deviceScaleFactor ?? 1,
+            mobile: info.project.use.isMobile ?? false,
+          })
+        else await page.setViewportSize({ width: viewport.width, height })
+      }
+      try {
+        await resize(viewport.height - 80)
+        await expect.poll(() => page.evaluate(() => innerHeight)).toBe(viewport.height - 80)
+        await expect
+          .poll(() =>
+            page.locator("video").evaluate((video: HTMLVideoElement) => {
+              const cue = Array.from(video.textTracks)
+                .flatMap((track) => Array.from(track.activeCues ?? []))
+                .find((cue) => cue instanceof VTTCue && cue.text === "M5 English subtitle")
+              const tools = document.querySelector(".player-tools")?.getBoundingClientRect()
+              const box = video.getBoundingClientRect()
+              return (
+                cue instanceof VTTCue &&
+                typeof cue.line === "number" &&
+                tools !== undefined &&
+                box.top + (box.height * cue.line) / 100 <= tools.top - 8 + 0.5
+              )
+            }),
+          )
+          .toBe(true)
+      } finally {
+        await resize(viewport.height)
+        await metrics?.detach()
+      }
+      await page.screenshot({
+        path: info.outputPath(`${mode}-subtitle.png`),
+        animations: "disabled",
+      })
+      await control.click()
+      await expect
+        .poll(() =>
+          page
+            .locator("video")
+            .evaluate((video: HTMLVideoElement) =>
+              Array.from(video.textTracks).some((track) =>
+                Array.from(track.activeCues ?? []).some(
+                  (cue) =>
+                    cue instanceof VTTCue &&
+                    cue.text === "M5 English subtitle" &&
+                    cue.line === "auto",
+                ),
+              ),
+            ),
+        )
+        .toBe(true)
+    }
     await page.reload()
     await expect(page.getByTestId("player-subtitle")).toHaveValue("off")
     await expect(page.getByTestId("player-source")).toHaveValue("primary")
     await expect(guest.getByRole("heading", { name: "M5 hls fixture" })).toBeVisible()
   } finally {
     await guestContext.close()
+  }
+})
+
+test("fullscreen keeps one viewport-safe control set and a shared two-client composer", async ({
+  page,
+  browser,
+}, info) => {
+  await serveMedia(page)
+  const roomId = await createAdmittedRoom(page)
+  await addAndSelect(page, roomId, "direct")
+  const video = page.locator(".player-screen video")
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.readyState))
+    .toBeGreaterThanOrEqual(2)
+  await expect(page.locator(".art-bottom")).toBeHidden()
+  await expect(page.locator(".player-controls [data-testid='player-seek']")).toHaveCount(1)
+  const seek = await page.getByTestId("player-seek").boundingBox()
+  const screen = await page.locator(".player-screen").boundingBox()
+  expect(seek?.height).toBeGreaterThanOrEqual(44)
+  expect(seek?.width ?? 0).toBeGreaterThan((screen?.width ?? 0) * 0.8)
+
+  const guestContext = await browser.newContext({
+    baseURL: new URL(page.url()).origin,
+    viewport: page.viewportSize() ?? undefined,
+    isMobile: Boolean(info.project.use.isMobile),
+    hasTouch: Boolean(info.project.use.hasTouch),
+  })
+  const guest = await guestContext.newPage()
+  try {
+    await serveMedia(guest)
+    await registerViewer(guest)
+    await guest.goto(page.url())
+    await expect(guest.getByTestId("player-play-toggle")).toBeDisabled()
+    await revealPlayerControl(guest, guest.getByTestId("player-volume"))
+    await guest.getByTestId("player-volume").fill("0.3")
+    await expect
+      .poll(() => guest.locator("video").evaluate((element: HTMLVideoElement) => element.volume))
+      .toBeCloseTo(0.3)
+    await expect
+      .poll(() => video.evaluate((element: HTMLVideoElement) => element.volume))
+      .not.toBeCloseTo(0.3)
+    await closePlayerSettings(guest)
+
+    await page.locator(".danmaku-source-panel summary").click()
+    await page.getByLabel("弹幕大小", { exact: true }).fill("1.5")
+    await page.locator("#chat-message").fill("mode draft")
+    for (const mode of ["web", "native"] as const) {
+      await clickPlayerControl(
+        page,
+        page.getByTestId(mode === "web" ? "player-web-fullscreen" : "player-native-fullscreen"),
+      )
+      if (mode === "native")
+        await expect
+          .poll(() =>
+            page.evaluate(() => document.fullscreenElement?.classList.contains("player-stage")),
+          )
+          .toBe(true)
+      else await expect(page.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
+      await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
+      await expect(page.locator(".room-chat-form")).toHaveCount(1)
+      await expect(page.locator(".player-stage .room-chat-form")).toHaveCount(1)
+      const dimensions = await page.evaluate(() => {
+        const stage = document.querySelector(".player-stage")?.getBoundingClientRect()
+        const controls = document.querySelector(".player-controls")?.getBoundingClientRect()
+        const targets = [...document.querySelectorAll(".player-toolbar button")].map((button) => {
+          const box = button.getBoundingClientRect()
+          return {
+            width: box.width,
+            height: box.height,
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+          }
+        })
+        return {
+          width: innerWidth,
+          height: innerHeight,
+          stage: stage?.toJSON(),
+          controls: controls?.toJSON(),
+          targets,
+        }
+      })
+      expect(dimensions.stage.x).toBe(0)
+      expect(dimensions.stage.y).toBe(0)
+      expect(dimensions.stage.width).toBe(dimensions.width)
+      expect(dimensions.stage.height).toBe(dimensions.height)
+      expect(dimensions.controls.bottom).toBeLessThanOrEqual(dimensions.height)
+      for (const target of dimensions.targets) {
+        expect(target.width).toBeGreaterThanOrEqual(44)
+        expect(target.height).toBeGreaterThanOrEqual(44)
+        expect(target.left).toBeGreaterThanOrEqual(0)
+        expect(target.right).toBeLessThanOrEqual(dimensions.width)
+      }
+      await page.getByRole("button", { name: "打开全屏交流" }).click()
+      const composer = page.getByRole("region", { name: "全屏交流", exact: true })
+      const message = composer.getByRole("textbox", { name: "发言", exact: true })
+      await expect(message).toHaveValue("mode draft")
+      await expect(message).toBeFocused()
+      await message.fill(`${mode} chat echo`)
+      await composer.getByRole("button", { name: "发送", exact: true }).click()
+      await expect(guest.locator(".room-feed")).toContainText(`${mode} chat echo`)
+      const notification = await page.locator(".danmaku-chat-live-track").boundingBox()
+      const tools = await page.locator(".player-tools").boundingBox()
+      expect(notification).not.toBeNull()
+      expect(tools).not.toBeNull()
+      expect((notification?.y ?? 0) + (notification?.height ?? 0)).toBeLessThanOrEqual(
+        tools?.y ?? 0,
+      )
+      await message.fill(`${mode} live echo`)
+      await composer.getByRole("button", { name: "弹幕", exact: true }).click()
+      await expect(
+        page.locator(".player-stage .danmaku-live-bubble").filter({ hasText: `${mode} live echo` }),
+      ).toContainText(`${mode} live echo`)
+      await expect(
+        guest.locator(".danmaku-live-bubble").filter({ hasText: `${mode} live echo` }),
+      ).toContainText(`${mode} live echo`)
+      await message.fill("mode draft")
+      await page.screenshot({
+        path: info.outputPath(`${mode}-shared-composer.png`),
+        animations: "disabled",
+      })
+      await composer.getByRole("button", { name: "关闭", exact: true }).click()
+      await expect(page.getByRole("button", { name: "打开全屏交流" })).toBeFocused()
+      await clickPlayerControl(page, page.getByRole("button", { name: "弹幕设置", exact: true }))
+      await expect(page.getByLabel("弹幕大小", { exact: true })).toHaveValue("1.5")
+      await page
+        .getByRole("region", { name: "播放器弹幕设置", exact: true })
+        .getByRole("button", { name: "关闭", exact: true })
+        .click()
+      await clickPlayerControl(
+        page,
+        page.getByTestId(mode === "web" ? "player-web-fullscreen" : "player-native-fullscreen"),
+      )
+      await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true)
+      await expect(page.locator(".player-stage")).not.toHaveClass(/player-web-fullscreen/)
+      await expect(page.locator(".room-chat-panel #chat-message")).toHaveValue("mode draft")
+      await expect(page.locator(".room-speed-dial-launcher")).toBeVisible()
+    }
+  } finally {
+    await guestContext.close()
+  }
+})
+
+test("player settings remain reachable at short, narrow and enlarged-text viewports", async ({
+  page,
+}, info) => {
+  await serveMedia(page)
+  const roomId = await createAdmittedRoom(page)
+  await addAndSelect(page, roomId, "hls", {
+    sources: [{ name: "备用线路与一个较长的可读名称", url: `${mediaOrigin}/clip.m3u8?alt=1` }],
+    subtitles: { English: { type: "hls", url: `${mediaOrigin}/sub-en.m3u8` } },
+  })
+  for (const viewport of [
+    { width: 320, height: 640 },
+    { width: 812, height: 375 },
+    { width: 1280, height: 640 },
+  ]) {
+    await page.setViewportSize(viewport)
+    if (viewport.width === 320) {
+      const toolbar = page.locator(".player-toolbar")
+      await expect.poll(async () => (await toolbar.boundingBox())?.height).toBe(44)
+    }
+    await revealPlayerControl(page, page.getByTestId("player-rate"))
+    const panel = page.getByRole("region", { name: "播放器设置", exact: true })
+    const rect = await panel.boundingBox()
+    expect(rect?.x).toBeGreaterThanOrEqual(0)
+    expect(rect?.y).toBeGreaterThanOrEqual(0)
+    expect((rect?.x ?? 0) + (rect?.width ?? 0)).toBeLessThanOrEqual(viewport.width)
+    expect((rect?.y ?? 0) + (rect?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+    if (viewport.width === 320) {
+      await page.getByTestId("player-web-fullscreen").click()
+      await expect(page.locator(".player-stage")).toHaveClass(/player-web-fullscreen/)
+      await page.getByTestId("player-web-fullscreen").click()
+      await expect(page.getByTestId("player-settings-toggle")).toBeFocused()
+      await page.getByTestId("player-settings-toggle").click()
+    }
+    await panel.getByRole("button", { name: "关闭", exact: true }).click()
+    await expect(page.getByTestId("player-settings-toggle")).toBeFocused()
+  }
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.addStyleTag({
+    content:
+      ':root[data-theme="warm-club"] { --primitive-type-body: 32px; --primitive-type-label: 26px; --primitive-type-title: 44px; }',
+  })
+  await revealPlayerControl(page, page.getByTestId("player-source"))
+  await page.getByTestId("player-source").selectOption({ label: "备用线路与一个较长的可读名称" })
+  await closePlayerSettings(page)
+  const targets = await page
+    .locator(".player-toolbar button")
+    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().toJSON()))
+  for (const target of targets) {
+    expect(target.x).toBeGreaterThanOrEqual(0)
+    expect(target.right).toBeLessThanOrEqual(375)
+  }
+  await page.screenshot({
+    path: info.outputPath("player-enlarged-text.png"),
+    animations: "disabled",
+  })
+})
+
+test("fullscreen idle controls wake through keyboard and touch, preserve IME and recover on item removal", async ({
+  page,
+}, info) => {
+  await serveMedia(page)
+  const roomId = await createAdmittedRoom(page)
+  await addAndSelect(page, roomId, "direct")
+  const video = page.locator(".player-screen video")
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.readyState))
+    .toBeGreaterThanOrEqual(2)
+  await clickPlayerControl(page, page.getByTestId("player-web-fullscreen"))
+  await expect(page.locator(".room-speed-dial-layer")).toHaveCount(0)
+  const surface = page.locator(".player-screen-target")
+  const tools = page.locator(".player-tools")
+  for (const reducedMotion of ["no-preference", "reduce"] as const) {
+    await page.emulateMedia({ reducedMotion })
+    await page.getByTestId("player-seek").fill("0")
+    if (await video.evaluate((element: HTMLVideoElement) => element.paused))
+      await page.getByTestId("player-play-toggle").click()
+    await surface.focus()
+    await page.mouse.move(3, 30)
+    await expect(tools).toHaveAttribute("aria-hidden", "true")
+    await expect(tools).toHaveAttribute("inert", "")
+    await expect(page.getByTestId("player-play-toggle")).toBeHidden()
+    await page.keyboard.press("Enter")
+    await expect(tools).toHaveAttribute("aria-hidden", "false")
+    if (info.project.use.hasTouch) {
+      await surface.tap()
+      await expect(tools).toHaveAttribute("aria-hidden", "true")
+      await surface.tap()
+    } else {
+      await surface.focus()
+      await expect(tools).toHaveAttribute("aria-hidden", "true")
+      await surface.click()
+    }
+    await expect(tools).toHaveAttribute("aria-hidden", "false")
+    await expect(page.getByTestId("player-play-toggle")).toBeVisible()
+    await page.getByTestId("player-play-toggle").focus()
+    await expect(page.getByTestId("player-play-toggle")).toBeFocused()
+    await page.waitForTimeout(2700)
+    await expect(tools).toHaveAttribute("aria-hidden", "false")
+  }
+  if (!(await video.evaluate((element: HTMLVideoElement) => element.paused)))
+    await page.getByTestId("player-play-toggle").click()
+  await page.getByRole("button", { name: "打开全屏交流" }).click()
+  const message = page.getByRole("textbox", { name: "发言", exact: true })
+  await message.fill("正在拼音")
+  await message.dispatchEvent("compositionstart")
+  await message.press("Enter")
+  await expect(message).toHaveValue("正在拼音")
+  await expect(page.locator(".room-feed")).not.toContainText("正在拼音")
+  await message.dispatchEvent("compositionend")
+  await message.press("Enter")
+  await expect(page.locator(".room-feed")).toContainText("正在拼音")
+  await message.fill("removal draft")
+  const controller = await page.context().newPage()
+  try {
+    await serveMedia(controller)
+    await controller.goto(page.url())
+    await controller.getByRole("button", { name: "取消当前节目", exact: true }).click()
+    await expect(page.locator(".player-stage")).toHaveCount(0)
+    await expect(page.locator(".room-side")).not.toHaveAttribute("inert", "")
+    await expect(page.locator(".room-speed-dial-launcher")).toBeVisible()
+    await expect(page.locator(".room-chat-panel #chat-message")).toHaveValue("removal draft")
+    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("")
+  } finally {
+    await controller.close()
   }
 })

@@ -681,7 +681,7 @@ a {
   overflow-wrap: anywhere;
 }
 .room-current .player-stage {
-  margin: var(--space-4) 0;
+  margin: var(--space-2) 0;
 }
 .room-media-state {
   min-height: 190px;
@@ -1267,9 +1267,7 @@ a {
 @media (min-width: 851px) {
   .room-cinema {
     padding-right: calc(
-      var(--space-3) +
       var(--room-chat-dock-width) +
-      52px +
       var(--space-4) +
       var(--space-4) +
       env(safe-area-inset-right)

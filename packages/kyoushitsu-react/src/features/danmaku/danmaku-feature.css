@@ -192,18 +192,26 @@
 }
 
 .danmaku-live-toggle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  position: relative;
   z-index: 1;
-  min-height: 32px;
-  padding: 2px 8px;
-  color: #fff;
-  background: rgb(0 0 0 / 55%);
-  border: 1px solid rgb(255 255 255 / 45%);
-  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  color: var(--color-on-media);
+  background: var(--color-overlay-strong);
+  border: 0;
+  border-radius: var(--radius-sm);
   pointer-events: auto;
   cursor: pointer;
+}
+
+.player-screen > .danmaku-live-toggle {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
 }
 
 .danmaku-live-track {

@@ -6,9 +6,10 @@ const initialOrigin = process.env.HOUKAGO_CORS_ORIGIN
 const initialNodeEnv = process.env.NODE_ENV
 
 afterEach(() => {
-  if (initialOrigin === undefined) process.env.HOUKAGO_CORS_ORIGIN = undefined
+  if (initialOrigin === undefined) Reflect.deleteProperty(process.env, "HOUKAGO_CORS_ORIGIN")
   else process.env.HOUKAGO_CORS_ORIGIN = initialOrigin
-  process.env.NODE_ENV = initialNodeEnv
+  if (initialNodeEnv === undefined) Reflect.deleteProperty(process.env, "NODE_ENV")
+  else process.env.NODE_ENV = initialNodeEnv
 })
 
 test("configured credentialed origin is exact", () => {
@@ -21,7 +22,7 @@ test("configured credentialed origin is exact", () => {
 
 test("development without an explicit origin accepts every frontend origin", () => {
   process.env.NODE_ENV = "development"
-  process.env.HOUKAGO_CORS_ORIGIN = undefined
+  Reflect.deleteProperty(process.env, "HOUKAGO_CORS_ORIGIN")
 
   expect(corsOrigin()).toBe(true)
   expect(isTrustedOrigin("http://192.168.9.4:5173")).toBe(true)

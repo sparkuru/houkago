@@ -4,6 +4,7 @@ import Hls from "hls.js"
 import type { Enmoku, Shinkou } from "houkago-kousoku"
 import type { PlayerHandle } from "houkago-kyoushitsu-core/player"
 import { canSeekTo } from "houkago-kyoushitsu-core/seekable"
+import { captionLineAboveControls } from "./caption-safe-line"
 
 type MediaType = Enmoku["type"]
 
@@ -12,6 +13,7 @@ export type PlayerDriverEvents = {
   time: (seconds: number) => void
   duration: (seconds: number) => void
   playback: (state: Shinkou) => void
+  volume: (volume: number, muted: boolean) => void
   error: (message: string) => void
   subtitleUnavailable: () => void
 }
@@ -38,6 +40,9 @@ export class PlayerDriver implements PlayerHandle {
   private art: Artplayer | null = null
   private mediaCleanup: (() => void) | null = null
   private subtitleCleanup: (() => void) | null = null
+  private captionCleanup: (() => void) | null = null
+  private controlsInset = 0
+  private automaticCues = new Map<VTTCue, Pick<VTTCue, "line" | "snapToLines" | "lineAlign">>()
   private hls: Hls | null = null
   private hlsManifestReady = false
   private nativeSubtitleReady = false
@@ -67,6 +72,7 @@ export class PlayerDriver implements PlayerHandle {
   }
 
   private clearMedia(): void {
+    this.restoreCaptionPositions()
     this.subtitleCleanup?.()
     this.subtitleCleanup = null
     this.mediaCleanup?.()
@@ -98,6 +104,7 @@ export class PlayerDriver implements PlayerHandle {
       hotkey: false,
       setting: false,
     })
+    this.watchCaptionPositions()
     const live = () => !this.disposed && generation === this.generation
     const playback = () => {
       if (!live()) return
@@ -110,6 +117,7 @@ export class PlayerDriver implements PlayerHandle {
       if (!live()) return
       this.flushPendingSeek()
       this.reportDuration()
+      this.events.volume(this.video?.volume ?? 1, this.video?.muted ?? false)
       this.suppressPlayback = false
       this.events.ready()
       this.reportTime()
@@ -118,6 +126,9 @@ export class PlayerDriver implements PlayerHandle {
     this.art.on("pause", playback)
     this.art.on("seek", playback)
     this.art.on("video:ratechange", playback)
+    this.art.on("video:volumechange", () => {
+      if (live()) this.events.volume(this.video?.volume ?? 1, this.video?.muted ?? false)
+    })
     this.art.on("video:play", () => {
       if (live()) this.startTicker()
     })
@@ -203,6 +214,80 @@ export class PlayerDriver implements PlayerHandle {
   setSubtitle(label: string | null): void {
     this.subtitleLabel = label
     this.applySubtitle()
+  }
+
+  setControlsInset(inset: number): void {
+    this.controlsInset = inset
+    this.positionCaptions()
+  }
+
+  private restoreCaptionPositions(): void {
+    for (const [cue, original] of this.automaticCues) Object.assign(cue, original)
+    this.automaticCues.clear()
+  }
+
+  private positionCaptions(): void {
+    const video = this.video
+    if (!video) return
+    const line = captionLineAboveControls(video.clientHeight, this.controlsInset)
+    if (line === null) {
+      this.restoreCaptionPositions()
+      return
+    }
+    for (const track of Array.from(video.textTracks)) {
+      for (const cue of Array.from(track.activeCues ?? [])) {
+        if (!(cue instanceof VTTCue)) continue
+        if (!this.automaticCues.has(cue)) {
+          // Authored positions must keep their meaning; only automatic bottom captions move.
+          if (cue.line !== "auto") continue
+          this.automaticCues.set(cue, {
+            line: cue.line,
+            snapToLines: cue.snapToLines,
+            lineAlign: cue.lineAlign,
+          })
+        }
+        cue.snapToLines = false
+        cue.lineAlign = "end"
+        cue.line = line
+      }
+    }
+  }
+
+  private watchCaptionPositions(): void {
+    const video = this.video
+    if (!video) return
+    const tracks = new Set<TextTrack>()
+    const position = () => this.positionCaptions()
+    const observe = () => {
+      const current = new Set(Array.from(video.textTracks))
+      for (const track of tracks) {
+        if (current.has(track)) continue
+        track.removeEventListener("cuechange", position)
+        tracks.delete(track)
+      }
+      for (const track of current) {
+        if (tracks.has(track)) continue
+        tracks.add(track)
+        track.addEventListener("cuechange", position)
+      }
+      position()
+    }
+    video.textTracks.addEventListener("addtrack", observe)
+    video.textTracks.addEventListener("removetrack", observe)
+    video.textTracks.addEventListener("change", observe)
+    video.addEventListener("resize", position)
+    const layout = new ResizeObserver(position)
+    layout.observe(video)
+    observe()
+    this.captionCleanup = () => {
+      video.textTracks.removeEventListener("addtrack", observe)
+      video.textTracks.removeEventListener("removetrack", observe)
+      video.textTracks.removeEventListener("change", observe)
+      video.removeEventListener("resize", position)
+      layout.disconnect()
+      for (const track of tracks) track.removeEventListener("cuechange", position)
+      this.restoreCaptionPositions()
+    }
   }
 
   private applySubtitle(): void {
@@ -297,6 +382,22 @@ export class PlayerDriver implements PlayerHandle {
     this.setRate(rate)
   }
 
+  setVolume(volume: number): void {
+    const video = this.video
+    if (!video || !Number.isFinite(volume)) return
+    video.volume = Math.max(0, Math.min(1, volume))
+    video.muted = volume === 0
+  }
+
+  toggleMuted(): void {
+    const video = this.video
+    if (!video) return
+    if (video.muted || video.volume === 0) {
+      if (video.volume === 0) video.volume = 1
+      video.muted = false
+    } else video.muted = true
+  }
+
   apply(state: Shinkou): void {
     if (!this.art) return
     if (Math.abs(this.snapshot().currentTime - state.currentTime) > SEEK_EPSILON)
@@ -356,6 +457,8 @@ export class PlayerDriver implements PlayerHandle {
     this.generation += 1
     this.stopTicker()
     this.clearMedia()
+    this.captionCleanup?.()
+    this.captionCleanup = null
     this.art?.destroy(false)
     this.art = null
     this.pendingSeek = null

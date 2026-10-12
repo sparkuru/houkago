@@ -19,6 +19,10 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
   const [playerFullscreen, setPlayerFullscreen] = useState(false)
   const [mediaTime, setMediaTime] = useState(0)
   const [overlayContainer, setOverlayContainer] = useState<HTMLElement | null>(null)
+  const [composerContainer, setComposerContainer] = useState<HTMLElement | null>(null)
+  const [danmakuControlsContainer, setDanmakuControlsContainer] = useState<HTMLElement | null>(null)
+  const [danmakuSettingsContainer, setDanmakuSettingsContainer] = useState<HTMLElement | null>(null)
+  const [controlsShown, setControlsShown] = useState(true)
   const entered = state.admission === "entered"
   const canQueue = room.can("playlist")
   const current = state.current ?? state.queue.find((item) => item.id === state.currentId) ?? null
@@ -59,7 +63,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
 
   return (
     <main className={`room-page${cinemaMode ? " room-cinema" : ""}`}>
-      <header className="room-topbar">
+      <header className="room-topbar" inert={playerFullscreen}>
         <div className="room-heading">
           <h1>{state.room?.name ?? t("enteringBushitsu")}</h1>
           <p className={`room-connection${state.connection === "open" ? " is-connected" : ""}`}>
@@ -139,6 +143,10 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                   url={isBaidu ? (baidu.grantUrl ?? undefined) : undefined}
                   onTime={setMediaTime}
                   onOverlayContainerChange={setOverlayContainer}
+                  onComposerContainerChange={setComposerContainer}
+                  onDanmakuControlsContainerChange={setDanmakuControlsContainer}
+                  onDanmakuSettingsContainerChange={setDanmakuSettingsContainer}
+                  onControlsVisibilityChange={setControlsShown}
                   cinemaMode={cinemaMode}
                   onCinemaChange={setCinemaMode}
                   onFullscreenChange={setPlayerFullscreen}
@@ -160,6 +168,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
               {state.currentId && canQueue && (
                 <Button
                   variant="secondary"
+                  inert={playerFullscreen}
                   disabled={state.command !== null}
                   onClick={() => room.select(null)}
                 >
@@ -168,7 +177,7 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
               )}
             </Card>
           </div>
-          <div className="room-side">
+          <div className="room-side" inert={playerFullscreen}>
             <div className="room-chat-rail room-dock">
               <Card className="room-dock-attendance">
                 <h2>
@@ -197,12 +206,19 @@ export function RoomContents({ room }: { room: RoomRuntime }) {
                 names={state.names}
                 mediaTime={mediaTime}
                 overlayContainer={overlayContainer}
+                controlsContainer={danmakuControlsContainer}
+                settingsContainer={playerFullscreen ? danmakuSettingsContainer : null}
+                controlsShown={controlsShown}
                 fingerprint={fingerprint}
               />
-              <ChatPanel room={room} state={state} />
+              <ChatPanel
+                room={room}
+                state={state}
+                composerContainer={playerFullscreen ? composerContainer : null}
+              />
             </div>
           </div>
-          <div className="room-queue">
+          <div className="room-queue" inert={playerFullscreen}>
             <QueuePanel room={room} state={state} />
           </div>
         </div>
