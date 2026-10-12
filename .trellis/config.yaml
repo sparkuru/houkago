@@ -156,21 +156,3 @@ channel:
 #
 # prompt_injection:
 #   skip_keyword: "no-trellis"   # "" disables the escape hatch entirely
-
-# Auto-detected monorepo packages
-packages:
-  houkago-eisha:
-    path: packages/eisha
-  houkago-adapter:
-    path: packages/houkago-adapter
-  houkago-housou:
-    path: packages/housou
-  houkago-kokuban:
-    path: packages/kokuban
-  houkago-kousoku:
-    path: packages/kousoku
-  houkago-kyoushitsu-core:
-    path: packages/kyoushitsu-core
-  houkago-kyoushitsu-react:
-    path: packages/kyoushitsu-react
-default_package: houkago-eisha
