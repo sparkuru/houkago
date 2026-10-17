@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Project policy and loading conditions."}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Preserve existing behavior, limit scope, and verify actual UI behavior."}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Required dx preview lifecycle and development verification."}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Required preview console and address-discovery contract."}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "User-visible frontend integration policy."}
+{"file": ".trellis/spec/trellis-plus/visual-experience.md", "reason": "Eight-dimension visual and interaction contract."}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Desktop/mobile Playwright and submit-ready validation contract."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "React component, token, target, and focus conventions."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Existing launcher, room presentation, and interaction invariants."}

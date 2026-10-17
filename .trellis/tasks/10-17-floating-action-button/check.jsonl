@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Verify project policy and loading conditions."}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Check scope discipline and actual behavior."}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Verify the required preview lifecycle and commands."}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Verify preview console and address-discovery evidence."}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Check frontend integration policy."}
+{"file": ".trellis/spec/trellis-plus/visual-experience.md", "reason": "Run the eight-dimension visual and interaction review."}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Verify desktop/mobile checks and submit-ready evidence."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Check component and accessibility conventions."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Verify room runtime and launcher contracts remain intact."}

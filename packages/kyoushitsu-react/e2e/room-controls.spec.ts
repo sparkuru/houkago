@@ -532,6 +532,29 @@ test("speed dial dismissal, focus, room settings and copy feedback", async ({
   await expect(launcher).toBeFocused()
   await expect(actions).toHaveAttribute("inert")
 
+  await launcher.press("Space")
+  await expect(launcher).toHaveAttribute("aria-expanded", "true")
+  await expect(informationAction).toBeFocused()
+  await page.keyboard.press("Escape")
+  await expect(launcher).toBeFocused()
+
+  await launcher.click()
+  await waitForSpeedDialState(page, true)
+  const openLauncherBox = await launcher.boundingBox()
+  const openViewport = page.viewportSize()
+  expect(openLauncherBox).not.toBeNull()
+  expect(openViewport).not.toBeNull()
+  await moveLauncherTo(
+    page,
+    Math.max(42, Math.min((openViewport?.width ?? 0) - 42, (openLauncherBox?.x ?? 0) - 72)),
+    Math.max(42, Math.min((openViewport?.height ?? 0) - 42, (openLauncherBox?.y ?? 0) + 72)),
+    info.project.name === "room-controls-phone",
+  )
+  await expect(launcher).toHaveAttribute("aria-expanded", "false")
+  await expect(actions).toHaveAttribute("aria-hidden", "true")
+  await expect(actions).toHaveAttribute("inert")
+  await expect(page.locator(".room-speed-dial-backdrop")).toHaveCSS("pointer-events", "none")
+
   await launcher.click()
   await page.locator(".room-speed-dial-backdrop").click({ position: { x: 10, y: 10 } })
   await expect(launcher).toHaveAttribute("aria-expanded", "false")
@@ -1131,9 +1154,14 @@ test("free launcher placement preserves attendance and composer targets", async 
   await expectLauncherCenter(page, 56 + 253 * preference.x, 86 + 650 * preference.y)
   await moveLauncherTo(page, 0, 0, touch)
   await expectLauncherCenter(page, 56, 86)
+  await launcher.press("Enter")
+  await expect(page.locator(".room-speed-dial")).toHaveAttribute("data-menu-placement", "below")
+  await expectActionsWithinViewport(page)
+  await launcher.press("Escape")
   await moveLauncherTo(page, 374, 811, touch)
   await expectLauncherCenter(page, 309, 736)
   await launcher.press("Enter")
+  await expect(page.locator(".room-speed-dial")).toHaveAttribute("data-menu-placement", "above")
   await waitForSpeedDialState(page, true)
   const menu = await page.locator(".room-speed-dial-actions").boundingBox()
   if (!menu) throw new Error("Missing safe-area menu")

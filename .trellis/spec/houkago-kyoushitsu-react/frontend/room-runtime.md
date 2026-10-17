@@ -228,6 +228,13 @@ Correct: use `host || canPlaylist` for single-item deletion, regardless of
   opensDialog? }`; callbacks continue to call the existing room/runtime
   actions. Do not add a second socket, command owner, or optimistic room state
   in the dial.
+- Speed-dial action labels are content-sized flex items capped by the available
+  viewport width (`width: max-content` plus a `max-width`) and may wrap at word
+  or character boundaries. An unconstrained auto flex item can collapse CJK
+  labels to min-content width and push an otherwise measured menu off-screen.
+  A pointer drag that crosses its threshold must clear its synthetic-click
+  suppression at the next pointer/keyboard activation; a timeout alone can
+  swallow a legitimate immediate tap or Enter/Space activation.
 - Keep room identity, connection/admission status, presence, and the read-only
   permission summary available to every admitted viewer. Render governance
   forms only for `room.isHost`; existing room command and `room.can(...)`

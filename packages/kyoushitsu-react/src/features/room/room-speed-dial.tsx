@@ -19,6 +19,7 @@ export type RoomSpeedDialAction = {
   onActivate: () => void
   selected?: boolean
   opensDialog?: boolean
+  disabled?: boolean
 }
 
 type RoomSpeedDialProps = {
@@ -90,6 +91,14 @@ export function RoomSpeedDial({
 
   boundsRef.current = bounds
 
+  const actionSignature = useMemo(
+    () =>
+      actions
+        .map(({ id, label, disabled }) => `${id}\u0000${label}\u0000${disabled ? "disabled" : ""}`)
+        .join("\u0001"),
+    [actions],
+  )
+
   const dismiss = useCallback(() => setOpen(false), [])
 
   const updatePosition = useCallback((next: RoomFloatingPosition) => {
@@ -106,8 +115,11 @@ export function RoomSpeedDial({
     if (!launcher) return
 
     const layerStyle = layerRef.current ? getComputedStyle(layerRef.current) : null
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const visualViewport = window.visualViewport
+    const viewportWidth =
+      visualViewport?.width || window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight =
+      visualViewport?.height || window.innerHeight || document.documentElement.clientHeight
     const launcherRect = launcher.getBoundingClientRect()
 
     const nextBounds: RoomFloatingBounds = {
@@ -142,6 +154,7 @@ export function RoomSpeedDial({
     }
     window.addEventListener("resize", onViewportResize)
     window.visualViewport?.addEventListener("resize", onViewportResize)
+    window.visualViewport?.addEventListener("scroll", onViewportResize)
     const observer =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onViewportResize)
     if (observer && layerRef.current) observer.observe(layerRef.current)
@@ -149,6 +162,7 @@ export function RoomSpeedDial({
       if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame)
       window.removeEventListener("resize", onViewportResize)
       window.visualViewport?.removeEventListener("resize", onViewportResize)
+      window.visualViewport?.removeEventListener("scroll", onViewportResize)
       observer?.disconnect()
     }
   }, [cinemaMode, hidden, measureViewport])
@@ -156,6 +170,7 @@ export function RoomSpeedDial({
   const pixels = useMemo(() => roomFloatingPositionToPixels(position, bounds), [bounds, position])
   const effectivePosition = roomFloatingPositionFromPixels(pixels, bounds)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: action labels and open state change the measured DOM geometry.
   useLayoutEffect(() => {
     if (hidden || typeof window === "undefined") {
       setMenuLeftOffset(0)
@@ -164,39 +179,80 @@ export function RoomSpeedDial({
     const speedDial = speedDialRef.current
     if (!speedDial) return
     const menu = speedDial.querySelector<HTMLElement>(".room-speed-dial-actions")
-    const menuWidth = menu?.getBoundingClientRect().width ?? 0
-    const leftInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.left ?? 0)
-    const rightInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.right ?? 0)
-    const preferredLeft =
-      effectivePosition.x < 0.3 ? pixels.left : pixels.left + bounds.elementWidth - menuWidth
-    const menuLeft = Math.max(
-      leftInset,
-      Math.min(preferredLeft, bounds.viewportWidth - rightInset - menuWidth),
-    )
-    setMenuLeftOffset(menuLeft - pixels.left)
-    const topInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.top ?? 0)
-    const bottomInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.bottom ?? 0)
-    const aboveAvailable = Math.max(0, pixels.top - topInset - MENU_GAP)
-    const belowAvailable = Math.max(
-      0,
-      window.innerHeight - pixels.top - bounds.elementHeight - bottomInset - MENU_GAP,
-    )
-    const preferredPlacement = effectivePosition.y < 0.45 ? "below" : "above"
-    const placement =
-      preferredPlacement === "above" &&
-      aboveAvailable < MENU_MIN_HEIGHT &&
-      belowAvailable > aboveAvailable
-        ? "below"
-        : preferredPlacement === "below" &&
-            belowAvailable < MENU_MIN_HEIGHT &&
-            aboveAvailable > belowAvailable
-          ? "above"
-          : preferredPlacement
-    setMenuPlacement(placement)
-    setMenuMaxHeight(
-      Math.max(MENU_MIN_HEIGHT, placement === "above" ? aboveAvailable : belowAvailable),
-    )
-  })
+    if (!menu) return
+
+    let measureFrame: number | null = null
+    const measureMenu = () => {
+      const menuWidth = menu.getBoundingClientRect().width
+      const leftInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.left ?? 0)
+      const rightInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.right ?? 0)
+      const preferredLeft =
+        effectivePosition.x < 0.3 ? pixels.left : pixels.left + bounds.elementWidth - menuWidth
+      const menuLeft = Math.max(
+        leftInset,
+        Math.min(preferredLeft, bounds.viewportWidth - rightInset - menuWidth),
+      )
+      const nextMenuLeftOffset = menuLeft - pixels.left
+      setMenuLeftOffset((previous) =>
+        previous === nextMenuLeftOffset ? previous : nextMenuLeftOffset,
+      )
+
+      const topInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.top ?? 0)
+      const bottomInset = Math.max(ROOM_FLOATING_POSITION_INSET, bounds.safeArea?.bottom ?? 0)
+      const viewportHeight =
+        window.visualViewport?.height || window.innerHeight || bounds.viewportHeight
+      const aboveAvailable = Math.max(0, pixels.top - topInset - MENU_GAP)
+      const belowAvailable = Math.max(
+        0,
+        viewportHeight - pixels.top - bounds.elementHeight - bottomInset - MENU_GAP,
+      )
+      const preferredPlacement = effectivePosition.y < 0.45 ? "below" : "above"
+      const placement =
+        preferredPlacement === "above" &&
+        aboveAvailable < MENU_MIN_HEIGHT &&
+        belowAvailable > aboveAvailable
+          ? "below"
+          : preferredPlacement === "below" &&
+              belowAvailable < MENU_MIN_HEIGHT &&
+              aboveAvailable > belowAvailable
+            ? "above"
+            : preferredPlacement
+      setMenuPlacement((previous) => (previous === placement ? previous : placement))
+      const nextMenuMaxHeight = Math.max(
+        MENU_MIN_HEIGHT,
+        placement === "above" ? aboveAvailable : belowAvailable,
+      )
+      setMenuMaxHeight((previous) =>
+        previous === nextMenuMaxHeight ? previous : nextMenuMaxHeight,
+      )
+    }
+
+    const scheduleMeasure = () => {
+      if (measureFrame !== null) window.cancelAnimationFrame(measureFrame)
+      measureFrame = window.requestAnimationFrame(() => {
+        measureFrame = null
+        measureMenu()
+      })
+    }
+
+    measureMenu()
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleMeasure)
+    observer?.observe(menu)
+    return () => {
+      if (measureFrame !== null) window.cancelAnimationFrame(measureFrame)
+      observer?.disconnect()
+    }
+  }, [
+    actionSignature,
+    bounds,
+    effectivePosition.x,
+    effectivePosition.y,
+    hidden,
+    open,
+    pixels.left,
+    pixels.top,
+  ])
 
   useEffect(() => {
     if (!hidden) return
@@ -250,19 +306,31 @@ export function RoomSpeedDial({
     }, DRAG_CLICK_SUPPRESSION_MS)
   }, [])
 
-  const beginDrag = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (event.button !== 0) return
-    const { left, top } = event.currentTarget.getBoundingClientRect()
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      startLeft: left,
-      startTop: top,
-      moved: false,
+  const clearClickSuppression = useCallback(() => {
+    suppressClickRef.current = false
+    if (suppressClickTimerRef.current !== null) {
+      window.clearTimeout(suppressClickTimerRef.current)
+      suppressClickTimerRef.current = null
     }
-    event.currentTarget.setPointerCapture(event.pointerId)
   }, [])
+
+  const beginDrag = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      if (event.button !== 0) return
+      clearClickSuppression()
+      const { left, top } = event.currentTarget.getBoundingClientRect()
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startLeft: left,
+        startTop: top,
+        moved: false,
+      }
+      event.currentTarget.setPointerCapture(event.pointerId)
+    },
+    [clearClickSuppression],
+  )
 
   const moveDrag = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -272,6 +340,7 @@ export function RoomSpeedDial({
       const deltaY = event.clientY - drag.startY
       if (!drag.moved && Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD) return
       drag.moved = true
+      if (open) dismiss()
       setDragging(true)
       updatePosition(
         roomFloatingPositionFromPixels(
@@ -280,7 +349,7 @@ export function RoomSpeedDial({
         ),
       )
     },
-    [updatePosition],
+    [dismiss, open, updatePosition],
   )
 
   const endDrag = useCallback(
@@ -299,6 +368,7 @@ export function RoomSpeedDial({
 
   const nudge = useCallback(
     (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      clearClickSuppression()
       const delta = DRAG_KEY_STEP * (event.shiftKey ? 2 : 1)
       const changes: Record<string, { left: number; top: number }> = {
         ArrowLeft: { left: -delta, top: 0 },
@@ -317,7 +387,7 @@ export function RoomSpeedDial({
         ),
       )
     },
-    [updatePosition],
+    [clearClickSuppression, updatePosition],
   )
 
   const visibilityDelay = `${Math.max(0, actions.length - 1) * 45 + 260}ms`
@@ -373,7 +443,10 @@ export function RoomSpeedDial({
                 aria-label={action.label}
                 aria-pressed={action.selected}
                 aria-haspopup={action.opensDialog ? "dialog" : undefined}
+                disabled={action.disabled}
+                title={action.label}
                 onClick={() => {
+                  if (action.disabled) return
                   action.onActivate()
                   dismiss()
                 }}
@@ -389,7 +462,7 @@ export function RoomSpeedDial({
           ))}
         </ul>
         <span id={dragHintId} className="room-speed-dial-hint">
-          使用方向键移动按钮；按 Enter 打开快捷菜单。
+          可拖动按钮或使用方向键移动；按 Enter 或空格打开快捷菜单。
         </span>
         <button
           ref={launcherRef}
@@ -401,11 +474,12 @@ export function RoomSpeedDial({
           aria-controls={actionsId}
           aria-expanded={open}
           onClick={(event) => {
-            if (suppressClickRef.current) {
+            if (suppressClickRef.current && event.detail !== 0) {
               event.preventDefault()
               suppressClickRef.current = false
               return
             }
+            clearClickSuppression()
             setOpen((current) => !current)
           }}
           onKeyDown={nudge}

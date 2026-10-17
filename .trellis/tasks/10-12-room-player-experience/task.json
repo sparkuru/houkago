@@ -18,7 +18,9 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "10-17-floating-action-button"
+  ],
   "parent": null,
   "relatedFiles": [],
   "notes": "2026-10-12: owner accepted visuals with 不错；效果可以 and authorized one work commit with 先提交一版. Keep task active; archive/push/deploy are not authorized.",
