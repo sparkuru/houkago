@@ -1,0 +1,13 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Project policy and explicit visual/preview context loading rules."}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Preserve room behavior and keep the presentation-only scope bounded."}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Use the project dx and preview lifecycle for browser evidence."}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Use the mandatory preview address and console verification contract."}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Apply project frontend integration and mobile coverage rules."}
+{"file": ".trellis/spec/trellis-plus/visual-experience.md", "reason": "Apply the eight-dimension visual experience contract."}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Record desktop/mobile browser evidence and human-review boundaries."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Preserve React presentation boundaries, tokens, semantics, focus and target sizes."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Follow frontend quality and verification conventions."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Keep typed props and state projections safe while restructuring markup."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "Identify the React room frontend contracts for this feature."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Preserve RoomControls dialog, permission, presence, focus and room presentation invariants."}
+{"file": ".trellis/spec/guides/index.md", "reason": "Apply reuse and cross-layer thinking checks before editing UI structure."}

@@ -1,0 +1,13 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Verify required policy details were loaded and registered."}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Check scope discipline and preservation of user behavior."}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Check preview lifecycle and dx command usage."}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Check address discovery and console evidence."}
+{"file": ".trellis/spec/trellis-plus/frontend.md", "reason": "Check frontend integration and responsive coverage."}
+{"file": ".trellis/spec/trellis-plus/visual-experience.md", "reason": "Run the eight-dimension final visual review."}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Check affected browser matrix, screenshots and residual limitations."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Check semantic structure, focus, tokens, and interactive target sizes."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Check lint, tests, build, and debug residue expectations."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Check type-safe component changes and no bypasses."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "Check the React frontend quality route."}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/room-runtime.md", "reason": "Check room dialog behavior, host/guest boundaries and runtime contracts."}
+{"file": ".trellis/spec/guides/index.md", "reason": "Check reuse and cross-layer reasoning before delivery."}
