@@ -210,3 +210,5 @@ non-PR-backed task; recorded branch/base fields are retained rather than
 inventing a feature branch or merge. Closure consists of a work commit, an
 exact-path archive commit with the project's single Codex attribution trailer,
 and a separate journal/mainline commit. No push or existing-preview restart.
+
+Work commit: `65e53d0` (`feat(preview): unify business routes under same-origin api`).
