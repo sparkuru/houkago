@@ -542,3 +542,37 @@ Completed and archived 10-21-preview-console-style with owner approval; archive 
 ### Next Steps
 
 - No further preview work authorized; retain unrelated active room UI tasks.
+
+
+## Session 83: 房间控制子页面视觉优化收尾
+<!-- trellis-session: v=2 fp=c501a15c0c0cac0b -->
+
+**Date**: 2026-10-21
+**Task**: 房间控制子页面视觉优化收尾
+**Branch**: `k-on`
+
+### Summary
+
+完成房间控制 dialog 的信息架构、Warm Club 视觉层级、成员/权限布局与响应式交互优化；同步记录 Speed Dial 菜单阴影边界决策。已通过 React 构建、Biome、diff 检查、任务上下文校验及桌面/手机 Playwright 验证；提交并归档 room-controls-subpage。
+
+### Main Changes
+
+- 提交房间控制 UI/UX 重构与最终 Speed Dial 阴影修正
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `20069b9` | feat(room): refine room controls workspace |
+
+### Testing
+
+- [OK] room-controls desktop/phone 14 passed；typecheck、build、Biome、diff-check、task validate 通过
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 保留并行 same-origin-api-entry 脏文件，按其自身任务继续处理
