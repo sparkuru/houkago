@@ -95,6 +95,28 @@ labels, entry syntax, ordering, and one-URL-per-line layout are mandatory.
   the summary above rather than a project-specific mixture of startup logs
   and access lines.
 
+## Presentation and output streams
+
+Root `preview.sh` forwards to `dx preview`; keep presentation in `dx` and
+`scripts/preview-config.py`, with one runtime summary. Shell `print_style`
+accepts a semantic style, output fd and message; Python `CLIStyle.color`
+accepts text, role and optional stream (stdout by default). Never decide
+stdout color from stderr's TTY state, or vice versa.
+
+Use bold cyan for help titles, bold green for section headings and green for
+readiness. Send help and `[log]`/`[warn]`/`[error]` diagnostics to stderr, with
+cyan/yellow/red respectively. Keep runtime summaries on stdout. Enable ANSI
+only on the actual destination TTY, with a reset after each styled message;
+nonempty `NO_COLOR` or `TERM=dumb` disables it. URL and ordinary summary data
+lines remain plain even in a terminal. Machine-readable configuration output
+must never contain presentation text or ANSI sequences.
+
+Keep help independent of Docker, Python and `.env`; explain commands/options,
+first use, prerequisites, configuration precedence, rebuild/restart and
+data-preserving teardown. Validate with the console cases in
+`python3 scripts/test-preview.py`: mixed stdout/stderr TTY states, plain URLs,
+color opt-outs and help invoked from outside an unconfigured repository.
+
 ## Host Address Discovery
 
 For wildcard host publishing, run `ip -br a` on the **host publishing the

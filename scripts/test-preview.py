@@ -583,6 +583,73 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(mappings, [f"0.0.0.0:{port}:{port}" for port in ports[:2]])
 
 
+class ConsoleTests(unittest.TestCase):
+    """Check terminal presentation independently from Docker and HTTP fixtures."""
+
+    def test_help_without_configuration_or_runtime_dependencies(self) -> None:
+        """Help works outside the repository with neither config nor Docker/Python."""
+        root = Path(__file__).resolve().parent.parent
+        with tempfile.TemporaryDirectory(prefix="houkago-console-test-") as workspace:
+            directory = Path(workspace)
+            repo, commands = directory / "repo", directory / "bin"
+            repo.mkdir()
+            commands.mkdir()
+            for name in ("preview.sh", "dx"):
+                shutil.copy2(root / name, repo / name)
+            for name in ("bash", "dirname"):
+                (commands / name).symlink_to(shutil.which(name))
+            result = subprocess.run([str(repo / "preview.sh"), "--help"], cwd=directory,
+                                    env={"PATH": str(commands), "TERM": "xterm"},
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, "")
+            for text in ("Commands:", "Options:", "First use:", "Configuration:", "Examples:",
+                         "--origin", "--verbose", "databases and caches", "cp .env.example .env"):
+                self.assertIn(text, result.stderr)
+            self.assertNotIn("\033[", result.stderr)
+
+    def test_summary_styles_its_own_stream_and_keeps_urls_plain(self) -> None:
+        """A redirected diagnostic stream must not control summary coloring."""
+        spec = importlib.util.spec_from_file_location("preview_config", Path(__file__).with_name("preview-config.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        runtime = {"service": "kyoushitsu-react", "host": "0.0.0.0", "port": "5173", "lan": "",
+                   "mappings": [{"HostIp": "127.0.0.1", "HostPort": "7081"}]}
+        for stdout_tty, stderr_tty in ((True, False), (False, True), (True, True), (False, False)):
+            with self.subTest(stdout_tty=stdout_tty, stderr_tty=stderr_tty):
+                output, errors = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors), \
+                        mock.patch.object(output, "isatty", return_value=stdout_tty), \
+                        mock.patch.object(errors, "isatty", return_value=stderr_tty), \
+                        mock.patch.dict(os.environ, {"TERM": "xterm", "NO_COLOR": ""}), \
+                        mock.patch.object(module, "require_local_daemon"):
+                    module.report([runtime], True)
+                    module.CLIStyle.log("Fixture failure", "error")
+                rendered = output.getvalue()
+                self.assertEqual("\033[" in rendered, stdout_tty)
+                if stdout_tty:
+                    self.assertIn("\033[0;32mSystem is ready.\033[0m", rendered)
+                    self.assertIn("\033[1;32mListeners:\033[0m", rendered)
+                self.assertIn("\nhttp://127.0.0.1:7081\n", rendered)
+                self.assertEqual("\033[" in errors.getvalue(), stderr_tty)
+                self.assertIn("[error] Fixture failure", errors.getvalue())
+                if stderr_tty:
+                    self.assertIn("\033[1;31m[error] Fixture failure\033[0m", errors.getvalue())
+
+    def test_terminal_opt_outs_disable_all_styles(self) -> None:
+        """NO_COLOR and dumb terminals suppress ANSI on both output channels."""
+        spec = importlib.util.spec_from_file_location("preview_config", Path(__file__).with_name("preview-config.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for environment in ({"TERM": "xterm", "NO_COLOR": "1"}, {"TERM": "dumb", "NO_COLOR": ""}):
+            with self.subTest(environment=environment), \
+                    mock.patch.object(sys.stdout, "isatty", return_value=True), \
+                    mock.patch.object(sys.stderr, "isatty", return_value=True), \
+                    mock.patch.dict(os.environ, environment):
+                self.assertEqual(module.CLIStyle.color("Ready", "success"), "Ready")
+                self.assertEqual(module.CLIStyle.color("Failure", "error", sys.stderr), "Failure")
+
+
 class DotenvTests(unittest.TestCase):
     """Check quoting and literal semantics without shell execution."""
 

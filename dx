@@ -5,6 +5,15 @@
 # Publishing uses DX_BIND_HOST and separate PREVIEW_* host/container ports.
 set -Eeuo pipefail
 
+readonly STYLE_RESET=$'\033[0m'
+readonly STYLE_TITLE=$'\033[1;36m'
+readonly STYLE_SECTION=$'\033[1;32m'
+readonly STYLE_EXAMPLE=$'\033[0;37m'
+readonly STYLE_SUCCESS=$'\033[0;32m'
+readonly STYLE_LOG=$'\033[0;36m'
+readonly STYLE_WARNING=$'\033[1;33m'
+readonly STYLE_ERROR=$'\033[1;31m'
+
 repo_root=""
 config_path=""
 config_tmp=""
@@ -20,24 +29,74 @@ runtime_hash=""
 published_port=""
 preview_verbose=false
 
+print_style() {
+	local style=$1 output_fd=$2 message=$3
+	if [[ -n "$style" && -z "${NO_COLOR:-}" && "${TERM:-}" != dumb && -t $output_fd ]]; then
+		printf '%s%s%s\n' "$style" "$message" "$STYLE_RESET" >&"$output_fd"
+	else
+		printf '%s\n' "$message" >&"$output_fd"
+	fi
+}
+
+log() {
+	print_style "$STYLE_LOG" 2 "[log] $*"
+}
+
+warn() {
+	print_style "$STYLE_WARNING" 2 "[warn] $*"
+}
+
+error() {
+	print_style "$STYLE_ERROR" 2 "[error] $*"
+}
+
 usage() {
-	printf 'Usage: [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]\n' >&2
-	printf '       ./preview.sh [start|stop|down|status|build] [--origin http://HOST:PORT] [--verbose]\n' >&2
-	printf '\nSetup (repository root): cp .env.example .env, then fill in .env.\n' >&2
-	printf 'First use: ./preview.sh (automatically builds a missing image and installs missing dependencies).\n' >&2
-	printf 'Requires Docker with an accessible daemon, Python 3 and iproute2 for wildcard publishing.\n' >&2
-	printf 'Start reuses prepared resources and returns after owned Housou /health and React / readiness.\n' >&2
-	printf 'Status reads actual Docker state; stop/down preserve databases and caches.\n' >&2
-	printf 'Root .env -> explicit process environment -> --origin overrides.\n' >&2
-	printf 'PORT/PREVIEW_FRONTEND_PORT: container; PREVIEW_BACKEND_PORT/PREVIEW_FRONTEND_PUBLISHED_PORT: host (0=dynamic).\n' >&2
-	printf 'DX_IMAGE, DX_BIND_HOST, HOST, PREVIEW_FRONTEND_HOST, PREVIEW_READY_TIMEOUT, PREVIEW_LAN_HOST configure preview.\n' >&2
-	printf 'Changed runtime settings: stop then start. Changed Dockerfile.dev: build then restart.\n' >&2
-	printf 'Wildcard publishing requires host ip -br a; --verbose shows transient readiness diagnostics.\n' >&2
-	printf 'Ordinary dx reuses/builds its image and skips busy optional port publications.\n' >&2
+	print_style "$STYLE_TITLE" 2 'Usage: ./preview.sh [start|stop|down|status|build] [options]'
+	print_style "$STYLE_SECTION" 2 'Commands:'
+	printf '%s\n' \
+		'  start       Prepare missing resources and start Housou and React in the background.' \
+		'              Default action; wait for /health and / readiness, then return.' \
+		'              Reuse healthy owned services with matching configuration.' \
+		'  stop        Stop only owned preview services; preserve databases and caches.' \
+		'  down        Data-preserving alias for stop.' \
+		'  status      Inspect actual state and health; never prepare or start services.' \
+		'  build       Explicitly rebuild the configured image; never start services.' >&2
+	print_style "$STYLE_SECTION" 2 'Options:'
+	print_style "$STYLE_LOG" 2 '  --origin http://HOST:PORT  Set the trusted frontend origin for start.'
+	print_style "$STYLE_LOG" 2 '  --verbose                Show detailed setup logs and transient readiness diagnostics.'
+	print_style "$STYLE_LOG" 2 '  -h, --help               Show help without loading configuration or calling Docker.'
+	print_style "$STYLE_SECTION" 2 'First use:'
+	printf '%s\n' \
+		'  Requires Docker with an accessible daemon, Python 3 and host iproute2 for wildcard publishing.' \
+		'  From the repository root, copy .env.example to .env only if .env is absent.' \
+		'  Edit desired settings; basic preview requires no provider credentials.' \
+		'  Run ./preview.sh; missing images and locked dependencies are prepared automatically.' \
+		'  First preparation may download resources and take several minutes; startup never runs tests.' >&2
+	print_style "$STYLE_SECTION" 2 'Configuration:'
+	printf '%s\n' \
+		'  Defaults -> root .env -> explicit process environment -> --origin overrides.' \
+		'  PORT/PREVIEW_FRONTEND_PORT: container listeners.' \
+		'  PREVIEW_BACKEND_PORT/PREVIEW_FRONTEND_PUBLISHED_PORT: host ports (0=dynamic).' \
+		'  DX_IMAGE, DX_BIND_HOST, HOST, PREVIEW_FRONTEND_HOST: image and binding settings.' \
+		'  PREVIEW_READY_TIMEOUT: readiness deadline; PREVIEW_LAN_HOST: additional address candidate.' \
+		'  Changed runtime settings: stop then start. Changed Dockerfile.dev: build then restart.' \
+		'  Wildcard publishing enumerates host addresses with ip -br a; device access is unverified.' \
+		'  Logs/help use stderr; access summaries use stdout. NO_COLOR or TERM=dumb disables color.' >&2
+	print_style "$STYLE_SECTION" 2 'Examples:'
+	print_style "$STYLE_EXAMPLE" 2 '  cp .env.example .env  # only when .env is absent; edit settings before starting'
+	print_style "$STYLE_EXAMPLE" 2 '  ./preview.sh'
+	print_style "$STYLE_EXAMPLE" 2 '  ./preview.sh start --verbose'
+	print_style "$STYLE_EXAMPLE" 2 '  ./preview.sh status'
+	print_style "$STYLE_EXAMPLE" 2 '  ./preview.sh stop'
+	print_style "$STYLE_SECTION" 2 'Development wrapper:'
+	printf '%s\n' \
+		'  [DX_EXTRA_PORTS=5174,5175] ./dx <command> [args...]' \
+		'  ./dx preview [start|stop|down|status|build] [options]' \
+		'  Ordinary dx reuses/builds its image and skips busy optional port publications.' >&2
 }
 
 die() {
-	printf 'dx: %s\n' "$*" >&2
+	error "$*"
 	exit 1
 }
 
@@ -48,11 +107,11 @@ cleanup() {
 	[[ -z "$setup_log" ]] || rm -f -- "$setup_log"
 	if ((status != 0)); then
 		for container in "${created_ids[@]}"; do
-			python3 "$config_path" diagnostics "$repo_root" "$container" || printf 'dx: startup diagnostics unavailable for an owned attempt container\n' >&2
+			python3 "$config_path" diagnostics "$repo_root" "$container" || warn 'startup diagnostics unavailable for an owned attempt container'
 		done
 	fi
 	for container in "${created_ids[@]}"; do
-		docker rm -f "$container" >/dev/null 2>&1 || printf 'dx: cleanup failed for owned attempt container %s; run ./preview.sh stop\n' "$container" >&2
+		docker rm -f "$container" >/dev/null 2>&1 || warn "cleanup failed for owned attempt container $container; run ./preview.sh stop"
 	done
 	exit "$status"
 }
@@ -89,17 +148,17 @@ ensure_image() {
 
 build_image() {
 	if [[ ! -f "${repo_root}/Dockerfile.dev" ]]; then
-		printf 'dx: missing Dockerfile.dev\n' >&2
+		error 'missing Dockerfile.dev'
 		return 1
 	fi
-	printf 'dx: building %s from Dockerfile.dev\n' "$DX_IMAGE" >&2
+	log "building $DX_IMAGE from Dockerfile.dev"
 	docker build --file "${repo_root}/Dockerfile.dev" --tag "$DX_IMAGE" "$repo_root"
 }
 
 setup_step() {
 	local description=$1
 	shift
-	printf 'dx: %s\n' "$description" >&2
+	log "$description"
 	setup_log=$(mktemp "${TMPDIR:-/tmp}/houkago-preview-setup.XXXXXXXXXX")
 	if "$@" >"$setup_log" 2>&1; then
 		[[ "$preview_verbose" != true ]] || cat -- "$setup_log" >&2
@@ -172,22 +231,22 @@ read_runtime() {
 stop_preview() {
 	find_owned
 	if [[ ${#owned_ids[@]} -eq 0 ]]; then
-		printf 'Preview status: stopped\n'
+		print_style "" 1 'Preview status: stopped'
 		return 0
 	fi
 	docker stop "${owned_ids[@]}" >/dev/null
 	docker rm "${owned_ids[@]}" >/dev/null
-	printf 'Preview stopped; databases and caches preserved.\n'
+	print_style "$STYLE_SUCCESS" 1 'Preview stopped; databases and caches preserved.'
 }
 
 status_preview() {
 	find_owned
 	if [[ ${#owned_ids[@]} -eq 0 ]]; then
-		printf 'Preview status: stopped\n'
+		print_style "" 1 'Preview status: stopped'
 		return 0
 	fi
 	if [[ -z "$backend_id" || -z "$frontend_id" ]]; then
-		printf 'Preview status: unhealthy (incomplete owned service set; stop then start)\n'
+		print_style "$STYLE_WARNING" 1 'Preview status: unhealthy (incomplete owned service set; stop then start)'
 		return 1
 	fi
 	python3 "$config_path" status "$repo_root" "$backend_id" "$frontend_id"
@@ -253,19 +312,19 @@ start_preview() {
 	export VITE_HOUSOU_PORT=$published_port
 	create_service kyoushitsu-react "$PREVIEW_FRONTEND_PORT" "$PREVIEW_FRONTEND_HOST" "$PREVIEW_FRONTEND_PUBLISHED_PORT" "${name_prefix}-react"
 	while ! probe_output=$(python3 "$config_path" probe "$repo_root" "$backend_id" "$frontend_id" 2>&1); do
-		[[ "$preview_verbose" != true ]] || printf '%s\n' "$probe_output" >&2
+		[[ "$preview_verbose" != true ]] || print_style "$STYLE_ERROR" 2 "$probe_output"
 		read_runtime "$backend_id" housou || die 'backend disappeared during startup'
 		if [[ "$runtime_state" != running ]]; then
-			printf '%s\n' "$probe_output" >&2
+			print_style "$STYLE_ERROR" 2 "$probe_output"
 			die 'housou exited before readiness; run ./dx bun run dev:housou to inspect startup errors'
 		fi
 		read_runtime "$frontend_id" kyoushitsu-react || die 'frontend disappeared during startup'
 		if [[ "$runtime_state" != running ]]; then
-			printf '%s\n' "$probe_output" >&2
+			print_style "$STYLE_ERROR" 2 "$probe_output"
 			die 'kyoushitsu-react exited before readiness; run ./dx bun run dev:react to inspect startup errors'
 		fi
 		if ((SECONDS >= deadline)); then
-			printf '%s\n' "$probe_output" >&2
+			print_style "$STYLE_ERROR" 2 "$probe_output"
 			die 'readiness timed out; check configuration and dependencies; failed attempt containers removed'
 		fi
 		sleep 1
@@ -333,7 +392,7 @@ run_command() {
 	[[ ! -t 0 || ! -t 1 ]] || tty_flags+=(-t)
 	for port in "${ports[@]}"; do
 		if (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
-			printf 'dx: port %s busy — skip publishing (fine for verify; dev needs it free)\n' "$port" >&2
+			warn "port $port busy — skip publishing (fine for verify; dev needs it free)"
 		elif [[ "$DX_LEGACY_PORTS" == 1 ]]; then
 			docker_args+=(-p "${port}:${port}")
 		else

@@ -13,7 +13,7 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Iterator
+from typing import Iterator, TextIO
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -24,15 +24,23 @@ class ConfigError(ValueError):
 
 
 class CLIStyle:
-    """Respect terminal and NO_COLOR when displaying help or errors."""
+    """Style each output stream independently while keeping data and URLs plain."""
 
     @staticmethod
-    def color(text: str, role: str = "content") -> str:
+    def color(text: str, role: str = "content", stream: TextIO | None = None) -> str:
         """Apply a semantic style only on an interactive terminal."""
-        if not sys.stderr.isatty() or "NO_COLOR" in os.environ:
+        stream = sys.stdout if stream is None else stream
+        if not stream.isatty() or os.environ.get("NO_COLOR") or os.environ.get("TERM") == "dumb":
             return text
-        codes = {"title": "36", "option": "32", "error": "31", "content": "37"}
-        return f"\033[1;{codes[role]}m{text}\033[0m"
+        codes = {"title": "1;36", "section": "1;32", "success": "0;32", "log": "0;36",
+                 "warning": "1;33", "error": "1;31", "content": ""}
+        return f"\033[{codes[role]}m{text}\033[0m" if codes[role] else text
+
+    @staticmethod
+    def log(text: str, role: str = "log") -> None:
+        """Write already-redacted diagnostics to stderr with a semantic prefix."""
+        prefix = {"log": "log", "warning": "warn", "error": "error"}[role]
+        print(CLIStyle.color(f"[{prefix}] {text}", role, sys.stderr), file=sys.stderr)
 
 
 class ColoredArgumentParser(argparse.ArgumentParser):
@@ -230,18 +238,18 @@ def startup_diagnostics(root: Path, container: str) -> None:
         "houkago.repo": str(root), "houkago.scope": "preview",
     }.items()):
         raise ConfigError("container ownership mismatch; refusing startup diagnostics")
-    print(CLIStyle.color(f"Startup diagnostics ({service}; container {data['State']['Status']}):"), file=sys.stderr)
+    CLIStyle.log(f"Startup diagnostics ({service}; container {data['State']['Status']}):")
     result = subprocess.run(["docker", "logs", "--tail", "80", container], capture_output=True,
                             text=True, timeout=5, check=False)
     if result.returncode:
         raise ConfigError(f"{service}: cannot read startup logs")
     output = redact_diagnostics(result.stdout + result.stderr, data["Config"].get("Env", []))
     if output.strip():
-        print(CLIStyle.color(output.rstrip()), file=sys.stderr)
+        print(CLIStyle.color(output.rstrip(), stream=sys.stderr), file=sys.stderr)
     else:
-        print(CLIStyle.color("No startup logs available."), file=sys.stderr)
+        CLIStyle.log("No startup logs available.")
     if service == "housou" and "legacy UUID room data detected" in output:
-        print(CLIStyle.color("preview: Housou rejected legacy room data. Preserve the existing database and explicitly choose a new HOUSOU_DB path for preview, or migrate the old data. No database was deleted.", "error"), file=sys.stderr)
+        CLIStyle.log("Housou rejected legacy room data. Preserve the existing database and explicitly choose a new HOUSOU_DB path for preview, or migrate the old data. No database was deleted.", "error")
 
 
 def url_host(host: str) -> str:
@@ -381,7 +389,8 @@ def entry_urls(runtime: dict, addresses: dict[int, list[str]]) -> tuple[list[str
 def render_section(title: str, lines: list[str]) -> None:
     """Render nonempty mandatory sections with directly copyable URL lines."""
     if lines:
-        print(CLIStyle.color(f"\n{title}:"))
+        print()
+        print(CLIStyle.color(f"{title}:", "section"))
         for line in lines:
             print(CLIStyle.color(line))
 
@@ -404,7 +413,7 @@ def report(runtimes: list[dict], ready: bool) -> None:
                 local_entries.extend([entry, *local])
         if remote_entries and not notes:
             notes.append("Access from other devices is unverified.")
-        print(CLIStyle.color("System is ready."))
+        print(CLIStyle.color("System is ready.", "success"))
     render_section("Open", remote_entries)
     render_section("Local only (preview host)", local_entries)
     listeners = [f"Listening {runtime['service']}: {url_host(runtime['host'])}:{runtime['port']} "
@@ -466,12 +475,12 @@ def main() -> int:
                     continue
                 started = datetime.datetime.fromisoformat(runtime["started"].replace("Z", "+00:00"))
                 starting |= (datetime.datetime.now(datetime.timezone.utc) - started).total_seconds() < int(runtime["timeout"])
-            print(CLIStyle.color(f"Preview status: {'starting' if starting else 'unhealthy'}"))
+            print(CLIStyle.color(f"Preview status: {'starting' if starting else 'unhealthy'}", "warning"))
             report(runtimes, False)
-        print(CLIStyle.color(f"preview: {error}", "error"), file=sys.stderr)
+        CLIStyle.log(str(error), "error")
         return 1
     except (OSError, ValueError, KeyError, IndexError, subprocess.TimeoutExpired) as error:
-        print(CLIStyle.color(f"preview: cannot read configuration/runtime ({type(error).__name__}); check .env, package.json and Docker daemon", "error"), file=sys.stderr)
+        CLIStyle.log(f"cannot read configuration/runtime ({type(error).__name__}); check .env, package.json and Docker daemon", "error")
         return 1
 
 
