@@ -57,14 +57,14 @@ test("room adapters send typed cookie requests and retain command errors", async
   await clearPendingRoomBangumi("room", { signal })
   await deleteRoomMember("room", "guest", { signal })
   expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toEqual([
-    ["GET", "/bushitsu/room"],
-    ["GET", "/bushitsu/room/bangumi"],
-    ["POST", "/bushitsu/room/enmoku/preview"],
-    ["POST", "/bushitsu/room/enmoku"],
-    ["POST", "/bushitsu/room/bangumi/item/move"],
-    ["DELETE", "/bushitsu/room/enmoku/item"],
-    ["DELETE", "/bushitsu/room/bangumi/pending"],
-    ["DELETE", "/bushitsu/room/meibo/guest"],
+    ["GET", "/api/bushitsu/room"],
+    ["GET", "/api/bushitsu/room/bangumi"],
+    ["POST", "/api/bushitsu/room/enmoku/preview"],
+    ["POST", "/api/bushitsu/room/enmoku"],
+    ["POST", "/api/bushitsu/room/bangumi/item/move"],
+    ["DELETE", "/api/bushitsu/room/enmoku/item"],
+    ["DELETE", "/api/bushitsu/room/bangumi/pending"],
+    ["DELETE", "/api/bushitsu/room/meibo/guest"],
   ])
   expect(requests.every((request) => request.credentials === "include")).toBe(true)
   expect(await requests[2]?.json()).toEqual({

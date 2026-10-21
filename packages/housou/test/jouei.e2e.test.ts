@@ -16,8 +16,8 @@ let baseWs: string
 
 beforeAll(() => {
   app.listen(0)
-  base = `http://localhost:${app.server?.port}`
-  baseWs = `ws://localhost:${app.server?.port}/ws`
+  base = `http://localhost:${app.server?.port}/api`
+  baseWs = `ws://localhost:${app.server?.port}/api/ws`
 })
 
 afterAll(() => {

@@ -72,8 +72,8 @@ beforeAll(() => {
   app.listen(0)
   const port = app.server?.port
   if (!port) throw new Error("test server did not start")
-  base = `http://localhost:${port}`
-  baseWs = `ws://localhost:${port}/ws`
+  base = `http://localhost:${port}/api`
+  baseWs = `ws://localhost:${port}/api/ws`
 })
 
 afterAll(() => {

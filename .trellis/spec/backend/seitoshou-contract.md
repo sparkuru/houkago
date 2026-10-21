@@ -11,6 +11,9 @@
 
 ### 2. Signatures
 
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
+
 - `POST /seitoshou/register { username, password } -> Seito`
 - `POST /seitoshou/sign-in { username, password } -> Seito`
 - `POST /seitoshou/sign-out -> { ok: true }`
@@ -133,6 +136,9 @@ HOUKAGO_CORS_ORIGIN=https://houkago.example.test bun run start
 
 ### 2. Signatures
 
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
+
 - SQLite: `bushitsu_buin(bushitsu_id, seito_id, joined_at)` with composite
   primary key and foreign keys to `bushitsu` and `seito`.
 - `DELETE /bushitsu/:id/meibo/:seitoId -> { ok: true }`.
@@ -211,6 +217,9 @@ for (const ownerSocket of admittedOwnerSockets(roomId)) {
   change what members may do.
 
 ### 2. Signatures
+
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
 
 - SQLite: nullable `bushitsu.kengen_json TEXT`.
 - `getKengen(bushitsuId: string): Kengen` reads the process cache, then the
@@ -293,6 +302,9 @@ broadcastRoom(roomId, serverMsg("KENGEN", getKengen(roomId)))
   without changing the shared `Enmoku`/`BANGUMI` shape.
 
 ### 2. Signatures
+
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
 
 - SQLite: `bangumi_entry(enmoku_id PRIMARY KEY, bushitsu_id, sort_key)` and
   `bangumi_entry_room_order(bushitsu_id, sort_key, enmoku_id)`.

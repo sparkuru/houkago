@@ -113,7 +113,7 @@ export function normalizeHttpError(
 }
 
 function defaultBaseUrl(): string {
-  return typeof location === "undefined" ? "http://127.0.0.1:3000" : housouUrl()
+  return typeof location === "undefined" ? "http://127.0.0.1:3000" : new URL(housouUrl()).origin
 }
 
 function errorDetails(value: unknown): { code?: string; message?: string } {

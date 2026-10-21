@@ -9,12 +9,12 @@ const origin = "http://127.0.0.1:5173"
 test("Baidu OAuth, pairing, source, and grants keep secrets behind adaptor auth", async () => {
   process.env.HOUKAGO_BAIDU_CLIENT_ID = "client-id"
   process.env.HOUKAGO_BAIDU_CLIENT_SECRET = "client-secret"
-  process.env.HOUKAGO_BAIDU_REDIRECT_URI = "http://localhost/baidu/oauth/callback"
+  process.env.HOUKAGO_BAIDU_REDIRECT_URI = "/api/baidu/oauth/callback"
   process.env.HOUKAGO_CREDENTIAL_KEY = Buffer.alloc(32, 9).toString("base64")
   const originalFetch = globalThis.fetch
   globalThis.fetch = baiduFixtureFetch(originalFetch)
   app.listen(0)
-  const base = `http://localhost:${app.server?.port}`
+  const base = `http://localhost:${app.server?.port}/api`
   const sockets: WebSocket[] = []
 
   try {
@@ -50,7 +50,11 @@ test("Baidu OAuth, pairing, source, and grants keep secrets behind adaptor auth"
     })
     expect(started.status).toBe(200)
     const { authorizationUrl } = (await started.json()) as { authorizationUrl: string }
+    expect(new URL(authorizationUrl).searchParams.get("redirect_uri")).toBe(
+      `${origin}/api/baidu/oauth/callback`,
+    )
     const state = new URL(authorizationUrl).searchParams.get("state") ?? ""
+    process.env.HOUKAGO_BAIDU_REDIRECT_URI = "https://changed.example/api/baidu/oauth/callback"
 
     const callback = await originalFetch(
       `${base}/baidu/oauth/callback?code=one-use-code&state=${encodeURIComponent(state)}`,
@@ -64,6 +68,7 @@ test("Baidu OAuth, pairing, source, and grants keep secrets behind adaptor auth"
     expect(callbackBody).not.toContain(state)
     expect(callbackBody).not.toContain("access-secret")
     expect(callbackBody).not.toContain("refresh-secret")
+    process.env.HOUKAGO_BAIDU_REDIRECT_URI = "/api/baidu/oauth/callback"
 
     const replay = await originalFetch(
       `${base}/baidu/oauth/callback?code=replay&state=${encodeURIComponent(state)}`,
@@ -739,6 +744,7 @@ function baiduFixtureFetch(fallback: typeof fetch): typeof fetch {
           scope: "basic netdisk",
         })
       }
+      expect(url.searchParams.get("redirect_uri")).toBe(`${origin}/api/baidu/oauth/callback`)
       return Response.json({
         access_token: "access-secret",
         refresh_token: "refresh-secret",

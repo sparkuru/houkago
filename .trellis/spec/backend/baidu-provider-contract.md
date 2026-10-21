@@ -15,9 +15,18 @@
 
 ### 2. Signatures
 
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
+
 - Environment:
   - `HOUKAGO_BAIDU_CLIENT_ID`, `HOUKAGO_BAIDU_CLIENT_SECRET`, and
-    `HOUKAGO_BAIDU_REDIRECT_URI` enable OAuth as one complete set.
+    `HOUKAGO_BAIDU_REDIRECT_URI` enable OAuth as one complete set. The callback
+    accepts a root-relative path or explicit HTTP(S) URL; relative configuration
+    is resolved from the OAuth-start request Origin after existing trust checks
+    (request URL fallback for permitted Origin-less development requests).
+    The full URI is stored with the one-use OAuth state and reused at exchange,
+    independent of later config changes. Reject protocol-relative URLs,
+    credentials, non-web schemes, whitespace, backslashes, queries and fragments.
   - `HOUKAGO_CREDENTIAL_KEY` is a base64-encoded 32-byte AES key and enables
     `server-saved` mode.
   - `HOUKAGO_CREDENTIAL_KEY_VERSION` is a positive integer, default `1`.

@@ -477,11 +477,13 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   const mediaRelease = release()
   const origin = "http://127.0.0.1:5173"
 
-  const unauthenticated = await app.handle(new Request("http://localhost/danmaku/episodes?q=route"))
+  const unauthenticated = await app.handle(
+    new Request("http://localhost/api/danmaku/episodes?q=route"),
+  )
   expect(unauthenticated.status).toBe(401)
 
   const search = await app.handle(
-    new Request("http://localhost/danmaku/episodes?q=route", {
+    new Request("http://localhost/api/danmaku/episodes?q=route", {
       headers: { cookie: sessionCookie(viewer) },
     }),
   )
@@ -489,7 +491,7 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   expect((await search.json())[0].id).toBe(canonicalEpisode.id)
 
   const forbiddenCurate = await app.handle(
-    new Request("http://localhost/danmaku/episodes", {
+    new Request("http://localhost/api/danmaku/episodes", {
       method: "POST",
       headers: { "content-type": "application/json", cookie: sessionCookie(viewer), origin },
       body: JSON.stringify({ title: "not allowed" }),
@@ -498,7 +500,7 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   expect(forbiddenCurate.status).toBe(403)
 
   const proposal = await app.handle(
-    new Request("http://localhost/danmaku/proposals", {
+    new Request("http://localhost/api/danmaku/proposals", {
       method: "POST",
       headers: { "content-type": "application/json", cookie: sessionCookie(viewer), origin },
       body: JSON.stringify({
@@ -511,7 +513,7 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   expect(proposal.status).toBe(200)
 
   const proposals = await app.handle(
-    new Request("http://localhost/danmaku/proposals", {
+    new Request("http://localhost/api/danmaku/proposals", {
       headers: { cookie: sessionCookie(komon) },
     }),
   )
@@ -523,7 +525,7 @@ test("danmaku routes derive session authority and keep governance endpoints gate
   ).toBe(true)
 
   const forbiddenPolicy = await app.handle(
-    new Request("http://localhost/danmaku/policy", {
+    new Request("http://localhost/api/danmaku/policy", {
       method: "POST",
       headers: { "content-type": "application/json", cookie: sessionCookie(viewer), origin },
       body: JSON.stringify({ allowedClasses: ["server-stored"], order: ["server-stored"] }),
@@ -552,7 +554,7 @@ test("Komon revision controls are exposed through trusted-origin routes", async 
     701,
   )
   const origin = "http://127.0.0.1:5173"
-  const path = `http://localhost/danmaku/tracks/${danmakuTrack.id}/revisions/${second.revision.id}`
+  const path = `http://localhost/api/danmaku/tracks/${danmakuTrack.id}/revisions/${second.revision.id}`
 
   const forbidden = await app.handle(
     new Request(`${path}/disable`, {
@@ -595,7 +597,7 @@ test("Komon revision controls are exposed through trusted-origin routes", async 
   expect(rollback.status).toBe(404)
 
   const pin = await app.handle(
-    new Request(`http://localhost/danmaku/revisions/${first.revision.id}/pin`, {
+    new Request(`http://localhost/api/danmaku/revisions/${first.revision.id}/pin`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -610,7 +612,7 @@ test("Komon revision controls are exposed through trusted-origin routes", async 
 
   const restored = await app.handle(
     new Request(
-      `http://localhost/danmaku/tracks/${danmakuTrack.id}/revisions/${first.revision.id}/rollback`,
+      `http://localhost/api/danmaku/tracks/${danmakuTrack.id}/revisions/${first.revision.id}/rollback`,
       {
         method: "POST",
         headers: {

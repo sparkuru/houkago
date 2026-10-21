@@ -8,7 +8,7 @@ export type HealthData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/health';
+    url: '/api/health';
 };
 
 export type HealthErrors = {
@@ -121,7 +121,7 @@ export type SiteConfigData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/site-config';
+    url: '/api/site-config';
 };
 
 export type SiteConfigErrors = {
@@ -247,7 +247,7 @@ export type EishaDanmakuData = {
         ref: string;
     };
     query?: never;
-    url: '/eisha/danmaku/{ref}';
+    url: '/api/eisha/danmaku/{ref}';
 };
 
 export type EishaDanmakuErrors = {
@@ -312,7 +312,7 @@ export type IdentityRegisterData = {
     };
     path?: never;
     query?: never;
-    url: '/seitoshou/register';
+    url: '/api/seitoshou/register';
 };
 
 export type IdentityRegisterErrors = {
@@ -430,7 +430,7 @@ export type IdentitySignInData = {
     };
     path?: never;
     query?: never;
-    url: '/seitoshou/sign-in';
+    url: '/api/seitoshou/sign-in';
 };
 
 export type IdentitySignInErrors = {
@@ -545,7 +545,7 @@ export type IdentitySignOutData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/seitoshou/sign-out';
+    url: '/api/seitoshou/sign-out';
 };
 
 export type IdentitySignOutErrors = {
@@ -658,7 +658,7 @@ export type IdentityMeData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/seitoshou/me';
+    url: '/api/seitoshou/me';
 };
 
 export type IdentityMeErrors = {
@@ -773,7 +773,7 @@ export type BaiduStatusData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/baidu/status';
+    url: '/api/baidu/status';
 };
 
 export type BaiduStatusErrors = {
@@ -895,7 +895,7 @@ export type BaiduOAuthStartData = {
     };
     path?: never;
     query?: never;
-    url: '/baidu/oauth/start';
+    url: '/api/baidu/oauth/start';
 };
 
 export type BaiduOAuthStartErrors = {
@@ -1009,7 +1009,7 @@ export type BaiduConnectionDeleteData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/baidu/connection';
+    url: '/api/baidu/connection';
 };
 
 export type BaiduConnectionDeleteErrors = {
@@ -1125,7 +1125,7 @@ export type BaiduAdaptorPairingData = {
     };
     path?: never;
     query?: never;
-    url: '/baidu/adaptor/pairing';
+    url: '/api/baidu/adaptor/pairing';
 };
 
 export type BaiduAdaptorPairingErrors = {
@@ -1245,7 +1245,7 @@ export type BaiduFilesListData = {
     };
     path?: never;
     query?: never;
-    url: '/baidu/files/list';
+    url: '/api/baidu/files/list';
 };
 
 export type BaiduFilesListErrors = {
@@ -1374,7 +1374,7 @@ export type BaiduSourceCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/baidu/sources';
+    url: '/api/baidu/sources';
 };
 
 export type BaiduSourceCreateErrors = {
@@ -1535,7 +1535,7 @@ export type BaiduSourceAvailabilityData = {
     query: {
         bushitsuId: string;
     };
-    url: '/baidu/sources/{sourceId}/availability';
+    url: '/api/baidu/sources/{sourceId}/availability';
 };
 
 export type BaiduSourceAvailabilityErrors = {
@@ -1656,7 +1656,7 @@ export type BaiduPlaybackGrantCreateData = {
         sourceId: string;
     };
     query?: never;
-    url: '/baidu/sources/{sourceId}/grants';
+    url: '/api/baidu/sources/{sourceId}/grants';
 };
 
 export type BaiduPlaybackGrantCreateErrors = {
@@ -1780,7 +1780,7 @@ export type BaiduPlaybackGrantPollData = {
         requestId: string;
     };
     query?: never;
-    url: '/baidu/grants/{requestId}';
+    url: '/api/baidu/grants/{requestId}';
 };
 
 export type BaiduPlaybackGrantPollErrors = {
@@ -1904,7 +1904,7 @@ export type RoomCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/bushitsu';
+    url: '/api/bushitsu';
 };
 
 export type RoomCreateErrors = {
@@ -2022,7 +2022,7 @@ export type RoomGetData = {
         id: string;
     };
     query?: never;
-    url: '/bushitsu/{id}';
+    url: '/api/bushitsu/{id}';
 };
 
 export type RoomGetErrors = {
@@ -2140,7 +2140,7 @@ export type RoomBangumiGetData = {
         id: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/bangumi';
+    url: '/api/bushitsu/{id}/bangumi';
 };
 
 export type RoomBangumiGetErrors = {
@@ -2302,7 +2302,7 @@ export type RoomEnmokuPreviewData = {
         id: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/enmoku/preview';
+    url: '/api/bushitsu/{id}/enmoku/preview';
 };
 
 export type RoomEnmokuPreviewErrors = {
@@ -2469,7 +2469,7 @@ export type RoomEnmokuCreateData = {
         id: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/enmoku';
+    url: '/api/bushitsu/{id}/enmoku';
 };
 
 export type RoomEnmokuCreateErrors = {
@@ -2629,7 +2629,7 @@ export type RoomEnmokuDeleteData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/enmoku/{enmokuId}';
+    url: '/api/bushitsu/{id}/enmoku/{enmokuId}';
 };
 
 export type RoomEnmokuDeleteErrors = {
@@ -2747,7 +2747,7 @@ export type RoomBangumiMoveData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/bangumi/{enmokuId}/move';
+    url: '/api/bushitsu/{id}/bangumi/{enmokuId}/move';
 };
 
 export type RoomBangumiMoveErrors = {
@@ -2862,7 +2862,7 @@ export type RoomBangumiPendingClearData = {
         id: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/bangumi/pending';
+    url: '/api/bushitsu/{id}/bangumi/pending';
 };
 
 export type RoomBangumiPendingClearErrors = {
@@ -2979,7 +2979,7 @@ export type RoomMemberDeleteData = {
         seitoId: string;
     };
     query?: never;
-    url: '/bushitsu/{id}/meibo/{seitoId}';
+    url: '/api/bushitsu/{id}/meibo/{seitoId}';
 };
 
 export type RoomMemberDeleteErrors = {
@@ -3094,7 +3094,7 @@ export type DanmakuEpisodeSearchData = {
     query?: {
         q?: string;
     };
-    url: '/danmaku/episodes';
+    url: '/api/danmaku/episodes';
 };
 
 export type DanmakuEpisodeSearchErrors = {
@@ -3220,7 +3220,7 @@ export type DanmakuEpisodeCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/danmaku/episodes';
+    url: '/api/danmaku/episodes';
 };
 
 export type DanmakuEpisodeCreateErrors = {
@@ -3456,7 +3456,7 @@ export type DanmakuMatchCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/danmaku/matches';
+    url: '/api/danmaku/matches';
 };
 
 export type DanmakuMatchCreateErrors = {
@@ -3700,7 +3700,7 @@ export type DanmakuAlignmentCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/danmaku/alignments';
+    url: '/api/danmaku/alignments';
 };
 
 export type DanmakuAlignmentCreateErrors = {
@@ -3820,7 +3820,7 @@ export type DanmakuPolicyGetData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/danmaku/policy';
+    url: '/api/danmaku/policy';
 };
 
 export type DanmakuPolicyGetErrors = {
@@ -3939,7 +3939,7 @@ export type DanmakuPolicyUpdateData = {
     };
     path?: never;
     query?: never;
-    url: '/danmaku/policy';
+    url: '/api/danmaku/policy';
 };
 
 export type DanmakuPolicyUpdateErrors = {
@@ -4063,7 +4063,7 @@ export type DanmakuCandidatesResolveData = {
         fingerprint?: string;
         fingerprintBytes?: string | number;
     };
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}';
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}';
 };
 
 export type DanmakuCandidatesResolveErrors = {
@@ -4358,7 +4358,7 @@ export type DanmakuCandidatesResolveLegacyData = {
         fingerprint?: string;
         fingerprintBytes?: string | number;
     };
-    url: '/danmaku/candidates/{bushitsuId}/{enmokuId}';
+    url: '/api/danmaku/candidates/{bushitsuId}/{enmokuId}';
 };
 
 export type DanmakuCandidatesResolveLegacyErrors = {
@@ -4648,7 +4648,7 @@ export type DanmakuEnmokuDefaultDeleteData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
 };
 
 export type DanmakuEnmokuDefaultDeleteErrors = {
@@ -4775,7 +4775,7 @@ export type DanmakuEnmokuDefaultCreateData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
 };
 
 export type DanmakuEnmokuDefaultCreateErrors = {
@@ -4902,7 +4902,7 @@ export type DanmakuEnmokuDefaultUpdateData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default';
 };
 
 export type DanmakuEnmokuDefaultUpdateErrors = {
@@ -5027,7 +5027,7 @@ export type DanmakuDefaultDeleteData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}';
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}';
 };
 
 export type DanmakuDefaultDeleteErrors = {
@@ -5154,7 +5154,7 @@ export type DanmakuDefaultCreateData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}';
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}';
 };
 
 export type DanmakuDefaultCreateErrors = {
@@ -5281,7 +5281,7 @@ export type DanmakuDefaultUpdateData = {
         enmokuId: string;
     };
     query?: never;
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}';
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}';
 };
 
 export type DanmakuDefaultUpdateErrors = {
@@ -5405,7 +5405,7 @@ export type DanmakuRoomDefaultsGetData = {
         bushitsuId: string;
     };
     query?: never;
-    url: '/danmaku/bushitsu/{bushitsuId}/defaults';
+    url: '/api/danmaku/bushitsu/{bushitsuId}/defaults';
 };
 
 export type DanmakuRoomDefaultsGetErrors = {
@@ -5529,7 +5529,7 @@ export type DanmakuProposalListData = {
     query?: {
         status?: 'pending' | 'approved' | 'rejected' | 'merged';
     };
-    url: '/danmaku/proposals';
+    url: '/api/danmaku/proposals';
 };
 
 export type DanmakuProposalListErrors = {
@@ -5730,7 +5730,7 @@ export type DanmakuProposalCreateData = {
     };
     path?: never;
     query?: never;
-    url: '/danmaku/proposals';
+    url: '/api/danmaku/proposals';
 };
 
 export type DanmakuProposalCreateErrors = {
@@ -5896,7 +5896,7 @@ export type DanmakuProposalDecisionData = {
         proposalId: string;
     };
     query?: never;
-    url: '/danmaku/proposals/{proposalId}/decision';
+    url: '/api/danmaku/proposals/{proposalId}/decision';
 };
 
 export type DanmakuProposalDecisionErrors = {
@@ -6061,7 +6061,7 @@ export type DanmakuRevisionDisableData = {
         revisionId: string;
     };
     query?: never;
-    url: '/danmaku/tracks/{trackId}/revisions/{revisionId}/disable';
+    url: '/api/danmaku/tracks/{trackId}/revisions/{revisionId}/disable';
 };
 
 export type DanmakuRevisionDisableErrors = {
@@ -6192,7 +6192,7 @@ export type DanmakuRevisionRollbackData = {
         revisionId: string;
     };
     query?: never;
-    url: '/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback';
+    url: '/api/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback';
 };
 
 export type DanmakuRevisionRollbackErrors = {
@@ -6322,7 +6322,7 @@ export type DanmakuRevisionPinData = {
         revisionId: string;
     };
     query?: never;
-    url: '/danmaku/revisions/{revisionId}/pin';
+    url: '/api/danmaku/revisions/{revisionId}/pin';
 };
 
 export type DanmakuRevisionPinErrors = {

@@ -33,7 +33,7 @@ test("export ignores production DB and credentials without upstream calls or lis
       Bun.serve = () => { throw new Error("export started a listener") }
       await import("./packages/housou/src/export-openapi.ts")
       const { app } = await import("./packages/housou/src/index.ts")
-      const unexpected = await app.handle(new Request("http://contract.local/eisha/danmaku/%25"))
+      const unexpected = await app.handle(new Request("http://contract.local/api/eisha/danmaku/%25"))
       if (unexpected.status !== 500 || (await unexpected.json()).error.code !== "INTERNAL")
         throw new Error("existing Eisha unexpected-error behavior changed")
       const { db } = await import("./packages/housou/src/db/client.ts")
@@ -60,17 +60,20 @@ test("export ignores production DB and credentials without upstream calls or lis
       in: "cookie",
       name: "houkago_seitoshou",
     })
-    expect(document.paths["/seitoshou/me"].get.security).toEqual([{ cookieSession: [] }])
-    expect(document.paths["/baidu/adaptor/heartbeat"].post.security).toEqual([
+    expect(document.paths["/api/seitoshou/me"].get.security).toEqual([{ cookieSession: [] }])
+    expect(document.paths["/api/baidu/adaptor/heartbeat"].post.security).toEqual([
       { adaptorBearer: [] },
     ])
-    expect(document.paths["/baidu/adaptor/pair"].post.security).toEqual([])
-    expect(document.paths["/site-config"].get.security).toEqual([])
-    expect(document.paths["/seitoshou/sign-out"].post.security).toEqual([{}, { cookieSession: [] }])
-    expect(document.paths["/seitoshou/sign-out"].post.parameters[0].required).toBe(false)
-    expect(document.paths["/eisha/danmaku/{ref}"].get.responses["500"]).toBeDefined()
+    expect(document.paths["/api/baidu/adaptor/pair"].post.security).toEqual([])
+    expect(document.paths["/api/site-config"].get.security).toEqual([])
+    expect(document.paths["/api/seitoshou/sign-out"].post.security).toEqual([
+      {},
+      { cookieSession: [] },
+    ])
+    expect(document.paths["/api/seitoshou/sign-out"].post.parameters[0].required).toBe(false)
+    expect(document.paths["/api/eisha/danmaku/{ref}"].get.responses["500"]).toBeDefined()
     const enmoku =
-      document.paths["/bushitsu/{id}/bangumi"].get.responses["200"].content["application/json"]
+      document.paths["/api/bushitsu/{id}/bangumi"].get.responses["200"].content["application/json"]
         .schema.items
     expect(enmoku.properties.headers.additionalProperties).toEqual({ type: "string" })
     expect(enmoku.properties.headers.patternProperties).toBeUndefined()
@@ -78,14 +81,16 @@ test("export ignores production DB and credentials without upstream calls or lis
       type: "string",
     })
     expect(
-      document.paths["/baidu/oauth/callback"].get.responses["200"].content["text/html"],
+      document.paths["/api/baidu/oauth/callback"].get.responses["200"].content["text/html"],
     ).toBeDefined()
     expect(
-      document.paths["/eisha/dash/{token}"].get.responses["200"].content["application/dash+xml"],
+      document.paths["/api/eisha/dash/{token}"].get.responses["200"].content[
+        "application/dash+xml"
+      ],
     ).toBeDefined()
-    expect(document.paths["/baidu/media/{grantId}"].get.responses["200"]).toBeUndefined()
-    expect(document.paths["/ws"].get.responses["101"]).toBeDefined()
-    expect(document.paths["/ws"].ws).toBeUndefined()
+    expect(document.paths["/api/baidu/media/{grantId}"].get.responses["200"]).toBeUndefined()
+    expect(document.paths["/api/ws"].get.responses["101"]).toBeDefined()
+    expect(document.paths["/api/ws"].ws).toBeUndefined()
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
@@ -108,7 +113,7 @@ test.each([false, true])(
   `)
     expect(result.exitCode).not.toBe(0)
     expect(result.stderr).toContain(
-      hidden ? "missing: get /contract-missing-route" : "lacks HTTP contract classification",
+      hidden ? "missing: get /api/contract-missing-route" : "lacks HTTP contract classification",
     )
   },
 )

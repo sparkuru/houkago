@@ -2,7 +2,7 @@
 # Run Bun development/verification in Docker with uid mapping and ignored .devhome.
 # Root .env configures the image, hosts and ports; package.json supplies fallbacks.
 # ./dx bun install; ./dx bun run typecheck; ./dx preview build/start/status/stop
-# Publishing uses DX_BIND_HOST and separate PREVIEW_* host/container ports.
+# Publishing uses DX_BIND_HOST and FRONTEND_PUBLISHED_PORT; backend stays internal.
 set -Eeuo pipefail
 
 readonly STYLE_RESET=$'\033[0m'
@@ -27,6 +27,8 @@ frontend_id=""
 runtime_state=""
 runtime_hash=""
 published_port=""
+preview_network=""
+created_network=false
 preview_verbose=false
 
 print_style() {
@@ -55,7 +57,7 @@ usage() {
 	print_style "$STYLE_SECTION" 2 'Commands:'
 	printf '%s\n' \
 		'  start       Prepare missing resources and start Housou and React in the background.' \
-		'              Default action; wait for /health and / readiness, then return.' \
+		'              Default action; wait for /api/health and / readiness, then return.' \
 		'              Reuse healthy owned services with matching configuration.' \
 		'  stop        Stop only owned preview services; preserve databases and caches.' \
 		'  down        Data-preserving alias for stop.' \
@@ -75,10 +77,10 @@ usage() {
 	print_style "$STYLE_SECTION" 2 'Configuration:'
 	printf '%s\n' \
 		'  Defaults -> root .env -> explicit process environment -> --origin overrides.' \
-		'  PORT/PREVIEW_FRONTEND_PORT: container listeners.' \
-		'  PREVIEW_BACKEND_PORT/PREVIEW_FRONTEND_PUBLISHED_PORT: host ports (0=dynamic).' \
-		'  DX_IMAGE, DX_BIND_HOST, HOST, PREVIEW_FRONTEND_HOST: image and binding settings.' \
-		'  PREVIEW_READY_TIMEOUT: readiness deadline; PREVIEW_LAN_HOST: additional address candidate.' \
+		'  BACKEND_PORT/FRONTEND_PORT: container listeners.' \
+		'  FRONTEND_PUBLISHED_PORT: site host port (0=dynamic); backend stays internal.' \
+		'  DX_IMAGE, DX_BIND_HOST, BACKEND_HOST, FRONTEND_HOST: image and binding settings.' \
+		'  READY_TIMEOUT: readiness deadline; LAN_HOST: additional address candidate.' \
 		'  Changed runtime settings: stop then start. Changed Dockerfile.dev: build then restart.' \
 		'  Wildcard publishing enumerates host addresses with ip -br a; device access is unverified.' \
 		'  Logs/help use stderr; access summaries use stdout. NO_COLOR or TERM=dumb disables color.' >&2
@@ -113,6 +115,9 @@ cleanup() {
 	for container in "${created_ids[@]}"; do
 		docker rm -f "$container" >/dev/null 2>&1 || warn "cleanup failed for owned attempt container $container; run ./preview.sh stop"
 	done
+	if [[ "$created_network" == true ]]; then
+		python3 "$config_path" network-remove "$repo_root" || warn 'owned preview network cleanup failed; run ./preview.sh stop'
+	fi
 	exit "$status"
 }
 
@@ -124,7 +129,7 @@ load_config() {
 	python3 "$config_path" "${args[@]}" >"$config_tmp" || die 'configuration rejected; correct the named key before retrying'
 	while IFS= read -r -d '' key && IFS= read -r -d '' value; do
 		case "$key" in
-		DX_IMAGE | DX_BIND_HOST | DX_LEGACY_PORTS | HOST | PORT | HOUSOU_DB | HOUKAGO_* | PREVIEW_* | VITE_*)
+		DX_IMAGE | DX_BIND_HOST | DX_LEGACY_PORTS | BACKEND_HOST | BACKEND_PORT | FRONTEND_* | LAN_HOST | READY_TIMEOUT | HOUSOU_DB | HOUKAGO_* | PREVIEW_* | VITE_*)
 			printf -v "$key" '%s' "$value"
 			export "${key?}"
 			config_keys+=("$key")
@@ -231,11 +236,13 @@ read_runtime() {
 stop_preview() {
 	find_owned
 	if [[ ${#owned_ids[@]} -eq 0 ]]; then
+		python3 "$config_path" network-remove "$repo_root"
 		print_style "" 1 'Preview status: stopped'
 		return 0
 	fi
 	docker stop "${owned_ids[@]}" >/dev/null
 	docker rm "${owned_ids[@]}" >/dev/null
+	python3 "$config_path" network-remove "$repo_root"
 	print_style "$STYLE_SUCCESS" 1 'Preview stopped; databases and caches preserved.'
 }
 
@@ -262,22 +269,23 @@ create_service() {
 	local service=$1 container_port=$2 listen_host=$3 host_port=$4 name=$5 key container
 	common_arguments
 	docker_args+=(--init --name "$name"
+		--network "$preview_network" --network-alias "$service"
 		--label "houkago.repo=${repo_root}" --label houkago.scope=preview --label "houkago.service=${service}"
 		--label "houkago.port=${container_port}" --label "houkago.host=${listen_host}"
-		--label "houkago.config=${PREVIEW_CONFIG_HASH}" --label "houkago.lan=${PREVIEW_LAN_HOST}"
-		--label "houkago.timeout=${PREVIEW_READY_TIMEOUT}")
-	publish_argument "$DX_BIND_HOST" "$host_port" "$container_port"
+		--label "houkago.config=${PREVIEW_CONFIG_HASH}" --label "houkago.lan=${LAN_HOST}"
+		--label "houkago.timeout=${READY_TIMEOUT}")
+	[[ "$service" != kyoushitsu-react ]] || publish_argument "$DX_BIND_HOST" "$host_port" "$container_port"
 	for key in "${config_keys[@]}"; do
 		case "$key" in
-		HOUKAGO_* | HOUSOU_DB | HOST | PORT)
+		HOUKAGO_* | HOUSOU_DB | BACKEND_HOST | BACKEND_PORT)
 			[[ "$service" != housou ]] || docker_args+=(-e "$key")
 			;;
-		VITE_* | PREVIEW_FRONTEND_HOST | PREVIEW_FRONTEND_PORT)
+		VITE_* | FRONTEND_HOST | FRONTEND_PORT)
 			[[ "$service" != kyoushitsu-react ]] || docker_args+=(-e "$key")
 			;;
 		esac
 	done
-	[[ "$service" != kyoushitsu-react ]] || docker_args+=(-e VITE_HOUSOU_PORT)
+	[[ "$service" != kyoushitsu-react ]] || docker_args+=(-e HOUSOU_PROXY_TARGET)
 	container=$(docker create "${docker_args[@]}" "$DX_IMAGE" bash scripts/preview-services.sh "$service") || die "cannot create ${service}; inspect required host port availability and Docker diagnostics"
 	created_ids+=("$container")
 	docker start "$container" >/dev/null || die "cannot start ${service}; check port conflicts, then retry"
@@ -288,7 +296,7 @@ create_service() {
 }
 
 start_preview() {
-	local origin=$1 name_prefix deadline probe_output
+	local origin=$1 name_prefix deadline probe_output network_result
 	load_config preview "$origin"
 	python3 "$config_path" discovery "$repo_root" "$DX_BIND_HOST" || die 'host address discovery failed before startup; correct the reported prerequisite'
 	find_owned
@@ -296,6 +304,7 @@ start_preview() {
 		[[ -n "$backend_id" && -n "$frontend_id" ]] || die 'incomplete owned preview; run ./preview.sh stop then start'
 		read_runtime "$backend_id" housou
 		[[ "$runtime_hash" == "$PREVIEW_CONFIG_HASH" ]] || die 'preview configuration changed; run ./preview.sh stop then start'
+		python3 "$config_path" network-verify "$repo_root" || die 'preview network changed; run ./preview.sh stop then start'
 		read_runtime "$frontend_id" kyoushitsu-react
 		[[ "$runtime_hash" == "$PREVIEW_CONFIG_HASH" ]] || die 'preview configuration changed; run ./preview.sh stop then start'
 		python3 "$config_path" probe "$repo_root" "$backend_id" "$frontend_id" || die 'existing preview unhealthy; preserved existing containers; inspect status, stop then start'
@@ -304,13 +313,14 @@ start_preview() {
 	fi
 	prepare_preview
 	name_prefix=$(python3 -c 'import hashlib,sys; print("houkago-preview-"+hashlib.sha256(sys.argv[1].encode()).hexdigest()[:20])' "$repo_root")
-	deadline=$((SECONDS + PREVIEW_READY_TIMEOUT))
-	# shellcheck disable=SC2153 # PORT/HOST are validated/exported by load_config.
-	create_service housou "$PORT" "$HOST" "$PREVIEW_BACKEND_PORT" "${name_prefix}-housou"
-	read_runtime "$backend_id" housou
-	[[ -n "$published_port" ]] || die 'backend has no published endpoint; run ./preview.sh status'
-	export VITE_HOUSOU_PORT=$published_port
-	create_service kyoushitsu-react "$PREVIEW_FRONTEND_PORT" "$PREVIEW_FRONTEND_HOST" "$PREVIEW_FRONTEND_PUBLISHED_PORT" "${name_prefix}-react"
+	network_result=$(python3 "$config_path" network-create "$repo_root")
+	preview_network=${network_result%:*}
+	created_network=${network_result##*:}
+	deadline=$((SECONDS + READY_TIMEOUT))
+	# shellcheck disable=SC2153 # BACKEND_PORT/BACKEND_HOST are validated/exported by load_config.
+	create_service housou "$BACKEND_PORT" "$BACKEND_HOST" "" "${name_prefix}-housou"
+	export HOUSOU_PROXY_TARGET="http://housou:${BACKEND_PORT}"
+	create_service kyoushitsu-react "$FRONTEND_PORT" "$FRONTEND_HOST" "$FRONTEND_PUBLISHED_PORT" "${name_prefix}-react"
 	while ! probe_output=$(python3 "$config_path" probe "$repo_root" "$backend_id" "$frontend_id" 2>&1); do
 		[[ "$preview_verbose" != true ]] || print_style "$STYLE_ERROR" 2 "$probe_output"
 		read_runtime "$backend_id" housou || die 'backend disappeared during startup'
@@ -331,6 +341,7 @@ start_preview() {
 	done
 	python3 "$config_path" report "$repo_root" "$backend_id" "$frontend_id"
 	created_ids=()
+	created_network=false
 }
 
 preview_command() {
@@ -374,7 +385,7 @@ run_command() {
 	local raw_port port extra_ports
 	local -a ports=() tty_flags=() requested_ports=()
 	load_config dx
-	ports=("$PORT" "$PREVIEW_FRONTEND_PORT")
+	ports=("$BACKEND_PORT" "$FRONTEND_PORT")
 	extra_ports=${DX_EXTRA_PORTS:-}
 	if [[ -n "$extra_ports" ]]; then
 		[[ "$extra_ports" =~ ^[0-9]+(,[0-9]+)*$ ]] || die 'DX_EXTRA_PORTS must be comma-separated decimal ports (1-65535)'

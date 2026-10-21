@@ -13,8 +13,8 @@ let baseWs: string
 beforeAll(() => {
   app.listen(0)
   const port = app.server?.port
-  base = `http://localhost:${port}`
-  baseWs = `ws://localhost:${port}/ws`
+  base = `http://localhost:${port}/api`
+  baseWs = `ws://localhost:${port}/api/ws`
 })
 
 afterAll(() => {

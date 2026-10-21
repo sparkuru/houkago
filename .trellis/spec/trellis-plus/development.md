@@ -44,30 +44,40 @@ then start after such changes. Stop/status inspect existing labeled containers
 without loading the current `.env`, so deletion or invalid edits to that file
 do not prevent teardown. Stop removes only owned containers and preserves
 bind-mounted databases/caches; there are no disposable data volumes to remove.
+The two containers share an exactly labeled repository-owned bridge network.
+Stop removes it only after all containers are detached; foreign labels or
+remaining attachments prevent deletion.
 
 `package.json`'s `config.ports` supplies absent-key defaults (currently backend
-9998, frontend 9999); `.env` controls actual listeners/publications. Normal
+8081, frontend 8080); `.env` controls actual listeners/publications. Normal
 preview fails on busy required ports; ordinary `dx` verification retains its
 existing skip-busy behavior for optional publications. Container listeners
 must use `0.0.0.0` or `::` for Docker publishing; restrict host access using
 `DX_BIND_HOST=127.0.0.1` or `::1`. This entry supports host-published preview;
-a Docker-network-only runtime requires explicit implementation before use.
+the backend is Docker-network-only and has no host publication.
+Absent `FRONTEND_PUBLISHED_PORT` defaults to the manifest frontend port (8080);
+the safe example explicitly publishes 9999. Keep listener and publication values
+independent, including when the user changes only one of them.
 
-Host ports may differ from container ports, including `0` for Docker-assigned
-host ports. Start inspects the backend mapping before creating React and passes
-that effective port as `VITE_HOUSOU_PORT`. React normally uses the browser
-hostname for API access; an explicit `VITE_HOUSOU_URL` takes precedence.
+The site host port may differ from its container port, including `0` for a
+Docker-assigned port. React/Vite proxies the exact `/api` path boundary to
+`HOUSOU_PROXY_TARGET=http://housou:<BACKEND_PORT>` on the owned network, preserving Host
+and forwarding WS upgrades. Housou mounts its routes under `/api`. Browsers use
+the current site origin; no separate backend URL/port is injected.
+`HOST`, `PORT`, the retired public `PREVIEW_*` keys,
+`PREVIEW_BACKEND_PORT`, `VITE_HOUSOU_URL` and `VITE_HOUSOU_PORT` are obsolete: the
+preview warns by key name, ignores them and preserves existing `.env` contents.
 
 Default manual probes after starting the owned preview (use the printed
 effective ports when configuration changes or host ports are dynamic):
 
 ```sh
-curl --fail --silent --show-error http://127.0.0.1:9998/health
+curl --fail --silent --show-error http://127.0.0.1:9999/api/health
 curl --fail --silent --show-error http://127.0.0.1:9999/ -o /dev/null
 ```
 
-Start/status verify both the owned container's HTTP listener and its actual
-published host endpoint. Responses from a pre-existing listener are not
+Start/status verify both owned container listeners and the site's inspected
+publication at `/` and `/api/health`, including the JSON `{ok:true}` body. Responses from a pre-existing listener are not
 readiness evidence for this preview. Stop with `./preview.sh stop` after
 validation unless the user requested a running preview.
 
@@ -126,10 +136,10 @@ README edits require an explicit request.
 ### Required readiness and access summary
 
 Read and enforce the mandatory [preview console contract](preview-console.md).
-Probe both owned Housou and React listeners and their inspected host publications
+Probe both owned Housou and React listeners and the site's inspected publication
 before reporting readiness. Use its fixed sections and one complete URL per
 line for every entry; enumerate all eligible host addresses via `ip -br a`
-for wildcard publishing. `PREVIEW_LAN_HOST` adds a candidate and cannot replace
+for wildcard publishing. `LAN_HOST` adds a candidate and cannot replace
 enumeration. Hide transient failed polls in normal startup; `--verbose` makes
 them visible. Terminal failures remain nonzero with service-specific diagnostics.
 Physical-device and provider acceptance are not implied by readiness.
@@ -191,17 +201,18 @@ link/context/evidence/diff checks, not product tests or service startup.
 For browser tests needing disposable data and no private configuration, reuse:
 
 ```sh
-DX_EXTRA_PORTS=3000,5173 ./dx bash scripts/dev-react-preview.sh
+DX_EXTRA_PORTS=5173 ./dx bash scripts/dev-react-preview.sh
 ```
 
 This starts memory-backed Housou and React, clears provider/credential inputs,
-disables Bun/Vite env-file loading and sets the frontend API URL to loopback.
+disables Bun/Vite env-file loading and sets Vite's proxy target to container
+loopback. Browser requests still use the site origin and `/api`.
 It is a host-local browser fixture, not the LAN preview. Its default ports
 3000/5173 differ from the normal preview's configured ports; pass
-`DX_EXTRA_PORTS` explicitly so `dx` publishes the fixture listeners. Free-port overrides:
+`DX_EXTRA_PORTS` explicitly so `dx` publishes the frontend fixture listener. Free-port overrides:
 
 ```sh
-DX_EXTRA_PORTS=3100,5174 ./dx bash scripts/dev-react-preview.sh --backend-port 3100 --frontend-port 5174
+DX_EXTRA_PORTS=5174 ./dx bash scripts/dev-react-preview.sh --backend-port 3100 --frontend-port 5174
 ```
 
 Set corresponding Playwright frontend/API variables. Ctrl-C stops owned children.
@@ -220,7 +231,7 @@ environment, then `--origin`. Required empty values fail; optional empty
 provider/LAN/CORS values retain their documented meaning.
 
 The shell loader exports only declared runtime keys and the application's
-`HOUKAGO_*`, `PREVIEW_*`, `VITE_*` namespaces; arbitrary dotenv names cannot
+`HOUKAGO_*`, `BACKEND_*`, `FRONTEND_*`, internal `PREVIEW_*` and `VITE_*` namespaces plus `LAN_HOST`/`READY_TIMEOUT`; arbitrary dotenv names cannot
 replace orchestration variables or system `HOME`/`PATH`. Backend containers
 receive parsed backend values through key-only Docker `-e` arguments; Housou's
 package script also uses `bun --env-file=../../.env`, with process inputs
@@ -234,13 +245,13 @@ files as shell code or print private environment values.
 | Key | Requirement and value source |
 | --- | --- |
 | `HOUKAGO_BAIDU_CLIENT_ID`, `HOUKAGO_BAIDU_CLIENT_SECRET` | Only for real OAuth; obtain from the deployment's Baidu application |
-| `HOUKAGO_BAIDU_REDIRECT_URI` | Callback registered for that same application; example uses localhost |
+| `HOUKAGO_BAIDU_REDIRECT_URI` | Root-relative callback (example `/api/baidu/oauth/callback`) resolved from the validated public request origin; explicit HTTP(S) callback URLs are also accepted. The resulting full URL is pinned to OAuth state and must match the provider registration |
 | `HOUKAGO_CREDENTIAL_KEY` | Only for server-saved mode; separate base64-encoded 32-byte encryption key |
 | `HOUKAGO_CREDENTIAL_KEY_VERSION` | Positive key version; example defaults to 1 |
 | `HOUKAGO_KOMON_USERNAMES` | Optional normalized existing accounts granted site-wide access; never infer from registration order |
-| `HOUSOU_DB`, `PORT` | Optional backend path/port; defaults `houkago.db` and 3000; memory preview overrides them |
+| `HOUSOU_DB`, `BACKEND_PORT` | Optional backend path/port; defaults `houkago.db` and 3000; memory preview overrides them |
 | `HOUKAGO_CORS_ORIGIN` | Optional trusted frontend origin; `preview.sh --origin` supplies it; open development origins otherwise |
-| `VITE_HOUSOU_URL`, `VITE_HOUSOU_PORT` | Optional frontend API base/port; URL takes precedence, otherwise use browser hostname and the preview-supplied backend port (standalone fallback 3000) |
+| `HOUSOU_PROXY_TARGET` | Server-side Vite target; injected by normal preview using the owned network alias, or by the memory fixture using container loopback; standalone default `http://127.0.0.1:3000` |
 
 ### Required root preview configuration
 
@@ -257,12 +268,11 @@ The safe example also defines the following preview inputs:
 | --- | --- |
 | `DX_IMAGE` | Docker development image; `houkago-dev:playwright` |
 | `DX_BIND_HOST` | Host publication address; `0.0.0.0` for trusted LAN, `127.0.0.1` for host-only use |
-| `HOST`, `PORT` | Housou container listener; `0.0.0.0:9998` |
-| `PREVIEW_FRONTEND_HOST`, `PREVIEW_FRONTEND_PORT` | React Vite container listener; `0.0.0.0:9999` |
-| `PREVIEW_BACKEND_PORT` | Backend published host port; `9998` |
-| `PREVIEW_FRONTEND_PUBLISHED_PORT` | Frontend published host port; `9999` |
-| `PREVIEW_LAN_HOST` | Optional explicitly known LAN hostname/address; blank by default, device access remains unverified |
-| `PREVIEW_READY_TIMEOUT` | Bounded readiness wait in seconds; `60` |
+| `BACKEND_HOST`, `BACKEND_PORT` | Housou container listener; `0.0.0.0:8081` |
+| `FRONTEND_HOST`, `FRONTEND_PORT` | React Vite container listener; `0.0.0.0:8080` |
+| `FRONTEND_PUBLISHED_PORT` | Frontend published host port; `9999` |
+| `LAN_HOST` | Optional explicitly known LAN hostname/address; blank by default, device access remains unverified |
+| `READY_TIMEOUT` | Bounded readiness wait in seconds; `60` |
 | `HOUSOU_DB` | Persistent SQLite path relative to `packages/housou`; `houkago.db` |
 | `HOUKAGO_CORS_ORIGIN` | Optional exact trusted frontend origin; blank allows development origins and retains the restricted default outside development |
 

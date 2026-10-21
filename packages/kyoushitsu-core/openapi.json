@@ -26,7 +26,7 @@
   },
   "openapi": "3.1.2",
   "paths": {
-    "/health": {
+    "/api/health": {
       "get": {
         "operationId": "health",
         "tags": [
@@ -388,7 +388,7 @@
         }
       }
     },
-    "/site-config": {
+    "/api/site-config": {
       "get": {
         "operationId": "siteConfig",
         "tags": [
@@ -822,7 +822,7 @@
         }
       }
     },
-    "/eisha/danmaku/{ref}": {
+    "/api/eisha/danmaku/{ref}": {
       "get": {
         "operationId": "eishaDanmaku",
         "tags": [
@@ -1018,7 +1018,7 @@
         }
       }
     },
-    "/seitoshou/register": {
+    "/api/seitoshou/register": {
       "post": {
         "operationId": "identityRegister",
         "tags": [
@@ -1452,7 +1452,7 @@
         }
       }
     },
-    "/seitoshou/sign-in": {
+    "/api/seitoshou/sign-in": {
       "post": {
         "operationId": "identitySignIn",
         "tags": [
@@ -1886,7 +1886,7 @@
         }
       }
     },
-    "/seitoshou/sign-out": {
+    "/api/seitoshou/sign-out": {
       "post": {
         "operationId": "identitySignOut",
         "tags": [
@@ -2263,7 +2263,7 @@
         }
       }
     },
-    "/seitoshou/me": {
+    "/api/seitoshou/me": {
       "get": {
         "operationId": "identityMe",
         "tags": [
@@ -2645,7 +2645,7 @@
         }
       }
     },
-    "/baidu/status": {
+    "/api/baidu/status": {
       "get": {
         "operationId": "baiduStatus",
         "tags": [
@@ -3041,7 +3041,7 @@
         }
       }
     },
-    "/baidu/oauth/start": {
+    "/api/baidu/oauth/start": {
       "post": {
         "operationId": "baiduOAuthStart",
         "tags": [
@@ -3485,7 +3485,7 @@
         }
       }
     },
-    "/baidu/connection": {
+    "/api/baidu/connection": {
       "delete": {
         "operationId": "baiduConnectionDelete",
         "tags": [
@@ -3851,7 +3851,7 @@
         }
       }
     },
-    "/baidu/adaptor/pairing": {
+    "/api/baidu/adaptor/pairing": {
       "post": {
         "operationId": "baiduAdaptorPairing",
         "tags": [
@@ -4308,7 +4308,7 @@
         }
       }
     },
-    "/baidu/files/list": {
+    "/api/baidu/files/list": {
       "post": {
         "operationId": "baiduFilesList",
         "tags": [
@@ -4778,7 +4778,7 @@
         }
       }
     },
-    "/baidu/sources": {
+    "/api/baidu/sources": {
       "post": {
         "operationId": "baiduSourceCreate",
         "tags": [
@@ -5421,7 +5421,7 @@
         }
       }
     },
-    "/baidu/sources/{sourceId}/availability": {
+    "/api/baidu/sources/{sourceId}/availability": {
       "get": {
         "operationId": "baiduSourceAvailability",
         "tags": [
@@ -5830,7 +5830,7 @@
         }
       }
     },
-    "/baidu/sources/{sourceId}/grants": {
+    "/api/baidu/sources/{sourceId}/grants": {
       "post": {
         "operationId": "baiduPlaybackGrantCreate",
         "tags": [
@@ -6309,7 +6309,7 @@
         }
       }
     },
-    "/baidu/grants/{requestId}": {
+    "/api/baidu/grants/{requestId}": {
       "get": {
         "operationId": "baiduPlaybackGrantPoll",
         "tags": [
@@ -6738,7 +6738,7 @@
         }
       }
     },
-    "/bushitsu": {
+    "/api/bushitsu": {
       "post": {
         "operationId": "roomCreate",
         "tags": [
@@ -7158,7 +7158,7 @@
         }
       }
     },
-    "/bushitsu/{id}": {
+    "/api/bushitsu/{id}": {
       "get": {
         "operationId": "roomGet",
         "tags": [
@@ -7540,7 +7540,7 @@
         }
       }
     },
-    "/bushitsu/{id}/bangumi": {
+    "/api/bushitsu/{id}/bangumi": {
       "get": {
         "operationId": "roomBangumiGet",
         "tags": [
@@ -8087,7 +8087,7 @@
         }
       }
     },
-    "/bushitsu/{id}/enmoku/preview": {
+    "/api/bushitsu/{id}/enmoku/preview": {
       "post": {
         "operationId": "roomEnmokuPreview",
         "tags": [
@@ -8557,7 +8557,7 @@
         }
       }
     },
-    "/bushitsu/{id}/enmoku": {
+    "/api/bushitsu/{id}/enmoku": {
       "post": {
         "operationId": "roomEnmokuCreate",
         "tags": [
@@ -9671,7 +9671,7 @@
         }
       }
     },
-    "/bushitsu/{id}/enmoku/{enmokuId}": {
+    "/api/bushitsu/{id}/enmoku/{enmokuId}": {
       "delete": {
         "operationId": "roomEnmokuDelete",
         "tags": [
@@ -10055,7 +10055,7 @@
         }
       }
     },
-    "/bushitsu/{id}/bangumi/{enmokuId}/move": {
+    "/api/bushitsu/{id}/bangumi/{enmokuId}/move": {
       "post": {
         "operationId": "roomBangumiMove",
         "tags": [
@@ -10495,7 +10495,7 @@
         }
       }
     },
-    "/bushitsu/{id}/bangumi/pending": {
+    "/api/bushitsu/{id}/bangumi/pending": {
       "delete": {
         "operationId": "roomBangumiPendingClear",
         "tags": [
@@ -10876,7 +10876,7 @@
         }
       }
     },
-    "/bushitsu/{id}/meibo/{seitoId}": {
+    "/api/bushitsu/{id}/meibo/{seitoId}": {
       "delete": {
         "operationId": "roomMemberDelete",
         "tags": [
@@ -11260,7 +11260,7 @@
         }
       }
     },
-    "/danmaku/episodes": {
+    "/api/danmaku/episodes": {
       "get": {
         "operationId": "danmakuEpisodeSearch",
         "tags": [
@@ -12223,7 +12223,7 @@
         }
       }
     },
-    "/danmaku/matches": {
+    "/api/danmaku/matches": {
       "post": {
         "operationId": "danmakuMatchCreate",
         "tags": [
@@ -15405,7 +15405,7 @@
         }
       }
     },
-    "/danmaku/alignments": {
+    "/api/danmaku/alignments": {
       "post": {
         "operationId": "danmakuAlignmentCreate",
         "tags": [
@@ -15898,7 +15898,7 @@
         }
       }
     },
-    "/danmaku/policy": {
+    "/api/danmaku/policy": {
       "get": {
         "operationId": "danmakuPolicyGet",
         "tags": [
@@ -16807,7 +16807,7 @@
         }
       }
     },
-    "/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}": {
+    "/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}": {
       "get": {
         "operationId": "danmakuCandidatesResolve",
         "tags": [
@@ -18266,7 +18266,7 @@
         }
       }
     },
-    "/danmaku/candidates/{bushitsuId}/{enmokuId}": {
+    "/api/danmaku/candidates/{bushitsuId}/{enmokuId}": {
       "get": {
         "operationId": "danmakuCandidatesResolveLegacy",
         "tags": [
@@ -19725,7 +19725,7 @@
         }
       }
     },
-    "/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default": {
+    "/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default": {
       "post": {
         "operationId": "danmakuEnmokuDefaultCreate",
         "tags": [
@@ -21165,7 +21165,7 @@
         }
       }
     },
-    "/danmaku/defaults/{bushitsuId}/{enmokuId}": {
+    "/api/danmaku/defaults/{bushitsuId}/{enmokuId}": {
       "post": {
         "operationId": "danmakuDefaultCreate",
         "tags": [
@@ -22605,7 +22605,7 @@
         }
       }
     },
-    "/danmaku/bushitsu/{bushitsuId}/defaults": {
+    "/api/danmaku/bushitsu/{bushitsuId}/defaults": {
       "get": {
         "operationId": "danmakuRoomDefaultsGet",
         "tags": [
@@ -23039,7 +23039,7 @@
         }
       }
     },
-    "/danmaku/proposals": {
+    "/api/danmaku/proposals": {
       "post": {
         "operationId": "danmakuProposalCreate",
         "tags": [
@@ -25094,7 +25094,7 @@
         }
       }
     },
-    "/danmaku/proposals/{proposalId}/decision": {
+    "/api/danmaku/proposals/{proposalId}/decision": {
       "post": {
         "operationId": "danmakuProposalDecision",
         "tags": [
@@ -25812,7 +25812,7 @@
         }
       }
     },
-    "/danmaku/tracks/{trackId}/revisions/{revisionId}/disable": {
+    "/api/danmaku/tracks/{trackId}/revisions/{revisionId}/disable": {
       "post": {
         "operationId": "danmakuRevisionDisable",
         "tags": [
@@ -26298,7 +26298,7 @@
         }
       }
     },
-    "/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback": {
+    "/api/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback": {
       "post": {
         "operationId": "danmakuRevisionRollback",
         "tags": [
@@ -26769,7 +26769,7 @@
         }
       }
     },
-    "/danmaku/revisions/{revisionId}/pin": {
+    "/api/danmaku/revisions/{revisionId}/pin": {
       "post": {
         "operationId": "danmakuRevisionPin",
         "tags": [

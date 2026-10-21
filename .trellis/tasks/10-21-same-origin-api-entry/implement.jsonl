@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Unified API preview policy: index"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Unified API preview policy: development-principles"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Unified API preview policy: development"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Unified API preview policy: preview-console"}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Unified API preview policy: validation"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Unified API preview policy: continuity"}
+{"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Unified API preview policy: loading"}
+{"file": ".trellis/spec/frontend/http-contract-resources.md", "reason": "Same-origin API, generated paths and extension/media contracts"}
+{"file": ".trellis/spec/houkago-kyoushitsu-core/frontend/shared-core.md", "reason": "Shared browser API base ownership"}
+{"file": ".trellis/spec/backend/baidu-provider-contract.md", "reason": "Relative callback resolution and pinned OAuth exchange URI"}
+{"file": ".trellis/spec/trellis-plus/commit-policy.md", "reason": "Authorized work commit, archive attribution and journal closure"}

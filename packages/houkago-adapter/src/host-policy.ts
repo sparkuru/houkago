@@ -42,14 +42,23 @@ export function validatedServerBase(
   try {
     const server = new URL(value)
     const page = new URL(pageOrigin)
+    if (
+      !isHttpProtocol(server.protocol) ||
+      server.username ||
+      server.password ||
+      server.search ||
+      server.hash ||
+      (value !== `${server.origin}/api` && value !== `${server.origin}/api/`)
+    )
+      return null
     if (expectedPageOrigin || expectedServerOrigin) {
       if (!expectedPageOrigin || !expectedServerOrigin) return null
       if (!isAllowedPageOrigin(page.origin, expectedPageOrigin)) return null
       if (server.origin !== expectedServerOrigin) return null
-      return server.origin
+      return `${server.origin}/api`
     }
     if (!isHttpProtocol(page.protocol) || !isHttpProtocol(server.protocol)) return null
-    return server.origin
+    return `${server.origin}/api`
   } catch {
     return null
   }
@@ -61,7 +70,15 @@ export function isAllowedSentinelUrl(
 ): boolean {
   try {
     const url = new URL(value)
-    if (!isHttpProtocol(url.protocol)) return false
+    if (
+      !isHttpProtocol(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.hash ||
+      url.search ||
+      !/^\/api\/baidu\/media\/[^/]+$/.test(url.pathname)
+    )
+      return false
     if (expectedServerOrigin) return url.origin === expectedServerOrigin
     return true
   } catch {

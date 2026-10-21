@@ -22,7 +22,7 @@ main() {
 	case "${1:-}" in
 	housou) bun run dev:housou & ;;
 	kyoushitsu-react)
-		bun --no-env-file run --filter houkago-kyoushitsu-react dev --host "$PREVIEW_FRONTEND_HOST" --port "$PREVIEW_FRONTEND_PORT" --strictPort &
+		bun --no-env-file run --filter houkago-kyoushitsu-react dev --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort &
 		;;
 	*)
 		printf 'Error: expected housou or kyoushitsu-react\n' >&2

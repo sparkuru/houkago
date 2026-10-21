@@ -176,7 +176,7 @@ describe("React room runtime", () => {
       await host.runtime.delete(item.id)
       expect(requests).toHaveLength(2)
       expect(requests[0]?.method).toBe("DELETE")
-      expect(requests[0]?.url).toBe("https://housou.test/bushitsu/room-1/enmoku/item-1")
+      expect(requests[0]?.url).toBe("https://housou.test/api/bushitsu/room-1/enmoku/item-1")
       expect(host.runtime.getSnapshot().error).toBeNull()
     } finally {
       guest.runtime.dispose()

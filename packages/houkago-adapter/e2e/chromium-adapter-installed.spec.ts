@@ -113,18 +113,18 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
         response.end("ordinary")
         return
       }
-      if (request.url === "/baidu/media/g1") {
+      if (request.url === "/api/baidu/media/g1") {
         sentinelRequests += 1
         response.writeHead(428, { "content-type": "text/plain" })
         response.end("adapter required")
         return
       }
-      if (request.url === "/baidu/adaptor/pair" && request.method === "POST") {
+      if (request.url === "/api/baidu/adaptor/pair" && request.method === "POST") {
         response.writeHead(200, { "content-type": "application/json" })
         response.end(JSON.stringify({ adaptorToken: "controlled-adaptor-token" }))
         return
       }
-      if (request.url === "/baidu/adaptor/grants/g1" && request.method === "GET") {
+      if (request.url === "/api/baidu/adaptor/grants/g1" && request.method === "GET") {
         if (request.headers.authorization !== "Bearer controlled-adaptor-token") {
           response.writeHead(401).end()
           return
@@ -133,18 +133,18 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
         response.end(
           JSON.stringify({
             id: "controlled-grant",
-            sentinelUrl: `${origin}/baidu/media/g1`,
+            sentinelUrl: `${origin}/api/baidu/media/g1`,
             dlink,
             expiresAt: Date.now() + 120_000,
           }),
         )
         return
       }
-      if (request.url === "/baidu/adaptor/session" && request.method === "DELETE") {
+      if (request.url === "/api/baidu/adaptor/session" && request.method === "DELETE") {
         response.writeHead(204).end()
         return
       }
-      if (request.url === "/baidu/adaptor/heartbeat" && request.method === "POST") {
+      if (request.url === "/api/baidu/adaptor/heartbeat" && request.method === "POST") {
         response.writeHead(204).end()
         return
       }
@@ -224,12 +224,12 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
     })
 
     const pair = await adapterRequest(page, "PAIR", {
-      serverBase: pageOrigin,
+      serverBase: `${pageOrigin}/api`,
       pairingCode: "controlled-pairing-code",
     })
     expect(pair).toMatchObject({ source: "houkago-adapter", type: "RESULT", ok: true })
     const prepared = await adapterRequest(page, "BAIDU_MEDIA_PREPARE", {
-      grantUrl: `${pageOrigin}/baidu/media/g1`,
+      grantUrl: `${pageOrigin}/api/baidu/media/g1`,
       expiresAt: Date.now() + 60_000,
     })
     expect(prepared).toMatchObject({ source: "houkago-adapter", type: "RESULT", ok: true })
@@ -271,7 +271,7 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
           status: null,
         }
       }
-    }, `${pageOrigin}/baidu/media/g1`)
+    }, `${pageOrigin}/api/baidu/media/g1`)
     expect(
       adapted,
       `controlled media evidence: ${JSON.stringify(mediaRequests)}; TLS: ${JSON.stringify(transportErrors)}`,
@@ -297,7 +297,7 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
         cacheControl: response.headers.get("cache-control"),
         status: response.status,
       }
-    }, `${pageOrigin}/baidu/media/g1`)
+    }, `${pageOrigin}/api/baidu/media/g1`)
     expect(repeated).toEqual({ body: "test", cacheControl: "no-store", status: 206 })
     expect(mediaRequests).toHaveLength(3)
     expect(mediaRequests.at(-1)).toEqual({
@@ -312,7 +312,7 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
     await isolatedPage.goto(pageOrigin)
     const isolatedStatus = await isolatedPage.evaluate(async (sentinelUrl) => {
       return (await fetch(sentinelUrl)).status
-    }, `${pageOrigin}/baidu/media/g1`)
+    }, `${pageOrigin}/api/baidu/media/g1`)
     expect(isolatedStatus).toBe(428)
     expect(sentinelRequests).toBe(1)
 
@@ -336,7 +336,7 @@ test("installed Chromium applies the real content-script, worker, and DNR bounda
     ).toBe(0)
     const revokedStatus = await page.evaluate(async (sentinelUrl) => {
       return (await fetch(sentinelUrl)).status
-    }, `${pageOrigin}/baidu/media/g1`)
+    }, `${pageOrigin}/api/baidu/media/g1`)
     expect(revokedStatus).toBe(428)
     expect(sentinelRequests).toBe(2)
     expect(mediaRequests).toHaveLength(3)

@@ -6,10 +6,10 @@ import { fingerprintBaiduMedia } from "../src/media-fingerprint"
 test("fingerprint reads only a bounded sentinel prefix and labels the digest scope", async () => {
   let requestedRange = ""
   const fingerprint = await fingerprintBaiduMedia(
-    "https://houkago.example/baidu/media/grant-1",
+    "https://houkago.example/api/baidu/media/grant-1",
     5,
     async (input, init) => {
-      expect(String(input)).toBe("https://houkago.example/baidu/media/grant-1")
+      expect(String(input)).toBe("https://houkago.example/api/baidu/media/grant-1")
       requestedRange = new Headers(init?.headers).get("range") ?? ""
       return new Response("hello world")
     },
@@ -31,13 +31,13 @@ test("fingerprint rejects unbounded or non-web requests and failed media reads",
   )
   await expect(
     fingerprintBaiduMedia(
-      "https://houkago.example/baidu/media/grant-2",
+      "https://houkago.example/api/baidu/media/grant-2",
       BAIDU_MEDIA_FINGERPRINT_MAX_BYTES + 1,
     ),
   ).rejects.toThrow("media fingerprint range is invalid")
   await expect(
     fingerprintBaiduMedia(
-      "https://houkago.example/baidu/media/grant-3",
+      "https://houkago.example/api/baidu/media/grant-3",
       10,
       async () => new Response("denied", { status: 403 }),
     ),

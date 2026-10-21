@@ -11,7 +11,7 @@ const registryKey = "baidu.chromium-grants.v1"
 const grant = {
   id: "grant-1",
   tabId: 7,
-  sentinelUrl: "https://houkago.example/baidu/media/capability",
+  sentinelUrl: "https://houkago.example/api/baidu/media/capability",
   dlink: "https://d.pcs.baidu.com/file?cap=1",
   expiresAt: 10_000,
 }
@@ -97,7 +97,7 @@ test("duplicate grant identities and foreign session rules cannot become Houkago
   const secondGrant = {
     ...grant,
     id: "grant-2",
-    sentinelUrl: "https://houkago.example/baidu/media/second",
+    sentinelUrl: "https://houkago.example/api/baidu/media/second",
     dlink: "https://d.pcs.baidu.com/file?cap=2",
   }
   const secondIds = await port.install(secondGrant, 1_000)
@@ -281,7 +281,7 @@ test("concurrent installs reserve distinct rule pairs and restart-safe revoke is
       {
         ...grant,
         id: "grant-2",
-        sentinelUrl: "https://houkago.example/baidu/media/second",
+        sentinelUrl: "https://houkago.example/api/baidu/media/second",
         dlink: "https://d.pcs.baidu.com/file?cap=2",
       },
       1_000,

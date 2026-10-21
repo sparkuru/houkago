@@ -65,9 +65,8 @@ export class KousokuClient {
     const params = this.connectParams
     if (!params) return
     this.onStatus("connecting")
-    const url = new URL(this.baseUrl)
+    const url = new URL(`${this.baseUrl.replace(/\/+$/, "")}/ws`)
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
-    url.pathname = "/ws"
     url.searchParams.set("bushitsuId", params.bushitsuId)
 
     const ws = new WebSocket(url)

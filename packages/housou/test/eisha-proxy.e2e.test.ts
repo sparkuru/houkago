@@ -50,7 +50,7 @@ const upstream = new Elysia()
 beforeAll(() => {
   app.listen(0)
   upstream.listen(0)
-  base = `http://localhost:${app.server?.port}`
+  base = `http://localhost:${app.server?.port}/api`
   upstreamBase = `http://localhost:${upstream.server?.port}`
 })
 

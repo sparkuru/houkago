@@ -31,8 +31,8 @@ beforeAll(async () => {
   upstreamBase = `http://localhost:${upstream.server?.port}`
 
   app.listen(0)
-  base = `http://localhost:${app.server?.port}`
-  baseWs = `ws://localhost:${app.server?.port}/ws`
+  base = `http://localhost:${app.server?.port}/api`
+  baseWs = `ws://localhost:${app.server?.port}/api/ws`
   const registered = await originalFetch(`${base}/seitoshou/register`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: "http://127.0.0.1:5173" },
@@ -47,7 +47,7 @@ beforeAll(async () => {
     headers.set("origin", "http://127.0.0.1:5173")
     headers.set("cookie", authCookie)
     const response = await originalFetch(input, { ...init, headers })
-    if (new URL(url).pathname === "/bushitsu" && init?.method === "POST" && response.ok) {
+    if (new URL(url).pathname === "/api/bushitsu" && init?.method === "POST" && response.ok) {
       const room = (await response.clone().json()) as { id: string }
       await admit(room.id)
     }
@@ -271,7 +271,7 @@ test("add enmoku from sourceUrl resolves through the eisha proxy", async () => {
   expect(enmoku.title).toBe("resolved")
   expect(enmoku.type).toBe("direct")
   expect(enmoku.headers).toBeUndefined()
-  expect(enmoku.url.startsWith(`${base}/eisha/proxy/`)).toBe(true)
+  expect(enmoku.url.startsWith("/api/eisha/proxy/")).toBe(true)
   expect(decodeProxyRef(enmoku.url.split("/eisha/proxy/")[1] ?? "")).toEqual({
     url: "https://media.example.test/video.mp4",
   })
@@ -390,7 +390,7 @@ test("add enmoku from Bilibili sourceUrl persists parser metadata", async () => 
     expect(enmoku.provider).toEqual({
       kind: "bilibili",
       url: "https://www.bilibili.com/video/BV1xx411c7mD/",
-      coverUrl: expect.stringContaining(`${base}/eisha/proxy/`),
+      coverUrl: expect.stringContaining("/api/eisha/proxy/"),
       ownerName: "Bili UP",
       stats: { view: 1000, danmaku: 10, reply: 20, coin: 30, like: 40 },
     })

@@ -51,9 +51,11 @@ its pure tests together rather than retaining two production copies.
 | `src/playback`, `src/media` | Player port, server-authoritative sync/clock/drift and source/subtitle/seek metadata |
 | `src/provider`, `src/danmaku` | Adapter/OAuth/grant helpers and local file/selection/preference/timeline behavior |
 
-The Housou URL uses explicit `VITE_HOUSOU_URL` first, otherwise browser hostname
-with `VITE_HOUSOU_PORT` and the standalone fallback port 3000. Preserve preview
-port configuration when relocating client code. Core reads public browser
+The Housou URL helper returns the current browser origin plus `/api`,
+preserving scheme, IPv6 syntax and the actual site port. Generated HTTP
+operations own their `/api` prefix and use an origin-only transport base.
+WS and extension callers use the path-bearing API base and preserve it when
+joining endpoints. Separate browser backend URL/port overrides are retired. Core reads public browser
 configuration only; never put backend secrets into frontend inputs or logs.
 
 ### Presence and permissions

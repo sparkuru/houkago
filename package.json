@@ -4,8 +4,8 @@
   "workspaces": ["packages/*"],
   "config": {
     "ports": {
-      "backend": 9998,
-      "frontend": 9999
+      "backend": 8081,
+      "frontend": 8080
     }
   },
   "scripts": {

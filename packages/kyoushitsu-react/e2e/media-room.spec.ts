@@ -8,7 +8,9 @@ import {
   revealPlayerControl,
 } from "./helpers/player-controls"
 
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const mediaOrigin = "https://media.example.test/m5"
 
 const mediaTypes: Record<string, string> = {
@@ -132,6 +134,38 @@ test("local MP4, HLS and DASH fixtures play in the React room", async ({ page })
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     .toBe(true)
+})
+
+test("resolved media keeps a site-relative API URL through queue echo and playback", async ({
+  page,
+}) => {
+  await page.route("**/api/eisha/proxy/*", (route) =>
+    route.fulfill({
+      contentType: "video/mp4",
+      path: fileURLToPath(new URL("./fixtures/media/clip.mp4", import.meta.url)),
+    }),
+  )
+  const roomId = await createAdmittedRoom(page)
+  const response = await page.context().request.post(`${housouUrl}/bushitsu/${roomId}/enmoku`, {
+    headers: { origin: new URL(page.url()).origin },
+    data: { sourceUrl: `${mediaOrigin}/clip.mp4`, title: "Resolved API fixture" },
+  })
+  expect(response.status()).toBe(200)
+  const item: { url: string } = await response.json()
+  expect(item.url).toMatch(/^\/api\/eisha\/proxy\/[A-Za-z0-9_-]+$/)
+  const row = page.getByRole("listitem").filter({ hasText: "Resolved API fixture" })
+  await row.getByRole("button", { name: "设为当前" }).click()
+  const video = page.locator(".player-screen video")
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.readyState))
+    .toBeGreaterThanOrEqual(2)
+  expect(await video.evaluate((element: HTMLVideoElement) => element.currentSrc)).toBe(
+    `${new URL(page.url()).origin}${item.url}`,
+  )
+  await page.locator(".player-controls").getByRole("button", { name: "播放", exact: true }).click()
+  await expect
+    .poll(() => video.evaluate((element: HTMLVideoElement) => element.currentTime))
+    .toBeGreaterThan(0)
 })
 
 test("source, subtitle, seek, rate, cinema and fullscreen controls stay in the player", async ({

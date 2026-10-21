@@ -17,6 +17,26 @@ export function baiduConfig(env: NodeJS.ProcessEnv = process.env): HoukagoBaiduC
   return { oauth, credentialKey, keyVersion }
 }
 
+export function resolveBaiduRedirectUri(value: string, siteUrl?: string): string | undefined {
+  if (/[\s\\]/.test(value) || value.startsWith("//")) return undefined
+  try {
+    const url = value.startsWith("/")
+      ? new URL(value, new URL(siteUrl ?? "").origin)
+      : new URL(value)
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    )
+      return undefined
+    return url.toString()
+  } catch {
+    return undefined
+  }
+}
+
 function decodeCredentialKey(value: string | undefined): Uint8Array | undefined {
   if (!value) return undefined
   try {

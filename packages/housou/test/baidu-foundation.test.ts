@@ -96,7 +96,7 @@ test("revoking one Baidu connection clears only that user's transient authorizat
 
   process.env.HOUKAGO_BAIDU_CLIENT_ID = "client-id"
   process.env.HOUKAGO_BAIDU_CLIENT_SECRET = "client-secret"
-  process.env.HOUKAGO_BAIDU_REDIRECT_URI = "http://localhost/baidu/oauth/callback"
+  process.env.HOUKAGO_BAIDU_REDIRECT_URI = "http://localhost/api/baidu/oauth/callback"
   const originalFetch = globalThis.fetch
   globalThis.fetch = async (input) => {
     const url = new URL(

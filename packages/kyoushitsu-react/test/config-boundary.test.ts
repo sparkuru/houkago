@@ -46,7 +46,7 @@ for (const response of [
       if (!(error instanceof HoukagoHttpError)) throw error
       expect(error.code).toBe("EMPTY_RESPONSE")
       expect(error.response?.status).toBe(error.status)
-      expect(error.request?.url).toBe("http://fixture.test/site-config")
+      expect(error.request?.url).toBe("http://fixture.test/api/site-config")
     }
     const warnings: string[] = []
     const load = loader(warnings)

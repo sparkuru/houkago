@@ -19,8 +19,8 @@ let stopTenko: () => void
 beforeAll(() => {
   app.listen(0)
   const port = app.server?.port
-  baseHttp = `http://localhost:${port}`
-  baseWs = `ws://localhost:${port}/ws`
+  baseHttp = `http://localhost:${port}/api`
+  baseWs = `ws://localhost:${port}/api/ws`
   stopTenko = startTenko(app, 100)
 })
 

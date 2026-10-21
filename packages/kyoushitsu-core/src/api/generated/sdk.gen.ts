@@ -18,14 +18,14 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
 
-export const health = <ThrowOnError extends boolean = false>(options?: Options<HealthData, ThrowOnError>): RequestResult<HealthResponses, HealthErrors, ThrowOnError> => (options?.client ?? client).get<HealthResponses, HealthErrors, ThrowOnError>({ url: '/health', ...options });
+export const health = <ThrowOnError extends boolean = false>(options?: Options<HealthData, ThrowOnError>): RequestResult<HealthResponses, HealthErrors, ThrowOnError> => (options?.client ?? client).get<HealthResponses, HealthErrors, ThrowOnError>({ url: '/api/health', ...options });
 
-export const siteConfig = <ThrowOnError extends boolean = false>(options?: Options<SiteConfigData, ThrowOnError>): RequestResult<SiteConfigResponses, SiteConfigErrors, ThrowOnError> => (options?.client ?? client).get<SiteConfigResponses, SiteConfigErrors, ThrowOnError>({ url: '/site-config', ...options });
+export const siteConfig = <ThrowOnError extends boolean = false>(options?: Options<SiteConfigData, ThrowOnError>): RequestResult<SiteConfigResponses, SiteConfigErrors, ThrowOnError> => (options?.client ?? client).get<SiteConfigResponses, SiteConfigErrors, ThrowOnError>({ url: '/api/site-config', ...options });
 
-export const eishaDanmaku = <ThrowOnError extends boolean = false>(options: Options<EishaDanmakuData, ThrowOnError>): RequestResult<EishaDanmakuResponses, EishaDanmakuErrors, ThrowOnError> => (options.client ?? client).get<EishaDanmakuResponses, EishaDanmakuErrors, ThrowOnError>({ url: '/eisha/danmaku/{ref}', ...options });
+export const eishaDanmaku = <ThrowOnError extends boolean = false>(options: Options<EishaDanmakuData, ThrowOnError>): RequestResult<EishaDanmakuResponses, EishaDanmakuErrors, ThrowOnError> => (options.client ?? client).get<EishaDanmakuResponses, EishaDanmakuErrors, ThrowOnError>({ url: '/api/eisha/danmaku/{ref}', ...options });
 
 export const identityRegister = <ThrowOnError extends boolean = false>(options: Options<IdentityRegisterData, ThrowOnError>): RequestResult<IdentityRegisterResponses, IdentityRegisterErrors, ThrowOnError> => (options.client ?? client).post<IdentityRegisterResponses, IdentityRegisterErrors, ThrowOnError>({
-    url: '/seitoshou/register',
+    url: '/api/seitoshou/register',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ export const identityRegister = <ThrowOnError extends boolean = false>(options: 
 });
 
 export const identitySignIn = <ThrowOnError extends boolean = false>(options: Options<IdentitySignInData, ThrowOnError>): RequestResult<IdentitySignInResponses, IdentitySignInErrors, ThrowOnError> => (options.client ?? client).post<IdentitySignInResponses, IdentitySignInErrors, ThrowOnError>({
-    url: '/seitoshou/sign-in',
+    url: '/api/seitoshou/sign-in',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export const identitySignOut = <ThrowOnError extends boolean = false>(options?: 
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/seitoshou/sign-out',
+    url: '/api/seitoshou/sign-out',
     ...options
 });
 
@@ -58,7 +58,7 @@ export const identityMe = <ThrowOnError extends boolean = false>(options?: Optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/seitoshou/me',
+    url: '/api/seitoshou/me',
     ...options
 });
 
@@ -68,7 +68,7 @@ export const baiduStatus = <ThrowOnError extends boolean = false>(options?: Opti
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/status',
+    url: '/api/baidu/status',
     ...options
 });
 
@@ -78,7 +78,7 @@ export const baiduOAuthStart = <ThrowOnError extends boolean = false>(options: O
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/oauth/start',
+    url: '/api/baidu/oauth/start',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export const baiduConnectionDelete = <ThrowOnError extends boolean = false>(opti
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/connection',
+    url: '/api/baidu/connection',
     ...options
 });
 
@@ -102,7 +102,7 @@ export const baiduAdaptorPairing = <ThrowOnError extends boolean = false>(option
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/adaptor/pairing',
+    url: '/api/baidu/adaptor/pairing',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export const baiduFilesList = <ThrowOnError extends boolean = false>(options: Op
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/files/list',
+    url: '/api/baidu/files/list',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export const baiduSourceCreate = <ThrowOnError extends boolean = false>(options:
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/sources',
+    url: '/api/baidu/sources',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export const baiduSourceAvailability = <ThrowOnError extends boolean = false>(op
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/sources/{sourceId}/availability',
+    url: '/api/baidu/sources/{sourceId}/availability',
     ...options
 });
 
@@ -154,7 +154,7 @@ export const baiduPlaybackGrantCreate = <ThrowOnError extends boolean = false>(o
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/sources/{sourceId}/grants',
+    url: '/api/baidu/sources/{sourceId}/grants',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export const baiduPlaybackGrantPoll = <ThrowOnError extends boolean = false>(opt
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/baidu/grants/{requestId}',
+    url: '/api/baidu/grants/{requestId}',
     ...options
 });
 
@@ -178,7 +178,7 @@ export const roomCreate = <ThrowOnError extends boolean = false>(options: Option
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu',
+    url: '/api/bushitsu',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -186,9 +186,9 @@ export const roomCreate = <ThrowOnError extends boolean = false>(options: Option
     }
 });
 
-export const roomGet = <ThrowOnError extends boolean = false>(options: Options<RoomGetData, ThrowOnError>): RequestResult<RoomGetResponses, RoomGetErrors, ThrowOnError> => (options.client ?? client).get<RoomGetResponses, RoomGetErrors, ThrowOnError>({ url: '/bushitsu/{id}', ...options });
+export const roomGet = <ThrowOnError extends boolean = false>(options: Options<RoomGetData, ThrowOnError>): RequestResult<RoomGetResponses, RoomGetErrors, ThrowOnError> => (options.client ?? client).get<RoomGetResponses, RoomGetErrors, ThrowOnError>({ url: '/api/bushitsu/{id}', ...options });
 
-export const roomBangumiGet = <ThrowOnError extends boolean = false>(options: Options<RoomBangumiGetData, ThrowOnError>): RequestResult<RoomBangumiGetResponses, RoomBangumiGetErrors, ThrowOnError> => (options.client ?? client).get<RoomBangumiGetResponses, RoomBangumiGetErrors, ThrowOnError>({ url: '/bushitsu/{id}/bangumi', ...options });
+export const roomBangumiGet = <ThrowOnError extends boolean = false>(options: Options<RoomBangumiGetData, ThrowOnError>): RequestResult<RoomBangumiGetResponses, RoomBangumiGetErrors, ThrowOnError> => (options.client ?? client).get<RoomBangumiGetResponses, RoomBangumiGetErrors, ThrowOnError>({ url: '/api/bushitsu/{id}/bangumi', ...options });
 
 export const roomEnmokuPreview = <ThrowOnError extends boolean = false>(options: Options<RoomEnmokuPreviewData, ThrowOnError>): RequestResult<RoomEnmokuPreviewResponses, RoomEnmokuPreviewErrors, ThrowOnError> => (options.client ?? client).post<RoomEnmokuPreviewResponses, RoomEnmokuPreviewErrors, ThrowOnError>({
     security: [{
@@ -196,7 +196,7 @@ export const roomEnmokuPreview = <ThrowOnError extends boolean = false>(options:
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/enmoku/preview',
+    url: '/api/bushitsu/{id}/enmoku/preview',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ export const roomEnmokuCreate = <ThrowOnError extends boolean = false>(options: 
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/enmoku',
+    url: '/api/bushitsu/{id}/enmoku',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -224,7 +224,7 @@ export const roomEnmokuDelete = <ThrowOnError extends boolean = false>(options: 
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/enmoku/{enmokuId}',
+    url: '/api/bushitsu/{id}/enmoku/{enmokuId}',
     ...options
 });
 
@@ -234,7 +234,7 @@ export const roomBangumiMove = <ThrowOnError extends boolean = false>(options: O
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/bangumi/{enmokuId}/move',
+    url: '/api/bushitsu/{id}/bangumi/{enmokuId}/move',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export const roomBangumiPendingClear = <ThrowOnError extends boolean = false>(op
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/bangumi/pending',
+    url: '/api/bushitsu/{id}/bangumi/pending',
     ...options
 });
 
@@ -258,7 +258,7 @@ export const roomMemberDelete = <ThrowOnError extends boolean = false>(options: 
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/bushitsu/{id}/meibo/{seitoId}',
+    url: '/api/bushitsu/{id}/meibo/{seitoId}',
     ...options
 });
 
@@ -268,7 +268,7 @@ export const danmakuEpisodeSearch = <ThrowOnError extends boolean = false>(optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/episodes',
+    url: '/api/danmaku/episodes',
     ...options
 });
 
@@ -278,7 +278,7 @@ export const danmakuEpisodeCreate = <ThrowOnError extends boolean = false>(optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/episodes',
+    url: '/api/danmaku/episodes',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ export const danmakuMatchCreate = <ThrowOnError extends boolean = false>(options
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/matches',
+    url: '/api/danmaku/matches',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -306,7 +306,7 @@ export const danmakuAlignmentCreate = <ThrowOnError extends boolean = false>(opt
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/alignments',
+    url: '/api/danmaku/alignments',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -320,7 +320,7 @@ export const danmakuPolicyGet = <ThrowOnError extends boolean = false>(options?:
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/policy',
+    url: '/api/danmaku/policy',
     ...options
 });
 
@@ -330,7 +330,7 @@ export const danmakuPolicyUpdate = <ThrowOnError extends boolean = false>(option
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/policy',
+    url: '/api/danmaku/policy',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -344,7 +344,7 @@ export const danmakuCandidatesResolve = <ThrowOnError extends boolean = false>(o
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}',
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}',
     ...options
 });
 
@@ -354,7 +354,7 @@ export const danmakuCandidatesResolveLegacy = <ThrowOnError extends boolean = fa
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/candidates/{bushitsuId}/{enmokuId}',
+    url: '/api/danmaku/candidates/{bushitsuId}/{enmokuId}',
     ...options
 });
 
@@ -364,7 +364,7 @@ export const danmakuEnmokuDefaultDelete = <ThrowOnError extends boolean = false>
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
     ...options
 });
 
@@ -374,7 +374,7 @@ export const danmakuEnmokuDefaultCreate = <ThrowOnError extends boolean = false>
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -388,7 +388,7 @@ export const danmakuEnmokuDefaultUpdate = <ThrowOnError extends boolean = false>
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
+    url: '/api/danmaku/bushitsu/{bushitsuId}/enmoku/{enmokuId}/default',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -402,7 +402,7 @@ export const danmakuDefaultDelete = <ThrowOnError extends boolean = false>(optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}',
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}',
     ...options
 });
 
@@ -412,7 +412,7 @@ export const danmakuDefaultCreate = <ThrowOnError extends boolean = false>(optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}',
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -426,7 +426,7 @@ export const danmakuDefaultUpdate = <ThrowOnError extends boolean = false>(optio
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/defaults/{bushitsuId}/{enmokuId}',
+    url: '/api/danmaku/defaults/{bushitsuId}/{enmokuId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -440,7 +440,7 @@ export const danmakuRoomDefaultsGet = <ThrowOnError extends boolean = false>(opt
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/bushitsu/{bushitsuId}/defaults',
+    url: '/api/danmaku/bushitsu/{bushitsuId}/defaults',
     ...options
 });
 
@@ -450,7 +450,7 @@ export const danmakuProposalList = <ThrowOnError extends boolean = false>(option
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/proposals',
+    url: '/api/danmaku/proposals',
     ...options
 });
 
@@ -460,7 +460,7 @@ export const danmakuProposalCreate = <ThrowOnError extends boolean = false>(opti
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/proposals',
+    url: '/api/danmaku/proposals',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -474,7 +474,7 @@ export const danmakuProposalDecision = <ThrowOnError extends boolean = false>(op
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/proposals/{proposalId}/decision',
+    url: '/api/danmaku/proposals/{proposalId}/decision',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -488,7 +488,7 @@ export const danmakuRevisionDisable = <ThrowOnError extends boolean = false>(opt
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/tracks/{trackId}/revisions/{revisionId}/disable',
+    url: '/api/danmaku/tracks/{trackId}/revisions/{revisionId}/disable',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -502,7 +502,7 @@ export const danmakuRevisionRollback = <ThrowOnError extends boolean = false>(op
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback',
+    url: '/api/danmaku/tracks/{trackId}/revisions/{revisionId}/rollback',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -516,7 +516,7 @@ export const danmakuRevisionPin = <ThrowOnError extends boolean = false>(options
             name: 'houkago_seitoshou',
             type: 'apiKey'
         }],
-    url: '/danmaku/revisions/{revisionId}/pin',
+    url: '/api/danmaku/revisions/{revisionId}/pin',
     ...options,
     headers: {
         'Content-Type': 'application/json',

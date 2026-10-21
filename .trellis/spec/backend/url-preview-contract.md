@@ -14,6 +14,9 @@
 
 ### 2. Signatures
 
+Endpoint paths below are relative to the application `/api` mount. Browser
+requests use the site origin; the development backend has no host publication.
+
 ```text
 POST /bushitsu/:id/enmoku/preview
 body: { sourceUrl: string, title?: string }

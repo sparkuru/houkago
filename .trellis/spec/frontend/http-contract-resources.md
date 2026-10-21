@@ -198,3 +198,80 @@ return fetchIdentityMe({ signal })
 Wrong: manually edit generated DTOs or derive live playback from cached queue.
 Correct: update canonical schemas and route metadata, regenerate the SDK, and
 read live playback/queue through room-session selectors.
+
+## Scenario: one public development entry under `/api`
+
+### 1. Scope / Trigger
+
+Applies to Housou routes, generated SDK paths, browser/extension URL joining,
+returned media URLs and the Docker development preview. Production hosting
+and automatic conversion of persisted historical URLs are outside this contract.
+
+### 2. Signatures
+
+- Housou mounts application endpoints at `/api/...`, including `/api/health`,
+  `/api/ws`, `/api/eisha/...`, `/api/baidu/...` and opt-in `/api/openapi/json`.
+- `housouUrl(): string` returns `${location.origin}/api`.
+- Generated SDK paths include `/api`; the HTTP transport base is an origin.
+- `validatedServerBase(value, pageOrigin, expectedPageOrigin?, expectedServerOrigin?)`
+  returns a canonical `origin/api` or null. Origin settings remain origins.
+- `HOUSOU_PROXY_TARGET` is a Vite-server-only upstream, injected by `dx` using
+  the owned `housou` network alias; it is never a browser API override.
+
+### 3. Contracts
+
+Only the site port is published. Vite proxies the exact `/api` boundary,
+preserving Host and Origin and enabling WS upgrades, without stripping the
+prefix or rewriting JSON bodies. `/apix` remains a page path. The backend
+keeps cookie flags, Origin checks and bearer/room authority.
+
+WS appends `ws` to the path-bearing base and converts HTTPS to WSS. Extension
+pairing accepts only `/api` or `/api/`, rejects credentials/query/hash/path
+escapes, and stores canonical `origin/api`. Origin trust checks compare origins
+separately from API bases. Old origin-only stored pairings are unpaired until
+explicit pairing; they cannot trigger polling of a retired endpoint. Sentinel
+and grant parsing require `/api/baidu/media/:id` and the paired origin.
+
+New server-resolved queue URLs, variants, subtitles and covers use site-relative
+`/api/eisha/...` paths, so another client's hostname does not become authority.
+HLS/DASH response references preserve `/api` using the current request Host.
+Viewer-scoped Baidu grants use that viewer's public origin and `/api` path.
+Direct external media URLs retain their existing handling.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+| --- | --- |
+| `/api/missing` | JSON `NOT_FOUND`, HTTP 404, never SPA HTML |
+| Website healthy but `/api/health` is HTML/unavailable | Readiness fails without a ready banner |
+| Backend has a host publication in the unified topology | Probe rejects; explicit stop/start required |
+| Retired preview backend-port/browser-base keys | Warn by key name, ignore, preserve `.env` contents |
+| Old extension pairing or malformed API base | Unpaired or rejected, without issuing private requests |
+| Foreign network labels or attached unrelated containers | Refuse network deletion |
+
+### 5. Good / Base / Bad Cases
+
+Good: `http://LAN:9999/api/ws` and site-relative queue URLs work alongside
+`http://localhost:9999` users. Base: changing listener/host ports changes only
+preview configuration. Bad: assigning `url.pathname = "/ws"`, supplying a
+path-bearing base to already-prefixed generated paths, or rewriting every
+external URL whose pathname resembles an application route.
+
+### 6. Tests Required
+
+Core URL tests cover HTTP/HTTPS, custom ports and IPv6; reconnect tests retain
+the API pathname and exclude identity query fields. Backend tests cover the
+prefix, absent legacy routes and JSON errors. Contract export still classifies
+all operations and regenerates deterministically. Extension tests cover API
+base rejection, pairing, grant ownership and installed Chromium DNR cleanup.
+Run real-cookie and media desktop/phone cases through the single public entry.
+Preview fixtures cover public API JSON health, owned network lifecycle and
+obsolete config; real Docker checks cover two port pairs, dynamic publication,
+Range/HLS/DASH, backend failure and persistent-data retention.
+
+### 7. Wrong vs Correct
+
+Wrong: derive a separate browser backend port or save a first visitor's
+localhost origin in a queue URL. Correct: resolve browser API traffic from
+the current site, keep generated paths prefixed once, and persist new resolved
+media paths as `/api/eisha/...`.

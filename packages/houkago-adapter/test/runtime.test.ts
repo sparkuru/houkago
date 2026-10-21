@@ -11,13 +11,20 @@ test("development runtime accepts HTTP and HTTPS LAN origins but rejects non-web
   const requestedOrigins: string[] = []
   const originalFetch = globalThis.fetch
   const fetcher: BaiduFetcher = async (input) => {
-    expect(String(input)).toBe("http://media-box.local:3000/baidu/adaptor/pair")
+    expect(String(input)).toBe("http://media-box.local:3000/api/baidu/adaptor/pair")
     return Response.json({ adaptorToken: "lan-pair-token" })
   }
   globalThis.fetch = Object.assign(fetcher, { preconnect() {} })
   const runtime = createAdapterRuntime({
     browser: "firefox",
-    storage: memoryStorage(new Map()),
+    storage: memoryStorage(
+      new Map([
+        [
+          "adapter.pairing",
+          { serverBase: "http://media-box.local:3000", adaptorToken: "old-token" },
+        ],
+      ]),
+    ),
     async requestServerOrigin(pattern) {
       requestedOrigins.push(pattern)
       return true
@@ -37,6 +44,7 @@ test("development runtime accepts HTTP and HTTPS LAN origins but rejects non-web
       1,
     )
     expect(JSON.stringify(httpHello)).toContain('"type":"HELLO"')
+    expect(JSON.stringify(httpHello)).toContain('"reason":"not-paired"')
     const httpsHello = await runtime.handle(
       request("HELLO", {}),
       "https://houkago-lan.local:8443/room/1",
@@ -45,7 +53,7 @@ test("development runtime accepts HTTP and HTTPS LAN origins but rejects non-web
     expect(JSON.stringify(httpsHello)).toContain('"type":"HELLO"')
     const paired = await runtime.handle(
       request("PAIR", {
-        serverBase: "http://media-box.local:3000",
+        serverBase: "http://media-box.local:3000/api",
         pairingCode: "pairing-code-1234",
       }),
       "http://192.168.50.20:5173/room/1",
@@ -78,13 +86,14 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
   const fetcher: BaiduFetcher = async (input, init) => {
     const url = new URL(String(input))
     serverRequests.push(`${init?.method ?? "GET"} ${url.pathname}`)
-    if (url.pathname === "/baidu/adaptor/pair") return Response.json({ adaptorToken: "pair-token" })
-    if (url.pathname === "/baidu/adaptor/session" && init?.method === "DELETE") {
+    if (url.pathname === "/api/baidu/adaptor/pair")
+      return Response.json({ adaptorToken: "pair-token" })
+    if (url.pathname === "/api/baidu/adaptor/session" && init?.method === "DELETE") {
       return Response.json({ error: "already revoked" }, { status: 401 })
     }
     const authorization = new Headers(init?.headers).get("authorization")
     if (url.hostname === "houkago.example") expect(authorization).toBe("Bearer pair-token")
-    if (url.pathname === "/baidu/adaptor/oauth/handoff") {
+    if (url.pathname === "/api/baidu/adaptor/oauth/handoff") {
       return Response.json({
         accessToken: "access-secret",
         refreshToken: "refresh-secret",
@@ -106,15 +115,15 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
         ],
       })
     }
-    if (url.pathname === "/baidu/adaptor/grants/g1") {
+    if (url.pathname === "/api/baidu/adaptor/grants/g1") {
       return Response.json({
         id: "g1",
-        sentinelUrl: "https://houkago.example/baidu/media/g1",
+        sentinelUrl: "https://houkago.example/api/baidu/media/g1",
         dlink: "https://cdn.baidupcs.com/final?cap=viewer",
         expiresAt: Date.now() + 60_000,
       })
     }
-    if (url.pathname === "/baidu/adaptor/dlink-requests") {
+    if (url.pathname === "/api/baidu/adaptor/dlink-requests") {
       return Response.json([
         {
           requestId: "request-failed-1",
@@ -132,7 +141,7 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
         },
       ])
     }
-    if (url.pathname === "/baidu/adaptor/dlink-responses" && init?.body) {
+    if (url.pathname === "/api/baidu/adaptor/dlink-responses" && init?.body) {
       dlinkResponses.push(JSON.parse(String(init.body)) as unknown)
     }
     return Response.json({ ok: true })
@@ -170,7 +179,7 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
   try {
     await runtime.handle(
       request("PAIR", {
-        serverBase: "https://houkago.example",
+        serverBase: "https://houkago.example/api",
         pairingCode: "pairing-code-1234",
       }),
       pageUrl,
@@ -178,8 +187,8 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
     )
     expect(grantsRevoked).toBe(1)
     await runtime.poll()
-    expect(serverRequests).toContain("POST /baidu/adaptor/heartbeat")
-    expect(serverRequests).not.toContain("GET /baidu/adaptor/dlink-requests")
+    expect(serverRequests).toContain("POST /api/baidu/adaptor/heartbeat")
+    expect(serverRequests).not.toContain("GET /api/baidu/adaptor/dlink-requests")
     const wrongPortHello = await runtime.handle(
       request("HELLO", {}),
       "https://houkago.example:444/room/room-1",
@@ -201,7 +210,7 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
     expect(JSON.stringify(hello)).not.toContain('"ready":false')
 
     const handoff = await runtime.handle(
-      request("OAUTH_HANDOFF", { serverBase: "https://houkago.example" }),
+      request("OAUTH_HANDOFF", { serverBase: "https://houkago.example/api" }),
       pageUrl,
       7,
     )
@@ -224,7 +233,7 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
     )
     const prepared = await runtime.handle(
       request("BAIDU_MEDIA_PREPARE", {
-        grantUrl: "https://houkago.example/baidu/media/g1",
+        grantUrl: "https://houkago.example/api/baidu/media/g1",
         expiresAt: Date.now() + 60_000,
       }),
       pageUrl,
@@ -236,8 +245,8 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
 
     await runtime.poll()
     expect(dlinkHandles).toEqual(["42", "42"])
-    expect(serverRequests).toContain("POST /baidu/adaptor/dlink-responses")
-    expect(serverRequests).toContain("POST /baidu/adaptor/heartbeat")
+    expect(serverRequests).toContain("POST /api/baidu/adaptor/dlink-responses")
+    expect(serverRequests).toContain("POST /api/baidu/adaptor/heartbeat")
     expect(dlinkResponses).toHaveLength(2)
     expect(dlinkResponses[0]).toEqual({
       requestId: "request-failed-1",
@@ -255,7 +264,7 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
     await runtime.handle(request("BAIDU_LIST", { path: "/" }), pageUrl, 7)
     await runtime.handle(
       request("PAIR", {
-        serverBase: "https://houkago.example",
+        serverBase: "https://houkago.example/api",
         pairingCode: "replacement-code-1234",
       }),
       pageUrl,
@@ -288,17 +297,17 @@ test("Chromium and Firefox share pairing, handoff, list, permit, grant, and dlin
 
 test("fingerprint preparation binds the claimed grant to the requested source and room", async () => {
   const values = new Map<string, unknown>([
-    ["adapter.pairing", { serverBase: "https://houkago.example", adaptorToken: "pair-token" }],
+    ["adapter.pairing", { serverBase: "https://houkago.example/api", adaptorToken: "pair-token" }],
   ])
   const installed: RuntimeMediaGrant[] = []
   const originalFetch = globalThis.fetch
   const fetcher: BaiduFetcher = async (input) => {
-    expect(String(input)).toBe("https://houkago.example/baidu/adaptor/grants/g1")
+    expect(String(input)).toBe("https://houkago.example/api/baidu/adaptor/grants/g1")
     return Response.json({
       id: "g1",
       sourceId: "source-1",
       bushitsuId: "room-1",
-      sentinelUrl: "https://houkago.example/baidu/media/g1",
+      sentinelUrl: "https://houkago.example/api/baidu/media/g1",
       dlink: "https://cdn.baidupcs.com/file/opaque",
       expiresAt: Date.now() + 60_000,
     })
@@ -327,7 +336,7 @@ test("fingerprint preparation binds the claimed grant to the requested source an
       request("BAIDU_MEDIA_FINGERPRINT", {
         sourceId: "source-1",
         bushitsuId: "room-1",
-        grantUrl: "https://houkago.example/baidu/media/g1",
+        grantUrl: "https://houkago.example/api/baidu/media/g1",
         expiresAt: Date.now() + 60_000,
         bytes: 1024,
       }),
@@ -342,7 +351,7 @@ test("fingerprint preparation binds the claimed grant to the requested source an
       request("BAIDU_MEDIA_FINGERPRINT", {
         sourceId: "source-2",
         bushitsuId: "room-1",
-        grantUrl: "https://houkago.example/baidu/media/g1",
+        grantUrl: "https://houkago.example/api/baidu/media/g1",
         expiresAt: Date.now() + 60_000,
         bytes: 1024,
       }),

@@ -41,7 +41,7 @@ import {
 } from "../db/queries/baidu"
 import { addEnmoku } from "../domain/bushitsu"
 import { isPresent } from "../ws/housou"
-import { baiduConfig } from "./baidu-config"
+import { baiduConfig, resolveBaiduRedirectUri } from "./baidu-config"
 import { CredentialCipher } from "./credential-crypto"
 import {
   BaiduAdaptorRequired,
@@ -68,6 +68,7 @@ type OAuthState = {
   retentionMode: BaiduRetentionMode
   deviceId?: string
   expiresAt: number
+  redirectUri: string
 }
 
 type Pairing = { seitoId: string; deviceId: string; expiresAt: number }
@@ -144,8 +145,15 @@ export function startBaiduOAuth(
   retentionMode: BaiduRetentionMode,
   deviceId: string | undefined,
   now = Date.now(),
+  siteUrl?: string,
 ): { authorizationUrl: string; expiresAt: number } {
-  const config = requireOAuthConfig()
+  const configured = requireOAuthConfig()
+  const redirectUri = resolveBaiduRedirectUri(configured.redirectUri, siteUrl)
+  if (!redirectUri)
+    throw new BaiduUnavailable(
+      "Baidu callback requires a valid HTTP(S) URL or a site-relative path with a request origin",
+    )
+  const config = { ...configured, redirectUri }
   if (retentionMode === "server-saved" && !baiduConfig().credentialKey) {
     throw new BaiduUnavailable("server-saved credentials are not configured")
   }
@@ -157,7 +165,7 @@ export function startBaiduOAuth(
   }
   const state = randomToken()
   const expiresAt = now + OAUTH_STATE_MS
-  oauthStates.set(digest(state), { seitoId, retentionMode, deviceId, expiresAt })
+  oauthStates.set(digest(state), { seitoId, retentionMode, deviceId, expiresAt, redirectUri })
   return { authorizationUrl: baiduAuthorizationUrl(config, state), expiresAt }
 }
 
@@ -171,7 +179,7 @@ export async function completeBaiduOAuth(
   const pending = oauthStates.get(key)
   oauthStates.delete(key)
   if (!pending || pending.expiresAt <= now) throw new BaiduStateInvalid("OAuth state is invalid")
-  const config = requireOAuthConfig()
+  const config = { ...requireOAuthConfig(), redirectUri: pending.redirectUri }
   const token = await exchangeBaiduCode(config, code, fetch, now)
   const account = await fetchBaiduAccount(token.accessToken, fetch)
   const authorizationId = newId()
@@ -376,7 +384,7 @@ export async function createBaiduSource(
     const enmoku = addEnmoku(input.bushitsuId, {
       title: fileName,
       type: "direct",
-      url: `/baidu/source/${sourceId}`,
+      url: `/api/baidu/source/${sourceId}`,
       provider,
       addedBy: seitoId,
     })
@@ -563,7 +571,7 @@ export function claimBaiduMediaGrant(
   }
   requireSourceConnection(requireSource(grant.sourceId, grant.bushitsuId))
   mediaGrants.delete(grantId)
-  const sentinelUrl = new URL(`/baidu/media/${grant.id}`, baseUrl).toString()
+  const sentinelUrl = new URL(`/api/baidu/media/${grant.id}`, baseUrl).toString()
   return {
     id: grant.id,
     sourceId: grant.sourceId,
@@ -671,7 +679,11 @@ function issueMediaGrant(
     dlink,
     expiresAt,
   })
-  return { state: "ready", grantUrl: new URL(`/baidu/media/${id}`, baseUrl).toString(), expiresAt }
+  return {
+    state: "ready",
+    grantUrl: new URL(`/api/baidu/media/${id}`, baseUrl).toString(),
+    expiresAt,
+  }
 }
 
 function activeAdaptor(seitoId: string, now: number): BaiduAdaptorSessionRecord | null {

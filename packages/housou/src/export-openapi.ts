@@ -17,7 +17,7 @@ process.env.HOUSOU_DB = ":memory:"
 process.env.HOUKAGO_OPENAPI = "1"
 
 const { app } = await import("./index")
-const response = await app.handle(new Request("http://contract.local/openapi/json"))
+const response = await app.handle(new Request("http://contract.local/api/openapi/json"))
 
 if (!response.ok) {
   throw new Error(`OpenAPI export failed with HTTP ${response.status}`)
@@ -29,7 +29,7 @@ if (!isRecord(document) || !isRecord(document.paths)) {
 }
 
 // OpenAPI describes the HTTP upgrade, not a non-standard `ws` HTTP method.
-const wsPath = document.paths["/ws"]
+const wsPath = document.paths["/api/ws"]
 if (isRecord(wsPath) && isRecord(wsPath.ws)) {
   wsPath.get = {
     ...wsPath.ws,
@@ -41,8 +41,8 @@ if (isRecord(wsPath) && isRecord(wsPath.ws)) {
 
 const expected = new Set<string>()
 for (const route of app.routes) {
-  if (route.method === "OPTIONS" && (route.path === "/" || route.path === "/*")) continue
-  if (route.method === "GET" && route.path === "/openapi/json") continue
+  if (route.method === "OPTIONS" && (route.path === "/api/" || route.path === "/api/*")) continue
+  if (route.method === "GET" && route.path === "/api/openapi/json") continue
   const detail: unknown = route.hooks.detail
   if (
     !isRecord(detail) ||

@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto"
 import { type Page, expect, test } from "@playwright/test"
 
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const frontendUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"
 
 async function register(target: Page, prefix: string) {
@@ -55,7 +57,7 @@ test("@real-cookie register refresh React room continuity and confirmed signout"
   await page.getByLabel("部室名").fill(roomName)
   let admitted = false
   page.on("websocket", (socket) => {
-    if (new URL(socket.url()).pathname !== "/ws") return
+    if (new URL(socket.url()).pathname !== "/api/ws") return
     socket.on("framereceived", (frame) => {
       const message: unknown = JSON.parse(frame.payload.toString())
       if (
@@ -109,7 +111,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
   const guest = await guestContext.newPage()
   let guestRoomSockets = 0
   guest.on("websocket", (socket) => {
-    if (new URL(socket.url()).pathname === "/ws") guestRoomSockets += 1
+    if (new URL(socket.url()).pathname === "/api/ws") guestRoomSockets += 1
   })
   try {
     await register(page, "m4_host")
@@ -183,7 +185,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
     await openControls(page)
     const remove = controls.getByRole("button", { name: "移除", exact: true })
     let removalRequests = 0
-    await page.route("**/bushitsu/*/meibo/*", (route) => {
+    await page.route("**/api/bushitsu/*/meibo/*", (route) => {
       removalRequests += 1
       return route.fulfill({
         status: 500,
@@ -200,7 +202,7 @@ test("@real-cookie two clients handle approval, chat, queue and revocation", asy
     expect(removalRequests).toBe(1)
     await expect(remove).toBeEnabled()
     await expect(guest.getByRole("heading", { name: "聊天室" })).toBeVisible()
-    await page.unroute("**/bushitsu/*/meibo/*")
+    await page.unroute("**/api/bushitsu/*/meibo/*")
     const removed = page.waitForResponse(
       (response) => response.request().method() === "DELETE" && response.url().includes("/meibo/"),
     )
@@ -281,9 +283,13 @@ test("@real-cookie members delete with playlist permission while owner retains r
       "Delete me",
     ])
     const controls = await openControls(page)
-    await expect(controls.getByLabel("发言", { exact: true })).toBeChecked()
-    await expect(controls.getByLabel("播放控制", { exact: true })).not.toBeChecked()
-    await expect(controls.getByLabel("选片", { exact: true })).not.toBeChecked()
+    await expect(controls.getByRole("checkbox", { name: "发言", exact: true })).toBeChecked()
+    await expect(
+      controls.getByRole("checkbox", { name: "播放控制", exact: true }),
+    ).not.toBeChecked()
+    await expect(
+      controls.getByRole("checkbox", { name: "片源选择", exact: true }),
+    ).not.toBeChecked()
     await expect(controls.getByRole("button", { name: "仅聊天", exact: true })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -293,23 +299,23 @@ test("@real-cookie members delete with playlist permission while owner retains r
       "aria-pressed",
       "true",
     )
-    await expect(controls.getByLabel("播放控制", { exact: true })).toBeChecked()
+    await expect(controls.getByRole("checkbox", { name: "播放控制", exact: true })).toBeChecked()
     await expect(guest.getByTestId("player-play-toggle")).toBeEnabled()
     await controls.getByRole("button", { name: "共同选片", exact: true }).click()
     await expect(controls.getByRole("button", { name: "共同选片", exact: true })).toHaveAttribute(
       "aria-pressed",
       "true",
     )
-    await expect(controls.getByLabel("选片", { exact: true })).toBeChecked()
+    await expect(controls.getByRole("checkbox", { name: "片源选择", exact: true })).toBeChecked()
     await guest.locator("#chat-message").fill("Permission fixture draft")
-    await controls.getByLabel("发言", { exact: true }).click()
-    await expect(controls.getByLabel("发言", { exact: true })).not.toBeChecked()
+    await controls.getByRole("checkbox", { name: "发言", exact: true }).click()
+    await expect(controls.getByRole("checkbox", { name: "发言", exact: true })).not.toBeChecked()
     await expect(controls.getByText("当前权限由精细设置自定义。", { exact: true })).toBeVisible()
     await expect(
       guest.locator(".room-chat-form").getByRole("button", { name: "发送", exact: true }),
     ).toBeDisabled()
-    await controls.getByLabel("发言", { exact: true }).click()
-    await expect(controls.getByLabel("发言", { exact: true })).toBeChecked()
+    await controls.getByRole("checkbox", { name: "发言", exact: true }).click()
+    await expect(controls.getByRole("checkbox", { name: "发言", exact: true })).toBeChecked()
     await expect(
       guest.locator(".room-chat-form").getByRole("button", { name: "发送", exact: true }),
     ).toBeEnabled()
@@ -451,7 +457,9 @@ test("@real-cookie admission rejects, closed/password gating and open recovery p
       await controls.getByLabel("入室方式").selectOption(mode)
       if (mode === "password") await controls.getByLabel("入室密码").fill("M6-room-password")
       await controls.getByRole("button", { name: "保存入室方式" }).click()
-      await expect(controls.locator(".room-controls-info dd").nth(2)).toHaveText(
+      await expect(
+        controls.getByText("方式", { exact: true }).locator("..").locator("dd"),
+      ).toHaveText(
         mode === "open"
           ? "开放"
           : mode === "approval"
@@ -468,7 +476,7 @@ test("@real-cookie admission rejects, closed/password gating and open recovery p
       if (
         request.method() === "GET" &&
         new URL(request.url()).origin === new URL(housouUrl).origin &&
-        [roomPath, `${roomPath}/bangumi`].includes(new URL(request.url()).pathname)
+        [`/api${roomPath}`, `/api${roomPath}/bangumi`].includes(new URL(request.url()).pathname)
       )
         protectedReads.push(request.url())
     })

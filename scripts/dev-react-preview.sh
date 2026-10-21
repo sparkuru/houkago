@@ -62,18 +62,19 @@ main() {
 	unset HOUKAGO_BAIDU_CLIENT_ID HOUKAGO_BAIDU_CLIENT_SECRET HOUKAGO_BAIDU_REDIRECT_URI
 	unset HOUKAGO_CREDENTIAL_KEY HOUKAGO_CREDENTIAL_KEY_VERSION HOUKAGO_KOMON_USERNAMES
 	unset HOUKAGO_CORS_ORIGIN HOUKAGO_OPENAPI
+	unset VITE_HOUSOU_URL VITE_HOUSOU_PORT
 	trap cleanup EXIT
 	trap 'exit 130' INT
 	trap 'exit 143' TERM
 
 	printf 'Starting isolated preview: Housou :%s, React :%s.\n' "$backend_port" "$frontend_port"
-	NODE_ENV=development HOUSOU_DB=:memory: PORT="$backend_port" \
+	NODE_ENV=development HOUSOU_DB=:memory: BACKEND_HOST=127.0.0.1 BACKEND_PORT="$backend_port" \
 		bun --no-env-file packages/housou/src/index.ts &
 	service_pids+=("$!")
 
 	(
 		cd -- packages/kyoushitsu-react
-		NODE_ENV=development HOUKAGO_ISOLATED_PREVIEW=1 VITE_HOUSOU_URL="http://127.0.0.1:$backend_port" \
+		NODE_ENV=development HOUKAGO_ISOLATED_PREVIEW=1 HOUSOU_PROXY_TARGET="http://127.0.0.1:$backend_port" \
 			exec bun --no-env-file ./node_modules/vite/bin/vite.js --host 0.0.0.0 --port "$frontend_port" --strictPort
 	) &
 	service_pids+=("$!")

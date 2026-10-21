@@ -13,7 +13,7 @@ type Observation = Record<string, unknown>
 function observeRoom(page: Page) {
   const events = { admissions: [] as string[], closed: 0, chats: [] as string[] }
   page.on("websocket", (socket) => {
-    if (new URL(socket.url()).pathname !== "/ws") return
+    if (new URL(socket.url()).pathname !== "/api/ws") return
     socket.on("close", () => {
       events.closed += 1
     })
@@ -186,7 +186,7 @@ test("actual public media UI preview, queue addition and decoded playback", asyn
 }, info) => {
   const deliveries: { status: number; bytes: number; contentType: string }[] = []
   page.on("response", (response) => {
-    if (!new URL(response.url()).pathname.startsWith("/eisha/proxy/")) return
+    if (!new URL(response.url()).pathname.startsWith("/api/eisha/proxy/")) return
     deliveries.push({
       status: response.status(),
       bytes: Number(response.headers()["content-length"] ?? 0),
@@ -259,7 +259,9 @@ test("real backend admission, permissions, queue, chat and document reconnect", 
     const dialog = await controls(host)
     await dialog.getByLabel("入室方式").selectOption("approval")
     await dialog.getByRole("button", { name: "保存入室方式" }).click()
-    await expect(dialog.locator(".room-controls-info dd").nth(2)).toHaveText("审批")
+    await expect(dialog.getByText("方式", { exact: true }).locator("..").locator("dd")).toHaveText(
+      "审批",
+    )
     const guestAccount = await register(guest, "guest")
     expect(guestAccount.id).not.toBe(hostAccount.id)
     const protectedReads: string[] = []
@@ -268,7 +270,7 @@ test("real backend admission, permissions, queue, chat and document reconnect", 
       if (
         request.method() === "GET" &&
         url.origin === new URL(housouUrl).origin &&
-        [`/bushitsu/${roomId}`, `/bushitsu/${roomId}/bangumi`].includes(url.pathname)
+        [`/api/bushitsu/${roomId}`, `/api/bushitsu/${roomId}/bangumi`].includes(url.pathname)
       )
         protectedReads.push(url.pathname)
     })
@@ -311,7 +313,7 @@ test("real backend admission, permissions, queue, chat and document reconnect", 
     await expect(guest.getByTestId("player-play-toggle")).toBeDisabled()
     await controls(host)
     await dialog.getByRole("button", { name: "共同选片", exact: true }).click()
-    await expect(dialog.getByLabel("选片", { exact: true })).toBeChecked()
+    await expect(dialog.getByRole("checkbox", { name: "片源选择", exact: true })).toBeChecked()
     await expect(guest.getByLabel("视频链接")).toBeVisible()
     await expect(guest.getByTestId("player-play-toggle")).toBeEnabled()
     for (const name of ["上移", "下移", "清空待播"])
@@ -325,14 +327,14 @@ test("real backend admission, permissions, queue, chat and document reconnect", 
       deleteButtonVisibilityIsObservationOnly: true,
     })
     await guest.locator("#chat-message").fill("Permission gated draft")
-    await dialog.getByLabel("发言", { exact: true }).click()
-    await expect(dialog.getByLabel("发言", { exact: true })).not.toBeChecked()
+    await dialog.getByRole("checkbox", { name: "发言", exact: true }).click()
+    await expect(dialog.getByRole("checkbox", { name: "发言", exact: true })).not.toBeChecked()
     await expect(guest.locator("#chat-message")).toBeDisabled()
     await expect(
       guest.locator(".room-chat-form").getByRole("button", { name: "发送", exact: true }),
     ).toBeDisabled()
-    await dialog.getByLabel("发言", { exact: true }).click()
-    await expect(dialog.getByLabel("发言", { exact: true })).toBeChecked()
+    await dialog.getByRole("checkbox", { name: "发言", exact: true }).click()
+    await expect(dialog.getByRole("checkbox", { name: "发言", exact: true })).toBeChecked()
     await closeControls(host)
     const pending = guest.locator(".room-queue .room-row").filter({ hasText: "Acceptance pending" })
     await pending.getByRole("button", { name: "设为当前" }).click()
@@ -405,7 +407,7 @@ test("guest queue deletion follows playlist permission while reorder and clear r
       if (request.url() === new URL("clip.mp4", mediaUrl).href) pendingMediaRequests += 1
     })
     page.on("websocket", (socket) => {
-      if (new URL(socket.url()).pathname !== "/ws") return
+      if (new URL(socket.url()).pathname !== "/api/ws") return
       socket.on("framereceived", (frame) => {
         const message = JSON.parse(frame.payload.toString()) as {
           type?: string
@@ -463,9 +465,9 @@ test("guest queue deletion follows playlist permission while reorder and clear r
       await expect(page.locator(".room-queue .room-row strong")).toHaveText(beforeTitles)
     }
     const dialog = await controls(host)
-    await expect(dialog.getByLabel("选片", { exact: true })).not.toBeChecked()
+    await expect(dialog.getByRole("checkbox", { name: "片源选择", exact: true })).not.toBeChecked()
     await dialog.getByRole("button", { name: "共同选片", exact: true }).click()
-    await expect(dialog.getByLabel("选片", { exact: true })).toBeChecked()
+    await expect(dialog.getByRole("checkbox", { name: "片源选择", exact: true })).toBeChecked()
     await closeControls(host)
     await expect(guest.getByLabel("视频链接")).toBeVisible()
     const guestDeleteButtonCount = await guest
@@ -606,8 +608,8 @@ for (const format of ["mp4", "hls", "dash"] as const) {
         samples: await settledPair(host, guest, true),
       })
       const dialog = await controls(host)
-      await dialog.getByLabel("播放控制", { exact: true }).click()
-      await expect(dialog.getByLabel("播放控制", { exact: true })).toBeChecked()
+      await dialog.getByRole("checkbox", { name: "播放控制", exact: true }).click()
+      await expect(dialog.getByRole("checkbox", { name: "播放控制", exact: true })).toBeChecked()
       await closeControls(host)
       await expect(guest.getByTestId("player-play-toggle")).toBeEnabled()
       await revealPlayerControl(guest, guest.getByTestId("player-rate"))

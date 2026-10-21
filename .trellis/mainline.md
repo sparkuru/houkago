@@ -58,6 +58,41 @@
 
 ## Ordered Work
 
+### In-progress task — same-origin API preview (2026-10-21)
+
+The owner requested task creation and assessed moving the separate backend
+entry under the site's `/api/` path, with configurable ports. The owner accepted
+one public site port and an internal-only backend, then selected existing
+Docker development preview only. The
+[task](tasks/10-21-same-origin-api-entry/prd.md) is in progress after owner approval
+`可以；开始实施`; its design and
+execution plan cover HTTP, WS, media, provider/extension URLs and preview
+lifecycle. The owner authorized commit/archive with `提交；归档` on
+2026-10-21. Production hosting, deployment and continuation of unrelated room
+UI work remain outside scope.
+Mode remains guided; existing tasks and dirty changes are preserved.
+
+Implementation checkpoint: one public site port with an internal backend,
+prefixed HTTP/WS/media/provider/extension consumers and deterministic generated
+contracts are delivered. Verification: 464 unit tests, seven workspace types,
+lint/build/drift, 35 preview fixtures, 93 shell checks, 76 existing browser cases
+plus two resolved-media cases and one installed Chromium adapter case passed;
+three existing browser applicability skips remain explicit. Real Docker checks
+passed two listener pairs, dynamic site ports, Range/HLS/DASH, failure readiness,
+data retention and owned-only cleanup. See
+[validation](tasks/10-21-same-origin-api-entry/validation.md) for staged reruns,
+tool limits and migration notes. The original preview is not recreated; its
+cutover requires normal stop/start. Commit/archive are owner-authorized.
+
+Owner follow-up: manifest defaults are backend 8081 / frontend 8080, runtime
+configuration uses `BACKEND_*`, `FRONTEND_*`, `LAN_HOST` and `READY_TIMEOUT`,
+and relative OAuth callbacks resolve against the validated public request
+origin with the full URI pinned to one-use state. The explicit local/example
+publication remains 9999. Follow-up checks pass 477 unit tests, seven workspace
+types, lint, 36 preview fixtures, 93 shell checks and isolated real Docker
+default-port/dynamic-publication/callback/reuse/cleanup checks. Detailed scope
+and fixture limits remain in the same task validation.
+
 ### Completed task — preview console style (2026-10-21)
 
 The owner requested applying Trellis Plus presentation to `preview.sh` and

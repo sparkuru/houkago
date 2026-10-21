@@ -28,10 +28,16 @@ when conventions change; task evidence records only that task's results.
   Use bundled Chromium when present. Bootstrap with
   `node_modules/.bin/playwright install chromium` only when needed and allowed
   by runtime/network availability. An existing compatible browser can be
-  selected through `PLAYWRIGHT_CHROMIUM_EXECUTABLE`; current path is
-  `/usr/bin/google-chrome`, not a universal machine prerequisite.
-- app readiness: `DX_EXTRA_PORTS=3000,5173 ./dx bash scripts/dev-react-preview.sh`, then probe
-  API `http://127.0.0.1:3000/health` and frontend `http://127.0.0.1:5173/`
+  selected through `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Verify that executable
+  exists; `/usr/bin/google-chrome` is not a machine prerequisite.
+- If the host lacks browser system libraries, run the same project-local
+  Playwright CLI through the prepared development image, mounting the project
+  and its existing browser cache with uid/gid mapping. Use the inspected local
+  preview URL; on a local Linux daemon host networking permits that loopback
+  access. Do not install system packages or weaken tests. Record Docker browser
+  execution separately from host execution.
+- app readiness: `DX_EXTRA_PORTS=5173 ./dx bash scripts/dev-react-preview.sh`, then probe
+  API `http://127.0.0.1:5173/api/health` and frontend `http://127.0.0.1:5173/`
   as in [development.md](development.md). No config `webServer` is defined.
   Stop the owning foreground session with Ctrl-C.
 - test location/config: application cases live in `packages/kyoushitsu-react/e2e/`
@@ -56,7 +62,7 @@ when conventions change; task evidence records only that task's results.
   or external mobile providers.
 - fixtures/data: route mocks and local test accounts; real-cookie tests use
   the isolated memory backend via `PLAYWRIGHT_HOUSOU_URL` (default
-  `http://127.0.0.1:3000`). No production data, personal sessions or credentials.
+  `<PLAYWRIGHT_BASE_URL>/api`). No production data, personal sessions or credentials.
   Fixture provider/media success does not establish real upstream acceptance.
 - accessibility: semantic roles/names, visible text, keyboard, focus and state
   assertions. No global axe scan. Add scans only for justified coverage;
@@ -83,7 +89,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 node_modules/.bin/playwright test --co
 Full React suite (no browser CI job is declared in this repository):
 
 ```sh
-PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 PLAYWRIGHT_HOUSOU_URL=http://127.0.0.1:3000 node_modules/.bin/playwright test --config packages/kyoushitsu-react/playwright.config.ts
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 PLAYWRIGHT_HOUSOU_URL=http://127.0.0.1:5173/api node_modules/.bin/playwright test --config packages/kyoushitsu-react/playwright.config.ts
 ```
 
 Prefix with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome` only when

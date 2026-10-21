@@ -46,11 +46,11 @@ test("Baidu pairing, OAuth, source creation and revoke use cookie SDK routes", a
   }
   const requests = installFetch((request) => {
     const path = new URL(request.url).pathname
-    if (path === "/baidu/adaptor/pairing")
+    if (path === "/api/baidu/adaptor/pairing")
       return json({ state: "pairing-required", pairingCode: "123456", expiresAt: 10 })
-    if (path === "/baidu/oauth/start")
+    if (path === "/api/baidu/oauth/start")
       return json({ authorizationUrl: "https://baidu.test/oauth", expiresAt: 10 })
-    if (path === "/baidu/sources") return json(created)
+    if (path === "/api/baidu/sources") return json(created)
     return json({ ok: true })
   })
 
@@ -71,10 +71,10 @@ test("Baidu pairing, OAuth, source creation and revoke use cookie SDK routes", a
   await expect(revokeBaiduConnection()).resolves.toEqual({ ok: true })
 
   expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toEqual([
-    ["POST", "/baidu/adaptor/pairing"],
-    ["POST", "/baidu/oauth/start"],
-    ["POST", "/baidu/sources"],
-    ["DELETE", "/baidu/connection"],
+    ["POST", "/api/baidu/adaptor/pairing"],
+    ["POST", "/api/baidu/oauth/start"],
+    ["POST", "/api/baidu/sources"],
+    ["DELETE", "/api/baidu/connection"],
   ])
   expect(requests.every((request) => request.credentials === "include")).toBe(true)
   expect(await requests[0]?.json()).toEqual({ deviceId: "device-1", localPaired: false })
@@ -101,7 +101,7 @@ test("Baidu revoke failure remains a typed rejection for caller-owned local clea
 
 test("danmaku default, proposal, match and legacy cue operations retain path and body", async () => {
   const requests = installFetch((request) => {
-    if (request.url.includes("/eisha/danmaku/"))
+    if (request.url.includes("/api/eisha/danmaku/"))
       return json([{ time: 1, text: "hello", mode: "scroll" }])
     return json({ ok: true })
   })
@@ -115,11 +115,11 @@ test("danmaku default, proposal, match and legacy cue operations retain path and
   ])
 
   expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toEqual([
-    ["PUT", "/danmaku/bushitsu/room-1/enmoku/item-1/default"],
-    ["DELETE", "/danmaku/bushitsu/room-1/enmoku/item-1/default"],
-    ["POST", "/danmaku/proposals"],
-    ["POST", "/danmaku/matches"],
-    ["GET", "/eisha/danmaku/legacy-1"],
+    ["PUT", "/api/danmaku/bushitsu/room-1/enmoku/item-1/default"],
+    ["DELETE", "/api/danmaku/bushitsu/room-1/enmoku/item-1/default"],
+    ["POST", "/api/danmaku/proposals"],
+    ["POST", "/api/danmaku/matches"],
+    ["GET", "/api/eisha/danmaku/legacy-1"],
   ])
   expect(await requests[0]?.json()).toEqual({ trackId: "track-1" })
   expect(await requests[2]?.json()).toEqual({ releaseId: "release-1", evidence })

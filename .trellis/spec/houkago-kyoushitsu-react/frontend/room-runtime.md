@@ -105,7 +105,9 @@ session to the restored identity epoch and room ID.
   candidate HTTP cannot overwrite it. The player attaches through one port
   and is disposed with the route. Host and permitted guests can send playback;
   all others follow only.
-- Local development uses Housou at port 3000 and React at port 5173.
+- Local verification uses internal Housou at port 3000 and the site at port
+  5173; browser HTTP and WS use the site origin under `/api`. Room transport
+  consumes the shared `housouUrl()` helper rather than deriving a second base.
   `scripts/dev-react-preview.sh` provides an isolated memory setup for browser
   verification. Browser tests may use task-owned ports when defaults are
   occupied, and must exercise real cookies and WebSocket frames.

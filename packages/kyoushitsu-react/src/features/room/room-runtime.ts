@@ -10,6 +10,7 @@ import type {
   Shinkou,
   Yakuwari,
 } from "houkago-kousoku"
+import { housouUrl } from "houkago-kyoushitsu-core/housou-url"
 import {
   clearPendingRoomBangumi,
   createRoomEnmoku,
@@ -135,13 +136,7 @@ export class RoomRuntime {
     readonly identityId: string,
     private readonly onRevoked: () => void,
     services: RoomServices = {
-      transport: (onMessage, onStatus) =>
-        new KousokuClient(
-          import.meta.env.VITE_HOUSOU_URL ??
-            `http://${location.hostname}:${import.meta.env.VITE_HOUSOU_PORT ?? 3000}`,
-          onMessage,
-          onStatus,
-        ),
+      transport: (onMessage, onStatus) => new KousokuClient(housouUrl(), onMessage, onStatus),
       room: fetchRoom,
       queue: fetchRoomBangumi,
     },

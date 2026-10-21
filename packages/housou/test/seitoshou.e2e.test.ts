@@ -8,8 +8,8 @@ let baseWs: string
 
 beforeAll(() => {
   app.listen(0)
-  base = `http://127.0.0.1:${app.server?.port}`
-  baseWs = `ws://127.0.0.1:${app.server?.port}/ws`
+  base = `http://127.0.0.1:${app.server?.port}/api`
+  baseWs = `ws://127.0.0.1:${app.server?.port}/api/ws`
 })
 
 afterAll(() => app.server?.stop())

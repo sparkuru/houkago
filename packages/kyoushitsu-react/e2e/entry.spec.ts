@@ -1,12 +1,14 @@
 import { type Page, expect, test } from "@playwright/test"
 import { DEFAULT_SITE_CONFIG } from "houkago-kousoku"
 const frontendUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const housouPort = new URL(housouUrl).port
 const account = { id: "fixture", username: "Mika", createdAt: 1 }
 const anonymous = { error: { code: "UNAUTHORIZED", message: "Unauthorized" } }
 async function identity(page: Page, signedIn = false) {
-  await page.route("**/seitoshou/me", (route) =>
+  await page.route("**/api/seitoshou/me", (route) =>
     route.fulfill({ status: signedIn ? 200 : 401, json: signedIn ? account : anonymous }),
   )
 }
@@ -16,8 +18,8 @@ function protectedActivity(page: Page) {
     const url = new URL(request.url())
     if (
       url.port === housouPort &&
-      (url.pathname.startsWith("/bushitsu/") ||
-        /^\/(?:ws|bangumi|enmoku|baidu|danmaku)(?:\/|$)/.test(url.pathname))
+      (url.pathname.startsWith("/api/bushitsu/") ||
+        /^\/api\/(?:ws|bangumi|enmoku|baidu|danmaku)(?:\/|$)/.test(url.pathname))
     )
       activity.push(request.url())
   })
@@ -51,7 +53,7 @@ async function checkLayout(page: Page) {
   ).toBe(true)
 }
 test.beforeEach(async ({ page }) => {
-  await page.route("**/site-config", (route) => route.fulfill({ json: DEFAULT_SITE_CONFIG }))
+  await page.route("**/api/site-config", (route) => route.fulfill({ json: DEFAULT_SITE_CONFIG }))
 })
 
 test("one delayed restore, anonymous form, keyboard and reduced-motion layout", async ({
@@ -62,7 +64,7 @@ test("one delayed restore, anonymous form, keyboard and reduced-motion layout", 
     release = r
   })
   let reads = 0
-  await page.route("**/seitoshou/me", async (route) => {
+  await page.route("**/api/seitoshou/me", async (route) => {
     reads++
     await gate
     await route.fulfill({ status: 401, json: anonymous })
@@ -152,7 +154,7 @@ test("authentication locks duplicates, clears credentials, handles typed failure
     release = r
   })
   let calls = 0
-  await page.route("**/seitoshou/sign-in", async (route) => {
+  await page.route("**/api/seitoshou/sign-in", async (route) => {
     calls++
     await gate
     await route.fulfill({
@@ -177,7 +179,7 @@ test("authentication locks duplicates, clears credentials, handles typed failure
 
 test("non-auth restore failure blocks forms until manual recovery", async ({ page }) => {
   let reads = 0
-  await page.route("**/seitoshou/me", (route) => {
+  await page.route("**/api/seitoshou/me", (route) => {
     reads++
     return route.fulfill({
       status: reads <= 2 ? 503 : 401,
@@ -202,7 +204,7 @@ test("registration preserves mode through pending, failure and explicit retry", 
     release = resolve
   })
   let calls = 0
-  await page.route("**/seitoshou/register", async (route) => {
+  await page.route("**/api/seitoshou/register", async (route) => {
     calls++
     if (calls === 1) {
       await gate
@@ -242,7 +244,7 @@ test("create locks pending controls, reports failure and retries only on submit"
     release = resolve
   })
   let calls = 0
-  await page.route("**/bushitsu", async (route) => {
+  await page.route("**/api/bushitsu", async (route) => {
     calls++
     expect(route.request().postDataJSON()).toEqual({ name: "retry-room" })
     if (calls === 1) {
@@ -278,7 +280,7 @@ test("persisted pageshow reloads a disposed entry and restores current cookie id
 }) => {
   let reads = 0
   let signedIn = false
-  await page.route("**/seitoshou/me", (route) => {
+  await page.route("**/api/seitoshou/me", (route) => {
     reads++
     return route.fulfill({ status: signedIn ? 200 : 401, json: signedIn ? account : anonymous })
   })
@@ -297,7 +299,7 @@ test("persisted pageshow reloads a disposed entry and restores current cookie id
 test("configured name/title create body enters the direct React room", async ({ page }, info) => {
   await identity(page, true)
   const configuredHint = "窗边的座位已备好，等周末的同伴。"
-  await page.route("**/site-config", (route) =>
+  await page.route("**/api/site-config", (route) =>
     route.fulfill({
       json: {
         ...DEFAULT_SITE_CONFIG,
@@ -312,7 +314,7 @@ test("configured name/title create body enters the direct React room", async ({ 
   )
   let creates = 0
   const forbidden = protectedActivity(page)
-  await page.route("**/bushitsu", async (route) => {
+  await page.route("**/api/bushitsu", async (route) => {
     creates++
     expect(route.request().postDataJSON()).toEqual({ name: "周末新教室" })
     await route.fulfill({
@@ -379,10 +381,10 @@ test("logout failure reconciles account; successful logout clears entry drafts",
 }) => {
   let signedIn = true
   let signouts = 0
-  await page.route("**/seitoshou/me", (route) =>
+  await page.route("**/api/seitoshou/me", (route) =>
     route.fulfill({ status: signedIn ? 200 : 401, json: signedIn ? account : anonymous }),
   )
-  await page.route("**/seitoshou/sign-out", (route) => {
+  await page.route("**/api/seitoshou/sign-out", (route) => {
     if (++signouts === 1)
       return route.fulfill({
         status: 503,
@@ -417,7 +419,7 @@ test("invalid successful config blocks bootstrap rather than silently defaulting
   page,
 }) => {
   await identity(page)
-  await page.route("**/site-config", (route) => route.fulfill({ json: {} }))
+  await page.route("**/api/site-config", (route) => route.fulfill({ json: {} }))
   await page.goto("/")
   await expect(page.getByRole("alert")).toContainText("楼层信息暂时无法读取")
   await expect(page.getByLabel("用户名")).toHaveCount(0)
@@ -427,7 +429,7 @@ for (const signedIn of [false, true]) {
   test(`editorial entry keeps configured identity and usable ${signedIn ? "signed-in" : "anonymous"} forms at narrow, tablet and wide sizes`, async ({
     page,
   }, info) => {
-    await page.route("**/seitoshou/me", (route) =>
+    await page.route("**/api/seitoshou/me", (route) =>
       route.fulfill({
         status: signedIn ? 200 : 401,
         json: signedIn ? { ...account, username: "a-very-long-club-member-name" } : anonymous,
@@ -435,7 +437,7 @@ for (const signedIn of [false, true]) {
     )
     const name = "周末的电影与音乐交流活动室"
     const privacyNote = "a".repeat(256)
-    await page.route("**/site-config", (route) =>
+    await page.route("**/api/site-config", (route) =>
       route.fulfill({
         json: {
           ...DEFAULT_SITE_CONFIG,

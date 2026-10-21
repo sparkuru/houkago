@@ -61,7 +61,13 @@ export const baiduRoutes = new Elysia({ prefix: "/baidu" })
     "/oauth/start",
     ({ request, body }) => {
       requireTrustedOrigin(request.headers.get("origin"))
-      return startBaiduOAuth(seitoFromRequest(request).id, body.retentionMode, body.deviceId)
+      return startBaiduOAuth(
+        seitoFromRequest(request).id,
+        body.retentionMode,
+        body.deviceId,
+        Date.now(),
+        request.headers.get("origin") ?? request.url,
+      )
     },
     {
       body: HttpBaiduOAuthStartBodySchema,

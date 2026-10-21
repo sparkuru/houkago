@@ -24,11 +24,13 @@ sys.dont_write_bytecode = True
 class FixtureHandler(http.server.BaseHTTPRequestHandler):
     """Serve real host probes independently of the Docker ownership stub."""
 
+    api_health = True
+
     def do_GET(self) -> None:
         """Return the documented health route and frontend root."""
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b'{"ok":true}' if self.path == "/health" else b"<html>fixture</html>")
+        self.wfile.write(b'{"ok":true}' if self.path == "/api/health" and self.api_health else b"<html>fixture</html>")
 
     def log_message(self, format_string: str, *args: object) -> None:
         """Keep fixture requests out of test output."""
@@ -43,6 +45,21 @@ def docker_stub() -> int:
     with (root / "commands.jsonl").open("a") as output:
         output.write(json.dumps(args) + "\n")
     operation = args[0]
+    if operation == "network":
+        network_path = root / "network.json"
+        if args[1] == "inspect":
+            if not network_path.exists():
+                return 1
+            print(json.dumps([json.loads(network_path.read_text())]))
+        elif args[1] == "create":
+            labels = dict(args[index + 1].split("=", 1) for index, value in enumerate(args) if value == "--label")
+            network_path.write_text(json.dumps({"Labels": labels, "Containers": {}}))
+            print(args[-1])
+        elif args[1] == "rm":
+            network_path.unlink()
+        else:
+            return 2
+        return 0
     if operation == "context":
         if args[1] == "inspect":
             current = (root / "current-context").read_text() if (root / "current-context").exists() else "default"
@@ -99,7 +116,7 @@ def docker_stub() -> int:
             if option == "--init":
                 index += 1
                 continue
-            if option not in ("--label", "-e", "-p", "--user", "--name", "-v", "-w"):
+            if option not in ("--label", "-e", "-p", "--user", "--name", "-v", "-w", "--network", "--network-alias"):
                 break
             value = args[index + 1]
             if option == "--label":
@@ -190,7 +207,7 @@ class PreviewTests(unittest.TestCase):
         (self.repo / "Dockerfile.dev").write_text("FROM fixture\n")
         (self.repo / "persistence-marker").write_text("retain")
         self.env_path = self.repo / ".env"
-        self.env_path.write_text("PREVIEW_BACKEND_PORT=0\nPREVIEW_FRONTEND_PUBLISHED_PORT=0\nPREVIEW_READY_TIMEOUT=1\nHOUKAGO_BAIDU_CLIENT_SECRET='literal $(never) `never`'\nVITE_TEST=public\nPATH=/invalid\nrepo_root=/invalid\n")
+        self.env_path.write_text("FRONTEND_PUBLISHED_PORT=0\nREADY_TIMEOUT=1\nHOUKAGO_BAIDU_CLIENT_SECRET='literal $(never) `never`'\nVITE_TEST=public\nPATH=/invalid\nrepo_root=/invalid\n")
         stub = self.bin / "docker"
         stub.write_text(f"#!/bin/sh\nexec {shutil.which('python3')} '{Path(__file__).resolve()}' --docker-stub \"$@\"\n")
         stub.chmod(0o755)
@@ -208,7 +225,7 @@ class PreviewTests(unittest.TestCase):
             "eth2 DOWN 198.51.100.99/24\n"
             "invalid UP nonsense 0.0.0.0/0\n"
         )
-        self.environment = {key: value for key, value in os.environ.items() if not key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_", "DX_", "DOCKER_")) and key not in ("HOST", "PORT", "HOUSOU_DB")}
+        self.environment = {key: value for key, value in os.environ.items() if not key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_", "FRONTEND_", "BACKEND_", "DX_", "DOCKER_")) and key not in ("BACKEND_HOST", "BACKEND_PORT", "HOST", "PORT", "LAN_HOST", "READY_TIMEOUT", "HOUSOU_DB")}
         self.environment.update(PATH=f"{self.bin}:{os.environ['PATH']}", TEST_DOCKER_STATE=str(self.state))
         self.servers = []
         for key in ("TEST_BACKEND_PORT", "TEST_FRONTEND_PORT"):
@@ -245,11 +262,12 @@ class PreviewTests(unittest.TestCase):
         """Inspect actual mapping, reuse only healthy ownership and preserve data."""
         result = self.run_preview("start", overrides={"DX_REBUILD_IMAGE": "1"})
         self.assertIn("System is ready.", result.stdout)
-        self.assertIn(f"API (housou):\nhttp://127.0.0.1:{self.environment['TEST_BACKEND_PORT']}", result.stdout)
+        self.assertIn(f"API (kyoushitsu-react):\nhttp://127.0.0.1:{self.environment['TEST_FRONTEND_PORT']}/api/health", result.stdout)
         self.assertIn(f"Website (kyoushitsu-react):\nhttp://127.0.0.1:{self.environment['TEST_FRONTEND_PORT']}", result.stdout)
         self.assertEqual(result.stderr, "")
         state = self.records()
-        self.assertEqual(state["owned-frontend"]["Config"]["Env"]["VITE_HOUSOU_PORT"], self.environment["TEST_BACKEND_PORT"])
+        self.assertEqual(state["owned-frontend"]["Config"]["Env"]["HOUSOU_PROXY_TARGET"], "http://housou:3000")
+        self.assertEqual(state["owned-backend"]["NetworkSettings"]["Ports"], {})
         self.assertNotIn("HOUKAGO_BAIDU_CLIENT_SECRET", state["owned-frontend"]["Config"]["Env"])
         self.assertEqual(self.run_preview("start").stdout, result.stdout)
         self.assertEqual(self.run_preview("status").stdout, result.stdout)
@@ -261,16 +279,66 @@ class PreviewTests(unittest.TestCase):
         self.run_preview("down")
         self.assertEqual(set(self.records()), {"unrelated"})
         self.assertEqual((self.repo / "persistence-marker").read_text(), "retain")
+        self.assertFalse((self.state / "network.json").exists())
+
+    def test_spa_html_is_not_api_health(self) -> None:
+        """A healthy website cannot hide a broken public API entry."""
+        with mock.patch.object(FixtureHandler, "api_health", False):
+            result = self.run_preview("start", success=False)
+        self.assertIn("/api/health", result.stderr)
+        self.assertNotIn("System is ready.", result.stdout)
+        self.assertEqual(set(self.records()), {"unrelated"})
+        self.assertFalse((self.state / "network.json").exists())
+
+    def test_renamed_keys_and_manifest_defaults_drive_actual_runtime(self) -> None:
+        """Use owner-selected listener defaults and an independent site host port."""
+        (self.repo / "package.json").write_text('{"config":{"ports":{"backend":8081,"frontend":8080}}}')
+        result = self.run_preview("start", overrides={"FRONTEND_PUBLISHED_PORT": self.environment["TEST_FRONTEND_PORT"], "LAN_HOST": "preview.example.test"})
+        state = self.records()
+        self.assertEqual(state["owned-backend"]["Config"]["Labels"]["houkago.port"], "8081")
+        self.assertEqual(state["owned-frontend"]["Config"]["Labels"]["houkago.port"], "8080")
+        self.assertEqual(state["owned-frontend"]["Config"]["Env"]["HOUSOU_PROXY_TARGET"], "http://housou:8081")
+        self.assertNotIn("PORT", state["owned-backend"]["Config"]["Env"])
+        self.assertNotIn("PREVIEW_FRONTEND_PORT", state["owned-frontend"]["Config"]["Env"])
+        self.assertIn(f"http://preview.example.test:{self.environment['TEST_FRONTEND_PORT']}", result.stdout)
+        self.assertEqual(state["owned-backend"]["NetworkSettings"]["Ports"], {})
+
+    def test_network_ownership_and_attached_container_preservation(self) -> None:
+        """Foreign or occupied networks are never deleted by preview teardown."""
+        network = self.state / "network.json"
+        network.write_text(json.dumps({"Labels": {"houkago.repo": "/other"}, "Containers": {}}))
+        self.assertIn("network ownership mismatch", self.run_preview("start", success=False).stderr)
+        self.assertTrue(network.exists())
+        self.assertEqual(set(self.records()), {"unrelated"})
+        network.unlink()
+        self.run_preview("start")
+        data = json.loads(network.read_text())
+        data["Containers"] = {"unrelated": {}}
+        network.write_text(json.dumps(data))
+        self.assertIn("still has attached containers", self.run_preview("stop", success=False).stderr)
+        self.assertTrue(network.exists())
+        self.assertEqual(set(self.records()), {"unrelated"})
+
+    def test_obsolete_public_backend_settings_are_preserved_but_ignored(self) -> None:
+        """Old endpoint settings cannot restore a second public API port."""
+        with self.env_path.open("a") as output:
+            output.write("PREVIEW_BACKEND_PORT=obsolete\nVITE_HOUSOU_URL=http://old-backend:3000\nVITE_HOUSOU_PORT=3000\n")
+        original = self.env_path.read_bytes()
+        result = self.run_preview("start")
+        self.assertIn("Obsolete settings ignored", result.stderr)
+        self.assertEqual(self.env_path.read_bytes(), original)
+        self.assertEqual(self.records()["owned-backend"]["NetworkSettings"]["Ports"], {})
+        self.assertNotIn("VITE_HOUSOU_URL", self.records()["owned-frontend"]["Config"]["Env"])
 
     def test_all_host_addresses_and_sections(self) -> None:
         """Enumerate secondary, bridge and tunnel candidates per browser entry."""
-        result = self.run_preview("start", overrides={"PREVIEW_LAN_HOST": "preview.example.test"})
+        result = self.run_preview("start", overrides={"LAN_HOST": "preview.example.test"})
         labels = ("Open:", "Local only (preview host):", "Listeners:", "Published:", "Notes:")
         positions = [result.stdout.index(label) for label in labels]
         self.assertEqual(positions, sorted(positions))
         opened = result.stdout.split("Open:\n", 1)[1].split("\nLocal only", 1)[0]
-        for label, key in (("API (housou):", "TEST_BACKEND_PORT"), ("Website (kyoushitsu-react):", "TEST_FRONTEND_PORT")):
-            expected = label + "\n" + "\n".join(f"http://{host}:{self.environment[key]}" for host in (
+        for label, path in (("API (kyoushitsu-react):", "/api/health"), ("Website (kyoushitsu-react):", "")):
+            expected = label + "\n" + "\n".join(f"http://{host}:{self.environment['TEST_FRONTEND_PORT']}{path}" for host in (
                 "192.0.2.10", "192.0.2.11", "198.51.100.20", "172.18.0.1", "203.0.113.7", "preview.example.test"))
             self.assertIn(expected, opened)
         self.assertNotIn("127.0.0.1", opened)
@@ -284,7 +352,7 @@ class PreviewTests(unittest.TestCase):
     def test_loopback_needs_no_ip_and_has_no_remote_urls(self) -> None:
         """Keep loopback publishing local even with a configured remote hint."""
         (self.bin / "ip").unlink()
-        result = self.run_preview("start", overrides={"DX_BIND_HOST": "127.0.0.1", "PREVIEW_LAN_HOST": "preview.example.test", "PATH": str(self.bin)})
+        result = self.run_preview("start", overrides={"DX_BIND_HOST": "127.0.0.1", "LAN_HOST": "preview.example.test", "PATH": str(self.bin)})
         self.assertNotIn("Open:", result.stdout)
         self.assertIn("Local only (preview host):", result.stdout)
         self.assertNotIn("preview.example.test", result.stdout)
@@ -342,7 +410,7 @@ class PreviewTests(unittest.TestCase):
         for arguments, verbose in (((), False), (("--verbose",), True)):
             with self.subTest(verbose=verbose):
                 (self.state / "transient-fail").touch()
-                result = self.run_preview("start", *arguments, overrides={"PREVIEW_READY_TIMEOUT": "5"})
+                result = self.run_preview("start", *arguments, overrides={"READY_TIMEOUT": "5"})
                 if verbose:
                     self.assertIn("housou: owned container HTTP listener is not ready", result.stderr)
                 else:
@@ -432,7 +500,7 @@ class PreviewTests(unittest.TestCase):
         """Require explicit restart for changed config; stop/status ignore .env."""
         self.run_preview("start")
         with self.env_path.open("a") as output:
-            output.write("PREVIEW_LAN_HOST=192.0.2.1\n")
+            output.write("LAN_HOST=192.0.2.1\n")
         result = self.run_preview("start", success=False)
         self.assertIn("configuration changed", result.stderr)
         self.assertEqual(len(self.records()), 3)
@@ -537,7 +605,7 @@ class PreviewTests(unittest.TestCase):
     def test_origin_override_and_public_frontend_inputs(self) -> None:
         """Explicit CLI origin wins; process config wins over root dotenv."""
         self.run_preview("start", "--origin", "http://localhost:4000",
-                         overrides={"HOUKAGO_CORS_ORIGIN": "http://localhost:3000", "PREVIEW_LAN_HOST": "192.0.2.9", "VITE_TEST": "overridden"})
+                         overrides={"HOUKAGO_CORS_ORIGIN": "http://localhost:3000", "LAN_HOST": "192.0.2.9", "VITE_TEST": "overridden"})
         state = self.records()
         self.assertEqual(state["owned-backend"]["Config"]["Env"]["HOUKAGO_CORS_ORIGIN"], "http://localhost:4000")
         self.assertEqual(state["owned-frontend"]["Config"]["Env"]["VITE_TEST"], "overridden")
@@ -545,7 +613,7 @@ class PreviewTests(unittest.TestCase):
 
     def test_invalid_config_no_docker_mutation(self) -> None:
         """Reject empty, duplicate, malformed and credential-bearing settings."""
-        for value in ("PORT=\n", "PORT=65536\n", "PORT='$(touch forbidden)'\n", "PORT=3000\nPORT=3001\n", "DX_IMAGE=\n", "HOUKAGO_CORS_ORIGIN=http://user:password@localhost\n", "HOUKAGO_CORS_ORIGIN=http://:fixture-password@localhost\n", "HOUKAGO_CORS_ORIGIN=http://localhost:bad\n", "HOUKAGO_CORS_ORIGIN=http://localhost:0\n", "HOUKAGO_CORS_ORIGIN=http://localhost:\n", "PREVIEW_LAN_HOST=192.0.2.1:4000\n", "PREVIEW_LAN_HOST=:::\n", "PREVIEW_READY_TIMEOUT=0\n"):
+        for value in ("BACKEND_PORT=\n", "BACKEND_PORT=65536\n", "BACKEND_PORT='$(touch forbidden)'\n", "BACKEND_PORT=3000\nBACKEND_PORT=3001\n", "DX_IMAGE=\n", "HOUKAGO_CORS_ORIGIN=http://user:password@localhost\n", "HOUKAGO_CORS_ORIGIN=http://:fixture-password@localhost\n", "HOUKAGO_CORS_ORIGIN=http://localhost:bad\n", "HOUKAGO_CORS_ORIGIN=http://localhost:0\n", "HOUKAGO_CORS_ORIGIN=http://localhost:\n", "LAN_HOST=192.0.2.1:4000\n", "LAN_HOST=:::\n", "READY_TIMEOUT=0\n"):
             with self.subTest(value=value):
                 self.env_path.write_text(value)
                 self.run_preview("start", success=False)

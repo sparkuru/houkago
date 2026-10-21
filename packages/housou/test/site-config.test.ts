@@ -93,7 +93,7 @@ test("public route returns only the normalized config and disables HTTP caching"
   process.env.HOUKAGO_CREDENTIAL_KEY = "site-config-key-sentinel"
 
   try {
-    const response = await app.handle(new Request("http://localhost/site-config"))
+    const response = await app.handle(new Request("http://localhost/api/site-config"))
     const text = await response.text()
 
     expect(response.status).toBe(200)

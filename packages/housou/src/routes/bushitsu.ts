@@ -105,7 +105,7 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     "/:id/enmoku/preview",
     async ({ params, body, request }) => {
       authorizePlaylistMutation(request, params.id)
-      return previewEnmoku(params.id, body, new URL(request.url).origin)
+      return previewEnmoku(params.id, body, "/api")
     },
     {
       body: PreviewEnmokuBody,
@@ -118,7 +118,7 @@ export const bushitsuRoutes = new Elysia({ prefix: "/bushitsu" })
     "/:id/enmoku",
     async ({ params, body, request }) => {
       const actor = authorizePlaylistMutation(request, params.id)
-      const enmoku = await createEnmoku(params.id, body, new URL(request.url).origin, actor)
+      const enmoku = await createEnmoku(params.id, body, "/api", actor)
       broadcastBangumi(params.id)
       return enmoku
     },

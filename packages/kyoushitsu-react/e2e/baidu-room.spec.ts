@@ -3,7 +3,9 @@ import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { type Page, expect, test } from "@playwright/test"
 
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const frontendUrl = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"
 const video = readFile(fileURLToPath(new URL("./fixtures/media/clip.mp4", import.meta.url)))
 
@@ -118,9 +120,9 @@ async function installAdapter(page: Page): Promise<void> {
 }
 
 async function installProviderRoutes(page: Page, state: FixtureState): Promise<void> {
-  await page.route("**/baidu/**", async (route) => {
+  await page.route("**/api/baidu/**", async (route) => {
     const request = route.request()
-    const path = new URL(request.url()).pathname
+    const path = new URL(request.url()).pathname.replace(/^\/api(?=\/)/, "")
     const headers = {
       "access-control-allow-origin": frontendUrl,
       "access-control-allow-credentials": "true",
@@ -404,7 +406,7 @@ test("desktop grant waits for owner once and mounts media only after adapter pre
     addedBy: "fixture-account",
     provider: { kind: "baidu", sourceId: "source-1", fileName: "Fixture.mp4" },
   }
-  await page.routeWebSocket("**/ws", (socket) => {
+  await page.routeWebSocket("**/api/ws", (socket) => {
     const server = socket.connectToServer()
     socket.onMessage((frame) => {
       const message = JSON.parse(frame.toString()) as {
@@ -439,7 +441,7 @@ test("desktop grant waits for owner once and mounts media only after adapter pre
   })
   // Keep the real room admission/socket; replace only its queue snapshot with
   // one synthetic provider item so the page can exercise grant preparation.
-  await page.route(`**/bushitsu/${roomId}/bangumi`, (route) =>
+  await page.route(`**/api/bushitsu/${roomId}/bangumi`, (route) =>
     route.fulfill({ json: [fixtureItem] }),
   )
   await page.reload()

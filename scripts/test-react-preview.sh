@@ -65,7 +65,7 @@ check_runner() {
 	set -m
 	TEST_SERVICE_DIR="$test_dir/services" HOUKAGO_CORS_ORIGIN=sentinel \
 		HOUKAGO_BAIDU_CLIENT_SECRET=sentinel HOUKAGO_CREDENTIAL_KEY=sentinel \
-		HOUSOU_DB=sentinel PORT=9000 NODE_ENV=production \
+		HOUSOU_DB=sentinel BACKEND_PORT=9000 NODE_ENV=production \
 		bash "$test_dir/repo/scripts/dev-react-preview.sh" >"$test_dir/runner.log" 2>&1 &
 	runner_pid=$!
 	set +m
@@ -148,8 +148,8 @@ esac
 printf '%s\0' "$@" > "$TEST_SERVICE_DIR/$service.args"
 printf '%s' "$PWD" > "$TEST_SERVICE_DIR/$service.cwd"
 printf '%s|%s|%s|%s' "${NODE_ENV:-}" "${HOUKAGO_CORS_ORIGIN+x}" "${HOUKAGO_BAIDU_CLIENT_SECRET+x}" "${HOUKAGO_CREDENTIAL_KEY+x}" > "$TEST_SERVICE_DIR/$service.env"
-printf '%s|%s' "${HOUSOU_DB:-}" "${PORT:-}" > "$TEST_SERVICE_DIR/$service.memory"
-printf '%s|%s|%s' "${HOUKAGO_ISOLATED_PREVIEW:-}" "${VITE_HOUSOU_URL:-}" "${VITE_LEGACY_FRONTEND_URL:-}" > "$TEST_SERVICE_DIR/$service.frontend"
+printf '%s|%s' "${HOUSOU_DB:-}" "${BACKEND_PORT:-}" > "$TEST_SERVICE_DIR/$service.memory"
+printf '%s|%s|%s' "${HOUKAGO_ISOLATED_PREVIEW:-}" "${HOUSOU_PROXY_TARGET:-}" "${VITE_LEGACY_FRONTEND_URL:-}" > "$TEST_SERVICE_DIR/$service.frontend"
 sleep 30 &
 helper_pid=$!
 printf '%s' "$helper_pid" > "$TEST_SERVICE_DIR/$service.helper"

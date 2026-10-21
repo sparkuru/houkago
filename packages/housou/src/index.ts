@@ -14,7 +14,7 @@ import { siteConfigRoutes } from "./routes/site-config"
 import { wsRoutes } from "./ws/handler"
 import { startTenko } from "./ws/tenko"
 
-export const app = new Elysia()
+export const app = new Elysia({ prefix: "/api" })
   .use(cors({ origin: corsOrigin(), credentials: true }))
   .use(
     openapi({
@@ -40,11 +40,6 @@ export const app = new Elysia()
   // Central error mapping: domain error `code` → HTTP status + uniform body.
   // Unmapped / unexpected errors become 500 with a generic message.
   .onError(({ error, code, set }) => {
-    const domainCode = (error as { code?: string }).code
-    if (domainCode) {
-      set.status = statusFor(domainCode)
-      return { error: { code: domainCode, message: (error as Error).message } }
-    }
     if (code === "VALIDATION") {
       set.status = 422
       return { error: { code: "VALIDATION", message: "invalid request" } }
@@ -52,6 +47,11 @@ export const app = new Elysia()
     if (code === "NOT_FOUND") {
       set.status = 404
       return { error: { code: "NOT_FOUND", message: "not found" } }
+    }
+    const domainCode = (error as { code?: string }).code
+    if (domainCode) {
+      set.status = statusFor(domainCode)
+      return { error: { code: domainCode, message: (error as Error).message } }
     }
     set.status = 500
     return { error: { code: "INTERNAL", message: "internal error" } }
@@ -72,8 +72,8 @@ export const app = new Elysia()
 export type App = typeof app
 
 if (import.meta.main) {
-  const port = Number(process.env.PORT ?? 3000)
-  app.listen({ hostname: process.env.HOST ?? "0.0.0.0", port })
+  const port = Number(process.env.BACKEND_PORT ?? 3000)
+  app.listen({ hostname: process.env.BACKEND_HOST ?? "0.0.0.0", port })
   // 点呼: authority-clock heartbeat, only in the running server (not tests, which
   // start it explicitly with a stop handle to avoid leaking the timer).
   startTenko(app)

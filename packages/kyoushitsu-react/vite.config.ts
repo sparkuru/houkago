@@ -32,6 +32,12 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
+    proxy: {
+      "^/api(?:/|$)": {
+        target: process.env.HOUSOU_PROXY_TARGET ?? "http://127.0.0.1:3000",
+        ws: true,
+      },
+    },
     watch: { usePolling: true, interval: 300 },
   },
 })

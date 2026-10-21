@@ -121,7 +121,7 @@ afterEach(() => {
 })
 
 function makeClient(): { client: KousokuClient; ws: MockWebSocket } {
-  const client = new KousokuClient("http://x", () => {})
+  const client = new KousokuClient("http://x/api", () => {})
   client.connect("rA", "b1")
   const ws = MockWebSocket.last
   if (!ws) throw new Error("mock ws not created")
@@ -135,7 +135,7 @@ function makeClientWithStatus(): {
 } {
   const statuses: string[] = []
   const client = new KousokuClient(
-    "http://x",
+    "http://x/api",
     () => {},
     (status) => {
       statuses.push(status)
@@ -151,7 +151,7 @@ function makeReconnectClient(onStatus: (status: string) => void = () => {}): {
   client: KousokuClient
   ws: MockWebSocket
 } {
-  const client = new KousokuClient("https://x/app", () => {}, onStatus, {
+  const client = new KousokuClient("https://x/api/", () => {}, onStatus, {
     minDelayMs: 0,
     maxDelayMs: 0,
   })
@@ -233,7 +233,7 @@ test("callbacks from a socket replaced by connect are ignored", () => {
   const messages: KousokuMessage[] = []
   const statuses: string[] = []
   const client = new KousokuClient(
-    "http://x",
+    "http://x/api",
     (message) => messages.push(message),
     (status) => statuses.push(status),
   )
@@ -268,7 +268,7 @@ test("unexpected close reconnects with the same room identity", async () => {
   const next = MockWebSocket.instances[1]
   const url = new URL(String(next.url))
   expect(url.protocol).toBe("wss:")
-  expect(url.pathname).toBe("/ws")
+  expect(url.pathname).toBe("/api/ws")
   expect(url.searchParams.get("bushitsuId")).toBe("rA")
   expect(url.searchParams.has("senderId")).toBe(false)
   expect(url.searchParams.has("nickname")).toBe(false)
@@ -305,7 +305,7 @@ test("initial browser offline waits for online before opening a socket", () => {
   setNavigatorOnline(false)
   const statuses: string[] = []
   const client = new KousokuClient(
-    "http://x",
+    "http://x/api",
     () => {},
     (status) => statuses.push(status),
     {

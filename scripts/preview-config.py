@@ -123,37 +123,41 @@ def load_config(root: Path, mode: str, origin: str | None) -> dict[str, str]:
     local = parse_dotenv(path) if path.is_file() else {}
     values = {
         "DX_IMAGE": "houkago-dev:playwright", "DX_BIND_HOST": "0.0.0.0",
-        "HOST": "0.0.0.0", "PORT": str(ports[0]),
-        "PREVIEW_FRONTEND_HOST": "0.0.0.0", "PREVIEW_FRONTEND_PORT": str(ports[1]),
-        "PREVIEW_BACKEND_PORT": str(ports[0]), "PREVIEW_FRONTEND_PUBLISHED_PORT": str(ports[1]),
-        "PREVIEW_READY_TIMEOUT": "60", "PREVIEW_LAN_HOST": "",
+        "BACKEND_HOST": "0.0.0.0", "BACKEND_PORT": str(ports[0]),
+        "FRONTEND_HOST": "0.0.0.0", "FRONTEND_PORT": str(ports[1]),
+        "FRONTEND_PUBLISHED_PORT": str(ports[1]),
+        "READY_TIMEOUT": "60", "LAN_HOST": "",
         "HOUSOU_DB": "houkago.db", "HOUKAGO_CORS_ORIGIN": "",
     }
     values.update(local)
-    relevant = set(values) | {key for key in os.environ if key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_"))}
+    relevant = set(values) | {key for key in os.environ if key.startswith(("HOUKAGO_", "VITE_", "PREVIEW_", "FRONTEND_", "BACKEND_"))}
     for key in relevant:
         if key in os.environ:
             values[key] = os.environ[key]
     if origin is not None:
         values["HOUKAGO_CORS_ORIGIN"] = origin
-    for key in ("PORT", "PREVIEW_FRONTEND_PORT", "PREVIEW_BACKEND_PORT", "PREVIEW_FRONTEND_PUBLISHED_PORT"):
-        values[key] = decimal(values[key], key, "PUBLISHED" in key or key == "PREVIEW_BACKEND_PORT")
-    if values["PORT"] == values["PREVIEW_FRONTEND_PORT"]:
-        raise ConfigError("PORT and PREVIEW_FRONTEND_PORT must be distinct container ports")
-    if values["PREVIEW_BACKEND_PORT"] != "0" and values["PREVIEW_BACKEND_PORT"] == values["PREVIEW_FRONTEND_PUBLISHED_PORT"]:
-        raise ConfigError("published backend and frontend ports must be distinct (or use 0)")
-    for key in ("DX_BIND_HOST", "HOST", "PREVIEW_FRONTEND_HOST"):
+    obsolete = [key for key in ("HOST", "PORT", "PREVIEW_FRONTEND_HOST", "PREVIEW_FRONTEND_PORT", "PREVIEW_FRONTEND_PUBLISHED_PORT", "PREVIEW_LAN_HOST", "PREVIEW_READY_TIMEOUT", "PREVIEW_BACKEND_PORT", "VITE_HOUSOU_URL", "VITE_HOUSOU_PORT") if key in values]
+    for key in obsolete:
+        del values[key]
+    if mode == "preview" and obsolete:
+        CLIStyle.log(f"Obsolete settings ignored for unified /api preview: {', '.join(obsolete)}. Existing .env values are preserved.", "warning")
+    values["PREVIEW_TOPOLOGY"] = "same-origin-api-v2"
+    for key in ("BACKEND_PORT", "FRONTEND_PORT", "FRONTEND_PUBLISHED_PORT"):
+        values[key] = decimal(values[key], key, "PUBLISHED" in key)
+    if values["BACKEND_PORT"] == values["FRONTEND_PORT"]:
+        raise ConfigError("BACKEND_PORT and FRONTEND_PORT must be distinct container ports")
+    for key in ("DX_BIND_HOST", "BACKEND_HOST", "FRONTEND_HOST"):
         try:
             ipaddress.ip_address(values[key])
         except ValueError as error:
             raise ConfigError(f"{key} must be an IPv4 or IPv6 address") from error
-    if mode == "preview" and any(values[key] not in ("0.0.0.0", "::") for key in ("HOST", "PREVIEW_FRONTEND_HOST")):
-        raise ConfigError("published preview requires HOST/PREVIEW_FRONTEND_HOST=0.0.0.0 or ::; restrict host access with DX_BIND_HOST=127.0.0.1")
+    if mode == "preview" and any(values[key] not in ("0.0.0.0", "::") for key in ("BACKEND_HOST", "FRONTEND_HOST")):
+        raise ConfigError("published preview requires BACKEND_HOST/FRONTEND_HOST=0.0.0.0 or ::; restrict host access with DX_BIND_HOST=127.0.0.1")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/:@-]*", values["DX_IMAGE"]):
         raise ConfigError("DX_IMAGE must be a nonempty Docker image reference")
-    timeout = values["PREVIEW_READY_TIMEOUT"]
+    timeout = values["READY_TIMEOUT"]
     if not re.fullmatch(r"[0-9]{1,4}", timeout) or not 1 <= int(timeout) <= 3600:
-        raise ConfigError("PREVIEW_READY_TIMEOUT must be an integer from 1 to 3600 seconds")
+        raise ConfigError("READY_TIMEOUT must be an integer from 1 to 3600 seconds")
     if not values["HOUSOU_DB"]:
         raise ConfigError("HOUSOU_DB must be nonempty (use houkago.db or :memory:)")
     cors = values["HOUKAGO_CORS_ORIGIN"]
@@ -166,7 +170,7 @@ def load_config(root: Path, mode: str, origin: str | None) -> dict[str, str]:
         raise ConfigError("HOUKAGO_CORS_ORIGIN/--origin port must be a decimal port from 1 to 65535")
     if cors and (parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.path or parsed.query or parsed.fragment or parsed.username is not None or re.search(r"\s", cors)):
         raise ConfigError("HOUKAGO_CORS_ORIGIN/--origin must be one http(s) origin without a path or credentials")
-    lan = values["PREVIEW_LAN_HOST"]
+    lan = values["LAN_HOST"]
     if lan:
         try:
             address = ipaddress.ip_address(lan)
@@ -174,10 +178,10 @@ def load_config(root: Path, mode: str, origin: str | None) -> dict[str, str]:
             valid_hostname = all(re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", label)
                                  for label in lan.rstrip(".").split("."))
             if not valid_hostname or len(lan) > 253 or lan.lower().rstrip(".") == "localhost":
-                raise ConfigError("PREVIEW_LAN_HOST must be a hostname/IP without a port, scheme, path or credentials")
+                raise ConfigError("LAN_HOST must be a hostname/IP without a port, scheme, path or credentials")
         else:
             if address.is_unspecified or address.is_loopback:
-                raise ConfigError("PREVIEW_LAN_HOST must be a non-loopback LAN hostname/IP candidate")
+                raise ConfigError("LAN_HOST must be a non-loopback LAN hostname/IP candidate")
     values["PREVIEW_CONFIG_HASH"] = hashlib.sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()
     values["DX_LEGACY_PORTS"] = "1" if not path.is_file() and "DX_BIND_HOST" not in os.environ else "0"
     return values
@@ -195,6 +199,35 @@ def docker_json(container: str) -> dict:
     if result.returncode:
         raise ConfigError("owned preview container disappeared; inspect ./preview.sh status")
     return json.loads(result.stdout)[0]
+
+
+def preview_network(root: Path, action: str) -> tuple[str, bool]:
+    """Create, verify or remove only the exact repository-owned preview network."""
+    name = "houkago-preview-" + hashlib.sha256(str(root).encode()).hexdigest()[:20]
+    result = subprocess.run(["docker", "network", "inspect", name], capture_output=True, timeout=5, check=False)
+    labels = {"houkago.repo": str(root), "houkago.scope": "preview"}
+    if result.returncode:
+        if action == "network-remove":
+            return name, False
+        if action != "network-create":
+            raise ConfigError("owned preview network missing; stop then start")
+        command = ["docker", "network", "create"]
+        for key, value in labels.items():
+            command.extend(("--label", f"{key}={value}"))
+        result = subprocess.run([*command, name], capture_output=True, timeout=10, check=False)
+        if result.returncode:
+            raise ConfigError("cannot create owned preview network; inspect Docker networking")
+        return name, True
+    network = json.loads(result.stdout)[0]
+    if any((network.get("Labels") or {}).get(key) != value for key, value in labels.items()):
+        raise ConfigError("network ownership mismatch; refusing to operate")
+    if action == "network-remove":
+        if network.get("Containers"):
+            raise ConfigError("owned preview network still has attached containers; preserving it")
+        result = subprocess.run(["docker", "network", "rm", name], capture_output=True, timeout=5, check=False)
+        if result.returncode:
+            raise ConfigError("cannot remove owned preview network; inspect attached containers")
+    return name, False
 
 
 def owned_runtime(root: Path, container: str, service: str) -> dict:
@@ -268,12 +301,14 @@ def probe(runtime: dict) -> None:
     name = runtime["service"]
     if runtime["state"] != "running":
         raise ConfigError(f"{name}: container is {runtime['state']}; restart with ./preview.sh stop then start")
-    if not runtime["mappings"]:
-        raise ConfigError(f"{name}: no published endpoint")
     backend = name == "housou"
-    path = "/health" if backend else "/"
-    script = ('const p=process.env.PORT; const h=process.env.HOST==="::"?"[::1]":"127.0.0.1";' if backend else
-              'const p=process.env.PREVIEW_FRONTEND_PORT; const h=process.env.PREVIEW_FRONTEND_HOST==="::"?"[::1]":"127.0.0.1";')
+    if backend and runtime["mappings"]:
+        raise ConfigError("housou: unexpected host publication; stop then start the unified /api preview")
+    if not backend and not runtime["mappings"]:
+        raise ConfigError(f"{name}: no published endpoint")
+    path = "/api/health" if backend else "/"
+    script = ('const p=process.env.BACKEND_PORT; const h=process.env.BACKEND_HOST==="::"?"[::1]":"127.0.0.1";' if backend else
+              'const p=process.env.FRONTEND_PORT; const h=process.env.FRONTEND_HOST==="::"?"[::1]":"127.0.0.1";')
     script += f'const r=await fetch(`http://${{h}}:${{p}}{path}`,{{signal:AbortSignal.timeout(1000)}}); if(!r.ok)process.exit(1);'
     if backend:
         script += 'if((await r.json()).ok!==true)process.exit(1);'
@@ -284,14 +319,20 @@ def probe(runtime: dict) -> None:
         raise ConfigError(f"{name}: owned container HTTP probe failed or timed out; inspect ./preview.sh status") from error
     if result.returncode:
         raise ConfigError(f"{name}: owned container HTTP listener is not ready")
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     for mapping in runtime["mappings"]:
-        try:
-            with opener.open(mapping_url(mapping, path), timeout=1) as response:
-                if response.status != 200 or (backend and json.load(response).get("ok") is not True):
-                    raise ConfigError(f"{name}: published HTTP endpoint is not ready")
-        except (urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
-            raise ConfigError(f"{name}: published HTTP endpoint is not ready") from error
+        probe_public(mapping, "/")
+        probe_public(mapping, "/api/health", health=True)
+
+
+def probe_public(mapping: dict, path: str, health: bool = False) -> None:
+    """Verify public API JSON instead of accepting a SPA fallback as readiness."""
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(mapping_url(mapping, path), timeout=1) as response:
+            if response.status != 200 or (health and json.load(response).get("ok") is not True):
+                raise ConfigError(f"kyoushitsu-react: published {path} endpoint is not ready")
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError, AttributeError) as error:
+        raise ConfigError(f"kyoushitsu-react: published {path} endpoint is not ready") from error
 
 
 def require_local_daemon() -> None:
@@ -404,26 +445,33 @@ def report(runtimes: list[dict], ready: bool) -> None:
         bind_hosts = [mapping["HostIp"] for runtime in runtimes for mapping in runtime["mappings"]]
         addresses, notes = discover_addresses(bind_hosts)
         for runtime in runtimes:
+            if runtime["service"] == "housou":
+                continue
             remote, local = entry_urls(runtime, addresses)
-            label = "API" if runtime["service"] == "housou" else "Website"
-            entry = f"{label} ({runtime['service']}):"
-            if remote:
-                remote_entries.extend([entry, *remote])
-            if local:
-                local_entries.extend([entry, *local])
+            for label, path in (("Website", ""), ("API", "/api/health")):
+                entry = f"{label} ({runtime['service']}):"
+                if remote:
+                    remote_entries.extend([entry, *(url + path for url in remote)])
+                if local:
+                    local_entries.extend([entry, *(url + path for url in local)])
         if remote_entries and not notes:
             notes.append("Access from other devices is unverified.")
         print(CLIStyle.color("System is ready.", "success"))
     render_section("Open", remote_entries)
     render_section("Local only (preview host)", local_entries)
     listeners = [f"Listening {runtime['service']}: {url_host(runtime['host'])}:{runtime['port']} "
-                 f"(container; HTTP{' listener unverified' if not ready else ''})" for runtime in runtimes]
+                 f"({'container only' if not runtime['mappings'] else 'container'}; HTTP{' listener unverified' if not ready else ''})" for runtime in runtimes]
     published = [f"Published {runtime['service']}: {url_host(mapping['HostIp'])}:{mapping['HostPort']} -> "
                  f"{url_host(runtime['host'])}:{runtime['port']} "
                  f"({'active listener' if ready else 'listener unverified'})"
                  for runtime in runtimes for mapping in runtime["mappings"]]
     render_section("Listeners", listeners)
     render_section("Published", published)
+    internal = [f"API (housou): http://housou:{runtime['port']}/api/health (Docker network only)"
+                for runtime in runtimes if ready and runtime["service"] == "housou"]
+    if internal:
+        internal.append("Internal probe: ./preview.sh status (checks owned container listeners and public /api/health)")
+    render_section("Internal only", internal)
     render_section("Notes", notes)
 
 
@@ -431,7 +479,7 @@ def main() -> int:
     """Dispatch config loading or read-only preview inspection."""
     parser = ColoredArgumentParser(description="Internal preview configuration/runtime helper",
                                    epilog="Example: python3 scripts/preview-config.py load . dx")
-    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status", "discovery", "diagnostics"))
+    parser.add_argument("action", choices=("load", "runtime", "probe", "report", "status", "discovery", "diagnostics", "network-create", "network-remove", "network-verify"))
     parser.add_argument("root", type=Path)
     parser.add_argument("arguments", nargs="*")
     parser.add_argument("--origin")
@@ -440,6 +488,11 @@ def main() -> int:
     root = args.root.resolve()
     runtimes: list[dict] = []
     try:
+        if args.action.startswith("network-"):
+            name, created = preview_network(root, args.action)
+            if args.action == "network-create":
+                print(CLIStyle.color(f"{name}:{str(created).lower()}"))
+            return 0
         if args.action == "diagnostics":
             startup_diagnostics(root, args.arguments[0])
             return 0
@@ -458,7 +511,7 @@ def main() -> int:
             raise ConfigError("both owned Housou and React containers are required")
         runtimes = [owned_runtime(root, item, service) for item, service in zip(args.arguments, ("housou", "kyoushitsu-react"))]
         if args.action == "report":
-            if any(runtime["state"] != "running" or not runtime["mappings"] for runtime in runtimes):
+            if any(runtime["state"] != "running" or (runtime["service"] != "housou" and not runtime["mappings"]) for runtime in runtimes):
                 raise ConfigError("required service exited or lost publication before readiness summary; inspect ./preview.sh status")
             report(runtimes, True)
             return 0

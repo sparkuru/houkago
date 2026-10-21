@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url"
 import { expect, test } from "@playwright/test"
 import { clickPlayerControl } from "./helpers/player-controls"
 
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const mediaUrl = "https://media.example.test/room-controls/clip.mp4"
 const clip = readFile(fileURLToPath(new URL("./fixtures/media/clip.mp4", import.meta.url)))
 

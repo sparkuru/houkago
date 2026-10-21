@@ -11,7 +11,12 @@ import {
 } from "houkago-kousoku"
 import { adapterHello } from "./capabilities"
 import type { BaiduDlinkResolver } from "./dlink-exchange"
-import { extensionOriginPattern, isAllowedPageOrigin, validatedServerBase } from "./host-policy"
+import {
+  configuredPageOrigin,
+  extensionOriginPattern,
+  isAllowedPageOrigin,
+  validatedServerBase,
+} from "./host-policy"
 import { BaiduPermitStore } from "./permits"
 import { BaiduSelectionRegistry } from "./selections"
 import type { AdapterStorage } from "./types"
@@ -318,6 +323,12 @@ export function createAdapterRuntime(options: AdapterRuntimeOptions): AdapterRun
     const adaptorToken = optionalString(value, "adaptorToken")
     if (
       !serverBase ||
+      validatedServerBase(
+        serverBase,
+        options.expectedPageOrigin ?? configuredPageOrigin() ?? serverBase,
+        options.expectedPageOrigin,
+        options.expectedServerOrigin,
+      ) !== serverBase ||
       !adaptorToken ||
       Object.keys(value).some((key) => !["serverBase", "adaptorToken"].includes(key))
     ) {
@@ -450,8 +461,15 @@ function publicError(error: unknown): string {
 function grantIdFromUrl(grantUrl: string, serverBase: string): string | null {
   try {
     const url = new URL(grantUrl)
-    if (url.origin !== serverBase) return null
-    const match = url.pathname.match(/^\/baidu\/media\/([^/]+)$/)
+    if (
+      url.origin !== new URL(serverBase).origin ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    )
+      return null
+    const match = url.pathname.match(/^\/api\/baidu\/media\/([^/]+)$/)
     return match?.[1] ? decodeURIComponent(match[1]) : null
   } catch {
     return null

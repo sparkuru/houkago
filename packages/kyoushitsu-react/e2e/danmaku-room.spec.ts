@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url"
 import { type Page, expect, test } from "@playwright/test"
 import { clickPlayerControl } from "./helpers/player-controls"
 
-const housouUrl = process.env.PLAYWRIGHT_HOUSOU_URL ?? "http://127.0.0.1:3000"
+const housouUrl =
+  process.env.PLAYWRIGHT_HOUSOU_URL ??
+  `${process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173"}/api`
 const mediaUrl = "https://media.example.test/m5/clip.mp4"
 const evidence = [{ kind: "filename", work: "fixture", episode: 1 }]
 
@@ -108,7 +110,7 @@ async function captureRoomSocket(page: Page) {
     window.WebSocket = class extends OriginalWebSocket {
       constructor(url: string | URL, protocols?: string | string[]) {
         super(url, protocols)
-        if (new URL(String(url)).pathname === "/ws")
+        if (new URL(String(url)).pathname === "/api/ws")
           (window as Window & { __m5DanmakuSocket?: WebSocket }).__m5DanmakuSocket = this
       }
     }
@@ -152,22 +154,22 @@ test("timeline precedence, local XML overlay, proposal and manual correction", a
   let itemId = ""
   let proposalBody: unknown = null
   let matchBody: unknown = null
-  await page.route("**/danmaku/bushitsu/*/enmoku/*", async (route) => {
+  await page.route("**/api/danmaku/bushitsu/*/enmoku/*", async (route) => {
     const url = new URL(route.request().url())
     const id = decodeURIComponent(url.pathname.split("/").at(-1) ?? "")
     const roomId = decodeURIComponent(url.pathname.split("/").at(-3) ?? "")
     await route.fulfill({ json: resolution(roomId, id) })
   })
-  await page.route("**/danmaku/episodes?*", (route) =>
+  await page.route("**/api/danmaku/episodes?*", (route) =>
     route.fulfill({
       json: [{ id: "episode-manual", title: "Fixture manual episode", createdAt: 0, updatedAt: 0 }],
     }),
   )
-  await page.route("**/danmaku/proposals", async (route) => {
+  await page.route("**/api/danmaku/proposals", async (route) => {
     proposalBody = route.request().postDataJSON()
     await route.fulfill({ json: { id: "proposal-fixture", status: "pending" } })
   })
-  await page.route("**/danmaku/matches", async (route) => {
+  await page.route("**/api/danmaku/matches", async (route) => {
     matchBody = route.request().postDataJSON()
     await route.fulfill({ json: { id: "match-fixture", trustScope: "personal" } })
   })
@@ -237,7 +239,7 @@ test("a late candidate response cannot repaint an older selected item", async ({
   let pendingItem = ""
   let delayed = false
   let lateSettled = false
-  await page.route("**/danmaku/bushitsu/*/enmoku/*", async (route) => {
+  await page.route("**/api/danmaku/bushitsu/*/enmoku/*", async (route) => {
     const url = new URL(route.request().url())
     const id = decodeURIComponent(url.pathname.split("/").at(-1) ?? "")
     const roomId = decodeURIComponent(url.pathname.split("/").at(-3) ?? "")

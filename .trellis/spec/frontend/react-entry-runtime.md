@@ -102,10 +102,13 @@ Run development and checks through the existing wrapper:
   PageTransitionEvent checks prove this lifecycle handling, not eligibility for
   a particular browser's Back/Forward Cache.
 - `DX_EXTRA_PORTS` accepts comma-separated decimal ports 1–65535, deduplicated
-  with defaults 3000/5173 and validated before Docker; it never evaluates input.
+  with the root configuration's listener defaults and validated before Docker; it never evaluates input.
   The preview runner owns a single container's memory Housou and React frontend.
   `--backend-port` and `--frontend-port` allow task-owned ports when defaults
   are occupied; both values must be valid distinct decimal ports.
+  The backend binds container loopback; Vite receives server-only
+  `HOUSOU_PROXY_TARGET` and forwards `/api` including WS. Browser traffic uses
+  the site origin, with no injected public backend URL.
   It uses Bun `--no-env-file`, `HOUSOU_DB=:memory:` and
   `HOUKAGO_ISOLATED_PREVIEW=1`. The React Vite config disables `envDir` under that
   flag, because Bun's option alone does not disable Vite dotenv loading. Ordinary

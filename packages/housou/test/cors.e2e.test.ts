@@ -9,7 +9,7 @@ test("configured frontend origin receives credentialed CORS preflight headers", 
   const { app } = await import(`../src/index.ts?cors-test=${crypto.randomUUID()}`)
   app.listen(0)
   try {
-    const response = await fetch(`http://127.0.0.1:${app.server?.port}/seitoshou/register`, {
+    const response = await fetch(`http://127.0.0.1:${app.server?.port}/api/seitoshou/register`, {
       method: "OPTIONS",
       headers: {
         origin,
@@ -40,7 +40,7 @@ test("development CORS reflects any frontend origin with credentials", async () 
   const { app } = await import(`../src/index.ts?dev-cors-test=${crypto.randomUUID()}`)
   app.listen(0)
   try {
-    const response = await fetch(`http://127.0.0.1:${app.server?.port}/seitoshou/register`, {
+    const response = await fetch(`http://127.0.0.1:${app.server?.port}/api/seitoshou/register`, {
       method: "OPTIONS",
       headers: {
         origin,

@@ -102,12 +102,14 @@ async function readCandidates(
 }> {
   const response = await app.handle(
     new Request(
-      `http://localhost/danmaku/bushitsu/${bushitsuId}/enmoku/${enmokuId}?${new URLSearchParams({
-        duration: String(duration),
-        ...(fingerprint === undefined
-          ? {}
-          : { fingerprint: fingerprint.value, fingerprintBytes: String(fingerprint.bytes) }),
-      })}`,
+      `http://localhost/api/danmaku/bushitsu/${bushitsuId}/enmoku/${enmokuId}?${new URLSearchParams(
+        {
+          duration: String(duration),
+          ...(fingerprint === undefined
+            ? {}
+            : { fingerprint: fingerprint.value, fingerprintBytes: String(fingerprint.bytes) }),
+        },
+      )}`,
       { headers: { cookie: actor.cookie } },
     ),
   )
@@ -148,7 +150,7 @@ test("Baidu filename matching is explainable and confirmation remains scoped", a
   const enmoku = addEnmoku(bushitsuId, {
     title: fileName,
     type: "direct",
-    url: `/baidu/source/${sourceId}`,
+    url: `/api/baidu/source/${sourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",
@@ -214,7 +216,7 @@ test("Baidu filename matching is explainable and confirmation remains scoped", a
   )
 
   const proposal = await app.handle(
-    new Request("http://localhost/danmaku/proposals", {
+    new Request("http://localhost/api/danmaku/proposals", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -268,7 +270,7 @@ test("Baidu matching ignores unsafe filenames and still enforces room admission"
   const enmoku = addEnmoku(bushitsuId, {
     title: "private source",
     type: "direct",
-    url: `/baidu/source/${sourceId}`,
+    url: `/api/baidu/source/${sourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",
@@ -281,7 +283,7 @@ test("Baidu matching ignores unsafe filenames and still enforces room admission"
   )
 
   const notAdmitted = await app.handle(
-    new Request(`http://localhost/danmaku/bushitsu/${bushitsuId}/enmoku/${enmoku.id}`, {
+    new Request(`http://localhost/api/danmaku/bushitsu/${bushitsuId}/enmoku/${enmoku.id}`, {
       headers: { cookie: owner.cookie },
     }),
   )
@@ -291,7 +293,7 @@ test("Baidu matching ignores unsafe filenames and still enforces room admission"
   const result = ensureBaiduDanmakuSource(owner.id, bushitsuId, enmoku.id)
   expect(result).toEqual({ release: null, matchCandidates: [] })
   expect(findMediaReleaseByProvider("baidu", sourceId)).toBeNull()
-  expect(enmoku.url).toBe(`/baidu/source/${sourceId}`)
+  expect(enmoku.url).toBe(`/api/baidu/source/${sourceId}`)
   expect(resolveDanmakuCandidates(owner.id, bushitsuId, enmoku.id).candidates).toEqual([])
 })
 
@@ -322,7 +324,7 @@ test("different Baidu encodes reuse one episode track with release-specific alig
   const firstEnmoku = addEnmoku(bushitsuId, {
     title: "[Group A] The Apothecary Diaries - S01E03 [1080p].mkv",
     type: "direct",
-    url: `/baidu/source/${firstSourceId}`,
+    url: `/api/baidu/source/${firstSourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",
@@ -334,7 +336,7 @@ test("different Baidu encodes reuse one episode track with release-specific alig
   const secondEnmoku = addEnmoku(bushitsuId, {
     title: "[Group B] The Apothecary Diaries - S01E03 [720p].mp4",
     type: "direct",
-    url: `/baidu/source/${secondSourceId}`,
+    url: `/api/baidu/source/${secondSourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",
@@ -456,7 +458,7 @@ test("a promoted Baidu fingerprint reuses the canonical track through candidate 
   const firstEnmoku = addEnmoku(bushitsuId, {
     title: firstFileName,
     type: "direct",
-    url: `/baidu/source/${firstSourceId}`,
+    url: `/api/baidu/source/${firstSourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",
@@ -491,7 +493,7 @@ test("a promoted Baidu fingerprint reuses the canonical track through candidate 
   const secondEnmoku = addEnmoku(bushitsuId, {
     title: secondFileName,
     type: "direct",
-    url: `/baidu/source/${secondSourceId}`,
+    url: `/api/baidu/source/${secondSourceId}`,
     addedBy: owner.id,
     provider: {
       kind: "baidu",

@@ -70,7 +70,7 @@ test("site config uses the configured origin and cookie credentials", async () =
 
   const request = requests[0]
   if (!request) throw new Error("site config request was not captured")
-  expect(request.url).toBe("https://housou.test/site-config")
+  expect(request.url).toBe("https://housou.test/api/site-config")
   expect(request.credentials).toBe("include")
 })
 
@@ -169,7 +169,7 @@ test.each(["ready", "failed"])("grant preparation creates once and stops at %s",
     state === "ready"
       ? {
           state,
-          grantUrl: "https://housou.test/baidu/media/grant-1",
+          grantUrl: "https://housou.test/api/baidu/media/grant-1",
           expiresAt: Date.now() + 60_000,
         }
       : { state, reason: "upstream-resolution-failed" }
@@ -301,7 +301,7 @@ test("room queue mutation returns an acknowledgement without a live-state payloa
   const request = requests[0]
   if (!request) throw new Error("queue request was not captured")
   expect(request.method).toBe("POST")
-  expect(new URL(request.url).pathname).toBe("/bushitsu/room-1/bangumi/enmoku-1/move")
+  expect(new URL(request.url).pathname).toBe("/api/bushitsu/room-1/bangumi/enmoku-1/move")
   expect(await request.json()).toEqual({ direction: "up" })
 })
 
@@ -316,7 +316,7 @@ test("Baidu availability and grant polling preserve all union states", async () 
     jsonResponse({ state: "pending", requestId: "request-123456789", expiresAt: 100 }),
     jsonResponse({
       state: "ready",
-      grantUrl: "https://housou.test/baidu/media/grant-1",
+      grantUrl: "https://housou.test/api/baidu/media/grant-1",
       expiresAt: 200,
     }),
     jsonResponse({ state: "failed", reason: "upstream-resolution-failed" }),
@@ -340,7 +340,7 @@ test("Baidu availability and grant polling preserve all union states", async () 
   })
   await expect(pollBaiduGrant("request-123456789")).resolves.toEqual({
     state: "ready",
-    grantUrl: "https://housou.test/baidu/media/grant-1",
+    grantUrl: "https://housou.test/api/baidu/media/grant-1",
     expiresAt: 200,
   })
   await expect(pollBaiduGrant("request-123456789")).resolves.toEqual({
@@ -352,7 +352,7 @@ test("Baidu availability and grant polling preserve all union states", async () 
     "room-1",
   )
   expect(new URL(requests[1]?.url ?? "https://invalid").pathname).toBe(
-    "/baidu/sources/source-1/grants",
+    "/api/baidu/sources/source-1/grants",
   )
 })
 

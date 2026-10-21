@@ -30,7 +30,7 @@ import type {
 const grant = {
   id: "grant-1",
   tabId: 7,
-  sentinelUrl: "https://houkago.example/baidu/media/capability",
+  sentinelUrl: "https://houkago.example/api/baidu/media/capability",
   dlink: "https://d.pcs.baidu.com/file?cap=1",
   expiresAt: 10_000,
 }
@@ -46,12 +46,15 @@ test("handshake identifies its device and keeps every media capability pairing-g
 test("Firefox grant registry is exact, tab-scoped, expiring, and blocks unsafe redirects", () => {
   const registry = new MediaGrantRegistry()
   expect(() =>
-    registry.install({ ...grant, sentinelUrl: "ftp://localhost/baidu/media/capability" }, 1_000),
+    registry.install(
+      { ...grant, sentinelUrl: "ftp://localhost/api/baidu/media/capability" },
+      1_000,
+    ),
   ).toThrow("sentinel origin denied")
   const lanGrant = {
     ...grant,
     id: "lan-grant",
-    sentinelUrl: "http://windows-box:3000/baidu/media/capability",
+    sentinelUrl: "http://windows-box:3000/api/baidu/media/capability",
   }
   registry.install(lanGrant, 1_000)
   expect(registry.redirectFor(lanGrant.sentinelUrl, "lan-request", 7, 1_000)).toBe(grant.dlink)
@@ -259,33 +262,36 @@ test("development origins are web-open while production origins remain exact", (
       "https://watch.houkago.example",
     ),
   ).toBe(false)
-  expect(validatedServerBase("http://192.168.50.10:3000", "http://192.168.50.20:5173/room/1")).toBe(
-    "http://192.168.50.10:3000",
-  )
-  expect(validatedServerBase("https://api.lan.local:8443", "http://windows-box:5173/room/1")).toBe(
-    "https://api.lan.local:8443",
-  )
+  expect(
+    validatedServerBase("http://192.168.50.10:3000/api", "http://192.168.50.20:5173/room/1"),
+  ).toBe("http://192.168.50.10:3000/api")
+  expect(
+    validatedServerBase("https://api.lan.local:8443/api", "http://windows-box:5173/room/1"),
+  ).toBe("https://api.lan.local:8443/api")
   expect(validatedServerBase("ftp://localhost", "ftp://localhost/room/1")).toBeNull()
-  expect(isAllowedSentinelUrl("http://192.168.50.10:3000/baidu/media/grant")).toBe(true)
-  expect(isAllowedSentinelUrl("https://api.lan.local/baidu/media/grant")).toBe(true)
-  expect(isAllowedSentinelUrl("ftp://api.lan.local/baidu/media/grant")).toBe(false)
+  expect(isAllowedSentinelUrl("http://192.168.50.10:3000/api/baidu/media/grant")).toBe(true)
+  expect(isAllowedSentinelUrl("https://api.lan.local/api/baidu/media/grant")).toBe(true)
+  expect(isAllowedSentinelUrl("ftp://api.lan.local/api/baidu/media/grant")).toBe(false)
   expect(
     isAllowedSentinelUrl(
-      "https://api.houkago.example/baidu/media/grant",
+      "https://api.houkago.example/api/baidu/media/grant",
       "https://api.houkago.example",
     ),
   ).toBe(true)
   expect(
-    isAllowedSentinelUrl("https://other.example/baidu/media/grant", "https://api.houkago.example"),
+    isAllowedSentinelUrl(
+      "https://other.example/api/baidu/media/grant",
+      "https://api.houkago.example",
+    ),
   ).toBe(false)
   expect(
     validatedServerBase(
-      "https://api.houkago.example",
+      "https://api.houkago.example/api",
       "https://watch.houkago.example/room/1",
       "https://watch.houkago.example",
       "https://api.houkago.example",
     ),
-  ).toBe("https://api.houkago.example")
+  ).toBe("https://api.houkago.example/api")
   expect(
     validatedServerBase(
       "https://evil.example",
@@ -295,6 +301,23 @@ test("development origins are web-open while production origins remain exact", (
     ),
   ).toBeNull()
   expect(extensionOriginPattern("http://127.0.0.1:3000")).toBe("http://127.0.0.1/*")
+})
+
+test("API pairing preserves only the canonical prefix and rejects URL escapes", () => {
+  expect(validatedServerBase("https://watch.test/api/", "https://watch.test")).toBe(
+    "https://watch.test/api",
+  )
+  for (const value of [
+    "https://watch.test",
+    "https://watch.test/other",
+    "https://watch.test/api/child",
+    "https://watch.test/api?token=private",
+    "https://watch.test/api#fragment",
+    "https://user:password@watch.test/api",
+    "https://watch.test/other/../api",
+  ])
+    expect(validatedServerBase(value, "https://watch.test")).toBeNull()
+  expect(isAllowedSentinelUrl("https://watch.test/baidu/media/grant")).toBe(false)
 })
 
 test("Chromium session rules bind redirect and headers to one tab and exact URLs", async () => {
@@ -333,7 +356,7 @@ test("Chromium session rules bind redirect and headers to one tab and exact URLs
   })
   expect(updates[0]?.addRules?.[0]).toMatchObject({
     condition: {
-      regexFilter: "^https://houkago\\.example/baidu/media/capability$",
+      regexFilter: "^https://houkago\\.example/api/baidu/media/capability$",
       isUrlFilterCaseSensitive: true,
       tabIds: [grant.tabId],
     },
@@ -360,14 +383,14 @@ test("Chromium exact URL rules escape DNR filter metacharacters", async () => {
     browserApi,
     {
       ...grant,
-      sentinelUrl: "https://houkago.example/baidu/media/grant*one",
+      sentinelUrl: "https://houkago.example/api/baidu/media/grant*one",
       dlink: "https://d.pcs.baidu.com/file?cap=one*two^three",
     },
     3,
   )
   expect(updates[0]?.addRules?.[0]).toMatchObject({
     condition: {
-      regexFilter: "^https://houkago\\.example/baidu/media/grant\\*one$",
+      regexFilter: "^https://houkago\\.example/api/baidu/media/grant\\*one$",
       isUrlFilterCaseSensitive: true,
     },
   })
@@ -393,14 +416,14 @@ test("Chromium runtime port removes each session grant at its expiry", async () 
   })
   const lanGrant = {
     ...grant,
-    sentinelUrl: "http://192.168.50.10:3000/baidu/media/capability",
+    sentinelUrl: "http://192.168.50.10:3000/api/baidu/media/capability",
   }
   const ids = await port.install(lanGrant, 1_000)
   expect(delay).toBe(9_000)
   expect(updates).toHaveLength(1)
   expect(updates[0]?.addRules?.[0]).toMatchObject({
     condition: {
-      regexFilter: "^http://192\\.168\\.50\\.10:3000/baidu/media/capability$",
+      regexFilter: "^http://192\\.168\\.50\\.10:3000/api/baidu/media/capability$",
       isUrlFilterCaseSensitive: true,
     },
   })
