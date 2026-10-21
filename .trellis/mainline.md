@@ -58,15 +58,15 @@
 
 ## Ordered Work
 
-### In-progress task — preview console style (2026-10-21)
+### Completed task — preview console style (2026-10-21)
 
 The owner requested applying Trellis Plus presentation to `preview.sh` and
-approved creating the [preview console style task](tasks/10-21-preview-console-style/prd.md)
+approved creating the [preview console style task](tasks/archive/2026-10/10-21-preview-console-style/prd.md)
 with `建 task`. This lightweight terminal presentation task covers the forwarded
 help/log/summary path in `dx` and `scripts/preview-config.py`. The PRD records
 semantic colors, actual-output-stream TTY behavior and plain URL requirements,
 preserving the lifecycle and unrelated UI changes. The owner reviewed the plan
-and authorized implementation with `开始`; the task is `in_progress`.
+and authorized implementation with `开始`; the task is now archived as completed.
 The owner subsequently authorized commit/archive and normal closure with
 `归档、提交`. Push, deployment and other task continuation remain unapproved.
 Mode remains guided.
@@ -79,8 +79,9 @@ and six real PTY combinations. An isolated real-container start/HTTP/reuse/
 status/stop/down smoke passed and retained its fresh SQLite database; owned
 test containers are removed. ShellCheck/shfmt were unavailable. Detailed
 evidence and the optional terminal preference review are in
-[validation](tasks/10-21-preview-console-style/validation.md). Work is uncommitted;
-existing room UI changes remain outside this task.
+[validation](tasks/archive/2026-10/10-21-preview-console-style/validation.md).
+Implementation commit: `f902206`; archive status and context resolution are
+verified. Existing room UI changes remain outside this task.
 
 ### In-progress task — room player experience (2026-10-12)
 

@@ -83,3 +83,12 @@ route and one explicit archive commit with the exact Codex trailer. This task
 was completed directly on `k-on` and has no PR branch, matching that option's
 documented purpose. Record the developer journal separately without repeating
 task-level attribution.
+
+Implementation commit: `f902206` (`fix(preview): unify console styling and
+stream-aware colors`). The owner approved closure after the verification
+report; the optional terminal preference review does not block archival.
+
+Archive moved successfully to
+`.trellis/tasks/archive/2026-10/10-21-preview-console-style/`; metadata is
+`completed` with `completedAt: 2026-10-21`, the source directory and session
+pointer are absent, and both archived contexts resolve (nine entries each).
