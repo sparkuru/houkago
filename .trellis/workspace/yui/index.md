@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 83
+- **Total Sessions**: 84
 - **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~578 | Active |
+| `journal-2.md` | ~613 | Active |
 | `journal-1.md` | ~1989 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 84 | 2026-10-21 | 统一同源 /api 入口并完成归档 | `65e53d0` | `k-on` |
 | 83 | 2026-10-21 | 房间控制子页面视觉优化收尾 | `20069b9` | `k-on` |
 | 82 | 2026-10-21 | Preview console style completed and archived | `f902206` | `k-on` |
 | 81 | 2026-10-05 | Room refinement and viewport launcher closure | `62810c5` | `k-on` |

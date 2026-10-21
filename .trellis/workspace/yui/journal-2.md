@@ -576,3 +576,38 @@ Completed and archived 10-21-preview-console-style with owner approval; archive 
 ### Next Steps
 
 - 保留并行 same-origin-api-entry 脏文件，按其自身任务继续处理
+
+
+## Session 84: 统一同源 /api 入口并完成归档
+<!-- trellis-session: v=2 fp=f0cc7bc744920bf4 -->
+
+**Date**: 2026-10-21
+**Task**: 统一同源 /api 入口并完成归档
+**Branch**: `k-on`
+
+### Summary
+
+完成单端口 Docker 预览、HTTP/WS/媒体/扩展适配及配置跟进；按用户授权提交并归档 same-origin-api-entry。归档提交 84ea76a。
+
+### Main Changes
+
+- 统一 /api 路由；后端仅 Docker 内网；端口配置、预览脚本及相对 Baidu OAuth 回调同步。
+- 主线更新为已完成，保留无关 i18n 修改；未推送、部署或重启用户预览。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `65e53d0` | feat(preview): unify business routes under same-origin api |
+
+### Testing
+
+- [OK] 477 单元测试、7 工作区类型检查、lint、构建和契约稳定性通过；36 预览测试、93 shell 检查、桌面/手机及已安装扩展验证、隔离 Docker 检查通过，边界详见归档 validation.md。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 本任务已关闭；其他任务保持原状态，等待用户选择。
