@@ -508,3 +508,37 @@ Owner accepted the final result with 可以提交. Delivered room hierarchy, con
 ### Next Steps
 
 - No new product scope authorized; preserve the original running preview.
+
+
+## Session 82: Preview console style completed and archived
+<!-- trellis-session: v=2 fp=be1e93325f1ec7e4 -->
+
+**Date**: 2026-10-21
+**Task**: Preview console style completed and archived
+**Branch**: `k-on`
+
+### Summary
+
+Completed and archived 10-21-preview-console-style with owner approval; archive commit f594142. Preserve unrelated room UI work.
+
+### Main Changes
+
+- Sectioned preview help and semantic log/summary colors; independent stdout/stderr TTY behavior and plain URLs.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f902206` | fix(preview): unify console styling and stream-aware colors |
+
+### Testing
+
+- [OK] 31 full preview checks plus three final console cases, 93 shell checks, six real PTY combinations and isolated Docker smoke passed; ShellCheck/shfmt unavailable.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- No further preview work authorized; retain unrelated active room UI tasks.

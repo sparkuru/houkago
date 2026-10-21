@@ -80,8 +80,9 @@ status/stop/down smoke passed and retained its fresh SQLite database; owned
 test containers are removed. ShellCheck/shfmt were unavailable. Detailed
 evidence and the optional terminal preference review are in
 [validation](tasks/archive/2026-10/10-21-preview-console-style/validation.md).
-Implementation commit: `f902206`; archive status and context resolution are
-verified. Existing room UI changes remain outside this task.
+Implementation commit: `f902206`; archive commit: `f594142`. Archive status,
+context resolution and exactly one Codex trailer are verified. Existing room
+UI changes remain outside this task.
 
 ### In-progress task — room player experience (2026-10-12)
 
