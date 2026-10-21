@@ -280,6 +280,7 @@ export const messages = {
     kengenPresetPlaybackHint: "成员可以发言并控制播放，选片仍由房主控制",
     kengenPresetPlaylistHint: "成员可以发言、控制播放和选择片源",
     kengenPolicyCustomNotice: "当前权限由精细设置自定义。",
+    kengenPermissionDetails: "权限明细",
     kengenAdvancedSettings: "展开精细设置",
     kengenSaving: "正在保存房间权限…",
     kengenSaveFailed: "房间权限保存失败，请重试。",
