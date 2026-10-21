@@ -88,7 +88,7 @@ export function RoomControls({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: Native dialog Escape handling remains available; this click only dismisses when the native backdrop is the event target. */}
       <dialog
         ref={dialogRef}
-        className="room-controls-dialog"
+        className={`room-controls-dialog${room.isHost ? "" : " room-controls-dialog--guest"}`}
         aria-labelledby="room-controls-dialog-title"
         onCancel={() => setControlsOpen(false)}
         onClose={() => {
@@ -109,21 +109,52 @@ export function RoomControls({
         }}
       >
         <header className="room-controls-dialog-header">
-          <h2 id="room-controls-dialog-title">
-            {room.isHost ? t("roomControlHeading") : t("roomInfoHeading")}
-          </h2>
-          <Button
-            ref={closeButtonRef}
-            variant="ghost"
-            aria-label={t("providerDialogClose")}
-            onClick={() => dialogRef.current?.close()}
-          >
-            <span aria-hidden="true">×</span>
-          </Button>
+          <div className="room-controls-dialog-heading">
+            <h2 id="room-controls-dialog-title">
+              <span className="room-controls-dialog-title-mark" aria-hidden="true" />
+              {room.isHost ? t("roomControlHeading") : t("roomInfoHeading")}
+            </h2>
+            <p
+              className="room-controls-dialog-room"
+              aria-label={`${t("roomInfoName")}: ${state.room?.name ?? room.roomId}`}
+            >
+              <span>{t("roomInfoName")}</span>
+              <strong>{state.room?.name ?? room.roomId}</strong>
+            </p>
+          </div>
+          <div className="room-controls-dialog-actions">
+            <output className="room-controls-dialog-status" data-status={state.connection}>
+              <span aria-hidden="true" />
+              {roomConnectionLabel(state.connection)}
+            </output>
+            <Button
+              ref={closeButtonRef}
+              className="room-controls-dialog-close"
+              variant="ghost"
+              aria-label={t("providerDialogClose")}
+              onClick={() => dialogRef.current?.close()}
+            >
+              <span aria-hidden="true">×</span>
+            </Button>
+          </div>
         </header>
-        {state.error && <Alert>{state.error}</Alert>}
-        <RoomInformation room={room} state={state} active={controlsOpen && !hidden} />
-        {room.isHost && <GovernancePanel room={room} state={state} />}
+        <div className="room-controls-dialog-body">
+          {state.error && (
+            <div className="room-controls-dialog-error">
+              <Alert>{state.error}</Alert>
+            </div>
+          )}
+          <div
+            className={
+              room.isHost
+                ? "room-controls-dialog-grid room-controls-dialog-grid--host"
+                : "room-controls-dialog-grid"
+            }
+          >
+            <RoomInformation room={room} state={state} active={controlsOpen && !hidden} />
+            {room.isHost && <GovernancePanel room={room} state={state} />}
+          </div>
+        </div>
       </dialog>
     </>
   )
@@ -152,12 +183,10 @@ function RoomInformation({
 
   return (
     <section className="room-controls-info" aria-labelledby="room-controls-info-heading">
-      <h3 id="room-controls-info-heading">{t("roomInfoHeading")}</h3>
+      <div className="room-controls-section-heading">
+        <h3 id="room-controls-info-heading">{t("roomInfoHeading")}</h3>
+      </div>
       <dl className="room-controls-info-list">
-        <div>
-          <dt>{t("roomInfoName")}</dt>
-          <dd>{state.room?.name ?? room.roomId}</dd>
-        </div>
         <div>
           <dt>{t("roomInfoStatus")}</dt>
           <dd>{roomConnectionLabel(state.connection)}</dd>
@@ -167,7 +196,7 @@ function RoomInformation({
           <dd>{modeLabel}</dd>
         </div>
         <div>
-          <dt>{t("roomInfoAdmissionStatus")}</dt>
+          <dt>{t("roomAdmissionHeading")}</dt>
           <dd>{t("nyuushitsuStatusEntered")}</dd>
         </div>
         {room.isHost && (
@@ -177,82 +206,118 @@ function RoomInformation({
           </div>
         )}
       </dl>
-      <h4>
-        {t("roomMembersHeading")} · {state.members.length}
-      </h4>
-      <section aria-labelledby="room-online-members-heading">
-        <h4 id="room-online-members-heading">{t("onlineMembersHeading")}</h4>
-        {online.length === 0 ? (
-          <p>{t("noOnlineMembers")}</p>
-        ) : (
-          <table className="w-full table-fixed text-left">
-            <thead>
-              <tr>
-                <th scope="col">{t("memberName")}</th>
-                <th scope="col">{t("memberRole")}</th>
-                <th scope="col">{t("memberOnlineDuration")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {online.map((member) => (
-                <tr key={member.id}>
-                  <td className="break-words">{member.nickname}</td>
-                  <td>{member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}</td>
-                  <td data-testid="member-online-duration">
-                    {formatOnlineDuration(member.joinedAt, now, {
-                      hour: t("durationHour"),
-                      minute: t("durationMinute"),
-                      second: t("durationSecond"),
-                    })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="room-controls-subsection-heading">
+        <h4>{t("roomMembersHeading")}</h4>
+        <span>{state.members.length}</span>
+      </div>
+      <div className="room-controls-member-sections">
+        <section
+          className="room-controls-member-section"
+          aria-labelledby="room-online-members-heading"
+        >
+          <div className="room-controls-subsection-heading room-controls-subsection-heading--minor">
+            <h4 id="room-online-members-heading">{t("onlineMembersHeading")}</h4>
+            <span>{online.length}</span>
+          </div>
+          {online.length === 0 ? (
+            <p className="room-controls-empty">{t("noOnlineMembers")}</p>
+          ) : (
+            <div className="room-controls-member-table-wrap">
+              <table className="room-controls-member-table w-full table-fixed text-left">
+                <thead>
+                  <tr>
+                    <th scope="col">{t("memberName")}</th>
+                    <th scope="col">{t("memberRole")}</th>
+                    <th scope="col">{t("memberOnlineDuration")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {online.map((member) => (
+                    <tr key={member.id}>
+                      <td className="break-words" data-label={t("memberName")}>
+                        {member.nickname}
+                      </td>
+                      <td data-label={t("memberRole")}>
+                        {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
+                      </td>
+                      <td
+                        data-label={t("memberOnlineDuration")}
+                        data-testid="member-online-duration"
+                      >
+                        {formatOnlineDuration(member.joinedAt, now, {
+                          hour: t("durationHour"),
+                          minute: t("durationMinute"),
+                          second: t("durationSecond"),
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+        <section
+          className="room-controls-member-section"
+          aria-labelledby="room-history-members-heading"
+        >
+          <div className="room-controls-subsection-heading room-controls-subsection-heading--minor">
+            <h4 id="room-history-members-heading">{t("historyMembersHeading")}</h4>
+            <span>{history.length}</span>
+          </div>
+          {history.length === 0 ? (
+            <p className="room-controls-empty">{t("noHistoryMembers")}</p>
+          ) : (
+            <div className="room-controls-member-table-wrap">
+              <table className="room-controls-member-table w-full table-fixed text-left">
+                <thead>
+                  <tr>
+                    <th scope="col">{t("memberName")}</th>
+                    <th scope="col">{t("memberRole")}</th>
+                    <th scope="col">{t("memberLastLogin")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((member) => (
+                    <tr key={member.id}>
+                      <td className="break-words" data-label={t("memberName")}>
+                        {member.nickname}
+                      </td>
+                      <td data-label={t("memberRole")}>
+                        {member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}
+                      </td>
+                      <td data-label={t("memberLastLogin")}>
+                        <time dateTime={new Date(member.lastSeenAt).toISOString()}>
+                          {formatLastSeen(member.lastSeenAt)}
+                        </time>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+      <section className="room-controls-permission-panel" aria-label={t("guestKengenGroupAria")}>
+        <PermissionSummary permissions={state.permissions} />
+        {!room.isHost && (
+          <ul className="room-controls-permissions">
+            {(["chat", "playlist", "playback"] as const).map((key) => (
+              <li key={key} data-state={state.permissions[key] ? "allowed" : "blocked"}>
+                <span>
+                  {key === "chat"
+                    ? t("chatPermission")
+                    : key === "playlist"
+                      ? t("playlistPermission")
+                      : t("playbackControl")}
+                </span>
+                <strong>{state.permissions[key] ? t("allowed") : t("blocked")}</strong>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
-      <section aria-labelledby="room-history-members-heading">
-        <h4 id="room-history-members-heading">{t("historyMembersHeading")}</h4>
-        {history.length === 0 ? (
-          <p>{t("noHistoryMembers")}</p>
-        ) : (
-          <table className="w-full table-fixed text-left">
-            <thead>
-              <tr>
-                <th scope="col">{t("memberName")}</th>
-                <th scope="col">{t("memberRole")}</th>
-                <th scope="col">{t("memberLastLogin")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((member) => (
-                <tr key={member.id}>
-                  <td className="break-words">{member.nickname}</td>
-                  <td>{member.yakuwari === "buchou" ? t("buchouRole") : t("memberYakuwari")}</td>
-                  <td>
-                    <time dateTime={new Date(member.lastSeenAt).toISOString()}>
-                      {formatLastSeen(member.lastSeenAt)}
-                    </time>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-      <PermissionSummary permissions={state.permissions} />
-      <ul className="room-controls-permissions">
-        {(["chat", "playlist", "playback"] as const).map((key) => (
-          <li key={key}>
-            {key === "chat"
-              ? t("chatPermission")
-              : key === "playlist"
-                ? t("playlistPermission")
-                : t("playbackControl")}
-            : {state.permissions[key] ? t("allowed") : t("blocked")}
-          </li>
-        ))}
-      </ul>
     </section>
   )
 }

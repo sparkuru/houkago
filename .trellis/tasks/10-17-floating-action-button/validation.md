@@ -22,8 +22,7 @@
   - 补齐 launcher/action 的 expanded、pressed、dragging、disabled、hover、focus-visible
     层级；below 菜单使用向下进入方向；label 使用内容宽度 + 最大宽度换行，避免窄屏中文
     逐字压缩后把动作项推出视口。
-  - 复用 Warm Club semantic token、52px icon/launcher、44px label 命中区、8px 间距，
-    保留 reduced-motion 和 safe-area 规则。
+  - 复用 Warm Club semantic token、52px icon/launcher、44px label 命中区、8px 间距，保留 reduced-motion 和 safe-area 规则。最终移除菜单标签与图标圆钮的独立阴影，仅保留主 launcher 的浮层阴影，避免阴影叠加形成菜单右侧和底部的矩形灰边。
 - `room-controls.spec.ts`
   - 增加 Space 打开、展开中拖动收敛、四角/边缘上下方向和最终 action viewport 几何断言。
 
@@ -84,7 +83,7 @@ safe-area padding。
 | --- | --- |
 | 排版 | label 不再被 flex 压缩成逐字换行；短/长文案使用可读换行和完整 `title`，按钮盒体保持稳定。 |
 | 留白 | 继续使用 4/8px 节奏，action 与 launcher 保持 12px 菜单间隔，8px action gap；未改变房间布局流。 |
-| 视觉层级 | launcher 使用 accent，expanded/dragging 提升层级，菜单以纸色 surface 与 floating shadow 从播放器/房间内容上层浮出。 |
+| 视觉层级 | launcher 使用 accent，expanded/dragging 提升层级；菜单标签与图标使用纸色 surface + 边框直接浮于内容之上，仅 launcher 保留 floating elevation，避免形成组阴影矩形边界。 |
 | 色彩 | 沿用 Warm Club 的 paper/wood/teal semantic token；hover/pressed/focus/disabled 不只依赖颜色，focus ring 保留。 |
 | 动效 | transform/opacity 入场 260/180ms、退出 180/140ms；above/below 方向一致，reduced-motion 仍移除装饰性位移与 stagger。 |
 | 微交互 | 修复拖动后误吞下一次 click/Enter；展开中拖动先收菜单；触控、键盘、backdrop、Escape 和 focus return 均有最终状态断言。 |

@@ -20,9 +20,13 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
   const selectedPreset = kengenPresetId(state.permissions)
   if (!room.isHost) return null
   return (
-    <Card>
-      <h2>{t("roomInfoHeading")}</h2>
-      <div className="room-form">
+    <Card className="room-controls-governance" aria-labelledby="room-controls-governance-heading">
+      <div className="room-controls-section-heading">
+        <h3 id="room-controls-governance-heading">{t("roomControlHeading")}</h3>
+        <span className="room-controls-governance-badge">{t("buchouRole")}</span>
+      </div>
+      <fieldset className="room-controls-governance-section room-controls-admission room-form">
+        <legend>{t("nyuushitsuSettingGroupAria")}</legend>
         <Label htmlFor="admission-mode">{t("nyuushitsuModeHeading")}</Label>
         <select
           id="admission-mode"
@@ -45,10 +49,11 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="new-password"
             />
-            <p>{t("nyuushitsuModePasswordHint")}</p>
+            <p className="room-controls-help">{t("nyuushitsuModePasswordHint")}</p>
           </>
         )}
         <Button
+          className="room-controls-save-button"
           disabled={busy || (modeDraft === "password" && !password.trim())}
           onClick={() => {
             room.setAdmission(modeDraft, modeDraft === "password" ? password : undefined)
@@ -57,54 +62,96 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
         >
           保存入室方式
         </Button>
-        <h3>{t("kengenPolicyCurrent")}</h3>
-        <fieldset className="room-form">
+      </fieldset>
+      <section
+        className="room-controls-governance-section room-controls-permission-management"
+        aria-labelledby="room-controls-permission-form-heading"
+      >
+        <div className="room-controls-subsection-heading room-controls-permission-heading">
+          <h4 id="room-controls-permission-form-heading">{t("guestKengenGroupAria")}</h4>
+          <span
+            className="room-controls-permission-current"
+            data-state={selectedPreset === null ? "custom" : "preset"}
+          >
+            {presetLabel(selectedPreset)}
+          </span>
+        </div>
+        <fieldset className="room-controls-preset-fieldset">
           <legend>{t("kengenPresetGroupAria")}</legend>
-          {KENGEN_PRESETS.map((preset) => (
-            <Button
-              key={preset.id}
-              type="button"
-              variant="secondary"
-              aria-pressed={selectedPreset === preset.id}
-              disabled={busy}
-              onClick={() => {
-                if (selectedPreset !== preset.id) room.setPermissions({ ...preset.kengen })
-              }}
-            >
-              {presetLabel(preset.id)}
-            </Button>
-          ))}
+          <div className="room-controls-preset-segmented">
+            {KENGEN_PRESETS.map((preset) => (
+              <Button
+                key={preset.id}
+                className="room-controls-preset-option"
+                type="button"
+                variant="secondary"
+                aria-pressed={selectedPreset === preset.id}
+                disabled={busy}
+                onClick={() => {
+                  if (selectedPreset !== preset.id) room.setPermissions({ ...preset.kengen })
+                }}
+              >
+                {presetLabel(preset.id)}
+              </Button>
+            ))}
+          </div>
         </fieldset>
-        {selectedPreset === null && <p>{t("kengenPolicyCustomNotice")}</p>}
-        {(["chat", "playlist", "playback"] as const).map((key) => (
-          <label key={key} className="room-check">
-            <input
-              type="checkbox"
-              checked={state.permissions[key]}
-              disabled={busy}
-              onChange={(event) =>
-                room.setPermissions({
-                  ...state.permissions,
-                  [key]: event.target.checked,
-                } as Kengen)
-              }
-            />
-            {key === "chat"
-              ? t("chatPermission")
-              : key === "playlist"
-                ? "选片"
-                : t("playbackControl")}
-          </label>
-        ))}
-        {state.pending.length > 0 && (
-          <>
-            <h3>{t("roomInfoPending")}</h3>
+        {selectedPreset === null && (
+          <p className="room-controls-help">{t("kengenPolicyCustomNotice")}</p>
+        )}
+        <fieldset className="room-controls-permission-fieldset">
+          <legend>{t("kengenPermissionDetails")}</legend>
+          <div className="room-controls-permission-checks">
+            {(["chat", "playlist", "playback"] as const).map((key) => (
+              <label
+                key={key}
+                className="room-controls-permission-row"
+                data-state={state.permissions[key] ? "allowed" : "blocked"}
+              >
+                <span className="room-controls-permission-copy">
+                  <span className="room-controls-permission-name">
+                    {key === "chat"
+                      ? t("chatPermission")
+                      : key === "playlist"
+                        ? t("playlistPermission")
+                        : t("playbackControl")}
+                  </span>
+                  <span className="room-controls-permission-state" aria-hidden="true">
+                    {state.permissions[key] ? t("allowed") : t("blocked")}
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={state.permissions[key]}
+                  disabled={busy}
+                  onChange={(event) =>
+                    room.setPermissions({
+                      ...state.permissions,
+                      [key]: event.target.checked,
+                    } as Kengen)
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </section>
+      {state.pending.length > 0 && (
+        <section
+          className="room-controls-governance-section"
+          aria-labelledby="room-controls-pending-heading"
+        >
+          <div className="room-controls-subsection-heading">
+            <h4 id="room-controls-pending-heading">{t("roomInfoPending")}</h4>
+            <span>{state.pending.length}</span>
+          </div>
+          <div className="room-controls-governance-list">
             {state.pending.map((request) => (
-              <div key={request.senderId} className="room-row">
-                <span>{request.nickname}</span>
+              <div key={request.senderId} className="room-controls-governance-row">
+                <span className="room-controls-governance-name">{request.nickname}</span>
                 <div className="room-actions">
                   <Button disabled={busy} onClick={() => room.decide(request.senderId, true)}>
-                    承认
+                    {t("approve")}
                   </Button>
                   <Button
                     variant="secondary"
@@ -116,33 +163,47 @@ export function GovernancePanel({ room, state }: { room: RoomRuntime; state: Roo
                 </div>
               </div>
             ))}
-          </>
-        )}
-        <h3>{t("durableMembersHeading")}</h3>
-        {state.meibo.map((member) => (
-          <div key={member.id} className="room-row">
-            <span>{member.username}</span>
-            {member.id !== room.identityId && (
-              <Button
-                variant="ghost"
-                disabled={busy}
-                onClick={() => {
-                  if (window.confirm(t("removeMemberTitle"))) void room.removeMember(member.id)
-                }}
-              >
-                {t("removeMember")}
-              </Button>
-            )}
           </div>
-        ))}
-      </div>
+        </section>
+      )}
+      <section
+        className="room-controls-governance-section"
+        aria-labelledby="room-controls-roster-heading"
+      >
+        <div className="room-controls-subsection-heading">
+          <h4 id="room-controls-roster-heading">{t("durableMembersHeading")}</h4>
+          <span>{state.meibo.length}</span>
+        </div>
+        {state.meibo.length === 0 ? (
+          <p className="room-controls-empty">{t("noDurableMembers")}</p>
+        ) : (
+          <div className="room-controls-governance-list">
+            {state.meibo.map((member) => (
+              <div key={member.id} className="room-controls-governance-row">
+                <span className="room-controls-governance-name">{member.username}</span>
+                {member.id !== room.identityId && (
+                  <Button
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm(t("removeMemberTitle"))) void room.removeMember(member.id)
+                    }}
+                  >
+                    {t("removeMember")}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </Card>
   )
 }
 
 export function PermissionSummary({ permissions }: { permissions: Kengen }) {
   return (
-    <p>
+    <p className="room-controls-permission-summary">
       {t("kengenPolicyCurrent")}：<strong>{presetLabel(kengenPresetId(permissions))}</strong>
     </p>
   )

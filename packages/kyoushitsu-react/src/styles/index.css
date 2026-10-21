@@ -886,6 +886,7 @@ a {
   gap: var(--space-2);
   overflow-x: clip;
   overflow-y: auto;
+  overflow-clip-margin: var(--space-6);
   margin: 0;
   padding: 8px;
   list-style: none;
@@ -951,7 +952,7 @@ a {
   border: 1px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-surface-raised);
-  box-shadow: var(--shadow-floating);
+  box-shadow: none;
   color: var(--color-text);
   text-align: start;
   white-space: normal;
@@ -972,6 +973,9 @@ a {
   transition: border-color var(--duration-fast) var(--ease-standard), background-color
     var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard);
+}
+.room-speed-dial-icon {
+  box-shadow: none;
 }
 .room-speed-dial-icon svg,
 .room-speed-dial-launcher svg {
@@ -1057,90 +1061,790 @@ a {
   }
 }
 .room-controls-dialog {
-  width: min(560px, calc(100vw - 32px));
+  --room-controls-canvas: var(--color-canvas);
+  --room-controls-surface: var(--color-surface);
+  --room-controls-surface-raised: var(--color-surface-raised);
+  --room-controls-surface-muted: var(--room-panel-muted-surface);
+  --room-controls-border: var(--color-border);
+  --room-controls-border-strong: var(--color-border-strong);
+  --room-controls-accent: var(--color-focus-ring);
+  --room-controls-accent-soft: color-mix(
+    in srgb,
+    var(--color-focus-ring) 9%,
+    var(--room-controls-surface-raised)
+  );
+  --room-controls-primary: var(--color-accent);
+  --room-controls-primary-strong: var(--color-accent-strong);
+  width: min(1100px, calc(100vw - 32px));
   max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  max-height: min(
+    90dvh,
+    calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom))
+  );
   margin: auto;
   padding: 0;
-  overflow: auto;
-  border: 1px solid var(--color-border-strong);
+  overflow: hidden;
+  border: 1px solid var(--room-controls-border-strong);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--room-controls-surface);
   box-shadow: var(--shadow-floating);
   color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: var(--line-height-body);
+}
+.room-controls-dialog--guest {
+  width: min(760px, calc(100vw - 32px));
 }
 .room-controls-dialog[open] {
-  display: block;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  animation: room-controls-dialog-enter 220ms var(--ease-standard) both;
 }
 .room-controls-dialog::backdrop {
-  background: color-mix(in srgb, var(--color-text) 36%, transparent);
+  background: color-mix(in srgb, var(--color-text) 48%, transparent);
+  animation: room-controls-backdrop-enter 180ms var(--ease-standard) both;
 }
 .room-controls-dialog-header {
-  position: sticky;
-  z-index: 1;
-  top: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  gap: var(--space-4);
+  padding: var(--space-4) clamp(var(--space-5), 3.2vw, var(--space-7));
+  border-bottom: 1px solid var(--room-controls-border);
+  background: var(--room-controls-surface);
+}
+.room-controls-dialog-heading {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
 }
 .room-controls-dialog-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--type-title-size);
+  font-weight: 500;
+  line-height: var(--line-height-compact);
+  overflow-wrap: anywhere;
+}
+.room-controls-dialog-title-mark {
+  width: 6px;
+  height: 28px;
+  flex: 0 0 6px;
+  border-radius: 999px;
+  background: var(--room-controls-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--room-controls-accent) 12%, transparent);
+}
+.room-controls-dialog-room {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 0;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
+}
+.room-controls-dialog-room > span {
+  color: var(--color-text-muted);
+}
+.room-controls-dialog-room strong {
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.room-controls-dialog-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.room-controls-dialog-status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--room-controls-accent) 42%, var(--room-controls-border));
+  border-radius: 999px;
+  background: var(--room-controls-accent-soft);
+  color: var(--color-text);
+  font-size: var(--type-label-size);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.room-controls-dialog-status > span {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--room-controls-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-controls-accent) 16%, transparent);
+}
+.room-controls-dialog-status[data-status="connecting"] > span {
+  background: var(--color-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-warning) 16%, transparent);
+}
+.room-controls-dialog-status[data-status="closed"],
+.room-controls-dialog-status[data-status="error"] {
+  border-color: var(--color-danger-border);
+}
+.room-controls-dialog-status[data-status="closed"] > span,
+.room-controls-dialog-status[data-status="error"] > span {
+  background: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 16%, transparent);
+}
+.room-controls-dialog-close {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  font-size: 22px;
+  line-height: 1;
+}
+.room-controls-dialog-body {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--space-5) clamp(var(--space-5), 3.2vw, var(--space-7))
+    max(var(--space-6), env(safe-area-inset-bottom));
+  background: var(--room-controls-canvas);
+}
+.room-controls-dialog-error {
+  margin-bottom: var(--space-4);
+}
+.room-controls-dialog-error [data-slot="alert"] {
+  margin: 0;
+}
+.room-controls-dialog-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.room-controls-dialog-grid--host {
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
 }
 .room-controls-info {
   display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--room-controls-border);
+  border-radius: var(--radius-md);
+  background: var(--room-controls-surface);
+}
+.room-controls-section-heading,
+.room-controls-subsection-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+}
+.room-controls-section-heading > h3 {
+  min-width: 0;
 }
 .room-controls-info h3,
-.room-controls-info h4 {
+.room-controls-governance h3 {
   margin: 0;
   font-family: var(--font-display);
+  font-size: var(--type-title-size);
+  font-weight: 500;
+  line-height: var(--line-height-compact);
+  overflow-wrap: anywhere;
+}
+.room-controls-info h4,
+.room-controls-governance h4 {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--type-body-size);
+  font-weight: 500;
+  line-height: var(--line-height-compact);
+  overflow-wrap: anywhere;
+}
+.room-controls-subsection-heading > span,
+.room-controls-governance-badge {
+  display: inline-flex;
+  min-height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--room-controls-border);
+  border-radius: 999px;
+  background: var(--room-controls-surface-muted);
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  font-weight: 700;
+  line-height: 1;
+}
+.room-controls-governance-badge {
+  border-color: color-mix(in srgb, var(--room-controls-accent) 40%, var(--room-controls-border));
+  background: var(--room-controls-accent-soft);
+  color: var(--room-controls-accent);
+  letter-spacing: 0.08em;
 }
 .room-controls-info-list {
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
   margin: 0;
+  border-top: 1px solid var(--room-controls-border);
+  border-bottom: 1px solid var(--room-controls-border);
 }
 .room-controls-info-list > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-3);
+  min-width: 0;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2) var(--space-3) 0;
+}
+.room-controls-info-list > div:nth-child(even) {
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--room-controls-border);
+}
+.room-controls-info-list > div:nth-child(n + 3) {
+  border-top: 1px solid var(--room-controls-border);
 }
 .room-controls-info-list dt {
   color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
 }
 .room-controls-info-list dd {
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--line-height-compact);
+}
+.room-controls-subsection-heading {
+  align-items: center;
+}
+.room-controls-info > .room-controls-subsection-heading {
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--room-controls-border);
+}
+.room-controls-subsection-heading--minor {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--room-controls-border);
+}
+.room-controls-member-sections {
+  display: grid;
+  gap: var(--space-4);
+}
+.room-controls-member-section {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+  padding: 0;
+}
+.room-controls-member-table-wrap {
+  max-height: 176px;
+  overflow: auto;
+  border-bottom: 1px solid var(--room-controls-border);
+  scrollbar-gutter: stable;
+}
+.room-controls-member-table {
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.room-controls-member-table th,
+.room-controls-member-table td {
+  min-width: 0;
+  padding: var(--space-2) var(--space-1);
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+.room-controls-member-table th {
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  font-weight: 600;
+  line-height: var(--line-height-compact);
+  text-align: left;
+}
+.room-controls-member-table td {
+  border-top: 1px solid var(--room-controls-border);
+  line-height: var(--line-height-compact);
+}
+.room-controls-member-table td:last-child {
   text-align: right;
+}
+.room-controls-member-table tbody tr {
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.room-controls-member-table tbody tr:hover {
+  background: var(--room-controls-accent-soft);
+}
+.room-controls-empty,
+.room-controls-help {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
 }
 .room-controls-permissions {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.room-controls-dialog > [data-slot="card"] {
+.room-controls-permission-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--room-controls-border);
+}
+.room-controls-permission-summary {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  overflow-wrap: anywhere;
+}
+.room-controls-permission-summary strong {
+  color: var(--room-controls-accent);
+}
+.room-controls-permissions li {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--room-controls-border);
+  border-radius: var(--radius-sm);
+  background: var(--room-controls-surface-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--line-height-compact);
+}
+.room-controls-permissions li span {
+  overflow-wrap: anywhere;
+}
+.room-controls-permissions li strong {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+.room-controls-permissions li[data-state="allowed"] {
+  border-color: color-mix(in srgb, var(--room-controls-accent) 42%, var(--room-controls-border));
+  background: var(--room-controls-accent-soft);
+}
+.room-controls-permissions li[data-state="allowed"] strong {
+  color: var(--room-controls-accent);
+}
+.room-controls-governance {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--room-controls-border);
+  border-radius: var(--radius-md);
+  background: var(--room-controls-surface);
+  box-shadow: none;
+}
+.room-controls-governance-section {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
   border: 0;
   border-radius: 0;
-  box-shadow: none;
+  background: transparent;
+}
+.room-controls-governance > .room-controls-governance-section:not(.room-controls-admission) {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--room-controls-border);
+}
+.room-controls-admission {
+  padding: var(--space-4);
+  border: 1px solid var(--room-controls-border);
+  border-radius: var(--radius-md);
+  background: var(--room-controls-surface-muted);
+}
+.room-controls-governance-section legend,
+.room-controls-preset-fieldset legend,
+.room-controls-permission-fieldset legend {
+  padding: 0;
+  color: var(--color-text-muted);
+  font-size: var(--type-label-size);
+  font-weight: 700;
+  line-height: var(--line-height-compact);
+}
+.room-controls-admission select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--room-controls-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--room-controls-surface);
+  color: var(--color-text);
+}
+.room-controls-dialog .room-controls-save-button {
+  width: auto;
+  min-width: 132px;
+  min-height: 44px;
+  margin-top: var(--space-1);
+  justify-self: end;
+  border: 1px solid var(--room-controls-primary);
+  background: var(--room-controls-primary);
+  color: var(--color-on-accent);
+}
+.room-controls-preset-fieldset,
+.room-controls-permission-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.room-controls-preset-fieldset {
+  display: grid;
+  gap: var(--space-2);
+}
+.room-controls-preset-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--room-controls-border);
+  border-radius: var(--radius-md);
+  background: var(--room-controls-surface-muted);
+}
+.room-controls-dialog .room-controls-preset-option {
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.room-controls-dialog .room-controls-preset-option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--room-controls-accent) 32%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--room-controls-accent) 5%,
+    var(--room-controls-surface-raised)
+  );
+  color: var(--color-text);
+}
+.room-controls-dialog .room-controls-preset-option[aria-pressed="true"] {
+  border-color: var(--room-controls-accent);
+  background: var(--room-controls-accent-soft);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--room-controls-accent) 16%, transparent);
+  color: var(--color-text);
+  font-weight: 600;
+}
+.room-controls-permission-management {
+  gap: var(--space-3);
+}
+.room-controls-permission-heading {
+  align-items: center;
+}
+.room-controls-permission-current {
+  display: inline-flex;
+  min-height: 28px;
+  max-width: 50%;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--room-controls-accent) 34%, var(--room-controls-border));
+  border-radius: 999px;
+  background: var(--room-controls-accent-soft);
+  color: var(--room-controls-accent);
+  font-size: var(--type-label-size);
+  font-weight: 700;
+  line-height: var(--line-height-compact);
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.room-controls-permission-current[data-state="custom"] {
+  border-color: var(--room-controls-border);
+  background: var(--room-controls-surface-muted);
+  color: var(--color-text-muted);
+}
+.room-controls-permission-fieldset {
+  display: grid;
+  gap: var(--space-2);
+}
+.room-controls-permission-checks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--room-controls-border);
+  border-bottom: 1px solid var(--room-controls-border);
+}
+.room-controls-permission-row {
+  display: flex;
+  min-width: 0;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast)
+    var(--ease-standard);
+}
+.room-controls-permission-row + .room-controls-permission-row {
+  border-left: 1px solid var(--room-controls-border);
+}
+.room-controls-permission-row:hover:not(:has(input:disabled)) {
+  background: var(--room-controls-accent-soft);
+}
+.room-controls-permission-row[data-state="allowed"] {
+  background: color-mix(in srgb, var(--room-controls-accent) 4%, transparent);
+}
+.room-controls-permission-row[data-state="allowed"] .room-controls-permission-state {
+  color: var(--room-controls-accent);
+}
+.room-controls-permission-row:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.room-controls-permission-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.room-controls-permission-name,
+.room-controls-permission-state {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.room-controls-permission-name {
+  color: var(--color-text);
+  font-size: var(--type-label-size);
+  font-weight: 600;
+  line-height: var(--line-height-compact);
+}
+.room-controls-permission-state {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: var(--line-height-compact);
+}
+.room-controls-permission-row input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  margin: 0;
+  accent-color: var(--room-controls-accent);
+}
+.room-controls-governance-list {
+  display: grid;
+  gap: var(--space-2);
+}
+.room-controls-governance-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--room-controls-border);
+}
+.room-controls-governance-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.room-controls-governance-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.room-controls-governance .room-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+.room-controls-dialog button,
+.room-controls-dialog select,
+.room-controls-dialog input {
+  transition:
+    border-color var(--duration-fast) var(--ease-standard), background-color
+    var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(
+      --ease-standard
+    );
+}
+.room-controls-dialog button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.room-controls-dialog .room-controls-save-button:hover:not(:disabled) {
+  border-color: var(--room-controls-primary-strong);
+  background: var(--room-controls-primary-strong);
+}
+.room-controls-dialog .room-controls-admission select:hover:not(:disabled),
+.room-controls-dialog input:hover:not(:disabled) {
+  border-color: color-mix(
+    in srgb,
+    var(--room-controls-accent) 48%,
+    var(--room-controls-border-strong)
+  );
+}
+.room-controls-dialog .room-controls-dialog-close:hover:not(:disabled),
+.room-controls-dialog .room-controls-dialog-close:active:not(:disabled) {
+  background: var(--room-controls-surface-muted);
+  color: var(--color-text);
+}
+.room-controls-dialog select:disabled,
+.room-controls-dialog input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.room-controls-dialog button[aria-pressed="true"]:active:not(:disabled),
+.room-controls-dialog button:focus-visible,
+.room-controls-dialog select:focus-visible,
+.room-controls-dialog input:focus-visible {
+  transform: none;
+}
+@keyframes room-controls-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes room-controls-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 900px) {
+  .room-controls-dialog-grid--host {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .room-controls-dialog {
+    width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    max-height: min(
+      90dvh,
+      calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))
+    );
+    margin: auto max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+    border-radius: var(--radius-lg);
+  }
+  .room-controls-dialog-header {
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+  .room-controls-dialog-actions {
+    gap: var(--space-2);
+  }
+  .room-controls-dialog-status {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .room-controls-dialog-body {
+    padding: var(--space-4) var(--space-4) max(var(--space-5), env(safe-area-inset-bottom));
+  }
+  .room-controls-dialog-grid {
+    gap: var(--space-4);
+  }
+  .room-controls-info,
+  .room-controls-governance {
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+  .room-controls-permission-checks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .room-controls-permission-row + .room-controls-permission-row {
+    border-top: 1px solid var(--room-controls-border);
+    border-left: 0;
+  }
+  .room-controls-member-table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+  .room-controls-member-table {
+    display: block;
+    table-layout: auto;
+  }
+  .room-controls-member-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .room-controls-member-table tbody {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .room-controls-member-table tr {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--room-controls-border);
+  }
+  .room-controls-member-table tr:last-child {
+    border-bottom: 0;
+  }
+  .room-controls-member-table td,
+  .room-controls-member-table td:last-child {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 0.42fr) minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: 0;
+    border: 0;
+    text-align: right;
+  }
+  .room-controls-member-table td::before {
+    color: var(--color-text-muted);
+    text-align: left;
+  }
+  .room-controls-member-table td::before {
+    content: attr(data-label);
+  }
+  .room-controls-governance-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .room-controls-governance-row .room-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .room-controls-dialog .room-controls-save-button {
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .room-speed-dial-backdrop,
   .room-speed-dial-action,
   .room-speed-dial-launcher svg,
-  .room-speed-dial-actions {
+  .room-speed-dial-actions,
+  .room-controls-dialog[open],
+  .room-controls-dialog::backdrop {
     transition-duration: 0.01ms;
     transition-delay: 0ms;
+    animation-duration: var(--duration-instant);
+    animation-delay: 0ms;
   }
 }
 .room-gate {
@@ -1233,6 +1937,17 @@ a {
   width: 20px;
   height: 20px;
   accent-color: var(--color-accent);
+}
+.room-controls-dialog .room-controls-admission {
+  margin: 0;
+}
+.room-controls-dialog .room-controls-admission select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+}
+.room-controls-dialog .room-controls-save-button {
+  width: auto;
+  justify-self: end;
 }
 @media (min-width: 1200px) {
   .room-page:not(.room-cinema) {

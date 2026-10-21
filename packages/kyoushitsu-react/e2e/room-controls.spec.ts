@@ -572,13 +572,55 @@ test("speed dial dismissal, focus, room settings and copy feedback", async ({
   await expect(dialog.locator("#admission-mode")).toBeVisible()
   await expect(dialog.getByLabel("播放控制")).toBeVisible()
   await expect(dialog.locator(".room-controls-info-list")).toContainText("已入室")
+  await expect(dialog.locator(".room-controls-dialog-status")).toContainText("正常")
+  await expect(dialog.locator(".room-controls-dialog-grid--host")).toBeVisible()
+  await expect(dialog.locator("#room-controls-info-heading")).toHaveText("房间信息")
+  await expect(dialog.locator("#room-controls-governance-heading")).toHaveText("房间控制")
+  await expect(dialog.locator(".room-controls-governance")).toBeVisible()
+  await expect(
+    dialog.locator(".room-controls-info .room-controls-permission-summary"),
+  ).toBeVisible()
+  await expect(dialog.locator(".room-controls-info .room-controls-permissions")).toHaveCount(0)
+  await expect(dialog.locator(".room-controls-permission-management")).toBeVisible()
+  await expect(dialog.locator(".room-controls-permission-current")).toHaveText("仅聊天")
+  await expect(dialog.locator(".room-controls-preset-segmented button")).toHaveCount(3)
+  await expect(
+    dialog.locator('.room-controls-preset-segmented button[aria-pressed="true"]'),
+  ).toHaveCount(1)
+  await expect(
+    dialog.locator(".room-controls-permission-checks .room-controls-permission-row"),
+  ).toHaveCount(3)
+  await dialog.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations({ subtree: true }).map((animation) => animation.finished),
+    )
+  })
+  const controlHeights = await dialog
+    .locator("button, select")
+    .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().height))
+  expect(controlHeights.every((height) => height >= 44)).toBe(true)
   await expect(dialog.locator(".room-controls-dialog-header button")).toBeFocused()
+  await dialog.getByRole("button", { name: "共同播放", exact: true }).click()
+  await expect(dialog.getByRole("button", { name: "共同播放", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  )
+  await expect(dialog.locator(".room-controls-permission-current")).toHaveText("共同播放")
+  await expect(dialog.getByLabel("播放控制")).toBeChecked()
   const dialogBox = await dialog.boundingBox()
   const dialogViewport = page.viewportSize()
   const expectedDialogLeft = ((dialogViewport?.width ?? 0) - (dialogBox?.width ?? 0)) / 2
   expect(dialogBox).not.toBeNull()
   expect(dialogViewport).not.toBeNull()
   expect(Math.abs((dialogBox?.x ?? 0) - expectedDialogLeft)).toBeLessThanOrEqual(1)
+  const dialogLayout = await dialog.evaluate((element) => {
+    const body = element.querySelector<HTMLElement>(".room-controls-dialog-body")
+    return {
+      bodyClientWidth: body?.clientWidth ?? 0,
+      bodyScrollWidth: body?.scrollWidth ?? 0,
+    }
+  })
+  expect(dialogLayout.bodyScrollWidth).toBeLessThanOrEqual(dialogLayout.bodyClientWidth)
   await dialog.evaluate((element) => {
     element.style.padding = "8px"
   })
@@ -591,6 +633,33 @@ test("speed dial dismissal, focus, room settings and copy feedback", async ({
   await dialog.click({ position: { x: 5, y: 90 } })
   await expect(dialog).toBeVisible()
   await dialog.evaluate((element) => element.style.removeProperty("padding"))
+  if (info.project.name === "room-controls-phone") {
+    const defaultPhoneViewport = page.viewportSize()
+    await page.setViewportSize({ width: 320, height: 740 })
+    const mobileDialogLayout = await dialog.evaluate((element) => {
+      const body = element.querySelector<HTMLElement>(".room-controls-dialog-body")
+      return {
+        bodyClientWidth: body?.clientWidth ?? 0,
+        bodyScrollWidth: body?.scrollWidth ?? 0,
+        dialogClientWidth: element.clientWidth,
+        dialogScrollWidth: element.scrollWidth,
+      }
+    })
+    expect(mobileDialogLayout.bodyScrollWidth).toBeLessThanOrEqual(
+      mobileDialogLayout.bodyClientWidth,
+    )
+    expect(mobileDialogLayout.dialogScrollWidth).toBeLessThanOrEqual(
+      mobileDialogLayout.dialogClientWidth,
+    )
+    await expect(dialog.locator(".room-controls-member-table td[data-label]").first()).toBeVisible()
+    await page.setViewportSize(defaultPhoneViewport ?? { width: 375, height: 812 })
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const reducedDialogDuration = await dialog.evaluate(
+    (element) => getComputedStyle(element).animationDuration,
+  )
+  expect(Number.parseFloat(reducedDialogDuration)).toBeLessThanOrEqual(0.001)
+  await page.emulateMedia({ reducedMotion: "no-preference" })
   await page.screenshot({
     path: test.info().outputPath("room-controls-dialog.png"),
     animations: "disabled",
@@ -632,7 +701,14 @@ test("speed dial dismissal, focus, room settings and copy feedback", async ({
       .getByRole("button", { name: "房间信息" })
       .click()
     const guestDialog = guest.getByRole("dialog", { name: "房间信息" })
+    const guestDialogBox = await guestDialog.boundingBox()
+    const guestViewport = guest.viewportSize()
+    if (guestDialogBox && guestViewport && guestViewport.width > 900) {
+      expect(guestDialogBox.width).toBeLessThanOrEqual(761)
+      expect(guestDialogBox.width).toBeLessThan(dialogBox?.width ?? Number.POSITIVE_INFINITY)
+    }
     await expect(guestDialog.locator(".room-controls-info-list")).toContainText("已入室")
+    await expect(guestDialog.locator(".room-controls-permissions li")).toHaveCount(3)
     await expect(guestDialog.locator("#admission-mode")).toHaveCount(0)
     await expect(guestDialog.locator(".room-form")).toHaveCount(0)
   } finally {

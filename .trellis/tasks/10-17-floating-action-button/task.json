@@ -18,7 +18,9 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [],
+  "children": [
+    "10-17-room-controls-subpage"
+  ],
   "parent": "10-12-room-player-experience",
   "relatedFiles": [],
   "notes": "",

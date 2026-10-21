@@ -16,6 +16,20 @@ interactive targets. Closed menus are inert; native dialogs open with
 and restore launcher focus. Keep theme values in core semantic tokens and
 application CSS; honor safe insets and reduced motion.
 
+For native-dialog entry transitions, animate opacity and position rather than
+scaling a container that owns interactive controls; a scale transform can
+temporarily shrink an otherwise valid 44px target. When a feature dialog also
+uses shared `.room-form` or `.room-check` rules, keep its scoped size and
+alignment overrides after the generic rules (or make them more specific) so
+the shared styles cannot undo the dialog contract.
+
+Room governance permission controls keep their semantic layers distinct: use a
+labelled `fieldset` with `aria-pressed` buttons for mutually exclusive presets,
+and native checkbox rows for independently editable permissions. A normal
+unchecked permission must remain interactive and visually distinct from a
+disabled or pending permission; do not communicate those states through color
+alone.
+
 The room grid, dock, shared chat/danmaku composer, launcher portal and free
 viewport placement follow the executable
 [room presentation contract](../houkago-kyoushitsu-react/frontend/room-runtime.md).

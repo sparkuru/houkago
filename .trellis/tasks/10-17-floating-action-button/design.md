@@ -91,6 +91,7 @@ duplicated in the speed dial.
   or an equivalent accessible full-label fallback rather than silently losing
   meaningful text to an ellipsis. The action shelf may scroll only when the
   viewport cannot display all actions at once.
+- Keep the action shelf visually unboxed: labels and icon circles use the semantic raised surface and border, but do not add individual box shadows or a group shadow. Only the launcher keeps floating elevation, so adjacent shadows cannot merge into a rectangular gray patch around the menu. Scrolling and clipping remain layout concerns and must not be used to hide a shadow artifact.
 - Use the existing 4/8px spacing rhythm, semantic surface/accent/focus tokens,
   current elevation and radius values. Do not adopt the generic UI search's
   unrelated neon/dark gaming palette; it conflicts with the accepted Warm Club
