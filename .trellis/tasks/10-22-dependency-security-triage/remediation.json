@@ -1,0 +1,2603 @@
+{
+  "checkedAt": "2026-10-22T13:57:06.123Z",
+  "authorization": "User requested 帮我修复 after reviewing assessment and candidate summary",
+  "status": "implemented and validated; not committed or deployed",
+  "sha256": {
+    "package.json": "b3c1ff9824c1fbe9cb3c9be17ac9300560eb880d3a4586c4872dd51b62bf6369",
+    "packages/eisha/package.json": "2f038e10d1438e3018c6d8070a8af6ab8611883a2e6710e617b21e9ae7f4f103",
+    "packages/housou/package.json": "bb2efb2a15e8909b8acbc80652609e1273d93062ae18c9760a57ff90a3d2ea54",
+    "packages/kyoushitsu-react/package.json": "431baa40d7a985cab1a279165a890fb8eca1f3d8d7270351cd7fe93f0cded83b",
+    "bun.lock": "1e13f403b1a19a38b29d40cd8753dbf1d3f75ce5f566796956ff767131f7372a",
+    "packages/housou/test/dependency-security.test.ts": "0314f74164ea5e819f30950cb6c5bc78d7aa4a26082a85a402cd43676d82ffa0",
+    "packages/housou/test/baidu.e2e.test.ts": "ccd4c1886857ac2fdbbebae83a849a6dea7bed4403a8314b9aa5c27c6221d7c0"
+  },
+  "versions": {
+    "elysia": "elysia@1.4.30",
+    "vite": "vite@8.1.6",
+    "postcss": "postcss@8.5.31",
+    "nanoid": "nanoid@3.3.20",
+    "source-map-js": "source-map-js@1.2.2",
+    "js-yaml": "js-yaml@4.3.2"
+  },
+  "counts": {
+    "externalLockRecords": 220,
+    "uniqueVersions": 213,
+    "packageNames": 204
+  },
+  "changes": [
+    {
+      "key": "@emnapi/core",
+      "from": "@emnapi/core@1.10.0",
+      "to": "@emnapi/core@1.11.1"
+    },
+    {
+      "key": "@emnapi/runtime",
+      "from": "@emnapi/runtime@1.10.0",
+      "to": "@emnapi/runtime@1.11.1"
+    },
+    {
+      "key": "@emnapi/wasi-threads",
+      "from": "@emnapi/wasi-threads@1.2.1",
+      "to": "@emnapi/wasi-threads@1.2.2"
+    },
+    {
+      "key": "@napi-rs/wasm-runtime",
+      "from": "@napi-rs/wasm-runtime@1.1.5",
+      "to": "@napi-rs/wasm-runtime@1.2.5"
+    },
+    {
+      "key": "@oxc-project/types",
+      "from": "@oxc-project/types@0.133.0",
+      "to": "@oxc-project/types@0.139.0"
+    },
+    {
+      "key": "@rolldown/binding-android-arm64",
+      "from": "@rolldown/binding-android-arm64@1.0.3",
+      "to": "@rolldown/binding-android-arm64@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-darwin-arm64",
+      "from": "@rolldown/binding-darwin-arm64@1.0.3",
+      "to": "@rolldown/binding-darwin-arm64@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-darwin-x64",
+      "from": "@rolldown/binding-darwin-x64@1.0.3",
+      "to": "@rolldown/binding-darwin-x64@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-freebsd-x64",
+      "from": "@rolldown/binding-freebsd-x64@1.0.3",
+      "to": "@rolldown/binding-freebsd-x64@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm-gnueabihf",
+      "from": "@rolldown/binding-linux-arm-gnueabihf@1.0.3",
+      "to": "@rolldown/binding-linux-arm-gnueabihf@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm64-gnu",
+      "from": "@rolldown/binding-linux-arm64-gnu@1.0.3",
+      "to": "@rolldown/binding-linux-arm64-gnu@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm64-musl",
+      "from": "@rolldown/binding-linux-arm64-musl@1.0.3",
+      "to": "@rolldown/binding-linux-arm64-musl@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-ppc64-gnu",
+      "from": "@rolldown/binding-linux-ppc64-gnu@1.0.3",
+      "to": "@rolldown/binding-linux-ppc64-gnu@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-s390x-gnu",
+      "from": "@rolldown/binding-linux-s390x-gnu@1.0.3",
+      "to": "@rolldown/binding-linux-s390x-gnu@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-x64-gnu",
+      "from": "@rolldown/binding-linux-x64-gnu@1.0.3",
+      "to": "@rolldown/binding-linux-x64-gnu@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-linux-x64-musl",
+      "from": "@rolldown/binding-linux-x64-musl@1.0.3",
+      "to": "@rolldown/binding-linux-x64-musl@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-openharmony-arm64",
+      "from": "@rolldown/binding-openharmony-arm64@1.0.3",
+      "to": "@rolldown/binding-openharmony-arm64@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-wasm32-wasi",
+      "from": "@rolldown/binding-wasm32-wasi@1.0.3",
+      "to": "@rolldown/binding-wasm32-wasi@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-win32-arm64-msvc",
+      "from": "@rolldown/binding-win32-arm64-msvc@1.0.3",
+      "to": "@rolldown/binding-win32-arm64-msvc@1.1.5"
+    },
+    {
+      "key": "@rolldown/binding-win32-x64-msvc",
+      "from": "@rolldown/binding-win32-x64-msvc@1.0.3",
+      "to": "@rolldown/binding-win32-x64-msvc@1.1.5"
+    },
+    {
+      "key": "@tybys/wasm-util",
+      "from": "@tybys/wasm-util@0.10.2",
+      "to": "@tybys/wasm-util@0.10.4"
+    },
+    {
+      "key": "elysia",
+      "from": "elysia@1.4.28",
+      "to": "elysia@1.4.30"
+    },
+    {
+      "key": "js-yaml",
+      "from": "js-yaml@4.2.0",
+      "to": "js-yaml@4.3.2"
+    },
+    {
+      "key": "nanoid",
+      "from": "nanoid@3.3.12",
+      "to": "nanoid@3.3.20"
+    },
+    {
+      "key": "picomatch",
+      "from": "picomatch@4.0.4",
+      "to": "picomatch@4.0.7"
+    },
+    {
+      "key": "postcss",
+      "from": "postcss@8.5.15",
+      "to": "postcss@8.5.31"
+    },
+    {
+      "key": "rolldown",
+      "from": "rolldown@1.0.3",
+      "to": "rolldown@1.1.5"
+    },
+    {
+      "key": "source-map-js",
+      "from": "source-map-js@1.2.1",
+      "to": "source-map-js@1.2.2"
+    },
+    {
+      "key": "vite",
+      "from": "vite@8.0.16",
+      "to": "vite@8.1.6"
+    }
+  ],
+  "scans": {
+    "osv": {
+      "endpoint": "https://api.osv.dev/v1/querybatch",
+      "request": {
+        "queries": [
+          {
+            "package": {
+              "name": "@biomejs/biome",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-darwin-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-darwin-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-linux-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-linux-arm64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-linux-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-linux-x64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-win32-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@biomejs/cli-win32-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.9.4"
+          },
+          {
+            "package": {
+              "name": "@borewit/text-codec",
+              "ecosystem": "npm"
+            },
+            "version": "0.2.2"
+          },
+          {
+            "package": {
+              "name": "@elysiajs/cors",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.2"
+          },
+          {
+            "package": {
+              "name": "@elysiajs/openapi",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.16"
+          },
+          {
+            "package": {
+              "name": "@emnapi/core",
+              "ecosystem": "npm"
+            },
+            "version": "1.11.1"
+          },
+          {
+            "package": {
+              "name": "@emnapi/runtime",
+              "ecosystem": "npm"
+            },
+            "version": "1.11.1"
+          },
+          {
+            "package": {
+              "name": "@emnapi/wasi-threads",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.2"
+          },
+          {
+            "package": {
+              "name": "@hey-api/codegen-core",
+              "ecosystem": "npm"
+            },
+            "version": "0.9.1"
+          },
+          {
+            "package": {
+              "name": "@hey-api/json-schema-ref-parser",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.4"
+          },
+          {
+            "package": {
+              "name": "@hey-api/openapi-ts",
+              "ecosystem": "npm"
+            },
+            "version": "0.99.0"
+          },
+          {
+            "package": {
+              "name": "@hey-api/shared",
+              "ecosystem": "npm"
+            },
+            "version": "0.5.0"
+          },
+          {
+            "package": {
+              "name": "@hey-api/spec-types",
+              "ecosystem": "npm"
+            },
+            "version": "0.2.0"
+          },
+          {
+            "package": {
+              "name": "@hey-api/types",
+              "ecosystem": "npm"
+            },
+            "version": "0.1.4"
+          },
+          {
+            "package": {
+              "name": "@jridgewell/gen-mapping",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.13"
+          },
+          {
+            "package": {
+              "name": "@jridgewell/remapping",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.5"
+          },
+          {
+            "package": {
+              "name": "@jridgewell/resolve-uri",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.2"
+          },
+          {
+            "package": {
+              "name": "@jridgewell/sourcemap-codec",
+              "ecosystem": "npm"
+            },
+            "version": "1.5.5"
+          },
+          {
+            "package": {
+              "name": "@jridgewell/trace-mapping",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.31"
+          },
+          {
+            "package": {
+              "name": "@jsdevtools/ono",
+              "ecosystem": "npm"
+            },
+            "version": "7.1.3"
+          },
+          {
+            "package": {
+              "name": "@lukeed/ms",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.2"
+          },
+          {
+            "package": {
+              "name": "@napi-rs/wasm-runtime",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.5"
+          },
+          {
+            "package": {
+              "name": "@oxc-project/types",
+              "ecosystem": "npm"
+            },
+            "version": "0.139.0"
+          },
+          {
+            "package": {
+              "name": "@playwright/test",
+              "ecosystem": "npm"
+            },
+            "version": "1.61.1"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-android-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-darwin-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-darwin-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-freebsd-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-arm-gnueabihf",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-arm64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-arm64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-ppc64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-s390x-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-x64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-linux-x64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-openharmony-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-wasm32-wasi",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-win32-arm64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/binding-win32-x64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@rolldown/pluginutils",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.1"
+          },
+          {
+            "package": {
+              "name": "@sinclair/typebox",
+              "ecosystem": "npm"
+            },
+            "version": "0.34.49"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-608",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.2"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-cmcd",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.2"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-cmsd",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.6"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-cta",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.6"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-dash",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.6"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-id3",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.6"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-request",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.12"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-structured-field-values",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.3"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-utils",
+              "ecosystem": "npm"
+            },
+            "version": "1.5.0"
+          },
+          {
+            "package": {
+              "name": "@svta/cml-xml",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.4"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/node",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-android-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-darwin-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-darwin-x64",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-freebsd-x64",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-linux-arm64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-linux-arm64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-linux-x64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-linux-x64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-wasm32-wasi",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-win32-arm64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/oxide-win32-x64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tailwindcss/vite",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "@tanstack/history",
+              "ecosystem": "npm"
+            },
+            "version": "1.162.4"
+          },
+          {
+            "package": {
+              "name": "@tanstack/query-core",
+              "ecosystem": "npm"
+            },
+            "version": "5.104.0"
+          },
+          {
+            "package": {
+              "name": "@tanstack/react-query",
+              "ecosystem": "npm"
+            },
+            "version": "5.104.0"
+          },
+          {
+            "package": {
+              "name": "@tanstack/react-router",
+              "ecosystem": "npm"
+            },
+            "version": "1.170.39"
+          },
+          {
+            "package": {
+              "name": "@tanstack/react-store",
+              "ecosystem": "npm"
+            },
+            "version": "0.11.1"
+          },
+          {
+            "package": {
+              "name": "@tanstack/router-core",
+              "ecosystem": "npm"
+            },
+            "version": "1.171.32"
+          },
+          {
+            "package": {
+              "name": "@tanstack/store",
+              "ecosystem": "npm"
+            },
+            "version": "0.11.1"
+          },
+          {
+            "package": {
+              "name": "@tokenizer/inflate",
+              "ecosystem": "npm"
+            },
+            "version": "0.4.1"
+          },
+          {
+            "package": {
+              "name": "@tokenizer/token",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.0"
+          },
+          {
+            "package": {
+              "name": "@tybys/wasm-util",
+              "ecosystem": "npm"
+            },
+            "version": "0.10.4"
+          },
+          {
+            "package": {
+              "name": "@types/bun",
+              "ecosystem": "npm"
+            },
+            "version": "1.3.14"
+          },
+          {
+            "package": {
+              "name": "@types/json-schema",
+              "ecosystem": "npm"
+            },
+            "version": "7.0.15"
+          },
+          {
+            "package": {
+              "name": "@types/node",
+              "ecosystem": "npm"
+            },
+            "version": "25.9.3"
+          },
+          {
+            "package": {
+              "name": "@types/react",
+              "ecosystem": "npm"
+            },
+            "version": "19.3.0"
+          },
+          {
+            "package": {
+              "name": "@types/react-dom",
+              "ecosystem": "npm"
+            },
+            "version": "19.3.0"
+          },
+          {
+            "package": {
+              "name": "@vitejs/plugin-react",
+              "ecosystem": "npm"
+            },
+            "version": "6.1.1"
+          },
+          {
+            "package": {
+              "name": "ansi-colors",
+              "ecosystem": "npm"
+            },
+            "version": "4.1.3"
+          },
+          {
+            "package": {
+              "name": "argparse",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.1"
+          },
+          {
+            "package": {
+              "name": "artplayer",
+              "ecosystem": "npm"
+            },
+            "version": "5.4.0"
+          },
+          {
+            "package": {
+              "name": "bcp-47-match",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.3"
+          },
+          {
+            "package": {
+              "name": "bun-types",
+              "ecosystem": "npm"
+            },
+            "version": "1.3.14"
+          },
+          {
+            "package": {
+              "name": "bundle-name",
+              "ecosystem": "npm"
+            },
+            "version": "4.1.0"
+          },
+          {
+            "package": {
+              "name": "c12",
+              "ecosystem": "npm"
+            },
+            "version": "3.3.4"
+          },
+          {
+            "package": {
+              "name": "chokidar",
+              "ecosystem": "npm"
+            },
+            "version": "5.0.0"
+          },
+          {
+            "package": {
+              "name": "class-variance-authority",
+              "ecosystem": "npm"
+            },
+            "version": "0.7.1"
+          },
+          {
+            "package": {
+              "name": "clsx",
+              "ecosystem": "npm"
+            },
+            "version": "2.1.1"
+          },
+          {
+            "package": {
+              "name": "codem-isoboxer",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.10"
+          },
+          {
+            "package": {
+              "name": "color-support",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.3"
+          },
+          {
+            "package": {
+              "name": "commander",
+              "ecosystem": "npm"
+            },
+            "version": "15.0.0"
+          },
+          {
+            "package": {
+              "name": "confbox",
+              "ecosystem": "npm"
+            },
+            "version": "0.2.4"
+          },
+          {
+            "package": {
+              "name": "cookie",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.1"
+          },
+          {
+            "package": {
+              "name": "cookie-es",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.1"
+          },
+          {
+            "package": {
+              "name": "cross-spawn",
+              "ecosystem": "npm"
+            },
+            "version": "7.0.6"
+          },
+          {
+            "package": {
+              "name": "csstype",
+              "ecosystem": "npm"
+            },
+            "version": "3.2.3"
+          },
+          {
+            "package": {
+              "name": "dashjs",
+              "ecosystem": "npm"
+            },
+            "version": "5.2.0"
+          },
+          {
+            "package": {
+              "name": "debug",
+              "ecosystem": "npm"
+            },
+            "version": "4.4.3"
+          },
+          {
+            "package": {
+              "name": "default-browser",
+              "ecosystem": "npm"
+            },
+            "version": "5.5.1"
+          },
+          {
+            "package": {
+              "name": "default-browser-id",
+              "ecosystem": "npm"
+            },
+            "version": "5.0.1"
+          },
+          {
+            "package": {
+              "name": "define-lazy-prop",
+              "ecosystem": "npm"
+            },
+            "version": "3.0.0"
+          },
+          {
+            "package": {
+              "name": "defu",
+              "ecosystem": "npm"
+            },
+            "version": "6.1.7"
+          },
+          {
+            "package": {
+              "name": "destr",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.5"
+          },
+          {
+            "package": {
+              "name": "detect-libc",
+              "ecosystem": "npm"
+            },
+            "version": "2.1.2"
+          },
+          {
+            "package": {
+              "name": "dotenv",
+              "ecosystem": "npm"
+            },
+            "version": "17.4.2"
+          },
+          {
+            "package": {
+              "name": "elysia",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.30"
+          },
+          {
+            "package": {
+              "name": "enhanced-resolve",
+              "ecosystem": "npm"
+            },
+            "version": "5.25.1"
+          },
+          {
+            "package": {
+              "name": "exact-mirror",
+              "ecosystem": "npm"
+            },
+            "version": "0.2.7"
+          },
+          {
+            "package": {
+              "name": "exsolve",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.1"
+          },
+          {
+            "package": {
+              "name": "fast-decode-uri-component",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.1"
+          },
+          {
+            "package": {
+              "name": "fast-deep-equal",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.3"
+          },
+          {
+            "package": {
+              "name": "fdir",
+              "ecosystem": "npm"
+            },
+            "version": "6.5.0"
+          },
+          {
+            "package": {
+              "name": "file-type",
+              "ecosystem": "npm"
+            },
+            "version": "22.0.1"
+          },
+          {
+            "package": {
+              "name": "fsevents",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.3"
+          },
+          {
+            "package": {
+              "name": "get-tsconfig",
+              "ecosystem": "npm"
+            },
+            "version": "4.14.0"
+          },
+          {
+            "package": {
+              "name": "giget",
+              "ecosystem": "npm"
+            },
+            "version": "3.3.1"
+          },
+          {
+            "package": {
+              "name": "graceful-fs",
+              "ecosystem": "npm"
+            },
+            "version": "4.2.11"
+          },
+          {
+            "package": {
+              "name": "hls.js",
+              "ecosystem": "npm"
+            },
+            "version": "1.6.16"
+          },
+          {
+            "package": {
+              "name": "html-entities",
+              "ecosystem": "npm"
+            },
+            "version": "2.6.0"
+          },
+          {
+            "package": {
+              "name": "ieee754",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.1"
+          },
+          {
+            "package": {
+              "name": "immediate",
+              "ecosystem": "npm"
+            },
+            "version": "3.0.6"
+          },
+          {
+            "package": {
+              "name": "imsc",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "is-docker",
+              "ecosystem": "npm"
+            },
+            "version": "3.0.0"
+          },
+          {
+            "package": {
+              "name": "is-in-ssh",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.0"
+          },
+          {
+            "package": {
+              "name": "is-inside-container",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.0"
+          },
+          {
+            "package": {
+              "name": "is-wsl",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.1"
+          },
+          {
+            "package": {
+              "name": "isbot",
+              "ecosystem": "npm"
+            },
+            "version": "5.2.2"
+          },
+          {
+            "package": {
+              "name": "isexe",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.0"
+          },
+          {
+            "package": {
+              "name": "jiti",
+              "ecosystem": "npm"
+            },
+            "version": "2.7.0"
+          },
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.2"
+          },
+          {
+            "package": {
+              "name": "kind-of",
+              "ecosystem": "npm"
+            },
+            "version": "6.0.3"
+          },
+          {
+            "package": {
+              "name": "lie",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.1"
+          },
+          {
+            "package": {
+              "name": "lightningcss",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-android-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-darwin-arm64",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-darwin-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-freebsd-x64",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-linux-arm-gnueabihf",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-linux-arm64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-linux-arm64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-linux-x64-gnu",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-linux-x64-musl",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-win32-arm64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "lightningcss-win32-x64-msvc",
+              "ecosystem": "npm"
+            },
+            "version": "1.32.0"
+          },
+          {
+            "package": {
+              "name": "localforage",
+              "ecosystem": "npm"
+            },
+            "version": "1.10.0"
+          },
+          {
+            "package": {
+              "name": "magic-string",
+              "ecosystem": "npm"
+            },
+            "version": "0.30.21"
+          },
+          {
+            "package": {
+              "name": "memoirist",
+              "ecosystem": "npm"
+            },
+            "version": "0.4.0"
+          },
+          {
+            "package": {
+              "name": "ms",
+              "ecosystem": "npm"
+            },
+            "version": "2.1.3"
+          },
+          {
+            "package": {
+              "name": "nanoid",
+              "ecosystem": "npm"
+            },
+            "version": "3.3.20"
+          },
+          {
+            "package": {
+              "name": "ohash",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.12"
+          },
+          {
+            "package": {
+              "name": "open",
+              "ecosystem": "npm"
+            },
+            "version": "11.0.0"
+          },
+          {
+            "package": {
+              "name": "openapi-types",
+              "ecosystem": "npm"
+            },
+            "version": "12.1.3"
+          },
+          {
+            "package": {
+              "name": "option-validator",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.6"
+          },
+          {
+            "package": {
+              "name": "path-browserify",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.1"
+          },
+          {
+            "package": {
+              "name": "path-key",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.1"
+          },
+          {
+            "package": {
+              "name": "pathe",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.3"
+          },
+          {
+            "package": {
+              "name": "perfect-debounce",
+              "ecosystem": "npm"
+            },
+            "version": "2.1.0"
+          },
+          {
+            "package": {
+              "name": "picocolors",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.1"
+          },
+          {
+            "package": {
+              "name": "picomatch",
+              "ecosystem": "npm"
+            },
+            "version": "4.0.7"
+          },
+          {
+            "package": {
+              "name": "pkg-types",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.3"
+          },
+          {
+            "package": {
+              "name": "playwright",
+              "ecosystem": "npm"
+            },
+            "version": "1.61.1"
+          },
+          {
+            "package": {
+              "name": "playwright-core",
+              "ecosystem": "npm"
+            },
+            "version": "1.61.1"
+          },
+          {
+            "package": {
+              "name": "postcss",
+              "ecosystem": "npm"
+            },
+            "version": "8.5.31"
+          },
+          {
+            "package": {
+              "name": "powershell-utils",
+              "ecosystem": "npm"
+            },
+            "version": "0.1.0"
+          },
+          {
+            "package": {
+              "name": "rc9",
+              "ecosystem": "npm"
+            },
+            "version": "3.1.0"
+          },
+          {
+            "package": {
+              "name": "react",
+              "ecosystem": "npm"
+            },
+            "version": "19.3.0"
+          },
+          {
+            "package": {
+              "name": "react-dom",
+              "ecosystem": "npm"
+            },
+            "version": "19.3.0"
+          },
+          {
+            "package": {
+              "name": "readdirp",
+              "ecosystem": "npm"
+            },
+            "version": "5.1.1"
+          },
+          {
+            "package": {
+              "name": "resolve-pkg-maps",
+              "ecosystem": "npm"
+            },
+            "version": "1.0.0"
+          },
+          {
+            "package": {
+              "name": "rolldown",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "run-applescript",
+              "ecosystem": "npm"
+            },
+            "version": "7.1.0"
+          },
+          {
+            "package": {
+              "name": "sax",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.1"
+          },
+          {
+            "package": {
+              "name": "scheduler",
+              "ecosystem": "npm"
+            },
+            "version": "0.28.0"
+          },
+          {
+            "package": {
+              "name": "semver",
+              "ecosystem": "npm"
+            },
+            "version": "7.8.4"
+          },
+          {
+            "package": {
+              "name": "seroval",
+              "ecosystem": "npm"
+            },
+            "version": "1.6.7"
+          },
+          {
+            "package": {
+              "name": "seroval-plugins",
+              "ecosystem": "npm"
+            },
+            "version": "1.6.7"
+          },
+          {
+            "package": {
+              "name": "shebang-command",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.0"
+          },
+          {
+            "package": {
+              "name": "shebang-regex",
+              "ecosystem": "npm"
+            },
+            "version": "3.0.0"
+          },
+          {
+            "package": {
+              "name": "source-map-js",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.2"
+          },
+          {
+            "package": {
+              "name": "strtok3",
+              "ecosystem": "npm"
+            },
+            "version": "10.3.5"
+          },
+          {
+            "package": {
+              "name": "tailwind-merge",
+              "ecosystem": "npm"
+            },
+            "version": "3.7.0"
+          },
+          {
+            "package": {
+              "name": "tailwindcss",
+              "ecosystem": "npm"
+            },
+            "version": "4.3.3"
+          },
+          {
+            "package": {
+              "name": "tapable",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.3"
+          },
+          {
+            "package": {
+              "name": "tinyglobby",
+              "ecosystem": "npm"
+            },
+            "version": "0.2.17"
+          },
+          {
+            "package": {
+              "name": "token-types",
+              "ecosystem": "npm"
+            },
+            "version": "6.1.2"
+          },
+          {
+            "package": {
+              "name": "tslib",
+              "ecosystem": "npm"
+            },
+            "version": "2.8.1"
+          },
+          {
+            "package": {
+              "name": "typescript",
+              "ecosystem": "npm"
+            },
+            "version": "5.9.3"
+          },
+          {
+            "package": {
+              "name": "uint8array-extras",
+              "ecosystem": "npm"
+            },
+            "version": "1.5.0"
+          },
+          {
+            "package": {
+              "name": "undici-types",
+              "ecosystem": "npm"
+            },
+            "version": "7.24.6"
+          },
+          {
+            "package": {
+              "name": "use-sync-external-store",
+              "ecosystem": "npm"
+            },
+            "version": "1.7.0"
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm"
+            },
+            "version": "8.1.6"
+          },
+          {
+            "package": {
+              "name": "which",
+              "ecosystem": "npm"
+            },
+            "version": "2.0.2"
+          },
+          {
+            "package": {
+              "name": "wsl-utils",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.1"
+          },
+          {
+            "package": {
+              "name": "@emnapi/core",
+              "ecosystem": "npm"
+            },
+            "version": "1.11.3"
+          },
+          {
+            "package": {
+              "name": "@emnapi/runtime",
+              "ecosystem": "npm"
+            },
+            "version": "1.11.3"
+          },
+          {
+            "package": {
+              "name": "@emnapi/wasi-threads",
+              "ecosystem": "npm"
+            },
+            "version": "1.2.3"
+          },
+          {
+            "package": {
+              "name": "@napi-rs/wasm-runtime",
+              "ecosystem": "npm"
+            },
+            "version": "1.1.5"
+          },
+          {
+            "package": {
+              "name": "@tybys/wasm-util",
+              "ecosystem": "npm"
+            },
+            "version": "0.10.2"
+          },
+          {
+            "package": {
+              "name": "@types/bun",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.2"
+          },
+          {
+            "package": {
+              "name": "confbox",
+              "ecosystem": "npm"
+            },
+            "version": "0.3.1"
+          },
+          {
+            "package": {
+              "name": "fsevents",
+              "ecosystem": "npm"
+            },
+            "version": "2.3.2"
+          },
+          {
+            "package": {
+              "name": "bun-types",
+              "ecosystem": "npm"
+            },
+            "version": "1.4.2"
+          }
+        ]
+      },
+      "result": {
+        "results": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ]
+      }
+    },
+    "npm": {
+      "endpoint": "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+      "request": {
+        "@biomejs/biome": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-darwin-arm64": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-darwin-x64": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-linux-arm64": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-linux-arm64-musl": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-linux-x64": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-linux-x64-musl": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-win32-arm64": [
+          "1.9.4"
+        ],
+        "@biomejs/cli-win32-x64": [
+          "1.9.4"
+        ],
+        "@borewit/text-codec": [
+          "0.2.2"
+        ],
+        "@elysiajs/cors": [
+          "1.4.2"
+        ],
+        "@elysiajs/openapi": [
+          "1.4.16"
+        ],
+        "@emnapi/core": [
+          "1.11.1",
+          "1.11.3"
+        ],
+        "@emnapi/runtime": [
+          "1.11.1",
+          "1.11.3"
+        ],
+        "@emnapi/wasi-threads": [
+          "1.2.2",
+          "1.2.3"
+        ],
+        "@hey-api/codegen-core": [
+          "0.9.1"
+        ],
+        "@hey-api/json-schema-ref-parser": [
+          "1.4.4"
+        ],
+        "@hey-api/openapi-ts": [
+          "0.99.0"
+        ],
+        "@hey-api/shared": [
+          "0.5.0"
+        ],
+        "@hey-api/spec-types": [
+          "0.2.0"
+        ],
+        "@hey-api/types": [
+          "0.1.4"
+        ],
+        "@jridgewell/gen-mapping": [
+          "0.3.13"
+        ],
+        "@jridgewell/remapping": [
+          "2.3.5"
+        ],
+        "@jridgewell/resolve-uri": [
+          "3.1.2"
+        ],
+        "@jridgewell/sourcemap-codec": [
+          "1.5.5"
+        ],
+        "@jridgewell/trace-mapping": [
+          "0.3.31"
+        ],
+        "@jsdevtools/ono": [
+          "7.1.3"
+        ],
+        "@lukeed/ms": [
+          "2.0.2"
+        ],
+        "@napi-rs/wasm-runtime": [
+          "1.2.5",
+          "1.1.5"
+        ],
+        "@oxc-project/types": [
+          "0.139.0"
+        ],
+        "@playwright/test": [
+          "1.61.1"
+        ],
+        "@rolldown/binding-android-arm64": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-darwin-arm64": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-darwin-x64": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-freebsd-x64": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-arm-gnueabihf": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-arm64-gnu": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-arm64-musl": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-ppc64-gnu": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-s390x-gnu": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-x64-gnu": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-linux-x64-musl": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-openharmony-arm64": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-wasm32-wasi": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-win32-arm64-msvc": [
+          "1.1.5"
+        ],
+        "@rolldown/binding-win32-x64-msvc": [
+          "1.1.5"
+        ],
+        "@rolldown/pluginutils": [
+          "1.0.1"
+        ],
+        "@sinclair/typebox": [
+          "0.34.49"
+        ],
+        "@svta/cml-608": [
+          "1.0.2"
+        ],
+        "@svta/cml-cmcd": [
+          "2.3.2"
+        ],
+        "@svta/cml-cmsd": [
+          "1.0.6"
+        ],
+        "@svta/cml-cta": [
+          "1.0.6"
+        ],
+        "@svta/cml-dash": [
+          "1.0.6"
+        ],
+        "@svta/cml-id3": [
+          "1.0.6"
+        ],
+        "@svta/cml-request": [
+          "1.0.12"
+        ],
+        "@svta/cml-structured-field-values": [
+          "1.1.3"
+        ],
+        "@svta/cml-utils": [
+          "1.5.0"
+        ],
+        "@svta/cml-xml": [
+          "1.1.4"
+        ],
+        "@tailwindcss/node": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-android-arm64": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-darwin-arm64": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-darwin-x64": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-freebsd-x64": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-linux-arm-gnueabihf": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-linux-arm64-gnu": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-linux-arm64-musl": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-linux-x64-gnu": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-linux-x64-musl": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-wasm32-wasi": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-win32-arm64-msvc": [
+          "4.3.3"
+        ],
+        "@tailwindcss/oxide-win32-x64-msvc": [
+          "4.3.3"
+        ],
+        "@tailwindcss/vite": [
+          "4.3.3"
+        ],
+        "@tanstack/history": [
+          "1.162.4"
+        ],
+        "@tanstack/query-core": [
+          "5.104.0"
+        ],
+        "@tanstack/react-query": [
+          "5.104.0"
+        ],
+        "@tanstack/react-router": [
+          "1.170.39"
+        ],
+        "@tanstack/react-store": [
+          "0.11.1"
+        ],
+        "@tanstack/router-core": [
+          "1.171.32"
+        ],
+        "@tanstack/store": [
+          "0.11.1"
+        ],
+        "@tokenizer/inflate": [
+          "0.4.1"
+        ],
+        "@tokenizer/token": [
+          "0.3.0"
+        ],
+        "@tybys/wasm-util": [
+          "0.10.4",
+          "0.10.2"
+        ],
+        "@types/bun": [
+          "1.3.14",
+          "1.4.2"
+        ],
+        "@types/json-schema": [
+          "7.0.15"
+        ],
+        "@types/node": [
+          "25.9.3"
+        ],
+        "@types/react": [
+          "19.3.0"
+        ],
+        "@types/react-dom": [
+          "19.3.0"
+        ],
+        "@vitejs/plugin-react": [
+          "6.1.1"
+        ],
+        "ansi-colors": [
+          "4.1.3"
+        ],
+        "argparse": [
+          "2.0.1"
+        ],
+        "artplayer": [
+          "5.4.0"
+        ],
+        "bcp-47-match": [
+          "2.0.3"
+        ],
+        "bun-types": [
+          "1.3.14",
+          "1.4.2"
+        ],
+        "bundle-name": [
+          "4.1.0"
+        ],
+        "c12": [
+          "3.3.4"
+        ],
+        "chokidar": [
+          "5.0.0"
+        ],
+        "class-variance-authority": [
+          "0.7.1"
+        ],
+        "clsx": [
+          "2.1.1"
+        ],
+        "codem-isoboxer": [
+          "0.3.10"
+        ],
+        "color-support": [
+          "1.1.3"
+        ],
+        "commander": [
+          "15.0.0"
+        ],
+        "confbox": [
+          "0.2.4",
+          "0.3.1"
+        ],
+        "cookie": [
+          "1.1.1"
+        ],
+        "cookie-es": [
+          "3.1.1"
+        ],
+        "cross-spawn": [
+          "7.0.6"
+        ],
+        "csstype": [
+          "3.2.3"
+        ],
+        "dashjs": [
+          "5.2.0"
+        ],
+        "debug": [
+          "4.4.3"
+        ],
+        "default-browser": [
+          "5.5.1"
+        ],
+        "default-browser-id": [
+          "5.0.1"
+        ],
+        "define-lazy-prop": [
+          "3.0.0"
+        ],
+        "defu": [
+          "6.1.7"
+        ],
+        "destr": [
+          "2.0.5"
+        ],
+        "detect-libc": [
+          "2.1.2"
+        ],
+        "dotenv": [
+          "17.4.2"
+        ],
+        "elysia": [
+          "1.4.30"
+        ],
+        "enhanced-resolve": [
+          "5.25.1"
+        ],
+        "exact-mirror": [
+          "0.2.7"
+        ],
+        "exsolve": [
+          "1.1.1"
+        ],
+        "fast-decode-uri-component": [
+          "1.0.1"
+        ],
+        "fast-deep-equal": [
+          "3.1.3"
+        ],
+        "fdir": [
+          "6.5.0"
+        ],
+        "file-type": [
+          "22.0.1"
+        ],
+        "fsevents": [
+          "2.3.3",
+          "2.3.2"
+        ],
+        "get-tsconfig": [
+          "4.14.0"
+        ],
+        "giget": [
+          "3.3.1"
+        ],
+        "graceful-fs": [
+          "4.2.11"
+        ],
+        "hls.js": [
+          "1.6.16"
+        ],
+        "html-entities": [
+          "2.6.0"
+        ],
+        "ieee754": [
+          "1.2.1"
+        ],
+        "immediate": [
+          "3.0.6"
+        ],
+        "imsc": [
+          "1.1.5"
+        ],
+        "is-docker": [
+          "3.0.0"
+        ],
+        "is-in-ssh": [
+          "1.0.0"
+        ],
+        "is-inside-container": [
+          "1.0.0"
+        ],
+        "is-wsl": [
+          "3.1.1"
+        ],
+        "isbot": [
+          "5.2.2"
+        ],
+        "isexe": [
+          "2.0.0"
+        ],
+        "jiti": [
+          "2.7.0"
+        ],
+        "js-yaml": [
+          "4.3.2"
+        ],
+        "kind-of": [
+          "6.0.3"
+        ],
+        "lie": [
+          "3.1.1"
+        ],
+        "lightningcss": [
+          "1.32.0"
+        ],
+        "lightningcss-android-arm64": [
+          "1.32.0"
+        ],
+        "lightningcss-darwin-arm64": [
+          "1.32.0"
+        ],
+        "lightningcss-darwin-x64": [
+          "1.32.0"
+        ],
+        "lightningcss-freebsd-x64": [
+          "1.32.0"
+        ],
+        "lightningcss-linux-arm-gnueabihf": [
+          "1.32.0"
+        ],
+        "lightningcss-linux-arm64-gnu": [
+          "1.32.0"
+        ],
+        "lightningcss-linux-arm64-musl": [
+          "1.32.0"
+        ],
+        "lightningcss-linux-x64-gnu": [
+          "1.32.0"
+        ],
+        "lightningcss-linux-x64-musl": [
+          "1.32.0"
+        ],
+        "lightningcss-win32-arm64-msvc": [
+          "1.32.0"
+        ],
+        "lightningcss-win32-x64-msvc": [
+          "1.32.0"
+        ],
+        "localforage": [
+          "1.10.0"
+        ],
+        "magic-string": [
+          "0.30.21"
+        ],
+        "memoirist": [
+          "0.4.0"
+        ],
+        "ms": [
+          "2.1.3"
+        ],
+        "nanoid": [
+          "3.3.20"
+        ],
+        "ohash": [
+          "2.0.12"
+        ],
+        "open": [
+          "11.0.0"
+        ],
+        "openapi-types": [
+          "12.1.3"
+        ],
+        "option-validator": [
+          "2.0.6"
+        ],
+        "path-browserify": [
+          "1.0.1"
+        ],
+        "path-key": [
+          "3.1.1"
+        ],
+        "pathe": [
+          "2.0.3"
+        ],
+        "perfect-debounce": [
+          "2.1.0"
+        ],
+        "picocolors": [
+          "1.1.1"
+        ],
+        "picomatch": [
+          "4.0.7"
+        ],
+        "pkg-types": [
+          "2.3.3"
+        ],
+        "playwright": [
+          "1.61.1"
+        ],
+        "playwright-core": [
+          "1.61.1"
+        ],
+        "postcss": [
+          "8.5.31"
+        ],
+        "powershell-utils": [
+          "0.1.0"
+        ],
+        "rc9": [
+          "3.1.0"
+        ],
+        "react": [
+          "19.3.0"
+        ],
+        "react-dom": [
+          "19.3.0"
+        ],
+        "readdirp": [
+          "5.1.1"
+        ],
+        "resolve-pkg-maps": [
+          "1.0.0"
+        ],
+        "rolldown": [
+          "1.1.5"
+        ],
+        "run-applescript": [
+          "7.1.0"
+        ],
+        "sax": [
+          "1.2.1"
+        ],
+        "scheduler": [
+          "0.28.0"
+        ],
+        "semver": [
+          "7.8.4"
+        ],
+        "seroval": [
+          "1.6.7"
+        ],
+        "seroval-plugins": [
+          "1.6.7"
+        ],
+        "shebang-command": [
+          "2.0.0"
+        ],
+        "shebang-regex": [
+          "3.0.0"
+        ],
+        "source-map-js": [
+          "1.2.2"
+        ],
+        "strtok3": [
+          "10.3.5"
+        ],
+        "tailwind-merge": [
+          "3.7.0"
+        ],
+        "tailwindcss": [
+          "4.3.3"
+        ],
+        "tapable": [
+          "2.3.3"
+        ],
+        "tinyglobby": [
+          "0.2.17"
+        ],
+        "token-types": [
+          "6.1.2"
+        ],
+        "tslib": [
+          "2.8.1"
+        ],
+        "typescript": [
+          "5.9.3"
+        ],
+        "uint8array-extras": [
+          "1.5.0"
+        ],
+        "undici-types": [
+          "7.24.6"
+        ],
+        "use-sync-external-store": [
+          "1.7.0"
+        ],
+        "vite": [
+          "8.1.6"
+        ],
+        "which": [
+          "2.0.2"
+        ],
+        "wsl-utils": [
+          "0.3.1"
+        ]
+      },
+      "result": {}
+    },
+    "upstreamSupplement": {
+      "elysia": "1.4.30 static fixes checked against initial evidence; three security regressions pass"
+    }
+  },
+  "validation": {
+    "workspaceInstall": {
+      "command": "DX_BIND_HOST=127.0.0.1 ./dx bun --no-env-file install --frozen-lockfile --ignore-scripts",
+      "exitCode": 0
+    },
+    "lint": {
+      "exitCode": 0,
+      "files": 290
+    },
+    "typecheck": {
+      "exitCode": 0,
+      "workspaces": 7
+    },
+    "tests": {
+      "exitCode": 0,
+      "passed": 480,
+      "failed": 0,
+      "assertions": 2409
+    },
+    "contractDrift": {
+      "exitCode": 0,
+      "byteStableFiles": 18
+    },
+    "reactBuild": {
+      "exitCode": 0
+    },
+    "previewFixtures": {
+      "exitCode": 0,
+      "passed": 36
+    },
+    "shellFixtures": {
+      "exitCode": 0,
+      "checks": 93
+    },
+    "browser": {
+      "exitCode": 0,
+      "passed": 78,
+      "skipped": 3,
+      "failed": 0,
+      "runner": "project-local Playwright through existing Docker image, read-only browser cache",
+      "baseURL": "http://127.0.0.1:41733"
+    },
+    "installedChromiumAdapter": {
+      "exitCode": 0,
+      "passed": 1
+    },
+    "yamlOverride": {
+      "exitCode": 0,
+      "scope": "Hey API parser normal YAML fixture; JSON covered by deterministic generated contracts"
+    },
+    "securityRegression": {
+      "passed": 3,
+      "baseline": "ordinary-body compatibility passed; old Elysia returned all 80 errors and rejected quoted schema name/default at compilation",
+      "payloads": "one multipart field; 80 invalid scalar array entries; literal quoted schema data; no stress or command execution"
+    }
+  },
+  "warnings": [
+    "Artificial quote-containing schema triggers exact-mirror optimization fallback warning; response assertions pass and warning is retained",
+    "React build reports upstream dashjs CommonJS-in-ESM and existing large chunk warnings; build and browser media assertions pass"
+  ],
+  "incidents": [
+    "First main-workspace aggregate rerun observed client/server WebSocket departure ordering race (200 before server close processing); test now awaits authoritative SHUSSEKI before retaining HTTP403 assertion; focused and final480 rerun pass",
+    "One focused probe omitted HOUSOU_DB=:memory: and opened existing root legacy DB; startup legacy ownership guard aborted before test body; no reset or deletion; subsequent probes explicitly use memory DB",
+    "Initial YAML probe compared wrapper result to schema; corrected to destructure schema according to actual parser API, then passed"
+  ],
+  "preservation": {
+    "existingServices": "No running container used original workspace before refreshing dependencies; no original preview started/stopped",
+    "configuration": "No env/config or database reset/deletion",
+    "cleanup": "Stopped only task-owned isolated memory service after browser checks"
+  },
+  "logs": {
+    "tests": "/tmp/houkago-security-fix-final-tests.log",
+    "types": "/tmp/houkago-security-fix-workspace-types.log",
+    "lint": "/tmp/houkago-security-fix-final-lint.log",
+    "drift": "/tmp/houkago-security-fix-final-drift.log",
+    "build": "/tmp/houkago-security-fix-build.log",
+    "browser": "/tmp/houkago-security-fix-browser.log",
+    "adapter": "/tmp/houkago-security-fix-adapter-browser.log",
+    "preview": "/tmp/houkago-security-fix-preview-tests.log",
+    "shell": "/tmp/houkago-security-fix-shell-tests.log",
+    "yaml": "/tmp/houkago-security-fix-yaml.log"
+  }
+}

@@ -58,6 +58,34 @@
 
 ## Ordered Work
 
+### Urgent repair — dependency security triage (2026-10-22)
+
+The owner requested a task and urgent dependency-vulnerability investigation,
+including upgrade feasibility, then explicitly requested `帮我修复` after the
+candidate summary. The P0 [task](tasks/10-22-dependency-security-triage/prd.md)
+is in progress with implementation and automated acceptance complete;
+[research](tasks/10-22-dependency-security-triage/research.md) retains the initial assessment.
+All eight manifests and 212 unique external lockfile versions were checked:
+npm/OSV agree on 14 advisories across six packages; two additional Elysia
+upstream advisories bring the version-match total to 16, with reachability
+conditions documented separately. Installed repairs: Elysia 1.4.30, Vite 8.1.6,
+PostCSS 8.5.31, Nano ID 3.3.20, source-map-js 1.2.2 and js-yaml 4.3.2 through
+a root override. Final full lockfile scans cover 213 unique versions with zero
+npm/OSV findings. Validation passes 480 unit/API tests, seven workspace types,
+lint, 18 byte-stable generated contracts, production build, 36 preview fixtures,
+93 shell checks, 78 desktop/phone browser tests (three existing applicability
+skips) and one installed Chromium adapter test. A close-event test race now
+awaits the authoritative departure snapshot without weakening its HTTP403
+assertion. See [validation](tasks/10-22-dependency-security-triage/validation.md)
+for warning, probe-incident and coverage boundaries. The current workspace's
+dependencies are refreshed; only task-owned memory fixture services were stopped.
+No existing service was restarted and no database was reset/deleted.
+The owner authorized the local work commit with `提交` on 2026-11-07.
+Archive, push and deployment remain unapproved; unrelated room tasks retain
+their status and guided continuation. Commit preparation verified all seven
+implementation hashes still match the recorded validation snapshot; the
+October vulnerability scan is historical evidence, not a new November scan.
+
 ### Completed task — same-origin API preview (2026-10-21)
 
 The owner requested task creation and assessed moving the separate backend

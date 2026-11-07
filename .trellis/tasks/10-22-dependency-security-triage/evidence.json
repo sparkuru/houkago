@@ -1,0 +1,5926 @@
+{
+  "checkedAt": "2026-10-22T13:28:14.831Z",
+  "baselineCommit": "13758a1",
+  "branch": "k-on",
+  "manifestPaths": [
+    "package.json",
+    "packages/eisha/package.json",
+    "packages/houkago-adapter/package.json",
+    "packages/housou/package.json",
+    "packages/kokuban/package.json",
+    "packages/kousoku/package.json",
+    "packages/kyoushitsu-core/package.json",
+    "packages/kyoushitsu-react/package.json"
+  ],
+  "sha256": {
+    "package.json": "383eac88825fb679ae2b6ba13f961a6ee9363b4ccc2ebb9dd6534d20a6c13d8b",
+    "packages/eisha/package.json": "e7e239ebc0b2a9a03864a80f89f2c089a32678278d10ecc35d7582b57a7cdc15",
+    "packages/houkago-adapter/package.json": "c55569b7bb58b630b055a5f89a34e0acdaebca8c636081614ad398106ad1c200",
+    "packages/housou/package.json": "88729efa228fe1ab4e8e8afbd56217e8e1b81421984492dae146844896107b82",
+    "packages/kokuban/package.json": "197a5f9df56b3112b83657ef7d3eba4bb8a1d17b378c848e5d8dcae4b2c9f936",
+    "packages/kousoku/package.json": "02e67dfcceabb3b1cf7a6f3ed07dc3cbbccaa1f9910ac28eb5dbb88995952a94",
+    "packages/kyoushitsu-core/package.json": "80e1a16d9e8959f99d3380ba0bf23c22c4a82755c8d835686bb14d722a17c74a",
+    "packages/kyoushitsu-react/package.json": "789193f1757b7ba73145de56681c3a429b9b79a20511f0d892b31cad637aa0af",
+    "bun.lock": "ecda326f5ce5e77267a41c053a7f0f04ec9a35ab45a37470b2cb2429467e74da"
+  },
+  "counts": {
+    "lockExternalRecords": 221,
+    "uniqueVersions": 212,
+    "packageNames": 205,
+    "databaseAffectedPackages": 6,
+    "databaseAdvisories": 14,
+    "additionalUpstreamAdvisories": 2
+  },
+  "inventory": [
+    {
+      "key": "@biomejs/biome",
+      "id": "@biomejs/biome@1.9.4",
+      "optional": {
+        "@biomejs/cli-darwin-arm64": "1.9.4",
+        "@biomejs/cli-darwin-x64": "1.9.4",
+        "@biomejs/cli-linux-arm64": "1.9.4",
+        "@biomejs/cli-linux-arm64-musl": "1.9.4",
+        "@biomejs/cli-linux-x64": "1.9.4",
+        "@biomejs/cli-linux-x64-musl": "1.9.4",
+        "@biomejs/cli-win32-arm64": "1.9.4",
+        "@biomejs/cli-win32-x64": "1.9.4"
+      }
+    },
+    {
+      "key": "@biomejs/cli-darwin-arm64",
+      "id": "@biomejs/cli-darwin-arm64@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-darwin-x64",
+      "id": "@biomejs/cli-darwin-x64@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-linux-arm64",
+      "id": "@biomejs/cli-linux-arm64@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-linux-arm64-musl",
+      "id": "@biomejs/cli-linux-arm64-musl@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-linux-x64",
+      "id": "@biomejs/cli-linux-x64@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-linux-x64-musl",
+      "id": "@biomejs/cli-linux-x64-musl@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-win32-arm64",
+      "id": "@biomejs/cli-win32-arm64@1.9.4"
+    },
+    {
+      "key": "@biomejs/cli-win32-x64",
+      "id": "@biomejs/cli-win32-x64@1.9.4"
+    },
+    {
+      "key": "@borewit/text-codec",
+      "id": "@borewit/text-codec@0.2.2"
+    },
+    {
+      "key": "@elysiajs/cors",
+      "id": "@elysiajs/cors@1.4.2"
+    },
+    {
+      "key": "@elysiajs/openapi",
+      "id": "@elysiajs/openapi@1.4.16"
+    },
+    {
+      "key": "@emnapi/core",
+      "id": "@emnapi/core@1.10.0",
+      "deps": {
+        "@emnapi/wasi-threads": "1.2.1",
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@emnapi/runtime",
+      "id": "@emnapi/runtime@1.10.0",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@emnapi/wasi-threads",
+      "id": "@emnapi/wasi-threads@1.2.1",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@hey-api/codegen-core",
+      "id": "@hey-api/codegen-core@0.9.1",
+      "deps": {
+        "@hey-api/types": "0.1.4",
+        "ansi-colors": "4.1.3",
+        "c12": "3.3.4",
+        "color-support": "1.1.3"
+      }
+    },
+    {
+      "key": "@hey-api/json-schema-ref-parser",
+      "id": "@hey-api/json-schema-ref-parser@1.4.4",
+      "deps": {
+        "@jsdevtools/ono": "7.1.3",
+        "@types/json-schema": "7.0.15",
+        "js-yaml": "4.2.0"
+      }
+    },
+    {
+      "key": "@hey-api/openapi-ts",
+      "id": "@hey-api/openapi-ts@0.99.0",
+      "deps": {
+        "@hey-api/codegen-core": "0.9.1",
+        "@hey-api/json-schema-ref-parser": "1.4.4",
+        "@hey-api/shared": "0.5.0",
+        "@hey-api/spec-types": "0.2.0",
+        "@hey-api/types": "0.1.4",
+        "@lukeed/ms": "2.0.2",
+        "ansi-colors": "4.1.3",
+        "color-support": "1.1.3",
+        "commander": "15.0.0",
+        "get-tsconfig": "4.14.0"
+      }
+    },
+    {
+      "key": "@hey-api/shared",
+      "id": "@hey-api/shared@0.5.0",
+      "deps": {
+        "@hey-api/codegen-core": "0.9.1",
+        "@hey-api/json-schema-ref-parser": "1.4.4",
+        "@hey-api/spec-types": "0.2.0",
+        "@hey-api/types": "0.1.4",
+        "ansi-colors": "4.1.3",
+        "cross-spawn": "7.0.6",
+        "open": "11.0.0",
+        "semver": "7.8.4"
+      }
+    },
+    {
+      "key": "@hey-api/spec-types",
+      "id": "@hey-api/spec-types@0.2.0",
+      "deps": {
+        "@hey-api/types": "0.1.4"
+      }
+    },
+    {
+      "key": "@hey-api/types",
+      "id": "@hey-api/types@0.1.4"
+    },
+    {
+      "key": "@jridgewell/gen-mapping",
+      "id": "@jridgewell/gen-mapping@0.3.13",
+      "deps": {
+        "@jridgewell/sourcemap-codec": "^1.5.0",
+        "@jridgewell/trace-mapping": "^0.3.24"
+      }
+    },
+    {
+      "key": "@jridgewell/remapping",
+      "id": "@jridgewell/remapping@2.3.5",
+      "deps": {
+        "@jridgewell/gen-mapping": "^0.3.5",
+        "@jridgewell/trace-mapping": "^0.3.24"
+      }
+    },
+    {
+      "key": "@jridgewell/resolve-uri",
+      "id": "@jridgewell/resolve-uri@3.1.2"
+    },
+    {
+      "key": "@jridgewell/sourcemap-codec",
+      "id": "@jridgewell/sourcemap-codec@1.5.5"
+    },
+    {
+      "key": "@jridgewell/trace-mapping",
+      "id": "@jridgewell/trace-mapping@0.3.31",
+      "deps": {
+        "@jridgewell/resolve-uri": "^3.1.0",
+        "@jridgewell/sourcemap-codec": "^1.4.14"
+      }
+    },
+    {
+      "key": "@jsdevtools/ono",
+      "id": "@jsdevtools/ono@7.1.3"
+    },
+    {
+      "key": "@lukeed/ms",
+      "id": "@lukeed/ms@2.0.2"
+    },
+    {
+      "key": "@napi-rs/wasm-runtime",
+      "id": "@napi-rs/wasm-runtime@1.1.5",
+      "deps": {
+        "@tybys/wasm-util": "^0.10.2"
+      }
+    },
+    {
+      "key": "@oxc-project/types",
+      "id": "@oxc-project/types@0.133.0"
+    },
+    {
+      "key": "@playwright/test",
+      "id": "@playwright/test@1.61.1",
+      "deps": {
+        "playwright": "1.61.1"
+      }
+    },
+    {
+      "key": "@rolldown/binding-android-arm64",
+      "id": "@rolldown/binding-android-arm64@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-darwin-arm64",
+      "id": "@rolldown/binding-darwin-arm64@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-darwin-x64",
+      "id": "@rolldown/binding-darwin-x64@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-freebsd-x64",
+      "id": "@rolldown/binding-freebsd-x64@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm-gnueabihf",
+      "id": "@rolldown/binding-linux-arm-gnueabihf@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm64-gnu",
+      "id": "@rolldown/binding-linux-arm64-gnu@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-arm64-musl",
+      "id": "@rolldown/binding-linux-arm64-musl@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-ppc64-gnu",
+      "id": "@rolldown/binding-linux-ppc64-gnu@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-s390x-gnu",
+      "id": "@rolldown/binding-linux-s390x-gnu@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-x64-gnu",
+      "id": "@rolldown/binding-linux-x64-gnu@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-linux-x64-musl",
+      "id": "@rolldown/binding-linux-x64-musl@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-openharmony-arm64",
+      "id": "@rolldown/binding-openharmony-arm64@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-wasm32-wasi",
+      "id": "@rolldown/binding-wasm32-wasi@1.0.3",
+      "deps": {
+        "@emnapi/core": "1.10.0",
+        "@emnapi/runtime": "1.10.0",
+        "@napi-rs/wasm-runtime": "^1.1.4"
+      }
+    },
+    {
+      "key": "@rolldown/binding-win32-arm64-msvc",
+      "id": "@rolldown/binding-win32-arm64-msvc@1.0.3"
+    },
+    {
+      "key": "@rolldown/binding-win32-x64-msvc",
+      "id": "@rolldown/binding-win32-x64-msvc@1.0.3"
+    },
+    {
+      "key": "@rolldown/pluginutils",
+      "id": "@rolldown/pluginutils@1.0.1"
+    },
+    {
+      "key": "@sinclair/typebox",
+      "id": "@sinclair/typebox@0.34.49"
+    },
+    {
+      "key": "@svta/cml-608",
+      "id": "@svta/cml-608@1.0.2"
+    },
+    {
+      "key": "@svta/cml-cmcd",
+      "id": "@svta/cml-cmcd@2.3.2"
+    },
+    {
+      "key": "@svta/cml-cmsd",
+      "id": "@svta/cml-cmsd@1.0.6"
+    },
+    {
+      "key": "@svta/cml-cta",
+      "id": "@svta/cml-cta@1.0.6"
+    },
+    {
+      "key": "@svta/cml-dash",
+      "id": "@svta/cml-dash@1.0.6"
+    },
+    {
+      "key": "@svta/cml-id3",
+      "id": "@svta/cml-id3@1.0.6"
+    },
+    {
+      "key": "@svta/cml-request",
+      "id": "@svta/cml-request@1.0.12"
+    },
+    {
+      "key": "@svta/cml-structured-field-values",
+      "id": "@svta/cml-structured-field-values@1.1.3"
+    },
+    {
+      "key": "@svta/cml-utils",
+      "id": "@svta/cml-utils@1.5.0"
+    },
+    {
+      "key": "@svta/cml-xml",
+      "id": "@svta/cml-xml@1.1.4"
+    },
+    {
+      "key": "@tailwindcss/node",
+      "id": "@tailwindcss/node@4.3.3",
+      "deps": {
+        "@jridgewell/remapping": "^2.3.5",
+        "enhanced-resolve": "^5.24.1",
+        "jiti": "^2.7.0",
+        "lightningcss": "1.32.0",
+        "magic-string": "^0.30.21",
+        "source-map-js": "^1.2.1",
+        "tailwindcss": "4.3.3"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide",
+      "id": "@tailwindcss/oxide@4.3.3",
+      "optional": {
+        "@tailwindcss/oxide-android-arm64": "4.3.3",
+        "@tailwindcss/oxide-darwin-arm64": "4.3.3",
+        "@tailwindcss/oxide-darwin-x64": "4.3.3",
+        "@tailwindcss/oxide-freebsd-x64": "4.3.3",
+        "@tailwindcss/oxide-linux-arm-gnueabihf": "4.3.3",
+        "@tailwindcss/oxide-linux-arm64-gnu": "4.3.3",
+        "@tailwindcss/oxide-linux-arm64-musl": "4.3.3",
+        "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
+        "@tailwindcss/oxide-linux-x64-musl": "4.3.3",
+        "@tailwindcss/oxide-wasm32-wasi": "4.3.3",
+        "@tailwindcss/oxide-win32-arm64-msvc": "4.3.3",
+        "@tailwindcss/oxide-win32-x64-msvc": "4.3.3"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-android-arm64",
+      "id": "@tailwindcss/oxide-android-arm64@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-darwin-arm64",
+      "id": "@tailwindcss/oxide-darwin-arm64@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-darwin-x64",
+      "id": "@tailwindcss/oxide-darwin-x64@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-freebsd-x64",
+      "id": "@tailwindcss/oxide-freebsd-x64@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-linux-arm-gnueabihf",
+      "id": "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-linux-arm64-gnu",
+      "id": "@tailwindcss/oxide-linux-arm64-gnu@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-linux-arm64-musl",
+      "id": "@tailwindcss/oxide-linux-arm64-musl@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-linux-x64-gnu",
+      "id": "@tailwindcss/oxide-linux-x64-gnu@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-linux-x64-musl",
+      "id": "@tailwindcss/oxide-linux-x64-musl@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi",
+      "id": "@tailwindcss/oxide-wasm32-wasi@4.3.3",
+      "deps": {
+        "@emnapi/core": "^1.11.1",
+        "@emnapi/runtime": "^1.11.1",
+        "@emnapi/wasi-threads": "^1.2.2",
+        "@napi-rs/wasm-runtime": "^1.1.4",
+        "@tybys/wasm-util": "^0.10.2",
+        "tslib": "^2.8.1"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-win32-arm64-msvc",
+      "id": "@tailwindcss/oxide-win32-arm64-msvc@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/oxide-win32-x64-msvc",
+      "id": "@tailwindcss/oxide-win32-x64-msvc@4.3.3"
+    },
+    {
+      "key": "@tailwindcss/vite",
+      "id": "@tailwindcss/vite@4.3.3",
+      "deps": {
+        "@tailwindcss/node": "4.3.3",
+        "@tailwindcss/oxide": "4.3.3",
+        "tailwindcss": "4.3.3"
+      }
+    },
+    {
+      "key": "@tanstack/history",
+      "id": "@tanstack/history@1.162.4"
+    },
+    {
+      "key": "@tanstack/query-core",
+      "id": "@tanstack/query-core@5.104.0"
+    },
+    {
+      "key": "@tanstack/react-query",
+      "id": "@tanstack/react-query@5.104.0",
+      "deps": {
+        "@tanstack/query-core": "5.104.0"
+      }
+    },
+    {
+      "key": "@tanstack/react-router",
+      "id": "@tanstack/react-router@1.170.39",
+      "deps": {
+        "@tanstack/history": "1.162.4",
+        "@tanstack/react-store": "^0.11.0",
+        "@tanstack/router-core": "1.171.32",
+        "isbot": "^5.1.22"
+      }
+    },
+    {
+      "key": "@tanstack/react-store",
+      "id": "@tanstack/react-store@0.11.1",
+      "deps": {
+        "@tanstack/store": "0.11.1",
+        "use-sync-external-store": "^1.6.0"
+      }
+    },
+    {
+      "key": "@tanstack/router-core",
+      "id": "@tanstack/router-core@1.171.32",
+      "deps": {
+        "@tanstack/history": "1.162.4",
+        "cookie-es": "^3.0.0",
+        "seroval": "^1.6.2",
+        "seroval-plugins": "^1.6.2"
+      }
+    },
+    {
+      "key": "@tanstack/store",
+      "id": "@tanstack/store@0.11.1"
+    },
+    {
+      "key": "@tokenizer/inflate",
+      "id": "@tokenizer/inflate@0.4.1",
+      "deps": {
+        "debug": "^4.4.3",
+        "token-types": "^6.1.1"
+      }
+    },
+    {
+      "key": "@tokenizer/token",
+      "id": "@tokenizer/token@0.3.0"
+    },
+    {
+      "key": "@tybys/wasm-util",
+      "id": "@tybys/wasm-util@0.10.2",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@types/bun",
+      "id": "@types/bun@1.3.14",
+      "deps": {
+        "bun-types": "1.3.14"
+      }
+    },
+    {
+      "key": "@types/json-schema",
+      "id": "@types/json-schema@7.0.15"
+    },
+    {
+      "key": "@types/node",
+      "id": "@types/node@25.9.3",
+      "deps": {
+        "undici-types": ">=7.24.0 <7.24.7"
+      }
+    },
+    {
+      "key": "@types/react",
+      "id": "@types/react@19.3.0",
+      "deps": {
+        "csstype": "^3.2.2"
+      }
+    },
+    {
+      "key": "@types/react-dom",
+      "id": "@types/react-dom@19.3.0"
+    },
+    {
+      "key": "@vitejs/plugin-react",
+      "id": "@vitejs/plugin-react@6.1.1",
+      "deps": {
+        "@rolldown/pluginutils": "^1.0.1"
+      }
+    },
+    {
+      "key": "ansi-colors",
+      "id": "ansi-colors@4.1.3"
+    },
+    {
+      "key": "argparse",
+      "id": "argparse@2.0.1"
+    },
+    {
+      "key": "artplayer",
+      "id": "artplayer@5.4.0",
+      "deps": {
+        "option-validator": "^2.0.6"
+      }
+    },
+    {
+      "key": "bcp-47-match",
+      "id": "bcp-47-match@2.0.3"
+    },
+    {
+      "key": "bun-types",
+      "id": "bun-types@1.3.14",
+      "deps": {
+        "@types/node": "*"
+      }
+    },
+    {
+      "key": "bundle-name",
+      "id": "bundle-name@4.1.0",
+      "deps": {
+        "run-applescript": "^7.0.0"
+      }
+    },
+    {
+      "key": "c12",
+      "id": "c12@3.3.4",
+      "deps": {
+        "chokidar": "^5.0.0",
+        "confbox": "^0.2.4",
+        "defu": "^6.1.6",
+        "dotenv": "^17.3.1",
+        "exsolve": "^1.0.8",
+        "giget": "^3.2.0",
+        "jiti": "^2.6.1",
+        "ohash": "^2.0.11",
+        "pathe": "^2.0.3",
+        "perfect-debounce": "^2.1.0",
+        "pkg-types": "^2.3.0",
+        "rc9": "^3.0.1"
+      }
+    },
+    {
+      "key": "chokidar",
+      "id": "chokidar@5.0.0",
+      "deps": {
+        "readdirp": "^5.0.0"
+      }
+    },
+    {
+      "key": "class-variance-authority",
+      "id": "class-variance-authority@0.7.1",
+      "deps": {
+        "clsx": "^2.1.1"
+      }
+    },
+    {
+      "key": "clsx",
+      "id": "clsx@2.1.1"
+    },
+    {
+      "key": "codem-isoboxer",
+      "id": "codem-isoboxer@0.3.10"
+    },
+    {
+      "key": "color-support",
+      "id": "color-support@1.1.3"
+    },
+    {
+      "key": "commander",
+      "id": "commander@15.0.0"
+    },
+    {
+      "key": "confbox",
+      "id": "confbox@0.2.4"
+    },
+    {
+      "key": "cookie",
+      "id": "cookie@1.1.1"
+    },
+    {
+      "key": "cookie-es",
+      "id": "cookie-es@3.1.1"
+    },
+    {
+      "key": "cross-spawn",
+      "id": "cross-spawn@7.0.6",
+      "deps": {
+        "path-key": "^3.1.0",
+        "shebang-command": "^2.0.0",
+        "which": "^2.0.1"
+      }
+    },
+    {
+      "key": "csstype",
+      "id": "csstype@3.2.3"
+    },
+    {
+      "key": "dashjs",
+      "id": "dashjs@5.2.0",
+      "deps": {
+        "@svta/cml-608": "1.0.2",
+        "@svta/cml-cmcd": "2.3.2",
+        "@svta/cml-cmsd": "1.0.6",
+        "@svta/cml-dash": "1.0.6",
+        "@svta/cml-id3": "1.0.6",
+        "@svta/cml-request": "1.0.12",
+        "@svta/cml-xml": "1.1.4",
+        "bcp-47-match": "^2.0.3",
+        "codem-isoboxer": "0.3.10",
+        "fast-deep-equal": "3.1.3",
+        "html-entities": "^2.6.0",
+        "imsc": "^1.1.5",
+        "localforage": "^1.10.0",
+        "path-browserify": "^1.0.1"
+      }
+    },
+    {
+      "key": "debug",
+      "id": "debug@4.4.3",
+      "deps": {
+        "ms": "^2.1.3"
+      }
+    },
+    {
+      "key": "default-browser",
+      "id": "default-browser@5.5.1",
+      "deps": {
+        "bundle-name": "^4.1.0",
+        "default-browser-id": "^5.0.0"
+      }
+    },
+    {
+      "key": "default-browser-id",
+      "id": "default-browser-id@5.0.1"
+    },
+    {
+      "key": "define-lazy-prop",
+      "id": "define-lazy-prop@3.0.0"
+    },
+    {
+      "key": "defu",
+      "id": "defu@6.1.7"
+    },
+    {
+      "key": "destr",
+      "id": "destr@2.0.5"
+    },
+    {
+      "key": "detect-libc",
+      "id": "detect-libc@2.1.2"
+    },
+    {
+      "key": "dotenv",
+      "id": "dotenv@17.4.2"
+    },
+    {
+      "key": "elysia",
+      "id": "elysia@1.4.28",
+      "deps": {
+        "cookie": "^1.1.1",
+        "exact-mirror": "^0.2.7",
+        "fast-decode-uri-component": "^1.0.1",
+        "memoirist": "^0.4.0"
+      }
+    },
+    {
+      "key": "enhanced-resolve",
+      "id": "enhanced-resolve@5.25.1",
+      "deps": {
+        "graceful-fs": "^4.2.4",
+        "tapable": "^2.3.3"
+      }
+    },
+    {
+      "key": "exact-mirror",
+      "id": "exact-mirror@0.2.7"
+    },
+    {
+      "key": "exsolve",
+      "id": "exsolve@1.1.1"
+    },
+    {
+      "key": "fast-decode-uri-component",
+      "id": "fast-decode-uri-component@1.0.1"
+    },
+    {
+      "key": "fast-deep-equal",
+      "id": "fast-deep-equal@3.1.3"
+    },
+    {
+      "key": "fdir",
+      "id": "fdir@6.5.0"
+    },
+    {
+      "key": "file-type",
+      "id": "file-type@22.0.1",
+      "deps": {
+        "@tokenizer/inflate": "^0.4.1",
+        "strtok3": "^10.3.5",
+        "token-types": "^6.1.2",
+        "uint8array-extras": "^1.5.0"
+      }
+    },
+    {
+      "key": "fsevents",
+      "id": "fsevents@2.3.3"
+    },
+    {
+      "key": "get-tsconfig",
+      "id": "get-tsconfig@4.14.0",
+      "deps": {
+        "resolve-pkg-maps": "^1.0.0"
+      }
+    },
+    {
+      "key": "giget",
+      "id": "giget@3.3.1"
+    },
+    {
+      "key": "graceful-fs",
+      "id": "graceful-fs@4.2.11"
+    },
+    {
+      "key": "hls.js",
+      "id": "hls.js@1.6.16"
+    },
+    {
+      "key": "html-entities",
+      "id": "html-entities@2.6.0"
+    },
+    {
+      "key": "ieee754",
+      "id": "ieee754@1.2.1"
+    },
+    {
+      "key": "immediate",
+      "id": "immediate@3.0.6"
+    },
+    {
+      "key": "imsc",
+      "id": "imsc@1.1.5",
+      "deps": {
+        "sax": "1.2.1"
+      }
+    },
+    {
+      "key": "is-docker",
+      "id": "is-docker@3.0.0"
+    },
+    {
+      "key": "is-in-ssh",
+      "id": "is-in-ssh@1.0.0"
+    },
+    {
+      "key": "is-inside-container",
+      "id": "is-inside-container@1.0.0",
+      "deps": {
+        "is-docker": "^3.0.0"
+      }
+    },
+    {
+      "key": "is-wsl",
+      "id": "is-wsl@3.1.1",
+      "deps": {
+        "is-inside-container": "^1.0.0"
+      }
+    },
+    {
+      "key": "isbot",
+      "id": "isbot@5.2.2"
+    },
+    {
+      "key": "isexe",
+      "id": "isexe@2.0.0"
+    },
+    {
+      "key": "jiti",
+      "id": "jiti@2.7.0"
+    },
+    {
+      "key": "js-yaml",
+      "id": "js-yaml@4.2.0",
+      "deps": {
+        "argparse": "^2.0.1"
+      }
+    },
+    {
+      "key": "kind-of",
+      "id": "kind-of@6.0.3"
+    },
+    {
+      "key": "lie",
+      "id": "lie@3.1.1",
+      "deps": {
+        "immediate": "~3.0.5"
+      }
+    },
+    {
+      "key": "lightningcss",
+      "id": "lightningcss@1.32.0",
+      "deps": {
+        "detect-libc": "^2.0.3"
+      },
+      "optional": {
+        "lightningcss-android-arm64": "1.32.0",
+        "lightningcss-darwin-arm64": "1.32.0",
+        "lightningcss-darwin-x64": "1.32.0",
+        "lightningcss-freebsd-x64": "1.32.0",
+        "lightningcss-linux-arm-gnueabihf": "1.32.0",
+        "lightningcss-linux-arm64-gnu": "1.32.0",
+        "lightningcss-linux-arm64-musl": "1.32.0",
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-arm64-msvc": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0"
+      }
+    },
+    {
+      "key": "lightningcss-android-arm64",
+      "id": "lightningcss-android-arm64@1.32.0"
+    },
+    {
+      "key": "lightningcss-darwin-arm64",
+      "id": "lightningcss-darwin-arm64@1.32.0"
+    },
+    {
+      "key": "lightningcss-darwin-x64",
+      "id": "lightningcss-darwin-x64@1.32.0"
+    },
+    {
+      "key": "lightningcss-freebsd-x64",
+      "id": "lightningcss-freebsd-x64@1.32.0"
+    },
+    {
+      "key": "lightningcss-linux-arm-gnueabihf",
+      "id": "lightningcss-linux-arm-gnueabihf@1.32.0"
+    },
+    {
+      "key": "lightningcss-linux-arm64-gnu",
+      "id": "lightningcss-linux-arm64-gnu@1.32.0"
+    },
+    {
+      "key": "lightningcss-linux-arm64-musl",
+      "id": "lightningcss-linux-arm64-musl@1.32.0"
+    },
+    {
+      "key": "lightningcss-linux-x64-gnu",
+      "id": "lightningcss-linux-x64-gnu@1.32.0"
+    },
+    {
+      "key": "lightningcss-linux-x64-musl",
+      "id": "lightningcss-linux-x64-musl@1.32.0"
+    },
+    {
+      "key": "lightningcss-win32-arm64-msvc",
+      "id": "lightningcss-win32-arm64-msvc@1.32.0"
+    },
+    {
+      "key": "lightningcss-win32-x64-msvc",
+      "id": "lightningcss-win32-x64-msvc@1.32.0"
+    },
+    {
+      "key": "localforage",
+      "id": "localforage@1.10.0",
+      "deps": {
+        "lie": "3.1.1"
+      }
+    },
+    {
+      "key": "magic-string",
+      "id": "magic-string@0.30.21",
+      "deps": {
+        "@jridgewell/sourcemap-codec": "^1.5.5"
+      }
+    },
+    {
+      "key": "memoirist",
+      "id": "memoirist@0.4.0"
+    },
+    {
+      "key": "ms",
+      "id": "ms@2.1.3"
+    },
+    {
+      "key": "nanoid",
+      "id": "nanoid@3.3.12"
+    },
+    {
+      "key": "ohash",
+      "id": "ohash@2.0.12"
+    },
+    {
+      "key": "open",
+      "id": "open@11.0.0",
+      "deps": {
+        "default-browser": "^5.4.0",
+        "define-lazy-prop": "^3.0.0",
+        "is-in-ssh": "^1.0.0",
+        "is-inside-container": "^1.0.0",
+        "powershell-utils": "^0.1.0",
+        "wsl-utils": "^0.3.0"
+      }
+    },
+    {
+      "key": "openapi-types",
+      "id": "openapi-types@12.1.3"
+    },
+    {
+      "key": "option-validator",
+      "id": "option-validator@2.0.6",
+      "deps": {
+        "kind-of": "^6.0.3"
+      }
+    },
+    {
+      "key": "path-browserify",
+      "id": "path-browserify@1.0.1"
+    },
+    {
+      "key": "path-key",
+      "id": "path-key@3.1.1"
+    },
+    {
+      "key": "pathe",
+      "id": "pathe@2.0.3"
+    },
+    {
+      "key": "perfect-debounce",
+      "id": "perfect-debounce@2.1.0"
+    },
+    {
+      "key": "picocolors",
+      "id": "picocolors@1.1.1"
+    },
+    {
+      "key": "picomatch",
+      "id": "picomatch@4.0.4"
+    },
+    {
+      "key": "pkg-types",
+      "id": "pkg-types@2.3.3",
+      "deps": {
+        "confbox": "^0.3.1",
+        "exsolve": "^1.1.1",
+        "pathe": "^2.0.3"
+      }
+    },
+    {
+      "key": "playwright",
+      "id": "playwright@1.61.1",
+      "deps": {
+        "playwright-core": "1.61.1"
+      },
+      "optional": {
+        "fsevents": "2.3.2"
+      }
+    },
+    {
+      "key": "playwright-core",
+      "id": "playwright-core@1.61.1"
+    },
+    {
+      "key": "postcss",
+      "id": "postcss@8.5.15",
+      "deps": {
+        "nanoid": "^3.3.12",
+        "picocolors": "^1.1.1",
+        "source-map-js": "^1.2.1"
+      }
+    },
+    {
+      "key": "powershell-utils",
+      "id": "powershell-utils@0.1.0"
+    },
+    {
+      "key": "rc9",
+      "id": "rc9@3.1.0",
+      "deps": {
+        "defu": "^6.1.7",
+        "destr": "^2.0.5"
+      }
+    },
+    {
+      "key": "react",
+      "id": "react@19.3.0"
+    },
+    {
+      "key": "react-dom",
+      "id": "react-dom@19.3.0",
+      "deps": {
+        "scheduler": "^0.28.0"
+      }
+    },
+    {
+      "key": "readdirp",
+      "id": "readdirp@5.1.1"
+    },
+    {
+      "key": "resolve-pkg-maps",
+      "id": "resolve-pkg-maps@1.0.0"
+    },
+    {
+      "key": "rolldown",
+      "id": "rolldown@1.0.3",
+      "deps": {
+        "@oxc-project/types": "=0.133.0",
+        "@rolldown/pluginutils": "^1.0.0"
+      },
+      "optional": {
+        "@rolldown/binding-android-arm64": "1.0.3",
+        "@rolldown/binding-darwin-arm64": "1.0.3",
+        "@rolldown/binding-darwin-x64": "1.0.3",
+        "@rolldown/binding-freebsd-x64": "1.0.3",
+        "@rolldown/binding-linux-arm-gnueabihf": "1.0.3",
+        "@rolldown/binding-linux-arm64-gnu": "1.0.3",
+        "@rolldown/binding-linux-arm64-musl": "1.0.3",
+        "@rolldown/binding-linux-ppc64-gnu": "1.0.3",
+        "@rolldown/binding-linux-s390x-gnu": "1.0.3",
+        "@rolldown/binding-linux-x64-gnu": "1.0.3",
+        "@rolldown/binding-linux-x64-musl": "1.0.3",
+        "@rolldown/binding-openharmony-arm64": "1.0.3",
+        "@rolldown/binding-wasm32-wasi": "1.0.3",
+        "@rolldown/binding-win32-arm64-msvc": "1.0.3",
+        "@rolldown/binding-win32-x64-msvc": "1.0.3"
+      }
+    },
+    {
+      "key": "run-applescript",
+      "id": "run-applescript@7.1.0"
+    },
+    {
+      "key": "sax",
+      "id": "sax@1.2.1"
+    },
+    {
+      "key": "scheduler",
+      "id": "scheduler@0.28.0"
+    },
+    {
+      "key": "semver",
+      "id": "semver@7.8.4"
+    },
+    {
+      "key": "seroval",
+      "id": "seroval@1.6.7"
+    },
+    {
+      "key": "seroval-plugins",
+      "id": "seroval-plugins@1.6.7"
+    },
+    {
+      "key": "shebang-command",
+      "id": "shebang-command@2.0.0",
+      "deps": {
+        "shebang-regex": "^3.0.0"
+      }
+    },
+    {
+      "key": "shebang-regex",
+      "id": "shebang-regex@3.0.0"
+    },
+    {
+      "key": "source-map-js",
+      "id": "source-map-js@1.2.1"
+    },
+    {
+      "key": "strtok3",
+      "id": "strtok3@10.3.5",
+      "deps": {
+        "@tokenizer/token": "^0.3.0"
+      }
+    },
+    {
+      "key": "tailwind-merge",
+      "id": "tailwind-merge@3.7.0"
+    },
+    {
+      "key": "tailwindcss",
+      "id": "tailwindcss@4.3.3"
+    },
+    {
+      "key": "tapable",
+      "id": "tapable@2.3.3"
+    },
+    {
+      "key": "tinyglobby",
+      "id": "tinyglobby@0.2.17",
+      "deps": {
+        "fdir": "^6.5.0",
+        "picomatch": "^4.0.4"
+      }
+    },
+    {
+      "key": "token-types",
+      "id": "token-types@6.1.2",
+      "deps": {
+        "@borewit/text-codec": "^0.2.1",
+        "@tokenizer/token": "^0.3.0",
+        "ieee754": "^1.2.1"
+      }
+    },
+    {
+      "key": "tslib",
+      "id": "tslib@2.8.1"
+    },
+    {
+      "key": "typescript",
+      "id": "typescript@5.9.3"
+    },
+    {
+      "key": "uint8array-extras",
+      "id": "uint8array-extras@1.5.0"
+    },
+    {
+      "key": "undici-types",
+      "id": "undici-types@7.24.6"
+    },
+    {
+      "key": "use-sync-external-store",
+      "id": "use-sync-external-store@1.7.0"
+    },
+    {
+      "key": "vite",
+      "id": "vite@8.0.16",
+      "deps": {
+        "lightningcss": "^1.32.0",
+        "picomatch": "^4.0.4",
+        "postcss": "^8.5.15",
+        "rolldown": "1.0.3",
+        "tinyglobby": "^0.2.17"
+      },
+      "optional": {
+        "fsevents": "~2.3.3"
+      }
+    },
+    {
+      "key": "which",
+      "id": "which@2.0.2",
+      "deps": {
+        "isexe": "^2.0.0"
+      }
+    },
+    {
+      "key": "wsl-utils",
+      "id": "wsl-utils@0.3.1",
+      "deps": {
+        "is-wsl": "^3.1.0",
+        "powershell-utils": "^0.1.0"
+      }
+    },
+    {
+      "key": "yaml",
+      "id": "yaml@2.9.0"
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/@emnapi/core",
+      "id": "@emnapi/core@1.11.3",
+      "deps": {
+        "@emnapi/wasi-threads": "1.2.3",
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/@emnapi/runtime",
+      "id": "@emnapi/runtime@1.11.3",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/@emnapi/wasi-threads",
+      "id": "@emnapi/wasi-threads@1.2.3",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/@napi-rs/wasm-runtime",
+      "id": "@napi-rs/wasm-runtime@1.1.5",
+      "deps": {
+        "@tybys/wasm-util": "^0.10.2"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/@tybys/wasm-util",
+      "id": "@tybys/wasm-util@0.10.2",
+      "deps": {
+        "tslib": "^2.4.0"
+      }
+    },
+    {
+      "key": "@tailwindcss/oxide-wasm32-wasi/tslib",
+      "id": "tslib@2.8.1"
+    },
+    {
+      "key": "houkago-eisha/@types/bun",
+      "id": "@types/bun@1.4.2",
+      "deps": {
+        "bun-types": "1.4.2"
+      }
+    },
+    {
+      "key": "houkago-housou/@types/bun",
+      "id": "@types/bun@1.4.2",
+      "deps": {
+        "bun-types": "1.4.2"
+      }
+    },
+    {
+      "key": "houkago-kokuban/@types/bun",
+      "id": "@types/bun@1.4.2",
+      "deps": {
+        "bun-types": "1.4.2"
+      }
+    },
+    {
+      "key": "houkago-kyoushitsu-core/@types/bun",
+      "id": "@types/bun@1.4.2",
+      "deps": {
+        "bun-types": "1.4.2"
+      }
+    },
+    {
+      "key": "pkg-types/confbox",
+      "id": "confbox@0.3.1"
+    },
+    {
+      "key": "playwright/fsevents",
+      "id": "fsevents@2.3.2"
+    },
+    {
+      "key": "houkago-eisha/@types/bun/bun-types",
+      "id": "bun-types@1.4.2",
+      "deps": {
+        "@types/node": "*"
+      }
+    },
+    {
+      "key": "houkago-housou/@types/bun/bun-types",
+      "id": "bun-types@1.4.2",
+      "deps": {
+        "@types/node": "*"
+      }
+    },
+    {
+      "key": "houkago-kokuban/@types/bun/bun-types",
+      "id": "bun-types@1.4.2",
+      "deps": {
+        "@types/node": "*"
+      }
+    },
+    {
+      "key": "houkago-kyoushitsu-core/@types/bun/bun-types",
+      "id": "bun-types@1.4.2",
+      "deps": {
+        "@types/node": "*"
+      }
+    }
+  ],
+  "npm": {
+    "endpoint": "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+    "request": {
+      "@biomejs/biome": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-darwin-arm64": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-darwin-x64": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-linux-arm64": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-linux-arm64-musl": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-linux-x64": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-linux-x64-musl": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-win32-arm64": [
+        "1.9.4"
+      ],
+      "@biomejs/cli-win32-x64": [
+        "1.9.4"
+      ],
+      "@borewit/text-codec": [
+        "0.2.2"
+      ],
+      "@elysiajs/cors": [
+        "1.4.2"
+      ],
+      "@elysiajs/openapi": [
+        "1.4.16"
+      ],
+      "@emnapi/core": [
+        "1.10.0",
+        "1.11.3"
+      ],
+      "@emnapi/runtime": [
+        "1.10.0",
+        "1.11.3"
+      ],
+      "@emnapi/wasi-threads": [
+        "1.2.1",
+        "1.2.3"
+      ],
+      "@hey-api/codegen-core": [
+        "0.9.1"
+      ],
+      "@hey-api/json-schema-ref-parser": [
+        "1.4.4"
+      ],
+      "@hey-api/openapi-ts": [
+        "0.99.0"
+      ],
+      "@hey-api/shared": [
+        "0.5.0"
+      ],
+      "@hey-api/spec-types": [
+        "0.2.0"
+      ],
+      "@hey-api/types": [
+        "0.1.4"
+      ],
+      "@jridgewell/gen-mapping": [
+        "0.3.13"
+      ],
+      "@jridgewell/remapping": [
+        "2.3.5"
+      ],
+      "@jridgewell/resolve-uri": [
+        "3.1.2"
+      ],
+      "@jridgewell/sourcemap-codec": [
+        "1.5.5"
+      ],
+      "@jridgewell/trace-mapping": [
+        "0.3.31"
+      ],
+      "@jsdevtools/ono": [
+        "7.1.3"
+      ],
+      "@lukeed/ms": [
+        "2.0.2"
+      ],
+      "@napi-rs/wasm-runtime": [
+        "1.1.5"
+      ],
+      "@oxc-project/types": [
+        "0.133.0"
+      ],
+      "@playwright/test": [
+        "1.61.1"
+      ],
+      "@rolldown/binding-android-arm64": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-darwin-arm64": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-darwin-x64": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-freebsd-x64": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-arm-gnueabihf": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-arm64-gnu": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-arm64-musl": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-ppc64-gnu": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-s390x-gnu": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-x64-gnu": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-linux-x64-musl": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-openharmony-arm64": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-wasm32-wasi": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-win32-arm64-msvc": [
+        "1.0.3"
+      ],
+      "@rolldown/binding-win32-x64-msvc": [
+        "1.0.3"
+      ],
+      "@rolldown/pluginutils": [
+        "1.0.1"
+      ],
+      "@sinclair/typebox": [
+        "0.34.49"
+      ],
+      "@svta/cml-608": [
+        "1.0.2"
+      ],
+      "@svta/cml-cmcd": [
+        "2.3.2"
+      ],
+      "@svta/cml-cmsd": [
+        "1.0.6"
+      ],
+      "@svta/cml-cta": [
+        "1.0.6"
+      ],
+      "@svta/cml-dash": [
+        "1.0.6"
+      ],
+      "@svta/cml-id3": [
+        "1.0.6"
+      ],
+      "@svta/cml-request": [
+        "1.0.12"
+      ],
+      "@svta/cml-structured-field-values": [
+        "1.1.3"
+      ],
+      "@svta/cml-utils": [
+        "1.5.0"
+      ],
+      "@svta/cml-xml": [
+        "1.1.4"
+      ],
+      "@tailwindcss/node": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-android-arm64": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-darwin-arm64": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-darwin-x64": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-freebsd-x64": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-linux-arm-gnueabihf": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-linux-arm64-gnu": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-linux-arm64-musl": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-linux-x64-gnu": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-linux-x64-musl": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-wasm32-wasi": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-win32-arm64-msvc": [
+        "4.3.3"
+      ],
+      "@tailwindcss/oxide-win32-x64-msvc": [
+        "4.3.3"
+      ],
+      "@tailwindcss/vite": [
+        "4.3.3"
+      ],
+      "@tanstack/history": [
+        "1.162.4"
+      ],
+      "@tanstack/query-core": [
+        "5.104.0"
+      ],
+      "@tanstack/react-query": [
+        "5.104.0"
+      ],
+      "@tanstack/react-router": [
+        "1.170.39"
+      ],
+      "@tanstack/react-store": [
+        "0.11.1"
+      ],
+      "@tanstack/router-core": [
+        "1.171.32"
+      ],
+      "@tanstack/store": [
+        "0.11.1"
+      ],
+      "@tokenizer/inflate": [
+        "0.4.1"
+      ],
+      "@tokenizer/token": [
+        "0.3.0"
+      ],
+      "@tybys/wasm-util": [
+        "0.10.2"
+      ],
+      "@types/bun": [
+        "1.3.14",
+        "1.4.2"
+      ],
+      "@types/json-schema": [
+        "7.0.15"
+      ],
+      "@types/node": [
+        "25.9.3"
+      ],
+      "@types/react": [
+        "19.3.0"
+      ],
+      "@types/react-dom": [
+        "19.3.0"
+      ],
+      "@vitejs/plugin-react": [
+        "6.1.1"
+      ],
+      "ansi-colors": [
+        "4.1.3"
+      ],
+      "argparse": [
+        "2.0.1"
+      ],
+      "artplayer": [
+        "5.4.0"
+      ],
+      "bcp-47-match": [
+        "2.0.3"
+      ],
+      "bun-types": [
+        "1.3.14",
+        "1.4.2"
+      ],
+      "bundle-name": [
+        "4.1.0"
+      ],
+      "c12": [
+        "3.3.4"
+      ],
+      "chokidar": [
+        "5.0.0"
+      ],
+      "class-variance-authority": [
+        "0.7.1"
+      ],
+      "clsx": [
+        "2.1.1"
+      ],
+      "codem-isoboxer": [
+        "0.3.10"
+      ],
+      "color-support": [
+        "1.1.3"
+      ],
+      "commander": [
+        "15.0.0"
+      ],
+      "confbox": [
+        "0.2.4",
+        "0.3.1"
+      ],
+      "cookie": [
+        "1.1.1"
+      ],
+      "cookie-es": [
+        "3.1.1"
+      ],
+      "cross-spawn": [
+        "7.0.6"
+      ],
+      "csstype": [
+        "3.2.3"
+      ],
+      "dashjs": [
+        "5.2.0"
+      ],
+      "debug": [
+        "4.4.3"
+      ],
+      "default-browser": [
+        "5.5.1"
+      ],
+      "default-browser-id": [
+        "5.0.1"
+      ],
+      "define-lazy-prop": [
+        "3.0.0"
+      ],
+      "defu": [
+        "6.1.7"
+      ],
+      "destr": [
+        "2.0.5"
+      ],
+      "detect-libc": [
+        "2.1.2"
+      ],
+      "dotenv": [
+        "17.4.2"
+      ],
+      "elysia": [
+        "1.4.28"
+      ],
+      "enhanced-resolve": [
+        "5.25.1"
+      ],
+      "exact-mirror": [
+        "0.2.7"
+      ],
+      "exsolve": [
+        "1.1.1"
+      ],
+      "fast-decode-uri-component": [
+        "1.0.1"
+      ],
+      "fast-deep-equal": [
+        "3.1.3"
+      ],
+      "fdir": [
+        "6.5.0"
+      ],
+      "file-type": [
+        "22.0.1"
+      ],
+      "fsevents": [
+        "2.3.3",
+        "2.3.2"
+      ],
+      "get-tsconfig": [
+        "4.14.0"
+      ],
+      "giget": [
+        "3.3.1"
+      ],
+      "graceful-fs": [
+        "4.2.11"
+      ],
+      "hls.js": [
+        "1.6.16"
+      ],
+      "html-entities": [
+        "2.6.0"
+      ],
+      "ieee754": [
+        "1.2.1"
+      ],
+      "immediate": [
+        "3.0.6"
+      ],
+      "imsc": [
+        "1.1.5"
+      ],
+      "is-docker": [
+        "3.0.0"
+      ],
+      "is-in-ssh": [
+        "1.0.0"
+      ],
+      "is-inside-container": [
+        "1.0.0"
+      ],
+      "is-wsl": [
+        "3.1.1"
+      ],
+      "isbot": [
+        "5.2.2"
+      ],
+      "isexe": [
+        "2.0.0"
+      ],
+      "jiti": [
+        "2.7.0"
+      ],
+      "js-yaml": [
+        "4.2.0"
+      ],
+      "kind-of": [
+        "6.0.3"
+      ],
+      "lie": [
+        "3.1.1"
+      ],
+      "lightningcss": [
+        "1.32.0"
+      ],
+      "lightningcss-android-arm64": [
+        "1.32.0"
+      ],
+      "lightningcss-darwin-arm64": [
+        "1.32.0"
+      ],
+      "lightningcss-darwin-x64": [
+        "1.32.0"
+      ],
+      "lightningcss-freebsd-x64": [
+        "1.32.0"
+      ],
+      "lightningcss-linux-arm-gnueabihf": [
+        "1.32.0"
+      ],
+      "lightningcss-linux-arm64-gnu": [
+        "1.32.0"
+      ],
+      "lightningcss-linux-arm64-musl": [
+        "1.32.0"
+      ],
+      "lightningcss-linux-x64-gnu": [
+        "1.32.0"
+      ],
+      "lightningcss-linux-x64-musl": [
+        "1.32.0"
+      ],
+      "lightningcss-win32-arm64-msvc": [
+        "1.32.0"
+      ],
+      "lightningcss-win32-x64-msvc": [
+        "1.32.0"
+      ],
+      "localforage": [
+        "1.10.0"
+      ],
+      "magic-string": [
+        "0.30.21"
+      ],
+      "memoirist": [
+        "0.4.0"
+      ],
+      "ms": [
+        "2.1.3"
+      ],
+      "nanoid": [
+        "3.3.12"
+      ],
+      "ohash": [
+        "2.0.12"
+      ],
+      "open": [
+        "11.0.0"
+      ],
+      "openapi-types": [
+        "12.1.3"
+      ],
+      "option-validator": [
+        "2.0.6"
+      ],
+      "path-browserify": [
+        "1.0.1"
+      ],
+      "path-key": [
+        "3.1.1"
+      ],
+      "pathe": [
+        "2.0.3"
+      ],
+      "perfect-debounce": [
+        "2.1.0"
+      ],
+      "picocolors": [
+        "1.1.1"
+      ],
+      "picomatch": [
+        "4.0.4"
+      ],
+      "pkg-types": [
+        "2.3.3"
+      ],
+      "playwright": [
+        "1.61.1"
+      ],
+      "playwright-core": [
+        "1.61.1"
+      ],
+      "postcss": [
+        "8.5.15"
+      ],
+      "powershell-utils": [
+        "0.1.0"
+      ],
+      "rc9": [
+        "3.1.0"
+      ],
+      "react": [
+        "19.3.0"
+      ],
+      "react-dom": [
+        "19.3.0"
+      ],
+      "readdirp": [
+        "5.1.1"
+      ],
+      "resolve-pkg-maps": [
+        "1.0.0"
+      ],
+      "rolldown": [
+        "1.0.3"
+      ],
+      "run-applescript": [
+        "7.1.0"
+      ],
+      "sax": [
+        "1.2.1"
+      ],
+      "scheduler": [
+        "0.28.0"
+      ],
+      "semver": [
+        "7.8.4"
+      ],
+      "seroval": [
+        "1.6.7"
+      ],
+      "seroval-plugins": [
+        "1.6.7"
+      ],
+      "shebang-command": [
+        "2.0.0"
+      ],
+      "shebang-regex": [
+        "3.0.0"
+      ],
+      "source-map-js": [
+        "1.2.1"
+      ],
+      "strtok3": [
+        "10.3.5"
+      ],
+      "tailwind-merge": [
+        "3.7.0"
+      ],
+      "tailwindcss": [
+        "4.3.3"
+      ],
+      "tapable": [
+        "2.3.3"
+      ],
+      "tinyglobby": [
+        "0.2.17"
+      ],
+      "token-types": [
+        "6.1.2"
+      ],
+      "tslib": [
+        "2.8.1"
+      ],
+      "typescript": [
+        "5.9.3"
+      ],
+      "uint8array-extras": [
+        "1.5.0"
+      ],
+      "undici-types": [
+        "7.24.6"
+      ],
+      "use-sync-external-store": [
+        "1.7.0"
+      ],
+      "vite": [
+        "8.0.16"
+      ],
+      "which": [
+        "2.0.2"
+      ],
+      "wsl-utils": [
+        "0.3.1"
+      ],
+      "yaml": [
+        "2.9.0"
+      ]
+    },
+    "result": {
+      "elysia": [
+        {
+          "id": 1239528,
+          "url": "https://github.com/advisories/GHSA-9643-4qgh-g8mx",
+          "title": "elysia has Inefficient Algorithmic Complexity and Interpretation Conflict",
+          "severity": "high",
+          "vulnerable_versions": "<1.4.29",
+          "cwe": [
+            "CWE-407",
+            "CWE-436"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        }
+      ],
+      "js-yaml": [
+        {
+          "id": 1123911,
+          "url": "https://github.com/advisories/GHSA-52cp-r559-cp3m",
+          "title": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+          "severity": "high",
+          "vulnerable_versions": ">=4.0.0 <4.3.0",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        },
+        {
+          "id": 1138115,
+          "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+          "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+          "severity": "high",
+          "vulnerable_versions": ">=4.0.0 <4.3.1",
+          "cwe": [
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        },
+        {
+          "id": 1193727,
+          "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
+          "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+          "severity": "high",
+          "vulnerable_versions": ">=4.0.0 <4.3.2",
+          "cwe": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        }
+      ],
+      "nanoid": [
+        {
+          "id": 1138811,
+          "url": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv",
+          "title": "nanoid: non-secure generators can loop indefinitely with negative size",
+          "severity": "high",
+          "vulnerable_versions": "<3.3.16",
+          "cwe": [
+            "CWE-835"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        },
+        {
+          "id": 1139427,
+          "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+          "title": "nanoid: custom generators can loop indefinitely when size is zero",
+          "severity": "high",
+          "vulnerable_versions": "<3.3.18",
+          "cwe": [
+            "CWE-835"
+          ],
+          "cvss": {
+            "score": 5.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        }
+      ],
+      "postcss": [
+        {
+          "id": 1130709,
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "severity": "moderate",
+          "vulnerable_versions": "<=8.5.22",
+          "cwe": [
+            "CWE-22",
+            "CWE-200"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        },
+        {
+          "id": 1139510,
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "severity": "high",
+          "vulnerable_versions": "<=8.5.17",
+          "cwe": [
+            "CWE-22"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+          }
+        }
+      ],
+      "source-map-js": [
+        {
+          "id": 1241209,
+          "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+          "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+          "severity": "high",
+          "vulnerable_versions": ">=1.0.0 <1.2.2",
+          "cwe": [
+            "CWE-1284"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        }
+      ],
+      "vite": [
+        {
+          "id": 1242726,
+          "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+          "title": "Vite: Cross origin script execution through Vite custom middleware",
+          "severity": "low",
+          "vulnerable_versions": ">=8.0.0 <=8.1.5",
+          "cwe": [
+            "CWE-80"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        },
+        {
+          "id": 1242732,
+          "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+          "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+          "severity": "moderate",
+          "vulnerable_versions": ">=8.0.0 <=8.1.5",
+          "cwe": [
+            "CWE-22",
+            "CWE-284"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        },
+        {
+          "id": 1242624,
+          "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+          "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+          "severity": "moderate",
+          "vulnerable_versions": ">=8.0.0 <=8.1.5",
+          "cwe": [
+            "CWE-78"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        },
+        {
+          "id": 1242653,
+          "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+          "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+          "severity": "moderate",
+          "vulnerable_versions": ">=8.0.0 <=8.1.5",
+          "cwe": [
+            "CWE-88"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        },
+        {
+          "id": 1242660,
+          "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+          "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+          "severity": "high",
+          "vulnerable_versions": ">=8.0.0 <=8.1.5",
+          "cwe": [
+            "CWE-77"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          }
+        }
+      ]
+    }
+  },
+  "osv": {
+    "endpoint": "https://api.osv.dev/v1/querybatch",
+    "request": {
+      "queries": [
+        {
+          "package": {
+            "name": "@biomejs/biome",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-darwin-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-darwin-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-linux-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-linux-arm64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-linux-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-linux-x64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-win32-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@biomejs/cli-win32-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.9.4"
+        },
+        {
+          "package": {
+            "name": "@borewit/text-codec",
+            "ecosystem": "npm"
+          },
+          "version": "0.2.2"
+        },
+        {
+          "package": {
+            "name": "@elysiajs/cors",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.2"
+        },
+        {
+          "package": {
+            "name": "@elysiajs/openapi",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.16"
+        },
+        {
+          "package": {
+            "name": "@emnapi/core",
+            "ecosystem": "npm"
+          },
+          "version": "1.10.0"
+        },
+        {
+          "package": {
+            "name": "@emnapi/runtime",
+            "ecosystem": "npm"
+          },
+          "version": "1.10.0"
+        },
+        {
+          "package": {
+            "name": "@emnapi/wasi-threads",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.1"
+        },
+        {
+          "package": {
+            "name": "@hey-api/codegen-core",
+            "ecosystem": "npm"
+          },
+          "version": "0.9.1"
+        },
+        {
+          "package": {
+            "name": "@hey-api/json-schema-ref-parser",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.4"
+        },
+        {
+          "package": {
+            "name": "@hey-api/openapi-ts",
+            "ecosystem": "npm"
+          },
+          "version": "0.99.0"
+        },
+        {
+          "package": {
+            "name": "@hey-api/shared",
+            "ecosystem": "npm"
+          },
+          "version": "0.5.0"
+        },
+        {
+          "package": {
+            "name": "@hey-api/spec-types",
+            "ecosystem": "npm"
+          },
+          "version": "0.2.0"
+        },
+        {
+          "package": {
+            "name": "@hey-api/types",
+            "ecosystem": "npm"
+          },
+          "version": "0.1.4"
+        },
+        {
+          "package": {
+            "name": "@jridgewell/gen-mapping",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.13"
+        },
+        {
+          "package": {
+            "name": "@jridgewell/remapping",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.5"
+        },
+        {
+          "package": {
+            "name": "@jridgewell/resolve-uri",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.2"
+        },
+        {
+          "package": {
+            "name": "@jridgewell/sourcemap-codec",
+            "ecosystem": "npm"
+          },
+          "version": "1.5.5"
+        },
+        {
+          "package": {
+            "name": "@jridgewell/trace-mapping",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.31"
+        },
+        {
+          "package": {
+            "name": "@jsdevtools/ono",
+            "ecosystem": "npm"
+          },
+          "version": "7.1.3"
+        },
+        {
+          "package": {
+            "name": "@lukeed/ms",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.2"
+        },
+        {
+          "package": {
+            "name": "@napi-rs/wasm-runtime",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.5"
+        },
+        {
+          "package": {
+            "name": "@oxc-project/types",
+            "ecosystem": "npm"
+          },
+          "version": "0.133.0"
+        },
+        {
+          "package": {
+            "name": "@playwright/test",
+            "ecosystem": "npm"
+          },
+          "version": "1.61.1"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-android-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-darwin-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-darwin-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-freebsd-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-arm-gnueabihf",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-arm64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-arm64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-ppc64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-s390x-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-x64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-linux-x64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-openharmony-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-wasm32-wasi",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-win32-arm64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/binding-win32-x64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "@rolldown/pluginutils",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.1"
+        },
+        {
+          "package": {
+            "name": "@sinclair/typebox",
+            "ecosystem": "npm"
+          },
+          "version": "0.34.49"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-608",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.2"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-cmcd",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.2"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-cmsd",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.6"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-cta",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.6"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-dash",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.6"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-id3",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.6"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-request",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.12"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-structured-field-values",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.3"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-utils",
+            "ecosystem": "npm"
+          },
+          "version": "1.5.0"
+        },
+        {
+          "package": {
+            "name": "@svta/cml-xml",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.4"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/node",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-android-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-darwin-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-darwin-x64",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-freebsd-x64",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-linux-arm64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-linux-arm64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-linux-x64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-linux-x64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-wasm32-wasi",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-win32-arm64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/oxide-win32-x64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tailwindcss/vite",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "@tanstack/history",
+            "ecosystem": "npm"
+          },
+          "version": "1.162.4"
+        },
+        {
+          "package": {
+            "name": "@tanstack/query-core",
+            "ecosystem": "npm"
+          },
+          "version": "5.104.0"
+        },
+        {
+          "package": {
+            "name": "@tanstack/react-query",
+            "ecosystem": "npm"
+          },
+          "version": "5.104.0"
+        },
+        {
+          "package": {
+            "name": "@tanstack/react-router",
+            "ecosystem": "npm"
+          },
+          "version": "1.170.39"
+        },
+        {
+          "package": {
+            "name": "@tanstack/react-store",
+            "ecosystem": "npm"
+          },
+          "version": "0.11.1"
+        },
+        {
+          "package": {
+            "name": "@tanstack/router-core",
+            "ecosystem": "npm"
+          },
+          "version": "1.171.32"
+        },
+        {
+          "package": {
+            "name": "@tanstack/store",
+            "ecosystem": "npm"
+          },
+          "version": "0.11.1"
+        },
+        {
+          "package": {
+            "name": "@tokenizer/inflate",
+            "ecosystem": "npm"
+          },
+          "version": "0.4.1"
+        },
+        {
+          "package": {
+            "name": "@tokenizer/token",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.0"
+        },
+        {
+          "package": {
+            "name": "@tybys/wasm-util",
+            "ecosystem": "npm"
+          },
+          "version": "0.10.2"
+        },
+        {
+          "package": {
+            "name": "@types/bun",
+            "ecosystem": "npm"
+          },
+          "version": "1.3.14"
+        },
+        {
+          "package": {
+            "name": "@types/json-schema",
+            "ecosystem": "npm"
+          },
+          "version": "7.0.15"
+        },
+        {
+          "package": {
+            "name": "@types/node",
+            "ecosystem": "npm"
+          },
+          "version": "25.9.3"
+        },
+        {
+          "package": {
+            "name": "@types/react",
+            "ecosystem": "npm"
+          },
+          "version": "19.3.0"
+        },
+        {
+          "package": {
+            "name": "@types/react-dom",
+            "ecosystem": "npm"
+          },
+          "version": "19.3.0"
+        },
+        {
+          "package": {
+            "name": "@vitejs/plugin-react",
+            "ecosystem": "npm"
+          },
+          "version": "6.1.1"
+        },
+        {
+          "package": {
+            "name": "ansi-colors",
+            "ecosystem": "npm"
+          },
+          "version": "4.1.3"
+        },
+        {
+          "package": {
+            "name": "argparse",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.1"
+        },
+        {
+          "package": {
+            "name": "artplayer",
+            "ecosystem": "npm"
+          },
+          "version": "5.4.0"
+        },
+        {
+          "package": {
+            "name": "bcp-47-match",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.3"
+        },
+        {
+          "package": {
+            "name": "bun-types",
+            "ecosystem": "npm"
+          },
+          "version": "1.3.14"
+        },
+        {
+          "package": {
+            "name": "bundle-name",
+            "ecosystem": "npm"
+          },
+          "version": "4.1.0"
+        },
+        {
+          "package": {
+            "name": "c12",
+            "ecosystem": "npm"
+          },
+          "version": "3.3.4"
+        },
+        {
+          "package": {
+            "name": "chokidar",
+            "ecosystem": "npm"
+          },
+          "version": "5.0.0"
+        },
+        {
+          "package": {
+            "name": "class-variance-authority",
+            "ecosystem": "npm"
+          },
+          "version": "0.7.1"
+        },
+        {
+          "package": {
+            "name": "clsx",
+            "ecosystem": "npm"
+          },
+          "version": "2.1.1"
+        },
+        {
+          "package": {
+            "name": "codem-isoboxer",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.10"
+        },
+        {
+          "package": {
+            "name": "color-support",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.3"
+        },
+        {
+          "package": {
+            "name": "commander",
+            "ecosystem": "npm"
+          },
+          "version": "15.0.0"
+        },
+        {
+          "package": {
+            "name": "confbox",
+            "ecosystem": "npm"
+          },
+          "version": "0.2.4"
+        },
+        {
+          "package": {
+            "name": "cookie",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.1"
+        },
+        {
+          "package": {
+            "name": "cookie-es",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.1"
+        },
+        {
+          "package": {
+            "name": "cross-spawn",
+            "ecosystem": "npm"
+          },
+          "version": "7.0.6"
+        },
+        {
+          "package": {
+            "name": "csstype",
+            "ecosystem": "npm"
+          },
+          "version": "3.2.3"
+        },
+        {
+          "package": {
+            "name": "dashjs",
+            "ecosystem": "npm"
+          },
+          "version": "5.2.0"
+        },
+        {
+          "package": {
+            "name": "debug",
+            "ecosystem": "npm"
+          },
+          "version": "4.4.3"
+        },
+        {
+          "package": {
+            "name": "default-browser",
+            "ecosystem": "npm"
+          },
+          "version": "5.5.1"
+        },
+        {
+          "package": {
+            "name": "default-browser-id",
+            "ecosystem": "npm"
+          },
+          "version": "5.0.1"
+        },
+        {
+          "package": {
+            "name": "define-lazy-prop",
+            "ecosystem": "npm"
+          },
+          "version": "3.0.0"
+        },
+        {
+          "package": {
+            "name": "defu",
+            "ecosystem": "npm"
+          },
+          "version": "6.1.7"
+        },
+        {
+          "package": {
+            "name": "destr",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.5"
+        },
+        {
+          "package": {
+            "name": "detect-libc",
+            "ecosystem": "npm"
+          },
+          "version": "2.1.2"
+        },
+        {
+          "package": {
+            "name": "dotenv",
+            "ecosystem": "npm"
+          },
+          "version": "17.4.2"
+        },
+        {
+          "package": {
+            "name": "elysia",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.28"
+        },
+        {
+          "package": {
+            "name": "enhanced-resolve",
+            "ecosystem": "npm"
+          },
+          "version": "5.25.1"
+        },
+        {
+          "package": {
+            "name": "exact-mirror",
+            "ecosystem": "npm"
+          },
+          "version": "0.2.7"
+        },
+        {
+          "package": {
+            "name": "exsolve",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.1"
+        },
+        {
+          "package": {
+            "name": "fast-decode-uri-component",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.1"
+        },
+        {
+          "package": {
+            "name": "fast-deep-equal",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.3"
+        },
+        {
+          "package": {
+            "name": "fdir",
+            "ecosystem": "npm"
+          },
+          "version": "6.5.0"
+        },
+        {
+          "package": {
+            "name": "file-type",
+            "ecosystem": "npm"
+          },
+          "version": "22.0.1"
+        },
+        {
+          "package": {
+            "name": "fsevents",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.3"
+        },
+        {
+          "package": {
+            "name": "get-tsconfig",
+            "ecosystem": "npm"
+          },
+          "version": "4.14.0"
+        },
+        {
+          "package": {
+            "name": "giget",
+            "ecosystem": "npm"
+          },
+          "version": "3.3.1"
+        },
+        {
+          "package": {
+            "name": "graceful-fs",
+            "ecosystem": "npm"
+          },
+          "version": "4.2.11"
+        },
+        {
+          "package": {
+            "name": "hls.js",
+            "ecosystem": "npm"
+          },
+          "version": "1.6.16"
+        },
+        {
+          "package": {
+            "name": "html-entities",
+            "ecosystem": "npm"
+          },
+          "version": "2.6.0"
+        },
+        {
+          "package": {
+            "name": "ieee754",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.1"
+        },
+        {
+          "package": {
+            "name": "immediate",
+            "ecosystem": "npm"
+          },
+          "version": "3.0.6"
+        },
+        {
+          "package": {
+            "name": "imsc",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.5"
+        },
+        {
+          "package": {
+            "name": "is-docker",
+            "ecosystem": "npm"
+          },
+          "version": "3.0.0"
+        },
+        {
+          "package": {
+            "name": "is-in-ssh",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.0"
+        },
+        {
+          "package": {
+            "name": "is-inside-container",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.0"
+        },
+        {
+          "package": {
+            "name": "is-wsl",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.1"
+        },
+        {
+          "package": {
+            "name": "isbot",
+            "ecosystem": "npm"
+          },
+          "version": "5.2.2"
+        },
+        {
+          "package": {
+            "name": "isexe",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.0"
+        },
+        {
+          "package": {
+            "name": "jiti",
+            "ecosystem": "npm"
+          },
+          "version": "2.7.0"
+        },
+        {
+          "package": {
+            "name": "js-yaml",
+            "ecosystem": "npm"
+          },
+          "version": "4.2.0"
+        },
+        {
+          "package": {
+            "name": "kind-of",
+            "ecosystem": "npm"
+          },
+          "version": "6.0.3"
+        },
+        {
+          "package": {
+            "name": "lie",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.1"
+        },
+        {
+          "package": {
+            "name": "lightningcss",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-android-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-darwin-arm64",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-darwin-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-freebsd-x64",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-linux-arm-gnueabihf",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-linux-arm64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-linux-arm64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-linux-x64-gnu",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-linux-x64-musl",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-win32-arm64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "lightningcss-win32-x64-msvc",
+            "ecosystem": "npm"
+          },
+          "version": "1.32.0"
+        },
+        {
+          "package": {
+            "name": "localforage",
+            "ecosystem": "npm"
+          },
+          "version": "1.10.0"
+        },
+        {
+          "package": {
+            "name": "magic-string",
+            "ecosystem": "npm"
+          },
+          "version": "0.30.21"
+        },
+        {
+          "package": {
+            "name": "memoirist",
+            "ecosystem": "npm"
+          },
+          "version": "0.4.0"
+        },
+        {
+          "package": {
+            "name": "ms",
+            "ecosystem": "npm"
+          },
+          "version": "2.1.3"
+        },
+        {
+          "package": {
+            "name": "nanoid",
+            "ecosystem": "npm"
+          },
+          "version": "3.3.12"
+        },
+        {
+          "package": {
+            "name": "ohash",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.12"
+        },
+        {
+          "package": {
+            "name": "open",
+            "ecosystem": "npm"
+          },
+          "version": "11.0.0"
+        },
+        {
+          "package": {
+            "name": "openapi-types",
+            "ecosystem": "npm"
+          },
+          "version": "12.1.3"
+        },
+        {
+          "package": {
+            "name": "option-validator",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.6"
+        },
+        {
+          "package": {
+            "name": "path-browserify",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.1"
+        },
+        {
+          "package": {
+            "name": "path-key",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.1"
+        },
+        {
+          "package": {
+            "name": "pathe",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.3"
+        },
+        {
+          "package": {
+            "name": "perfect-debounce",
+            "ecosystem": "npm"
+          },
+          "version": "2.1.0"
+        },
+        {
+          "package": {
+            "name": "picocolors",
+            "ecosystem": "npm"
+          },
+          "version": "1.1.1"
+        },
+        {
+          "package": {
+            "name": "picomatch",
+            "ecosystem": "npm"
+          },
+          "version": "4.0.4"
+        },
+        {
+          "package": {
+            "name": "pkg-types",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.3"
+        },
+        {
+          "package": {
+            "name": "playwright",
+            "ecosystem": "npm"
+          },
+          "version": "1.61.1"
+        },
+        {
+          "package": {
+            "name": "playwright-core",
+            "ecosystem": "npm"
+          },
+          "version": "1.61.1"
+        },
+        {
+          "package": {
+            "name": "postcss",
+            "ecosystem": "npm"
+          },
+          "version": "8.5.15"
+        },
+        {
+          "package": {
+            "name": "powershell-utils",
+            "ecosystem": "npm"
+          },
+          "version": "0.1.0"
+        },
+        {
+          "package": {
+            "name": "rc9",
+            "ecosystem": "npm"
+          },
+          "version": "3.1.0"
+        },
+        {
+          "package": {
+            "name": "react",
+            "ecosystem": "npm"
+          },
+          "version": "19.3.0"
+        },
+        {
+          "package": {
+            "name": "react-dom",
+            "ecosystem": "npm"
+          },
+          "version": "19.3.0"
+        },
+        {
+          "package": {
+            "name": "readdirp",
+            "ecosystem": "npm"
+          },
+          "version": "5.1.1"
+        },
+        {
+          "package": {
+            "name": "resolve-pkg-maps",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.0"
+        },
+        {
+          "package": {
+            "name": "rolldown",
+            "ecosystem": "npm"
+          },
+          "version": "1.0.3"
+        },
+        {
+          "package": {
+            "name": "run-applescript",
+            "ecosystem": "npm"
+          },
+          "version": "7.1.0"
+        },
+        {
+          "package": {
+            "name": "sax",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.1"
+        },
+        {
+          "package": {
+            "name": "scheduler",
+            "ecosystem": "npm"
+          },
+          "version": "0.28.0"
+        },
+        {
+          "package": {
+            "name": "semver",
+            "ecosystem": "npm"
+          },
+          "version": "7.8.4"
+        },
+        {
+          "package": {
+            "name": "seroval",
+            "ecosystem": "npm"
+          },
+          "version": "1.6.7"
+        },
+        {
+          "package": {
+            "name": "seroval-plugins",
+            "ecosystem": "npm"
+          },
+          "version": "1.6.7"
+        },
+        {
+          "package": {
+            "name": "shebang-command",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.0"
+        },
+        {
+          "package": {
+            "name": "shebang-regex",
+            "ecosystem": "npm"
+          },
+          "version": "3.0.0"
+        },
+        {
+          "package": {
+            "name": "source-map-js",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.1"
+        },
+        {
+          "package": {
+            "name": "strtok3",
+            "ecosystem": "npm"
+          },
+          "version": "10.3.5"
+        },
+        {
+          "package": {
+            "name": "tailwind-merge",
+            "ecosystem": "npm"
+          },
+          "version": "3.7.0"
+        },
+        {
+          "package": {
+            "name": "tailwindcss",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.3"
+        },
+        {
+          "package": {
+            "name": "tapable",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.3"
+        },
+        {
+          "package": {
+            "name": "tinyglobby",
+            "ecosystem": "npm"
+          },
+          "version": "0.2.17"
+        },
+        {
+          "package": {
+            "name": "token-types",
+            "ecosystem": "npm"
+          },
+          "version": "6.1.2"
+        },
+        {
+          "package": {
+            "name": "tslib",
+            "ecosystem": "npm"
+          },
+          "version": "2.8.1"
+        },
+        {
+          "package": {
+            "name": "typescript",
+            "ecosystem": "npm"
+          },
+          "version": "5.9.3"
+        },
+        {
+          "package": {
+            "name": "uint8array-extras",
+            "ecosystem": "npm"
+          },
+          "version": "1.5.0"
+        },
+        {
+          "package": {
+            "name": "undici-types",
+            "ecosystem": "npm"
+          },
+          "version": "7.24.6"
+        },
+        {
+          "package": {
+            "name": "use-sync-external-store",
+            "ecosystem": "npm"
+          },
+          "version": "1.7.0"
+        },
+        {
+          "package": {
+            "name": "vite",
+            "ecosystem": "npm"
+          },
+          "version": "8.0.16"
+        },
+        {
+          "package": {
+            "name": "which",
+            "ecosystem": "npm"
+          },
+          "version": "2.0.2"
+        },
+        {
+          "package": {
+            "name": "wsl-utils",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.1"
+        },
+        {
+          "package": {
+            "name": "yaml",
+            "ecosystem": "npm"
+          },
+          "version": "2.9.0"
+        },
+        {
+          "package": {
+            "name": "@emnapi/core",
+            "ecosystem": "npm"
+          },
+          "version": "1.11.3"
+        },
+        {
+          "package": {
+            "name": "@emnapi/runtime",
+            "ecosystem": "npm"
+          },
+          "version": "1.11.3"
+        },
+        {
+          "package": {
+            "name": "@emnapi/wasi-threads",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.3"
+        },
+        {
+          "package": {
+            "name": "@types/bun",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.2"
+        },
+        {
+          "package": {
+            "name": "confbox",
+            "ecosystem": "npm"
+          },
+          "version": "0.3.1"
+        },
+        {
+          "package": {
+            "name": "fsevents",
+            "ecosystem": "npm"
+          },
+          "version": "2.3.2"
+        },
+        {
+          "package": {
+            "name": "bun-types",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.2"
+        }
+      ]
+    },
+    "result": {
+      "results": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-9643-4qgh-g8mx",
+              "modified": "2026-09-23T22:00:04.429969Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-2883-xcg3-v3hh",
+              "modified": "2026-09-08T21:30:05.575808Z"
+            },
+            {
+              "id": "GHSA-52cp-r559-cp3m",
+              "modified": "2026-09-10T03:50:12.263307Z"
+            },
+            {
+              "id": "GHSA-5p4m-2wfm-xmqj",
+              "modified": "2026-09-10T03:50:53.407436Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-28wg-ghj8-5hjv",
+              "modified": "2026-09-10T03:50:51.191256Z"
+            },
+            {
+              "id": "GHSA-2v37-7h3g-55p8",
+              "modified": "2026-09-10T03:50:51.243328Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-fxqj-rqcc-2cmp",
+              "modified": "2026-09-10T03:50:53.572374Z"
+            },
+            {
+              "id": "GHSA-r28c-9q8g-f849",
+              "modified": "2026-09-10T03:50:52.854537Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-68fv-2mgg-jv7q",
+              "modified": "2026-10-05T23:45:07.974936Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {
+          "vulns": [
+            {
+              "id": "GHSA-587h-7wmj-h5pm",
+              "modified": "2026-10-20T20:00:04.608979Z"
+            },
+            {
+              "id": "GHSA-698v-4r3x-3vcv",
+              "modified": "2026-10-20T18:45:09.467993Z"
+            },
+            {
+              "id": "GHSA-9jrq-w75r-8gcw",
+              "modified": "2026-10-21T17:00:26.569382Z"
+            },
+            {
+              "id": "GHSA-r825-w8mm-5pxw",
+              "modified": "2026-10-20T20:00:04.608907Z"
+            },
+            {
+              "id": "GHSA-rq7h-c2jc-7f22",
+              "modified": "2026-10-21T17:00:06.336868Z"
+            }
+          ]
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "details": [
+      {
+        "id": "GHSA-2883-xcg3-v3hh",
+        "aliases": [
+          "CVE-2026-84375"
+        ],
+        "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+        "published": "2026-09-08T21:24:51Z",
+        "modified": "2026-09-08T21:30:05.575808098Z",
+        "affected": [
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "4.0.0"
+                  },
+                  {
+                    "fixed": "4.3.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/09/GHSA-2883-xcg3-v3hh/GHSA-2883-xcg3-v3hh.json"
+            }
+          },
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "3.0.0"
+                  },
+                  {
+                    "fixed": "3.15.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/09/GHSA-2883-xcg3-v3hh/GHSA-2883-xcg3-v3hh.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        ],
+        "database_specific": {
+          "nvd_published_at": "2026-09-01T22:17:19Z",
+          "cwe_ids": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "severity": "HIGH",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-09-08T21:24:51Z"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/security/advisories/GHSA-2883-xcg3-v3hh"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-84375"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/pull/797"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/commit/3485bc06ff8a0251505f44a00414d90df2466639"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/commit/6a8e05f9a485188ed730ac81e81ae221352ef480"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/commit/d90b6612a5a84385bdcb556c44578eac76dc0f6b"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/nodeca/js-yaml"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/releases/tag/3.15.2"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/releases/tag/4.3.2"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-28wg-ghj8-5hjv",
+        "aliases": [
+          "CVE-2026-67214"
+        ],
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "published": "2026-07-29T15:31:12Z",
+        "modified": "2026-09-10T03:50:51.191256883Z",
+        "affected": [
+          {
+            "package": {
+              "name": "nanoid",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/nanoid"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "3.3.16"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-28wg-ghj8-5hjv/GHSA-28wg-ghj8-5hjv.json"
+            }
+          },
+          {
+            "package": {
+              "name": "nanoid",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/nanoid"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "4.0.0"
+                  },
+                  {
+                    "fixed": "5.1.16"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-28wg-ghj8-5hjv/GHSA-28wg-ghj8-5hjv.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "severity": "HIGH",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-08-07T20:52:58Z",
+          "nvd_published_at": "2026-07-29T14:16:35Z",
+          "cwe_ids": [
+            "CWE-835"
+          ]
+        },
+        "references": [
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67214"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/pull/600"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/pull/601"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/commit/6ccc67bbaba71d3d77a21d9b636f4171a268ce49"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/commit/e835c9b71eab832bc6106944bdd26ea96cf2c66d"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/ai/nanoid"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/releases/tag/5.1.16"
+          },
+          {
+            "type": "WEB",
+            "url": "https://www.vulncheck.com/advisories/nanoid-before-infinite-loop-via-negative-size-in-non-secure-module"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-2v37-7h3g-55p8",
+        "aliases": [
+          "CVE-2026-67213"
+        ],
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "published": "2026-07-29T15:31:12Z",
+        "modified": "2026-09-10T03:50:51.243328986Z",
+        "affected": [
+          {
+            "package": {
+              "name": "nanoid",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/nanoid"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "3.3.18"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-2v37-7h3g-55p8/GHSA-2v37-7h3g-55p8.json"
+            }
+          },
+          {
+            "package": {
+              "name": "nanoid",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/nanoid"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "4.0.0"
+                  },
+                  {
+                    "fixed": "5.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-2v37-7h3g-55p8/GHSA-2v37-7h3g-55p8.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "nvd_published_at": "2026-07-29T14:16:34Z",
+          "cwe_ids": [
+            "CWE-835"
+          ],
+          "severity": "HIGH",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-08-07T20:50:34Z"
+        },
+        "references": [
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67213"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/commit/cb3626d0f3342fdf179cd425fd9c4fbb92c7d0e7"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/commit/e10f8d40ce9d1ab47f66d65a16b48086432730d0"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/commit/f9d13f150847d117877adee3460a46eceb0cf49b"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/ai/nanoid"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/releases/tag/3.3.17"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/releases/tag/3.3.18"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/ai/nanoid/releases/tag/5.1.6"
+          },
+          {
+            "type": "WEB",
+            "url": "https://www.vulncheck.com/advisories/nanoid-before-infinite-loop-via-zero-size-in-customalphabet-and-customrandom"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-52cp-r559-cp3m",
+        "aliases": [
+          "CVE-2026-59869"
+        ],
+        "summary": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+        "published": "2026-07-20T21:19:09Z",
+        "modified": "2026-09-10T03:50:12.263307536Z",
+        "affected": [
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "3.0.0"
+                  },
+                  {
+                    "fixed": "3.15.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-52cp-r559-cp3m/GHSA-52cp-r559-cp3m.json"
+            }
+          },
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "4.0.0"
+                  },
+                  {
+                    "fixed": "4.3.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-52cp-r559-cp3m/GHSA-52cp-r559-cp3m.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        ],
+        "database_specific": {
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-07-20T21:19:09Z",
+          "nvd_published_at": "2026-07-08T16:16:33Z",
+          "cwe_ids": [
+            "CWE-400",
+            "CWE-407"
+          ],
+          "severity": "HIGH"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/security/advisories/GHSA-52cp-r559-cp3m"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59869"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/commit/24f13e79ee1343a7e30bd6f6c9d9cdbf0ac9b2b7"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/commit/59423c6f8cdc78742ac00e25a4dd39ef16b702e4"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/nodeca/js-yaml"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/releases/tag/3.15.0"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/releases/tag/4.3.0"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-587h-7wmj-h5pm",
+        "aliases": [
+          "CVE-2026-112942"
+        ],
+        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+        "published": "2026-10-20T19:48:25Z",
+        "modified": "2026-10-20T20:00:04.608979840Z",
+        "affected": [
+          {
+            "package": {
+              "name": "launch-editor",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/launch-editor"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "2.14.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 2.14.1",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.3.0"
+                  },
+                  {
+                    "fixed": "8.3.3"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.3.2",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.2.0"
+                  },
+                  {
+                    "fixed": "8.2.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.2.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.0.0"
+                  },
+                  {
+                    "fixed": "8.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.1.5",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "7.0.0"
+                  },
+                  {
+                    "fixed": "7.3.7"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json",
+              "last_known_affected_version_range": "<= 7.3.6"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "6.4.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 6.4.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite-plus",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite-plus"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.1.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 1.0.0",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-587h-7wmj-h5pm/GHSA-587h-7wmj-h5pm.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "severity": "HIGH",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-20T19:48:25Z",
+          "nvd_published_at": "2026-10-20T15:17:17Z",
+          "cwe_ids": [
+            "CWE-77"
+          ]
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/security/advisories/GHSA-587h-7wmj-h5pm"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-112942"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/commit/f13cd835d4b8e860b1d4d080ad8a490cc2463679"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/vitejs/launch-editor"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/releases/tag/v2.14.2"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-5p4m-2wfm-xmqj",
+        "summary": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+        "published": "2026-08-06T20:27:32Z",
+        "modified": "2026-09-10T03:50:53.407436483Z",
+        "affected": [
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "4.0.0"
+                  },
+                  {
+                    "fixed": "4.3.1"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/08/GHSA-5p4m-2wfm-xmqj/GHSA-5p4m-2wfm-xmqj.json"
+            }
+          },
+          {
+            "package": {
+              "name": "js-yaml",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/js-yaml"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "3.0.0"
+                  },
+                  {
+                    "fixed": "3.15.1"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/08/GHSA-5p4m-2wfm-xmqj/GHSA-5p4m-2wfm-xmqj.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        ],
+        "database_specific": {
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-08-06T20:27:32Z",
+          "nvd_published_at": null,
+          "cwe_ids": [
+            "CWE-407"
+          ],
+          "severity": "HIGH"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/nodeca/js-yaml/security/advisories/GHSA-5p4m-2wfm-xmqj"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/nodeca/js-yaml"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-68fv-2mgg-jv7q",
+        "aliases": [
+          "CVE-2026-93749"
+        ],
+        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+        "published": "2026-09-18T18:31:44Z",
+        "modified": "2026-10-05T23:45:07.974936711Z",
+        "affected": [
+          {
+            "package": {
+              "name": "source-map-js",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/source-map-js"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "1.0.0"
+                  },
+                  {
+                    "fixed": "1.2.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/09/GHSA-68fv-2mgg-jv7q/GHSA-68fv-2mgg-jv7q.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "cwe_ids": [
+            "CWE-1284"
+          ],
+          "severity": "HIGH",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-05T23:31:22Z",
+          "nvd_published_at": "2026-09-18T18:18:33Z"
+        },
+        "references": [
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-93749"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/7rulnik/source-map-js/issues/76"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/7rulnik/source-map-js/pull/79"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/7rulnik/source-map-js/commit/cf7658058ceeaa8619d5ae0ec90be6905209d016"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/7rulnik/source-map-js"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/7rulnik/source-map-js/blob/c1cd8904bb7bd0c7fb5879fcda48134d82a27934/lib/source-node.js#L115-L118"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2"
+          },
+          {
+            "type": "WEB",
+            "url": "https://www.vulncheck.com/advisories/source-map-js-through-1.2.1-event-loop-denial-of-service"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-698v-4r3x-3vcv",
+        "aliases": [
+          "CVE-2026-112943"
+        ],
+        "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+        "published": "2026-10-20T18:30:24Z",
+        "modified": "2026-10-20T18:45:09.467993691Z",
+        "affected": [
+          {
+            "package": {
+              "name": "launch-editor",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/launch-editor"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "2.14.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 2.14.1",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.3.0"
+                  },
+                  {
+                    "fixed": "8.3.3"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.3.2",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.2.0"
+                  },
+                  {
+                    "fixed": "8.2.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.2.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.0.0"
+                  },
+                  {
+                    "fixed": "8.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.1.5",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "7.0.0"
+                  },
+                  {
+                    "fixed": "7.3.7"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json",
+              "last_known_affected_version_range": "<= 7.3.6"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "6.4.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json",
+              "last_known_affected_version_range": "<= 6.4.3"
+            }
+          },
+          {
+            "package": {
+              "name": "vite-plus",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite-plus"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.1.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 1.0.0",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-698v-4r3x-3vcv/GHSA-698v-4r3x-3vcv.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-20T18:30:24Z",
+          "nvd_published_at": "2026-10-20T15:17:17Z",
+          "cwe_ids": [
+            "CWE-78"
+          ],
+          "severity": "MODERATE"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/security/advisories/GHSA-698v-4r3x-3vcv"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-112943"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/pull/155"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/commit/3c2f9bf2ff8fe63d056a8f9cc52d825b66ca79fc"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/vitejs/launch-editor"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/releases/tag/v2.14.2"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-9643-4qgh-g8mx",
+        "aliases": [
+          "CVE-2026-56669"
+        ],
+        "summary": "elysia has Inefficient Algorithmic Complexity and Interpretation Conflict",
+        "published": "2026-09-23T21:54:50Z",
+        "modified": "2026-09-23T22:00:04.429969872Z",
+        "affected": [
+          {
+            "package": {
+              "name": "elysia",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/elysia"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.4.29"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/09/GHSA-9643-4qgh-g8mx/GHSA-9643-4qgh-g8mx.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          }
+        ],
+        "database_specific": {
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-09-23T21:54:50Z",
+          "nvd_published_at": "2026-07-08T21:16:50Z",
+          "cwe_ids": [
+            "CWE-407",
+            "CWE-436"
+          ],
+          "severity": "HIGH"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/elysiajs/elysia/security/advisories/GHSA-9643-4qgh-g8mx"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-56669"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/elysiajs/elysia/commit/8358ff9efbcedf9534995f5977f26b9ceab59329"
+          },
+          {
+            "type": "WEB",
+            "url": "https://gist.github.com/jviide/ea040eabe7bac058326174e2cd42dfd9"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/elysiajs/elysia"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/elysiajs/elysia/releases/tag/1.4.29"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-9jrq-w75r-8gcw",
+        "aliases": [
+          "CVE-2026-112945"
+        ],
+        "summary": "Vite: Cross origin script execution through Vite custom middleware",
+        "published": "2026-10-21T16:48:14Z",
+        "modified": "2026-10-21T17:00:26.569382874Z",
+        "affected": [
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.3.0"
+                  },
+                  {
+                    "fixed": "8.3.3"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.3.2",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.2.0"
+                  },
+                  {
+                    "fixed": "8.2.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json",
+              "last_known_affected_version_range": "<= 8.2.3"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.0.0"
+                  },
+                  {
+                    "fixed": "8.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.1.5",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "7.0.0"
+                  },
+                  {
+                    "fixed": "7.3.7"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 7.3.6",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "6.4.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 6.4.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite-plus",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite-plus"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.1.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-9jrq-w75r-8gcw/GHSA-9jrq-w75r-8gcw.json",
+              "last_known_affected_version_range": "<= 1.0.0"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "cwe_ids": [
+            "CWE-80"
+          ],
+          "severity": "LOW",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-21T16:48:14Z",
+          "nvd_published_at": "2026-10-20T16:17:05Z"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/security/advisories/GHSA-9jrq-w75r-8gcw"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-112945"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/pull/23653"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/7dafd8e56f152403a3230608fa4005273c2e9e17"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/vitejs/vite"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-fxqj-rqcc-2cmp",
+        "aliases": [
+          "CVE-2026-69153"
+        ],
+        "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+        "published": "2026-08-03T17:11:39Z",
+        "modified": "2026-09-10T03:50:53.572374167Z",
+        "affected": [
+          {
+            "package": {
+              "name": "postcss",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/postcss"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "8.5.23"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.5.22",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/08/GHSA-fxqj-rqcc-2cmp/GHSA-fxqj-rqcc-2cmp.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "nvd_published_at": null,
+          "cwe_ids": [
+            "CWE-200",
+            "CWE-22"
+          ],
+          "severity": "MODERATE",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-08-03T17:11:39Z"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/security/advisories/GHSA-fxqj-rqcc-2cmp"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/commit/7beca139e70f9075c6b19700fcb00dd8033e5da8"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/postcss/postcss"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/releases/tag/8.5.19"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-r28c-9q8g-f849",
+        "aliases": [
+          "CVE-2026-73646"
+        ],
+        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "published": "2026-07-24T16:24:55Z",
+        "modified": "2026-09-10T03:50:52.854537677Z",
+        "affected": [
+          {
+            "package": {
+              "name": "postcss",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/postcss"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "8.5.18"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.5.17",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/07/GHSA-r28c-9q8g-f849/GHSA-r28c-9q8g-f849.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V3",
+            "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+          }
+        ],
+        "database_specific": {
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-07-24T16:24:55Z",
+          "nvd_published_at": null,
+          "cwe_ids": [
+            "CWE-22"
+          ],
+          "severity": "HIGH"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/security/advisories/GHSA-r28c-9q8g-f849"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/commit/95663d3eb7ba26f4854dd19d3b4f4425760cf56c"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/postcss/postcss"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/postcss/postcss/releases/tag/8.5.18"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-r825-w8mm-5pxw",
+        "aliases": [
+          "CVE-2026-112944"
+        ],
+        "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+        "published": "2026-10-20T19:51:52Z",
+        "modified": "2026-10-20T20:00:04.608907013Z",
+        "affected": [
+          {
+            "package": {
+              "name": "launch-editor",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/launch-editor"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "2.14.2"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 2.14.1",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.3.0"
+                  },
+                  {
+                    "fixed": "8.3.3"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.3.2",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.2.0"
+                  },
+                  {
+                    "fixed": "8.2.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json",
+              "last_known_affected_version_range": "<= 8.2.3"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.0.0"
+                  },
+                  {
+                    "fixed": "8.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.1.5",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "7.0.0"
+                  },
+                  {
+                    "fixed": "7.3.7"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 7.3.6",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "6.4.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 6.4.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite-plus",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite-plus"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.1.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 1.0.0",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-r825-w8mm-5pxw/GHSA-r825-w8mm-5pxw.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "nvd_published_at": "2026-10-20T15:17:17Z",
+          "cwe_ids": [
+            "CWE-88"
+          ],
+          "severity": "MODERATE",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-20T19:51:52Z"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/security/advisories/GHSA-r825-w8mm-5pxw"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-112944"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/pull/156"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/commit/f6e6701bb1f16f2dd242b321374f1b6cca6eb6d4"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/vitejs/launch-editor"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/launch-editor/releases/tag/v2.14.2"
+          }
+        ]
+      },
+      {
+        "id": "GHSA-rq7h-c2jc-7f22",
+        "aliases": [
+          "CVE-2026-112946"
+        ],
+        "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+        "published": "2026-10-21T16:47:42Z",
+        "modified": "2026-10-21T17:00:06.336868869Z",
+        "affected": [
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.3.0"
+                  },
+                  {
+                    "fixed": "8.3.3"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json",
+              "last_known_affected_version_range": "<= 8.3.2"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.2.0"
+                  },
+                  {
+                    "fixed": "8.2.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json",
+              "last_known_affected_version_range": "<= 8.2.3"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "8.0.0"
+                  },
+                  {
+                    "fixed": "8.1.6"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 8.1.5",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "7.0.0"
+                  },
+                  {
+                    "fixed": "7.3.7"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 7.3.6",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "6.4.4"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 6.4.3",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json"
+            }
+          },
+          {
+            "package": {
+              "name": "vite-plus",
+              "ecosystem": "npm",
+              "purl": "pkg:npm/vite-plus"
+            },
+            "ranges": [
+              {
+                "type": "SEMVER",
+                "events": [
+                  {
+                    "introduced": "0"
+                  },
+                  {
+                    "fixed": "1.1.0"
+                  }
+                ]
+              }
+            ],
+            "database_specific": {
+              "last_known_affected_version_range": "<= 1.0.0",
+              "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/10/GHSA-rq7h-c2jc-7f22/GHSA-rq7h-c2jc-7f22.json"
+            }
+          }
+        ],
+        "severity": [
+          {
+            "type": "CVSS_V4",
+            "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+          }
+        ],
+        "database_specific": {
+          "cwe_ids": [
+            "CWE-22",
+            "CWE-284"
+          ],
+          "severity": "MODERATE",
+          "github_reviewed": true,
+          "github_reviewed_at": "2026-10-21T16:47:42Z",
+          "nvd_published_at": "2026-10-20T16:17:05Z"
+        },
+        "references": [
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/security/advisories/GHSA-rq7h-c2jc-7f22"
+          },
+          {
+            "type": "ADVISORY",
+            "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-112946"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/pull/23656"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/170b92791421bcd484f7325936d989a82d6bd4aa"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/45c0e3392a298626955a0ab93a8e51232daac721"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/c3e06f92e969952466b4e2f5801e85e1e00cd905"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/e570d8d016096b5f8f6f09808376ca6cf73f27d0"
+          },
+          {
+            "type": "WEB",
+            "url": "https://github.com/vitejs/vite/commit/f0d76c7da13d5e794807b82f0b86c1931a8438e3"
+          },
+          {
+            "type": "PACKAGE",
+            "url": "https://github.com/vitejs/vite"
+          }
+        ]
+      }
+    ]
+  },
+  "additionalUpstream": [
+    {
+      "id": "GHSA-46qc-v7pw-4j7j",
+      "url": "https://github.com/elysiajs/elysia/security/advisories/GHSA-46qc-v7pw-4j7j",
+      "summary": "Unbounded validation-error enumeration in Elysia allows unauthenticated Denial of Service (memory exhaustion)",
+      "published_at": "2026-10-11T12:31:35Z",
+      "updated_at": "2026-10-11T12:31:35Z",
+      "severity": "high",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "elysia"
+          },
+          "vulnerable_version_range": "<1.4.29",
+          "patched_versions": "1.4.30",
+          "vulnerable_functions": []
+        }
+      ]
+    },
+    {
+      "id": "GHSA-gmm9-qwx3-2m3h",
+      "url": "https://github.com/elysiajs/elysia/security/advisories/GHSA-gmm9-qwx3-2m3h",
+      "summary": "Remote Code Execution via Unescaped Schema Defaults and Property Names",
+      "published_at": "2026-09-01T00:35:51Z",
+      "updated_at": "2026-09-01T00:35:51Z",
+      "severity": "critical",
+      "vulnerabilities": [
+        {
+          "package": {
+            "ecosystem": "npm",
+            "name": "elysia"
+          },
+          "vulnerable_version_range": "<= 1.4.29",
+          "patched_versions": "",
+          "vulnerable_functions": []
+        }
+      ]
+    }
+  ],
+  "candidateScan": {
+    "request": {
+      "queries": [
+        {
+          "package": {
+            "name": "elysia",
+            "ecosystem": "npm"
+          },
+          "version": "1.4.30"
+        },
+        {
+          "package": {
+            "name": "vite",
+            "ecosystem": "npm"
+          },
+          "version": "8.1.6"
+        },
+        {
+          "package": {
+            "name": "vite",
+            "ecosystem": "npm"
+          },
+          "version": "8.3.5"
+        },
+        {
+          "package": {
+            "name": "postcss",
+            "ecosystem": "npm"
+          },
+          "version": "8.5.23"
+        },
+        {
+          "package": {
+            "name": "postcss",
+            "ecosystem": "npm"
+          },
+          "version": "8.5.31"
+        },
+        {
+          "package": {
+            "name": "js-yaml",
+            "ecosystem": "npm"
+          },
+          "version": "4.3.2"
+        },
+        {
+          "package": {
+            "name": "nanoid",
+            "ecosystem": "npm"
+          },
+          "version": "3.3.18"
+        },
+        {
+          "package": {
+            "name": "source-map-js",
+            "ecosystem": "npm"
+          },
+          "version": "1.2.2"
+        }
+      ]
+    },
+    "result": {
+      "results": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  }
+}

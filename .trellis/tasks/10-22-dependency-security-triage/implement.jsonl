@@ -1,0 +1,12 @@
+{"file": ".trellis/spec/trellis-plus/index.md", "reason": "Project policy loading conditions"}
+{"file": ".trellis/spec/trellis-plus/development-principles.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/spec/trellis-plus/development.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/spec/trellis-plus/validation.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/spec/trellis-plus/continuity.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/spec/trellis-plus/loading.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/tasks/10-22-dependency-security-triage/research.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/tasks/10-22-dependency-security-triage/design.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/tasks/10-22-dependency-security-triage/implement.md", "reason": "Dependency security assessment policy and verified upgrade plan"}
+{"file": ".trellis/spec/trellis-plus/preview-console.md", "reason": "Dependency remediation runtime and regression requirements"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Dependency remediation runtime and regression requirements"}
+{"file": ".trellis/spec/houkago-kyoushitsu-react/frontend/index.md", "reason": "Dependency remediation runtime and regression requirements"}

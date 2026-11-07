@@ -515,7 +515,14 @@ test("Baidu OAuth, pairing, source, and grants keep secrets behind adaptor auth"
       bob.cookie,
     ).then((response) => response.json() as Promise<{ grantUrl: string }>)
     const leaveGrantId = new URL(leaveReady.grantUrl).pathname.split("/").at(-1) ?? ""
+    const ownerLeft = nextMessage(
+      sockets[1] as WebSocket,
+      (message) =>
+        message.type === "SHUSSEKI" &&
+        !message.payload.members.some((member) => member.id === alice.id),
+    )
     await closeSocket(sockets[0] as WebSocket)
+    await ownerLeft
     expect(
       await originalFetch(`${base}/baidu/adaptor/grants/${leaveGrantId}`, {
         headers: { authorization: `Bearer ${bobAdapter.adaptorToken}` },

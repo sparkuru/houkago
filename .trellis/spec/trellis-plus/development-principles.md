@@ -38,6 +38,20 @@ errors or mock away the behavior under test. Controlled fixtures must state
 which external behavior they do not verify. Missing required configuration and
 resources must remain visible failures, not success-looking defaults.
 
+For individual Housou tests, explicitly use
+`./dx env HOUSOU_DB=:memory: bun --no-env-file test <test-path>`; bypassing the
+root test script also bypasses its memory database setting. A client WebSocket
+`close` event does not prove the server has processed departure. Before checking
+departure-dependent grant revocation, await the remaining peer's authoritative
+`SHUSSEKI` snapshot excluding the departed account, then require HTTP 403.
+
+Keep dependency-security regressions small: Elysia's ordinary object body can
+still select the multipart parser, validation errors must remain bounded, and
+schema names/defaults containing quotes must remain literal data during route
+compilation. `packages/housou/test/dependency-security.test.ts` checks these
+contracts without listeners, credentials or stress payloads. A short `onError`
+response alone does not bound work performed while constructing the error.
+
 Use proportionate existing checks; build, HTTP 200, unit passes and browser
 interactions prove different scopes. Report implemented but unverified behavior.
 Keep actual results in task evidence, not another audit system. Frontend/mobile
