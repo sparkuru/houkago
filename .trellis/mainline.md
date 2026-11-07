@@ -58,13 +58,13 @@
 
 ## Ordered Work
 
-### Urgent repair — dependency security triage (2026-10-22)
+### Completed repair — dependency security triage (2026-10-22)
 
 The owner requested a task and urgent dependency-vulnerability investigation,
 including upgrade feasibility, then explicitly requested `帮我修复` after the
-candidate summary. The P0 [task](tasks/10-22-dependency-security-triage/prd.md)
-is in progress with implementation and automated acceptance complete;
-[research](tasks/10-22-dependency-security-triage/research.md) retains the initial assessment.
+candidate summary. The P0 [task](tasks/archive/2026-11/10-22-dependency-security-triage/prd.md)
+is archived with implementation and automated acceptance complete;
+[research](tasks/archive/2026-11/10-22-dependency-security-triage/research.md) retains the initial assessment.
 All eight manifests and 212 unique external lockfile versions were checked:
 npm/OSV agree on 14 advisories across six packages; two additional Elysia
 upstream advisories bring the version-match total to 16, with reachability
@@ -76,15 +76,19 @@ lint, 18 byte-stable generated contracts, production build, 36 preview fixtures,
 93 shell checks, 78 desktop/phone browser tests (three existing applicability
 skips) and one installed Chromium adapter test. A close-event test race now
 awaits the authoritative departure snapshot without weakening its HTTP403
-assertion. See [validation](tasks/10-22-dependency-security-triage/validation.md)
+assertion. See [validation](tasks/archive/2026-11/10-22-dependency-security-triage/validation.md)
 for warning, probe-incident and coverage boundaries. The current workspace's
 dependencies are refreshed; only task-owned memory fixture services were stopped.
 No existing service was restarted and no database was reset/deleted.
-The owner authorized the local work commit with `提交` on 2026-11-07.
-Archive, push and deployment remain unapproved; unrelated room tasks retain
-their status and guided continuation. Commit preparation verified all seven
+The owner authorized the local work commit with `提交` on 2026-11-07 and
+subsequently requested archive. Work commit `5653266`; archive commit `e69a0b8`.
+Push and deployment remain unapproved. Commit preparation verified all seven
 implementation hashes still match the recorded validation snapshot; the
 October vulnerability scan is historical evidence, not a new November scan.
+
+The owner selected [floating action button](tasks/10-17-floating-action-button/prd.md)
+as current and requested an assessment and improvement recommendations. It
+remains in progress under the room-player parent; mode remains guided.
 
 ### Completed task — same-origin API preview (2026-10-21)
 
